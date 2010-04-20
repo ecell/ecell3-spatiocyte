@@ -1,0 +1,12 @@
+loadModel('Fig.spatiocyte.10kD.40fraction.noSearchVacant.moveObstacles.eml')
+validationProcessStub = createEntityStub('Process:/:validate')
+duration = validationProcessStub.getProperty('LogDuration')
+interval = validationProcessStub.getProperty('LogInterval')
+if(interval != -1):
+  duration = duration+interval+interval*0.1;
+else:
+  duration = duration+duration*0.1;
+message("starting simulation...")
+print duration
+run(duration)
+message("done.")
