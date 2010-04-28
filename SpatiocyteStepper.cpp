@@ -511,6 +511,7 @@ void SpatiocyteStepper::initPriorityQueue()
       if(aClassName == "DiffusionProcess" ||
          aClassName == "IteratingLogProcess" ||
          aClassName == "CoordinateLogProcess" ||
+         aClassName == "IntensityLoggerProcess" ||
          aClassName == "VisualizationLogProcess" ||
          aClassName == "FluorescentProteinImagingProcess" ||
          aClassName == "OscillationAnalysisProcess" ||
@@ -527,6 +528,7 @@ void SpatiocyteStepper::initPriorityQueue()
       if(aClassName != "DiffusionProcess" && 
          aClassName != "IteratingLogProcess" &&
          aClassName != "CoordinateLogProcess" &&
+         aClassName != "IntensityLoggerProcess" &&
          aClassName != "VisualizationLogProcess" &&
          aClassName != "FluorescentProteinImagingProcess" &&
          aClassName != "OscillationAnalysisProcess" &&

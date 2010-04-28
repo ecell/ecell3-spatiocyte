@@ -8,6 +8,7 @@ MassActionProcess\
 ReactionProcess\
 VisualizationLogProcess\
 IteratingLogProcess\
+IntensityLoggerProcess\
 DiffusionInfluencedReactionProcess\
 OscillationAnalysisProcess\
 SpatiocyteNextReactionProcess\
@@ -26,7 +27,8 @@ SPATIOCYTE = spatiocyte
 OBJECTS=${OBJS:=.o}
 SOS=${DMS:=.so}
 
-all:	$(SOS) $(SPATIOCYTE)
+# all:	$(SOS) $(SPATIOCYTE)
+all:	$(SOS)
 
 VisualizationLogProcess.so: 	VisualizationLogProcess.cpp
 	ecell3-dmc -o VisualizationLogProcess.so --ldflags=SpatiocyteProcess.so VisualizationLogProcess.cpp
@@ -42,6 +44,9 @@ IteratingLogProcess.so: 	IteratingLogProcess.cpp
 
 CoordinateLogProcess.so: 	CoordinateLogProcess.cpp
 	ecell3-dmc -o CoordinateLogProcess.so --ldflags="SpatiocyteProcess.so IteratingLogProcess.so" CoordinateLogProcess.cpp
+
+IntensityLoggerProcess.so: 	IntensityLoggerProcess.cpp
+	ecell3-dmc -o IntensityLoggerProcess.so --ldflags="SpatiocyteProcess.so IteratingLogProcess.so" IntensityLoggerProcess.cpp
 
 DiffusionInfluencedReactionProcess.so: 	DiffusionInfluencedReactionProcess.cpp
 	ecell3-dmc -o DiffusionInfluencedReactionProcess.so --ldflags=ReactionProcess.so DiffusionInfluencedReactionProcess.cpp
