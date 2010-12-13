@@ -35,7 +35,24 @@ LIBECS_DM_INIT(SpatiocyteNextReactionProcess, Process);
 
 void SpatiocyteNextReactionProcess::fire()
 {
-  if(theOrder == 1)
+  if(theOrder == 0)
+    {
+      if(C)
+        { 
+          Voxel* moleculeC(C->getRandomCompartmentVoxel());
+          if(moleculeC == NULL)
+            {
+              requeue();
+              return;
+            }
+          C->addMolecule(moleculeC);
+        }
+      else if(variableC)
+        {
+          variableC->addValue(1);
+        }
+    }
+  else if(theOrder == 1)
     { 
       //nonHD_A -> nonHD_C + nonHD_D:
       if(A && C && D)
@@ -134,14 +151,41 @@ void SpatiocyteNextReactionProcess::fire()
       //nonHD_A -> HD_C:
       else if(A && variableC && !D && !variableD)
         {
+          Voxel* moleculeA(A->getRandomMolecule());
+          A->removeMolecule(moleculeA);
+          variableC->addValue(1);
         }
       //nonHD_A -> nonHD_C + HD_D:
-      else if(A && C && variableD)
-        {
-        }
       //nonHD_A -> HD_C + nonHD_D:
-      else if(A && variableC && D)
+      else if(A && ((variableC && D) || (C && variableD)))
         {
+          Variable* HD_p(variableC);
+          Species* nonHD_p(D);
+          if(variableD)
+            {
+              HD_p = variableD;
+              nonHD_p = C;
+            }
+          Voxel* moleculeA(A->getRandomMolecule());
+          Voxel* molecule;
+          if(A->getCompartment() != nonHD_p->getCompartment())
+            {
+              molecule = nonHD_p->getRandomAdjoiningVoxel(moleculeA);
+              //Only proceed if we can find an adjoining vacant voxel
+              //of A which can be occupied by nonHD:
+              if(molecule == NULL)
+                {
+                  requeue();
+                  return;
+                }
+            }
+          else
+            {
+              molecule = moleculeA;
+            }
+          A->removeMolecule(moleculeA);
+          nonHD_p->addMolecule(molecule);
+          HD_p->addValue(1);
         }
       //HD_A -> nonHD_C + nonHD_D:
       else if(variableA && C && D)
@@ -173,29 +217,50 @@ void SpatiocyteNextReactionProcess::fire()
           variableC->addValue(1);
         }
       //HD_A -> nonHD_C + HD_D:
-      else if(variableA && C && variableD)
-        {
-        }
       //HD_A -> HD_C + nonHD_D:
-      else if(variableA && variableC && D)
+      else if(variableA && ((variableC && D) || (C && variableD)))
         {
+          Variable* HD_p(variableC);
+          Species* nonHD_p(D);
+          if(variableD)
+            {
+              HD_p = variableD;
+              nonHD_p = C;
+            }
+          Voxel* molecule(nonHD_p->getRandomCompartmentVoxel());
+          if(molecule == NULL)
+            {
+              requeue();
+              return;
+            }
+          variableA->addValue(-1);
+          nonHD_p->addMolecule(molecule);
+          HD_p->addValue(1);
         }
     }
   else
     {
-      //nonHD_A + HD_B -> nonHD_C + nonHD_D 
-      if(A && variableB && C && D)
+      Species* nonHD(A);
+      Variable* HD(variableB);
+      if(B)
         {
-          Voxel* moleculeA(A->getRandomMolecule());
-          //If the product C is not in the same compartment as A,
-          //we need to find a vacant adjoining voxel of A that belongs
+          nonHD = B;
+          HD = variableA;
+        }
+      //nonHD + HD -> nonHD + nonHD: 
+      //HD + nonHD -> nonHD + nonHD: 
+      if(C && D)
+        {
+          Voxel* moleculeNonHD(nonHD->getRandomMolecule());
+          //If the product C is not in the same compartment as nonHD,
+          //we need to find a vacant adjoining voxel of nonHD that belongs
           //to the compartment of C:
           Voxel* moleculeC;
-          if(A->getCompartment() != C->getCompartment())
+          if(nonHD->getCompartment() != C->getCompartment())
             {
-              moleculeC = C->getRandomAdjoiningVoxel(moleculeA);
+              moleculeC = C->getRandomAdjoiningVoxel(moleculeNonHD);
               //Only proceed if we can find an adjoining vacant voxel
-              //of A which can be occupied by C:
+              //of nonHD which can be occupied by C:
               if(moleculeC == NULL)
                 {
                   requeue();
@@ -204,7 +269,7 @@ void SpatiocyteNextReactionProcess::fire()
             }
           else
             {
-              moleculeC = moleculeA;
+              moleculeC = moleculeNonHD;
             }
           Voxel* moleculeD(D->getRandomAdjoiningVoxel(moleculeC, moleculeC));
           //Only proceed if we can find an adjoining vacant voxel
@@ -214,24 +279,25 @@ void SpatiocyteNextReactionProcess::fire()
               requeue();
               return;
             }
-          variableB->addValue(-1);
-          A->removeMolecule(moleculeA);
+          HD->addValue(-1);
+          nonHD->removeMolecule(moleculeNonHD);
           D->addMolecule(moleculeD);
           C->addMolecule(moleculeC);
         }
-      //nonHD_A + HD_B -> nonHD_C
-      else if(A && variableB && C && !D)
+      //nonHD + HD -> nonHD:
+      //HD + nonHD -> nonHD:
+      else if(C && !D)
         {
-          Voxel* moleculeA(A->getRandomMolecule());
-          //If the product C is not in the same compartment as A,
-          //we need to find a vacant adjoining voxel of A that belongs
+          Voxel* moleculeNonHD(nonHD->getRandomMolecule());
+          //If the product C is not in the same compartment as nonHD,
+          //we need to find a vacant adjoining voxel of nonHD that belongs
           //to the compartment of C:
           Voxel* moleculeC;
-          if(A->getCompartment() != C->getCompartment())
+          if(nonHD->getCompartment() != C->getCompartment())
             {
-              moleculeC = C->getRandomAdjoiningVoxel(moleculeA);
+              moleculeC = C->getRandomAdjoiningVoxel(moleculeNonHD);
               //Only proceed if we can find an adjoining vacant voxel
-              //of A which can be occupied by C:
+              //of nonHD which can be occupied by C:
               if(moleculeC == NULL)
                 {
                   requeue();
@@ -240,10 +306,10 @@ void SpatiocyteNextReactionProcess::fire()
             }
           else
             {
-              moleculeC = moleculeA;
+              moleculeC = moleculeNonHD;
             }
-          variableB->addValue(-1);
-          A->removeMolecule(moleculeA);
+          HD->addValue(-1);
+          nonHD->removeMolecule(moleculeNonHD);
           C->addMolecule(moleculeC);
         }
     }
@@ -253,40 +319,129 @@ void SpatiocyteNextReactionProcess::fire()
 void SpatiocyteNextReactionProcess::initializeThird()
 {
   ReactionProcess::initializeThird();
-  if(theOrder == 1) 
+  if(p != -1)
+    {
+      return;
+    }
+  if(theOrder == 0)
+    {
+      Compartment* compC(NULL);
+      if(C)
+        {
+          compC = C->getCompartment();
+        }
+      else
+        {
+          compC = theSpatiocyteStepper->system2compartment(
+                             variableC->getSuperSystem());
+        }
+      double aSpace(0);
+      if(compC->isSurface)
+        {
+          aSpace = compC->actualArea;
+        }
+      else
+        {
+          aSpace = compC->actualVolume;
+        }
+      p = k*aSpace;
+    }
+  else if(theOrder == 1) 
     {
       p = k;
     }
   else if(theOrder == 2)
     {
-      if(A && variableB)
+      Compartment* compA(NULL);
+      Compartment* compB(NULL);
+      Compartment* compC(NULL);
+      Compartment* compD(NULL);
+      if(A)
         {
-          Compartment* compB(theSpatiocyteStepper->system2compartment(
-                  variableB->getSuperSystem()));
-          if(A->getIsVolume() || !compB->isSurface)
-            {
-              p = k/A->getCompartment()->volume;
-              cout << "vol:" << A->getCompartment()->volume << endl; 
-            }
-          else
-            {
-              double anArea;
-              if(!A->getIsVolume())
-                {
-                  anArea = A->getCompartment()->area;
-                }
-              else
-                {
-                  anArea = compB->area;
-                }
-              p = k/anArea;
-              cout << "area:" << anArea << endl; 
-            }
+          compA = A->getCompartment();
+        }
+      else
+        {
+          compA = theSpatiocyteStepper->system2compartment(
+                             variableA->getSuperSystem());
+        }
+      if(B)
+        {
+          compB = B->getCompartment();
+        }
+      else
+        {
+          compB = theSpatiocyteStepper->system2compartment(
+                             variableB->getSuperSystem());
+        }
+      if(C)
+        {
+          compC = C->getCompartment();
+        }
+      else
+        {
+          compC = theSpatiocyteStepper->system2compartment(
+                             variableC->getSuperSystem());
+        }
+      if(D)
+        {
+          compD = D->getCompartment();
+        }
+      else if(variableD)
+        {
+          compD = theSpatiocyteStepper->system2compartment(
+                             variableD->getSuperSystem());
+        }
+      //If there are two products, both C and D must belong to the
+      //same compartment:
+      if(compD && compD != compC)
+        {
+          NEVER_GET_HERE;
+        }
+      double aVolume(compA->actualVolume);
+      double anArea(compA->actualArea);
+      if(compB->isSurface)
+        {
+          anArea = compB->actualArea;
+        }
+      else
+        {
+          aVolume = compB->actualVolume;
+        }
+      if(compC->isSurface)
+        {
+          anArea = compC->actualArea;
+        }
+      else
+        {
+          aVolume = compC->actualVolume;
+        }
+      //If volume (+volume) = k(volume)(volume) or
+      //   surface (+surface) = k(volume)(surface) or
+      //   surface (+surface) = k(surface)(volume)
+      if((!compC->isSurface && !compA->isSurface && !compB->isSurface) ||
+         (compC->isSurface && !compA->isSurface && compB->isSurface) ||
+         (compC->isSurface && compA->isSurface && !compB->isSurface))
+        {
+          p = k/aVolume;
+        }
+      //If surface (+surface) = k(surface)(surface) or
+      //   volume (+volume) = k(volume)(surface) or
+      //   volume (+volume) = k(surface)(volume)
+      else if((compC->isSurface && compA->isSurface && compB->isSurface) ||
+              (!compC->isSurface && !compA->isSurface && compB->isSurface) ||
+              (!compC->isSurface && compA->isSurface && !compB->isSurface))
+        {
+          p = k/anArea;
+        }
+      else
+        {
+          NEVER_GET_HERE;
         }
       //A + A -> products
       if(getZeroVariableReferenceOffset() == 1)
         {
-          p *= 2;
+          p = k;
         }
     }
   else

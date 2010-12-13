@@ -54,6 +54,10 @@ public:
   virtual ~PolymerFragmentationProcess() {}
   virtual void initialize()
     {
+      if(isInitialized)
+        {
+          return;
+        }
       ReactionProcess::initialize();
       if(getOrder() != 1 && getOrder() != 2)
         {

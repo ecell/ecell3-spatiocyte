@@ -193,7 +193,13 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
     }
   else if(!A->getIsVolume() && !B->getIsVolume())
     {
-      if(A != B)
+      //Inter-surface compartment reaction.
+      //For surface edge absorbing reactions:
+      if(A->getCompartment() != B->getCompartment())
+        {
+          k = p;
+        }
+      else if(A != B)
         {
           if(p == -1)
             {
@@ -279,14 +285,30 @@ void DiffusionInfluencedReactionProcess::printParameters()
     A->getVariable()->getSystemPath().asString() << ":" <<
     A->getVariable()->getID() << "] + [" << 
     B->getVariable()->getSystemPath().asString() << ":" <<
-    B->getVariable()->getID() << "] -> [" << 
-    C->getVariable()->getSystemPath().asString() << ":" <<
-    C->getVariable()->getID() << "]";
-  if(D != NULL)
+    B->getVariable()->getID() << "] -> [";
+  if(C)
+    {
+      cout << 
+        C->getVariable()->getSystemPath().asString() << ":" <<
+        C->getVariable()->getID() << "]";
+    }
+  else
+    {
+      cout << 
+        variableC->getSystemPath().asString() << ":" <<
+        variableC->getID() << "]";
+    }
+  if(D)
     {
       cout << " + [" <<
         D->getVariable()->getSystemPath().asString() << ":" <<
         D->getVariable()->getID() << "]";
+    }
+  else if(variableD)
+    {
+      cout << " + [" <<
+        variableD->getSystemPath().asString() << ":" <<
+        variableD->getID() << "]";
     }
   cout << ": k=" << k << ", p=" << p << 
     ", p_A=" << A->getReactionProbability(B->getID()) <<

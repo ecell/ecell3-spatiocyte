@@ -17,14 +17,25 @@ System System( / )
     } 
   Variable Variable( SHAPE )
     {
-      Value     1;              # { 0: Spherical
-                                #   1: Rod (uses RADIUS)
-                                #   2: Cubic (uses SURFACEX,SURFACEY,SURFACEZ) }
+      Value     1;      # { 0: Spherical (uses SIZE) 
+                        #   1: Rod (uses SIZE, LENGTHY == 2*radius)
+                        #   2: Cubic (uses SIZE, SURFACEX, SURFACEY, SURFACEZ)
+                        #   3: Cuboid (uses LENGTHX, LENGTHY, LENGTHZ)
+                        #   4: Ellipsoid (uses LENGTHX, LENGTHY, LENGTHZ) }
     } 
-  Variable Variable( RADIUS )
+  Variable Variable( LENGTHX )
     {
-      Value     0.5e-6;        # in meters
+      Value     0e-6;        # in meters
     } 
+  Variable Variable( LENGTHY )
+    {
+      Value     1e-6;        # in meters
+    } 
+  Variable Variable( LENGTHZ )
+    {
+      Value     0e-6;        # in meters
+    } 
+
   Variable Variable( SIZE )
     {
       Value	 2.88e-15;   # volume in liters
@@ -101,6 +112,16 @@ System System( / )
       VariableReferenceList [_ Variable:/:MinD_ADP -1]
                             [_ Variable:/:MinD_ATP 1];
       k 6; # in s^{-1}
+    }
+  Process MoleculePopulateProcess( populate )
+    {
+      VariableReferenceList [_ Variable:/:MinD_ATP ]
+                            [_ Variable:/:MinD_ADP ]
+                            [_ Variable:/:MinE ]
+                            [_ Variable:/Surface:MinD_ATP_m ]
+                            [_ Variable:/Surface:MinD_ATP_m_MinE ]
+                            [_ Variable:/Surface:MinD_ADP_m_MinE ]
+                            [_ Variable:/Surface:MinE_m ];
     }
 }
 

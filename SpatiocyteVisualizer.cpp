@@ -122,10 +122,11 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   m_stepCnt(0),
   thePngNumber(1),
   theRotateAngle(5.0),
-  show3DMolecule(true),
+  show3DMolecule(false),
   startRecord(false),
   theResetTime(0),
-  showTime(true)
+  showTime(true),
+  theMeanCoordSize(0)
 {
   add_events(Gdk::VISIBILITY_NOTIFY_MASK); 
   
@@ -899,14 +900,14 @@ void GLScene::plotMean3DMolecules()
                 {
                   Color clr(theSpeciesColor[j]);
                   double intensity((double)(theFrequency[i][j][k])/
-                                   (double)(theMeanCount/2));
+                                   (double)(theMeanCount/4));
                   //glColor3f(clr.r*intensity, clr.g*intensity, clr.b*intensity); 
                   glColor4f(clr.r, clr.g, clr.b, intensity);
                   //glColor4f(clr.r*intensity, clr.g*intensity, clr.b*intensity,
                    //         0.5f); 
-                  if( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
                       y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                      z <= theZUpBound[j] && z >= theZLowBound[j])
+                      z <= theZUpBound[j] && z >= theZLowBound[j]))
                     {
                       glPushMatrix();
                       glTranslatef(x,y,z);
@@ -933,9 +934,9 @@ void GLScene::plotMean3DMolecules()
                   y = (col%2)*theHCPk + theHCPl*layer + theRadius;
                   z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
                   x = col*theHCPh + theRadius;
-                  if( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
                       y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                      z <= theZUpBound[j] && z >= theZLowBound[j])
+                      z <= theZUpBound[j] && z >= theZLowBound[j]))
                     {
                       glPushMatrix();
                       glTranslatef(x,y,z);
@@ -1031,9 +1032,9 @@ void GLScene::plotPoints()
                   y = (col%2)*theHCPk + theHCPl*layer + theRadius;
                   z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
                   x = col*theHCPh + theRadius;
-                  if( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
                       y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                      z <= theZUpBound[j] && z >= theZLowBound[j])
+                      z <= theZUpBound[j] && z >= theZLowBound[j]))
                     {
                       glVertex3f(x, y, z);
                     }
@@ -1051,9 +1052,9 @@ void GLScene::plotPoints()
                   x = (thePoints[i][j][k].x/theResolution)*theRadius+theRadius;
                   y = (thePoints[i][j][k].y/theResolution)*theRadius+theRadius;
                   z = (thePoints[i][j][k].z/theResolution)*theRadius+theRadius;
-                  if( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
                       y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                      z <= theZUpBound[j] && z >= theZLowBound[j])
+                      z <= theZUpBound[j] && z >= theZLowBound[j]))
                     {
                       glVertex3f(x, y, z);
                     }
@@ -1588,7 +1589,8 @@ ControlBox::ControlBox(GLScene *anArea) :
   theBoxCtrl.pack_start( theCheckShowTime, false, false, 2 );
   theCheck3DMolecule.signal_toggled().connect( sigc::mem_fun(*this,
                             &ControlBox::on_3DMolecule_toggled) );
-  theCheck3DMolecule.set_active();
+  //theCheck3DMolecule.set_active();
+  theCheck3DMolecule.set_active(false);
   theBoxCtrl.pack_start( theCheck3DMolecule, false, false, 2 );
   theButtonResetTime.signal_clicked().connect( sigc::mem_fun(*this,
                             &ControlBox::on_resetTime_clicked) );

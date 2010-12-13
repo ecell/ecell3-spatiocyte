@@ -42,12 +42,12 @@ LIBECS_DM_INIT(SpatiocyteStepper, Stepper);
 
 void SpatiocyteStepper::initialize()
 {
-  Stepper::initialize(); 
   if(isInitialized)
     {
       return;
     }
   isInitialized = true;
+  Stepper::initialize(); 
   if(theProcessVector.empty())
     {
       THROW_EXCEPTION(InitializationFailed,
@@ -79,6 +79,7 @@ void SpatiocyteStepper::initialize()
   setSurfaceVoxelProperties();
   cout << "11. populating compartments with molecules..." << endl;
   populateCompartments();
+  storeSimulationParameters();
   //checkSurfaceCompartment();
   cout << "12. initializing processes the third time..." << endl;
   initProcessThird();
@@ -353,7 +354,7 @@ void SpatiocyteStepper::checkSurfaceCompartment()
         {
           if(aVoxel == aVoxel->adjoiningVoxels[k])
             {
-              theSpecies[2]->addSimpleMolecule(aVoxel);
+              theSpecies[1]->addSimpleMolecule(aVoxel);
               break;
             }
         }
@@ -510,8 +511,8 @@ void SpatiocyteStepper::initPriorityQueue()
       String aClassName(aProcess->getPropertyInterface().getClassName());
       if(aClassName == "DiffusionProcess" ||
          aClassName == "IteratingLogProcess" ||
+         aClassName == "MoleculePopulateProcess" ||
          aClassName == "CoordinateLogProcess" ||
-         aClassName == "IntensityLoggerProcess" ||
          aClassName == "VisualizationLogProcess" ||
          aClassName == "FluorescentProteinImagingProcess" ||
          aClassName == "OscillationAnalysisProcess" ||
@@ -526,9 +527,9 @@ void SpatiocyteStepper::initPriorityQueue()
       //processes. All processes which interrupt other processes have
       //the ReactionProcess as the base class.
       if(aClassName != "DiffusionProcess" && 
+         aClassName != "MoleculePopulateProcess" &&
          aClassName != "IteratingLogProcess" &&
          aClassName != "CoordinateLogProcess" &&
-         aClassName != "IntensityLoggerProcess" &&
          aClassName != "VisualizationLogProcess" &&
          aClassName != "FluorescentProteinImagingProcess" &&
          aClassName != "OscillationAnalysisProcess" &&
@@ -799,6 +800,30 @@ void SpatiocyteStepper::setLatticeProperties()
   theLattice.resize(theRowSize*theLayerSize*theColSize);
 }
 
+void SpatiocyteStepper::storeSimulationParameters()
+{
+  for(unsigned int i(0); i != theCompartments.size(); ++i)
+    {
+      Compartment* aCompartment(theCompartments[i]); 
+      if(aCompartment->isSurface)
+        {
+          aCompartment->actualArea =  (72*pow(VoxelRadius,2))*
+            aCompartment->coords.size()/(6*pow(2,0.5)+4*pow(3,0.5)+
+                                         3*pow(6, 0.5));
+        }
+      else
+        { 
+          int voxelCnt(aCompartment->coords.size());
+          for(unsigned int j(0); j != aCompartment->allSubs.size(); ++j)
+            {
+              voxelCnt += aCompartment->allSubs[j]->coords.size();
+            }
+          aCompartment->actualVolume = (4*pow(2,0.5)*pow(VoxelRadius,3))*
+            voxelCnt;
+        }
+    }
+}
+
 void SpatiocyteStepper::printSimulationParameters()
 {
   cout << endl;
@@ -823,13 +848,15 @@ void SpatiocyteStepper::printSimulationParameters()
   for(unsigned int i(0); i != theCompartments.size(); ++i)
     {
       Compartment* aCompartment(theCompartments[i]);
-      double aVolume(aCompartment->volume);
-      double anArea(aCompartment->area);
+      double aSpecVolume(aCompartment->specVolume);
+      double aSpecArea(aCompartment->specArea);
+      double anActualVolume(aCompartment->actualVolume);
+      double anActualArea(aCompartment->actualArea);
       switch(aCompartment->shape)
         {
         case SPHERICAL:
           cout << "Spherical (radius=" << 
-            pow(3*aVolume/(4*M_PI), 1.0/3) << "m) ";
+            pow(3*aSpecVolume/(4*M_PI), 1.0/3) << "m) ";
           break;
         case ROD:
           cout << "Rod (radius=" << aCompartment->lengthY*VoxelRadius << 
@@ -851,13 +878,16 @@ void SpatiocyteStepper::printSimulationParameters()
       if(aCompartment->isSurface)
         {
           cout << " Surface Compartment:" << endl;
-          cout << "  Theoretical surface voxels, n_s = " <<
-            "S*(6*2^0.5*+4*3^0.5+3*6^0.5)/(72*r_v^2):" << 
-              int(anArea*(6*sqrt(2)+4*sqrt(3)+3*sqrt(6))/
-                  (72*VoxelRadius*VoxelRadius)) <<
-              ", S:" << anArea <<  " m^2" << endl;
-          cout << "  Actual surface voxels: " << aCompartment->coords.size()
-            << endl;
+          cout << "  [" << int(aSpecArea*(6*sqrt(2)+4*sqrt(3)+3*sqrt(6))/
+                              (72*VoxelRadius*VoxelRadius)) << 
+            "] Specified surface voxels {n_s = S_specified*"
+            << "(6*2^0.5+4*3^0.5+3*6^0.5)/(72*r_v^2}" << endl;
+          cout << "  [" << aCompartment->coords.size() <<
+            "] Actual surface voxels {n_s}" << endl;
+          cout << "  [" << aSpecArea << " m^2] Specified surface area " <<
+            "{S_specified}" << endl;
+          cout << "  [" << anActualArea << " m^2] Actual surface area " <<
+            "{S = (72*r_v^2)*n_s/(6*2^0.5+4*3^0.5+3*6^0.5)}" << endl;
         }
       else
         {
@@ -867,10 +897,14 @@ void SpatiocyteStepper::printSimulationParameters()
             {
               voxelCnt += aCompartment->allSubs[j]->coords.size();
             }
-          cout << "  Theoretical volume voxels, n_v = V/(4*2^0.5*r_v^3):" <<  
-            int(aVolume/(4*sqrt(2)*pow(VoxelRadius, 3))) << 
-            ", V:" << aVolume << " m^3" << endl;
-          cout << "  Actual volume voxels: " << voxelCnt << endl;
+          cout << "  [" << int(aSpecVolume/(4*sqrt(2)*pow(VoxelRadius, 3))) << 
+            "] Specified volume voxels {n_v = V_specified/(4*2^0.5*r_v^3)}" <<
+          endl;  
+          cout << "  [" << voxelCnt << "] Actual volume voxels {n_v}"  << endl;
+          cout << "  [" << aSpecVolume << " m^3] Specified volume {V_specified}"
+            << endl; 
+          cout << "  [" << anActualVolume << " m^3] Actual volume " <<
+            "{V = (4*2^0.5*r_v^3)*n_v}" << endl; 
         }
     }
   cout << endl;
@@ -980,7 +1014,7 @@ void SpatiocyteStepper::constructLattice()
           //will occupy it:
           (*i).id = theNullID;
           //Concatenate the some of the null voxels close to the surface:
-          if(isInsideCoord(b, aRootCompartment, -2))
+          if(isInsideCoord(b, aRootCompartment, -4))
             {
               concatenateVoxel(&(*i), aRow, aLayer, aCol);
             }
@@ -1061,35 +1095,35 @@ void SpatiocyteStepper::setCompartmentProperties(Compartment* aCompartment)
   switch(aCompartment->shape)
     {
     case SPHERICAL:
-      aCompartment->volume = aSystem->getVariable("SIZE")->getValue()*1e-3;
-      aRadius = pow(3*aCompartment->volume/(4*M_PI), 1.0/3);
+      aCompartment->specVolume = aSystem->getVariable("SIZE")->getValue()*1e-3;
+      aRadius = pow(3*aCompartment->specVolume/(4*M_PI), 1.0/3);
       aCompartment->lengthX = 2*aRadius;
       aCompartment->lengthY = aCompartment->lengthX;
       aCompartment->lengthZ = aCompartment->lengthX;
-      aCompartment->area = 4*M_PI*aRadius*aRadius;
+      aCompartment->specArea = 4*M_PI*aRadius*aRadius;
       break;
     case ROD:
-      aCompartment->volume = aSystem->getVariable("SIZE")->getValue()*1e-3;
+      aCompartment->specVolume = aSystem->getVariable("SIZE")->getValue()*1e-3;
       aCompartment->lengthY = aSystem->getVariable("LENGTHY")->getValue();
       aRadius = aCompartment->lengthY/2;
-      aCompartment->lengthX = aCompartment->volume/
+      aCompartment->lengthX = aCompartment->specVolume/
         (M_PI*aRadius*aRadius)-(4*aRadius/3)+(2*aRadius);
       aCompartment->lengthZ = aCompartment->lengthY;
-      aCompartment->area = 4*M_PI*aRadius*aRadius+
+      aCompartment->specArea = 4*M_PI*aRadius*aRadius+
         2*M_PI*aRadius*(aCompartment->lengthX-2*aRadius);
       break;
     case CUBIC:
-      aCompartment->volume = aSystem->getVariable("SIZE")->getValue()*1e-3;
-      aCompartment->lengthX = pow(aCompartment->volume, 1.0/3);
+      aCompartment->specVolume = aSystem->getVariable("SIZE")->getValue()*1e-3;
+      aCompartment->lengthX = pow(aCompartment->specVolume, 1.0/3);
       aCompartment->lengthY = aCompartment->lengthX;
       aCompartment->lengthZ = aCompartment->lengthX;
-      aCompartment->area = 6*aCompartment->lengthX*aCompartment->lengthX;
+      aCompartment->specArea = 6*aCompartment->lengthX*aCompartment->lengthX;
       break;
     case CUBOID:
       aCompartment->lengthX = aSystem->getVariable("LENGTHX")->getValue();
       aCompartment->lengthY = aSystem->getVariable("LENGTHY")->getValue();
       aCompartment->lengthZ = aSystem->getVariable("LENGTHZ")->getValue();
-      aCompartment->volume = aCompartment->lengthX*aCompartment->lengthY*
+      aCompartment->specVolume = aCompartment->lengthX*aCompartment->lengthY*
         aCompartment->lengthZ;
       if(aSystem->getVariable("SURFACEZ")->getValue() ==
          UNIPERIODIC)
@@ -1121,21 +1155,21 @@ void SpatiocyteStepper::setCompartmentProperties(Compartment* aCompartment)
         { 
           anArea += 2*aCompartment->lengthX*aCompartment->lengthZ; 
         }
-      aCompartment->area = anArea;
+      aCompartment->specArea = anArea;
       break;
     case ELLIPSOID:
       aCompartment->lengthX = aSystem->getVariable("LENGTHX")->getValue();
       aCompartment->lengthY = aSystem->getVariable("LENGTHY")->getValue();
       aCompartment->lengthZ = aSystem->getVariable("LENGTHZ")->getValue();
-      aCompartment->volume = 4*M_PI*aCompartment->lengthX*aCompartment->lengthY*
-        aCompartment->lengthZ/24;
-      aCompartment->area = 4*M_PI*pow((pow(aCompartment->lengthX/2, 1.6075)*
-                                       pow(aCompartment->lengthY/2, 1.6075)+
-                                       pow(aCompartment->lengthX/2, 1.6075)*
-                                       pow(aCompartment->lengthZ/2, 1.6075)+
-                                       pow(aCompartment->lengthY/2, 1.6075)*
-                                       pow(aCompartment->lengthZ/2, 1.6075))/
-                                      3, 1/1.6075); 
+      aCompartment->specVolume = 4*M_PI*aCompartment->lengthX*
+        aCompartment->lengthY* aCompartment->lengthZ/24;
+      aCompartment->specArea = 4*M_PI*
+        pow((pow(aCompartment->lengthX/2, 1.6075)*
+             pow(aCompartment->lengthY/2, 1.6075)+
+             pow(aCompartment->lengthX/2, 1.6075)*
+             pow(aCompartment->lengthZ/2, 1.6075)+
+             pow(aCompartment->lengthY/2, 1.6075)*
+             pow(aCompartment->lengthZ/2, 1.6075))/ 3, 1/1.6075); 
       break;
     }
   aCompartment->lengthX /= VoxelRadius*2;
@@ -1858,152 +1892,90 @@ bool SpatiocyteStepper::isInsideCoord(unsigned int aCoord,
         {
           return true;
         }
+      break;
+    case CUBOID:
+      if(sqrt(pow(aPoint.x-aCenterPoint.x, 2)) <= 
+         aCompartment->lengthX/2+theNormalizedVoxelRadius-delta &&
+         sqrt(pow(aPoint.y-aCenterPoint.y, 2)) <= 
+         aCompartment->lengthY/2+theNormalizedVoxelRadius-delta &&
+         sqrt(pow(aPoint.z-aCenterPoint.z, 2)) <= 
+         aCompartment->lengthZ/2+theNormalizedVoxelRadius-delta)
+        {
+          return true;
+        }
+      break;
     }
   return false;
 }
 
 void SpatiocyteStepper::populateCompartment(Compartment* aCompartment)
 {
-  unsigned int populateVoxelSize(0);
+  unsigned int populationSize(0);
+  unsigned int gaussianPopulationSize(0);
+  //First, populate gaussian distributed molecules, if any:
   for(vector<Species*>::const_iterator i(aCompartment->species.begin());
       i != aCompartment->species.end(); ++i)
     {
-      populateVoxelSize += (unsigned int)(*i)->getPopulateMoleculeSize();
-    }
-  for(vector<Species*>::const_iterator i(aCompartment->species.begin());
-      i != aCompartment->species.end(); ++i)
-    {
-      if(!(*i)->getIsPopulated() && (*i)->getIsCentered())
+      populationSize += (unsigned int)(*i)->getPopulateMoleculeSize();
+      if((*i)->getIsGaussianPopulation())
         {
-          Voxel* aVoxel;
-          if(aCompartment->isSurface)
+          gaussianPopulationSize +=
+            (unsigned int)(*i)->getPopulateMoleculeSize();
+          (*i)->populateCompartmentGaussian();
+        }
+    }
+  //Second, populate remaining vacant voxels uniformly:
+  //If there are many molecules to be populated we need to
+  //systematically choose the vacant voxels randomly from a list
+  //of available vacant voxels of the compartment:
+  if(populationSize > gaussianPopulationSize)
+    {
+      unsigned int count(0);
+      if(double(populationSize)/aCompartment->coords.size() > 0.2)
+        {
+          unsigned int* populateVoxels(new unsigned int[populationSize]);
+          unsigned int availableVoxelSize(aCompartment->coords.size());
+          unsigned int* availableVoxels(new unsigned int [availableVoxelSize]); 
+          for(unsigned int i(0); i != availableVoxelSize; ++i)
             {
-              const int r(gsl_rng_uniform_int(getRng(),
-                                              aCompartment->coords.size()));
-              aVoxel = &theLattice[aCompartment->coords[r]];
+              availableVoxels[i] = i;
             }
-          else
+          cout << "here" << endl;
+          gsl_ran_choose(getRng(), populateVoxels, populationSize,
+                     availableVoxels, availableVoxelSize, sizeof(unsigned int));
+          //gsl_ran_choose arranges the position ascending, so we need
+          //to shuffle the order of voxel positions:
+          gsl_ran_shuffle(getRng(), populateVoxels, populationSize,
+                          sizeof(unsigned int)); 
+          for(vector<Species*>::const_iterator i(aCompartment->species.begin());
+              i != aCompartment->species.end(); ++i)
             {
-              aVoxel = point2voxel(theCenterPoint);
-            }
-          (*i)->addMolecule(aVoxel);
-          (*i)->setIsPopulated();
-          if((*i)->getIsInContact())
-            {
-              Species* reactantPair((*i)->getDiffusionInfluencedReactantPair());
-              if(reactantPair != NULL)
+              if(!(*i)->getIsGaussianPopulation())
                 {
-                  for(unsigned int j(0); j != ADJOINING_VOXEL_SIZE; ++j)
-                    {
-                      if(aVoxel->adjoiningVoxels[j]->id ==
-                         aCompartment->vacantID)
-                        {
-                          reactantPair->addMolecule(aVoxel->adjoiningVoxels[j]);
-                          break;
-                        }
-                    }
-                  reactantPair->setIsPopulated();
+                  (*i)->populateCompartmentUniform(populateVoxels, &count);
+                }
+            }
+          delete[] populateVoxels;
+          delete[] availableVoxels;
+        }
+      //Otherwise, we select a random voxel from the list of compartment
+      //voxels and check if it is vacant before occupying it with a 
+      //molecule, iteratively. This makes it much faster to populate
+      //large compartments with small number of molecules.
+      else
+        {
+          for(vector<Species*>::const_iterator i(aCompartment->species.begin());
+              i != aCompartment->species.end(); ++i)
+            {
+              if(!(*i)->getIsGaussianPopulation())
+                {
+                  (*i)->populateCompartmentUniformSparse();
                 }
             }
         }
     }
-  if(populateVoxelSize > aCompartment->coords.size())
-    {
-      printSimulationParameters();
-      THROW_EXCEPTION(ValueError, 
-                      String(getPropertyInterface().getClassName()) + 
-                      "[" + getID() + 
-                      "]: When populating the compartment:" +
-                      aCompartment->system->getFullID().asString() +
-                      " There are more molecules than the number of" +
-                      " available vacant voxels. Either reduce the number" +
-                      " of molecules, increase the compartment volume" + 
-                      " or reduce the voxel radius.");
-    }
-  //If there are many molecules to be populated we need to systematically
-  //choose the vacant voxels randomly from a list of available vacant
-  //voxels of the compartment:
-  else if(double(populateVoxelSize)/aCompartment->coords.size() > 0.2)
-    {
-      populateCompartmentUniformly(aCompartment, populateVoxelSize);
-    }
-  //Otherwise, we select a random voxel from the list of compartment
-  //voxels and check if it is vacant before occupying it with a molecule,
-  //iteratively. This makes it much faster to populate large compartments
-  //with small number of molecules.
-  else if(populateVoxelSize)
-    {
-      populateCompartmentUniformly(aCompartment);
-    }
 }
 
-
-void SpatiocyteStepper::populateCompartmentUniformly(Compartment* aCompartment,
-                                               unsigned int populateVoxelSize)
-{
-  unsigned int* populateVoxels(new unsigned int[populateVoxelSize]); 
-  unsigned int availableVoxelSize(aCompartment->coords.size());
-  unsigned int* availableVoxels(new unsigned int[availableVoxelSize]); 
-  for(unsigned int i(0); i != availableVoxelSize; ++i)
-    {
-      availableVoxels[i] = i;
-    }
-  gsl_ran_choose(getRng(), populateVoxels, populateVoxelSize,
-                 availableVoxels, availableVoxelSize, sizeof(unsigned int)); 
-  //gsl_ran_choose arranges the position ascending, so we need to shuffle
-  //the order of voxel positions:
-  gsl_ran_shuffle(getRng(), populateVoxels, populateVoxelSize,
-                  sizeof(unsigned int));
-  unsigned int n(0);
-  for(vector<Species*>::const_iterator i(aCompartment->species.begin());
-      i != aCompartment->species.end(); ++i)
-    {
-      if(!(*i)->getIsPopulated())
-        {
-          unsigned int aSize((*i)->getPopulateMoleculeSize());
-          for(unsigned int j(0); j != aSize; ++j)
-            {
-              Voxel* aVoxel;
-              do
-                {
-                  aVoxel = &theLattice[
-                    aCompartment->coords[populateVoxels[n++]]];
-                }
-              while(aVoxel->id != aCompartment->vacantID);
-              (*i)->addMolecule(aVoxel);
-            }
-          (*i)->setIsPopulated();
-        }
-    }
-  delete[] populateVoxels;
-  delete[] availableVoxels;
-}
-
-void SpatiocyteStepper::populateCompartmentUniformly(Compartment* aCompartment)
-{
-  int availableVoxelSize(aCompartment->coords.size());
-  for(vector<Species*>::const_iterator i(aCompartment->species.begin());
-      i != aCompartment->species.end(); ++i)
-    {
-      if(!(*i)->getIsPopulated())
-        {
-          unsigned int aSize((*i)->getPopulateMoleculeSize());
-          vector<int> surfaceMolecules;
-          for(unsigned int j(0); j != aSize; ++j)
-            {
-              Voxel* aVoxel;
-              do
-                {
-                  aVoxel = &theLattice[aCompartment->coords[
-                    gsl_rng_uniform_int(getRng(), availableVoxelSize)]];
-                }
-              while(aVoxel->id != aCompartment->vacantID);
-              (*i)->addMolecule(aVoxel);
-            }
-          (*i)->setIsPopulated();
-        }
-    }
-}
 
 void SpatiocyteStepper::clearCompartment(Compartment* aCompartment)
 {

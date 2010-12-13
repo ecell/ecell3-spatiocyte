@@ -45,6 +45,10 @@ public:
   virtual ~PeriodicBoundaryDiffusionProcess() {}
   virtual void initialize()
     {
+      if(isInitialized)
+        {
+          return;
+        }
       DiffusionProcess::initialize();
       theSpatiocyteStepper->setPeriodicEdge();
     }

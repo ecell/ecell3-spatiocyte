@@ -55,6 +55,7 @@ public:
       theLatticeSize = theSpatiocyteStepper->getLatticeSize();
       theStartCoord = theSpatiocyteStepper->getStartCoord();
       theProcessSpecies.resize(0);
+      //Put all the unique negative species in the process species list:
       for(VariableReferenceVector::iterator 
           i(theNegativeVariableReferences.begin());
           i != theNegativeVariableReferences.end(); ++i)
@@ -137,6 +138,9 @@ public:
           MeanCount = (int)ceil(ExposureTime/theStepInterval);
         }
       theMeanCount = (unsigned int)MeanCount;
+      theTime = theStepInterval;
+      theLastExposedTime = theTime;
+      thePriorityQueue->move(theQueueID);
     }
   virtual void initializeLastOnce()
     {  

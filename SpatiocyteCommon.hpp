@@ -122,8 +122,10 @@ struct Compartment
   double lengthX;
   double lengthY;
   double lengthZ;
-  double volume;
-  double area;
+  double specVolume;
+  double specArea;
+  double actualVolume;
+  double actualArea;
   System* system;
   Compartment* surfaceSub;
   Point westPoint;

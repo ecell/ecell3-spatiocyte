@@ -454,7 +454,7 @@ void PolymerizationProcess::removeContPoint(Subunit* aSubunit,  Point* aPoint)
             }
         }
     }
-  cout << "error in remove contPoint" << endl;
+  cout << "error in remove contPoint at time:" << getStepper()->getCurrentTime() << endl;
 }
 
 void PolymerizationProcess::resetSubunit(Subunit* aSubunit)
@@ -803,10 +803,10 @@ bool PolymerizationProcess::setTargetVoxels(Subunit* aSubunit)
         }
       ++j;
     }
+  /*
   cout << "end" << endl;
   for(unsigned int i(0); i != nearestBends.size(); ++i)
     {
-      cout << "aBend:" << nearestBends[i] << endl;
       cout << "dist:" << distances[i][curr[i]] << endl;
       if(!i && nearestBends.size() > 1)
         {
@@ -817,33 +817,34 @@ bool PolymerizationProcess::setTargetVoxels(Subunit* aSubunit)
             }
         }
     }
+    */
 
   for(unsigned int k(0); k != nearestBends.size(); ++k)
     { 
       if(sizes[k])
         {
-          cout << "k:" << k << endl;
+          //cout << "k:" << k << endl;
           unsigned int i(nearestBends[k]);
           aSubunit->targetVoxels[i] = targetVoxels[k][curr[k]]; 
           Voxel* aRefVoxel(aSubunit->voxel);
           Point* aRefPoint(&aSubunit->targetPoints[i]);
           if(sharedIndices[k][curr[k]] != -1)
             { 
-              cout << "here:" << sharedIndices[k][curr[k]] << endl;
+              //cout << "here:" << sharedIndices[k][curr[k]] << endl;
               vector<Voxel*>& aSharedList((*aRefVoxel->surfaceVoxels)
                                           [SHARED+sharedIndices[k][curr[k]]]);
               double aSharedDist(LARGE_DISTANCE);
               Voxel* aSelectedSharedVoxel(NULL);
               for(unsigned int j(0); j != aSharedList.size(); ++j)
                 { 
-                  cout << "sharedlist:" << j << endl;
+                  //cout << "sharedlist:" << j << endl;
                   Voxel* aSharedVoxel(aSharedList[j]);
                   Subunit* aSharedSubunit(aSharedVoxel->subunit);
                   //First find an existing shared voxel which connects
                   //the reference voxel to the extended voxel:
                   if(aSharedSubunit->voxel == aSubunit->voxel)
                     {
-                      cout << "break" << endl;
+                      //cout << "break" << endl;
                       aSelectedSharedVoxel = aSharedVoxel;
                       break;
                     }
@@ -851,19 +852,19 @@ bool PolymerizationProcess::setTargetVoxels(Subunit* aSubunit)
                   //protomer:
                   else if(aSharedSubunit->contPoints.empty())
                     {
-                      cout << "elsse" << endl;
+                      //cout << "elsse" << endl;
                       double aDist(getDistance(aRefPoint,
                                            &aSharedSubunit->surfacePoint));
                       if(aDist < aSharedDist)
                         {
-                          cout << "af" << endl;
+                          //cout << "af" << endl;
                           aSharedDist = aDist;
                           aSelectedSharedVoxel = aSharedVoxel;
                         }
                     }
                   else
                     {
-                      cout << "failure" << endl;
+                      //cout << "failure" << endl;
                       return false;
                     }
                 }
@@ -872,10 +873,10 @@ bool PolymerizationProcess::setTargetVoxels(Subunit* aSubunit)
               if(!id2species(aSelectedSharedVoxel->id)->getIsLipid() &&
                  aSelectedSharedVoxel->subunit->voxel != aRefVoxel)
                 {
-                  cout << "fail1 immed"  << endl;
+                  //cout << "fail1 immed"  << endl;
                   return false;
                 }
-                          cout << "afdaff" << endl;
+                          //cout << "afdaff" << endl;
               aSelectedSharedVoxel->subunit->voxel = aRefVoxel;
               //Add the subunitPoint of the reference protomer to the 
               //list of contPoints of the selected shared subunit:
@@ -883,11 +884,11 @@ bool PolymerizationProcess::setTargetVoxels(Subunit* aSubunit)
                            &aSubunit->subunitPoint);
               aSubunit->sharedLipids[i] = aSelectedSharedVoxel;
             }
-                          cout << "afllll" << endl;
+                          //cout << "afllll" << endl;
           addContPoint(aSubunit->targetVoxels[i]->subunit, aRefPoint);
         }
     }
-  cout << "Herell" << endl;
+  //cout << "Herell" << endl;
   return retValue;
 }
 
@@ -900,7 +901,7 @@ int PolymerizationProcess::setExistingTargetVoxel(Subunit* aRefSubunit,
   vector<Voxel*>& immediateSurface(aRefVoxel->surfaceVoxels[0][IMMEDIATE]);
   //Check the immediate 6 (usually) surface voxels adjoining the voxel of the
   //reference subunit:
-  for(unsigned int i(0); i!=immediateSurface.size(); ++i)
+  for(unsigned int i(0); i != immediateSurface.size(); ++i)
     {
       Voxel* aVoxel(immediateSurface[i]);
       Subunit* aSubunit(aVoxel->subunit);
@@ -1037,7 +1038,7 @@ unsigned int PolymerizationProcess::sortNearestTargetVoxels(
       if(aSubunit->contPoints.empty())
         {
           double aDist(getDistance(aRefPoint, &aSubunit->surfacePoint));
-          cout << "immediate:" << aDist << endl;
+          //cout << "immediate:" << aDist << endl;
           unsigned int j(aSize);
           while(j)
             {
@@ -1080,7 +1081,7 @@ unsigned int PolymerizationProcess::sortNearestTargetVoxels(
                  aSharedVoxel->subunit->voxel == aRefVoxel)
                 { 
                   double aDist(getDistance(aRefPoint, &aSubunit->surfacePoint));
-                  cout << "extended:" << aDist << endl;
+                  //cout << "extended:" << aDist << endl;
                   unsigned int j(aSize);
                   while(j)
                     {
@@ -1239,7 +1240,7 @@ bool PolymerizationProcess::setExtendedTargetVoxel(Subunit* aRefSubunit,
           if(!id2species(aSelectedSharedVoxel->id)->getIsLipid() &&
              aSelectedSharedVoxel->subunit->voxel != aRefVoxel)
             {
-              cout << "fail1 immed:" << immeDist << endl;
+              //cout << "fail1 immed:" << immeDist << endl;
               return false;
             }
           aSelectedSharedVoxel->subunit->voxel = aRefVoxel;
@@ -1253,7 +1254,6 @@ bool PolymerizationProcess::setExtendedTargetVoxel(Subunit* aRefSubunit,
       addContPoint(aRefSubunit->targetVoxels[aBendIndex]->subunit, aRefPoint);
       return true;
     }
-  cout << "fail2:" << extDist << " immed:" << immeDist << endl;
   return false;
 }
 

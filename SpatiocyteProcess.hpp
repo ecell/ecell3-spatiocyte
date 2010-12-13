@@ -44,6 +44,7 @@ public:
       INHERIT_PROPERTIES(Process);
     }
   SpatiocyteProcess(bool aPriority=true):
+    isInitialized(false),
     isPriority(aPriority),
     theStepInterval(libecs::INF),
     theTime(libecs::INF) {}
@@ -60,6 +61,11 @@ public:
   virtual void substrateValueChanged(Time) {}
   virtual void initialize()
     {
+      if(isInitialized)
+        {
+          return;
+        }
+      isInitialized = true;
       Process::initialize();
       theSpatiocyteStepper = reinterpret_cast<SpatiocyteStepper*>(getStepper());
       theSortedVariableReferences.resize(theVariableReferenceVector.size());
@@ -129,6 +135,7 @@ protected:
   const String getIDString(Voxel*) const;
   const String getIDString(Species*) const;
 protected:
+  bool isInitialized;
   bool isPriority;
   double theStepInterval;
   Time theTime;

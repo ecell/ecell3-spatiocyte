@@ -82,6 +82,7 @@ public:
   unsigned int getLatticeSize();
   Point getCenterPoint();
   double getNormalizedVoxelRadius();
+  Voxel* point2voxel(Point);
 private:
   void printProcessParameters();
   void checkSurfaceCompartment();
@@ -92,6 +93,7 @@ private:
   void initProcessThird();
   void initProcessFourth();
   void initProcessLastOnce();
+  void storeSimulationParameters();
   void printSimulationParameters();
   void setSurfaceVoxelProperties();
   void initSpecies();
@@ -124,7 +126,6 @@ private:
   unsigned int coord2row(unsigned int);
   unsigned int coord2col(unsigned int);
   unsigned int coord2layer(unsigned int);
-  Voxel* point2voxel(Point);
   Compartment* registerCompartment(System*, vector<Compartment*>*);
 private:
   bool isInitialized;

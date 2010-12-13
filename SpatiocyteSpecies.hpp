@@ -37,6 +37,7 @@
 #include "SpatiocyteStepper.hpp"
 #include "DiffusionInfluencedReactionProcess.hpp"
 #include "PolymerFragmentationProcess.hpp"
+#include "MoleculePopulateProcess.hpp"
 
 // The size of Voxel must be 128 bytes to avoid cacheline splits
 // The Core 2 has 64-byte cacheline
@@ -54,6 +55,7 @@ public:
           int anInitMoleculeSize, const gsl_rng* aRng):
     isCentered(false),
     isDiffusing(false),
+    isGaussianPopulation(false),
     isInContact(false),
     isLipid(false),
     isPolymer(false),
@@ -68,8 +70,9 @@ public:
     theDiffusionInterval(libecs::INF),
     theWalkProbability(1),
     theRng(aRng),
-    theVariable(aVariable),
-    theStepper(aStepper) {}
+    thePopulateProcess(NULL),
+    theStepper(aStepper),
+    theVariable(aVariable) {}
   ~Species() {}
   void initialize(int speciesSize)
     {
@@ -90,6 +93,54 @@ public:
   void setDiffusionInfluencedReactantPair(Species* aSpecies)
     {
       theDiffusionInfluencedReactantPairs.push_back(aSpecies);
+    }
+  void setPopulateProcess(MoleculePopulateProcess* aProcess, double aDist)
+    {
+      if(aDist)
+        {
+          isGaussianPopulation = true;
+        }
+      thePopulateProcess = aProcess;
+    }
+  bool getIsGaussianPopulation()
+    {
+      return isGaussianPopulation;
+    }
+  void populateCompartmentGaussian()
+    {
+      if(thePopulateProcess)
+        {
+          thePopulateProcess->populateGaussian(this);
+        }
+      else
+        {
+          cout << "Species:" << theVariable->getFullID().asString() <<
+            " not populated." << endl;
+        }
+    }
+  void populateCompartmentUniform(unsigned int voxelIDs[], unsigned int* aCount)
+    {
+      if(thePopulateProcess)
+        {
+          thePopulateProcess->populateUniformDense(this, voxelIDs, aCount);
+        }
+      else
+        {
+          cout << "Species:" << theVariable->getFullID().asString() <<
+            " not populated." << endl;
+        }
+    }
+  void populateCompartmentUniformSparse()
+    {
+      if(thePopulateProcess)
+        {
+          thePopulateProcess->populateUniformSparse(this);
+        }
+      else
+        {
+          cout << "Species:" << theVariable->getFullID().asString() <<
+            " not populated." << endl;
+        }
     }
   Variable* getVariable()
     {
@@ -289,10 +340,6 @@ public:
     {
       return theMoleculeSize == theInitMoleculeSize;
     }
-  const double getVolume() const
-    {
-      return theCompartment->volume;
-    }
   const double getDiffusionInterval() const
     {
       return theDiffusionInterval;
@@ -308,8 +355,15 @@ public:
           const unsigned short size(source->adjoiningSize);
           if(size > 6 || size <= r)
             { 
-              target = source->adjoiningVoxels[
-                gsl_rng_uniform_int(theRng, size)];
+              if(size)
+                {
+                  target = source->adjoiningVoxels[
+                    gsl_rng_uniform_int(theRng, size)];
+                }
+              else
+                {
+                  continue;
+                }
             }
           else
             {
@@ -421,8 +475,15 @@ public:
           const unsigned short size(source->adjoiningSize);
           if(size > 6 || size <= r)
             { 
-              target = source->adjoiningVoxels[
-                gsl_rng_uniform_int(theRng, size)];
+              if(size)
+                {
+                  target = source->adjoiningVoxels[
+                    gsl_rng_uniform_int(theRng, size)];
+                }
+              else
+                {
+                  continue;
+                }
             }
           else
             {
@@ -891,6 +952,7 @@ public:
 private:
   bool isCentered;
   bool isDiffusing;
+  bool isGaussianPopulation;
   bool isInContact;
   bool isLipid;
   bool isPolymer;
@@ -906,9 +968,10 @@ private:
   double theDiffusionInterval;
   double theWalkProbability;
   const gsl_rng* theRng;
-  Variable* theVariable;
   Compartment* theCompartment;
+  MoleculePopulateProcess* thePopulateProcess;
   SpatiocyteStepper* theStepper;
+  Variable* theVariable;
   vector<double> theBendAngles;
   vector<double> theReactionProbabilities;
   vector<Voxel*> theMolecules;

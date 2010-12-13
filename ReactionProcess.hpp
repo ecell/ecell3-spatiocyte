@@ -84,6 +84,10 @@ public:
     }
   virtual void initialize()
     {
+      if(isInitialized)
+        {
+          return;
+        }
       SpatiocyteProcess::initialize();
       declareUnidirectional();
       calculateOrder();

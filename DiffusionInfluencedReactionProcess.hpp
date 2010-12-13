@@ -47,6 +47,10 @@ public:
   virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
   virtual void initialize()
     {
+      if(isInitialized)
+        {
+          return;
+        }
       ReactionProcess::initialize();
       if(getOrder() != 2)
         {

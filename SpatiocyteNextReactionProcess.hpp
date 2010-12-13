@@ -48,20 +48,22 @@ public:
     }
   SpatiocyteNextReactionProcess():
     theGetPropensityMethodPtr(RealMethodProxy::create<
-                              &SpatiocyteNextReactionProcess::getZero>()),
-    theGetMinValueMethodPtr(RealMethodProxy::create<
-                            &SpatiocyteNextReactionProcess::getZero>()),
-    theGetPDMethodPtr(&SpatiocyteNextReactionProcess::getPD_Zero) {}
+            &SpatiocyteNextReactionProcess::getPropensity_ZerothOrder>()) {}
   virtual ~SpatiocyteNextReactionProcess() {}
   virtual void initialize()
     {
+      if(isInitialized)
+        {
+          return;
+        }
       ReactionProcess::initialize();
-      if(!(getOrder() == 1 || getOrder() == 2))
+      if(!(getOrder() == 0 || getOrder() == 1 || getOrder() == 2))
         {
           THROW_EXCEPTION(ValueError, 
                           String(getPropertyInterface().getClassName()) + 
                           "[" + getFullID().asString() + 
-                          "]: Only first or second order scheme is allowed.");
+                          "]: Only zeroth, first or second order scheme " + 
+                          "is allowed.");
         }
     }
   GET_METHOD(Real, Propensity)
@@ -89,10 +91,6 @@ public:
           return libecs::INF;
         }
     }
-  Real getPD(Variable* aVariable) 
-    {
-      return (this->*theGetPDMethodPtr)(aVariable);
-    }
   virtual bool isContinuous() 
     {
       return true;
@@ -102,18 +100,13 @@ public:
   virtual void initializeThird();
 protected:
   virtual void calculateOrder();
-  Real getZero() 
+  Real getPropensity_ZerothOrder() 
     {
-      return 0.0;
-    }
-  Real getPD_Zero(Variable* aVariable) 
-    {
-      return 0.0;
+      return p;
     }
   Real getPropensity_FirstOrder() 
     {
-      Real aValue(theVariableReferenceVector[0
-                        ].getVariable()->getValue());
+      Real aValue(theVariableReferenceVector[0].getVariable()->getValue());
       if(aValue > 0.0)
         {
           return p*aValue;
@@ -123,27 +116,10 @@ protected:
           return 0.0;
         }
     }
-  Real getMinValue_FirstOrder() 
-    {
-      return theVariableReferenceVector[0].getVariable()->getValue();
-    }
-  Real getPD_FirstOrder(Variable* aVariable) 
-    {
-      if(theVariableReferenceVector[0].getVariable() == aVariable)
-        {
-          return p;
-        }
-      else
-        {
-          return 0.0;
-        }
-    }
   Real getPropensity_SecondOrder_TwoSubstrates() 
     {
-      Real aValue1(theVariableReferenceVector[0
-                         ].getVariable()->getValue());
-      Real aValue2(theVariableReferenceVector[1
-                         ].getVariable()->getValue());
+      Real aValue1(theVariableReferenceVector[0].getVariable()->getValue());
+      Real aValue2(theVariableReferenceVector[1].getVariable()->getValue());
       if(aValue1 > 0.0 && aValue2 > 0.0)
         {
           return p*aValue1*aValue2;
@@ -153,60 +129,13 @@ protected:
           return 0.0;
         }
     }
-  Real getMinValue_SecondOrder_TwoSubstrates() 
-    {
-      Real aFirstValue(theVariableReferenceVector[0
-                             ].getVariable()->getValue());
-      Real aSecondValue(theVariableReferenceVector[1
-                              ].getVariable()->getValue());
-      return fmin(aFirstValue, aSecondValue);
-    }
-  Real getPD_SecondOrder_TwoSubstrates(Variable* aVariable) 
-    {
-      if(theVariableReferenceVector[0].getVariable() == aVariable)
-        {
-          return p*theVariableReferenceVector[1].getVariable()->getValue();
-        }
-      else if(theVariableReferenceVector[1].getVariable() == aVariable)
-        {
-          return p*theVariableReferenceVector[0].getVariable()->getValue();
-        }
-      else
-        {
-          return 0.0;
-        }
-    }
   Real getPropensity_SecondOrder_OneSubstrate() 
     {
-      Real aValue(theVariableReferenceVector[0
-                        ].getVariable()->getValue());
-      if (aValue > 1.0) // there must be two or more molecules
+      Real aValue(theVariableReferenceVector[0].getVariable()->getValue());
+      //There must be two or more molecules:
+      if(aValue > 1.0)
         {
-          return p*0.5*aValue*(aValue-1.0);
-        }
-      else
-        {
-          return 0.0;
-        }
-    }
-  Real getMinValue_SecondOrder_OneSubstrate() 
-    {
-      return theVariableReferenceVector[0].getVariable()->getValue()*0.5;
-    }
-  Real getPD_SecondOrder_OneSubstrate(Variable* aVariable) 
-    {
-      if(theVariableReferenceVector[0].getVariable() == aVariable)
-        {
-          Real aValue(theVariableReferenceVector[0
-                            ].getVariable()->getValue());
-          if(aValue > 0.0) // there must be at least one molecule
-            {
-              return p*0.5*(2.0*aValue-1.0);
-            }
-          else
-            {
-              return 0.0;
-            }
+          return p*aValue*(aValue-1.0);
         }
       else
         {
@@ -215,8 +144,6 @@ protected:
     }
 protected:
   RealMethodProxy theGetPropensityMethodPtr;  
-  RealMethodProxy theGetMinValueMethodPtr;
-  PDMethodPtr     theGetPDMethodPtr;
 };
 
 inline void SpatiocyteNextReactionProcess::calculateOrder()
@@ -227,7 +154,7 @@ inline void SpatiocyteNextReactionProcess::calculateOrder()
       i != theVariableReferenceVector.end(); ++i)
     {
       VariableReference aVariableReference(*i);
-      Integer aCoefficient( aVariableReference.getCoefficient() );
+      Integer aCoefficient(aVariableReference.getCoefficient());
       // here assume aCoefficient != 0
       if(aCoefficient == 0)
         {
@@ -236,58 +163,39 @@ inline void SpatiocyteNextReactionProcess::calculateOrder()
                           "]: Zero stoichiometry is not allowed.");
         }
     }
-  // set theGetPropensityMethodPtr and theGetMinValueMethodPtr
-  if(getOrder() == 0)   // no substrate
+  // set theGetPropensityMethodPtr
+  if(getOrder() == 0) // no substrate
     {
-      theGetPropensityMethodPtr =
-        RealMethodProxy::create<&SpatiocyteNextReactionProcess::getZero>();
-      theGetMinValueMethodPtr =
-        RealMethodProxy::create<&SpatiocyteNextReactionProcess::getZero>();
-      theGetPDMethodPtr = &SpatiocyteNextReactionProcess::getPD_Zero;
+      theGetPropensityMethodPtr = RealMethodProxy::create<
+        &SpatiocyteNextReactionProcess::getPropensity_ZerothOrder>();
     }
   else if(getOrder() == 1)   // one substrate, first order.
     {
-      theGetPropensityMethodPtr =
-        RealMethodProxy::create<
+      theGetPropensityMethodPtr = RealMethodProxy::create<
         &SpatiocyteNextReactionProcess::getPropensity_FirstOrder>();
-      theGetMinValueMethodPtr =
-        RealMethodProxy::create<
-        &SpatiocyteNextReactionProcess::getMinValue_FirstOrder>();
-      theGetPDMethodPtr = &SpatiocyteNextReactionProcess::getPD_FirstOrder;
     }
   else if(getOrder() == 2)
-    {
-      if(getZeroVariableReferenceOffset() == 2) // 2 substrates, 2nd order
+    { 
+      //Two unique substrate species, second order
+      //A + B -> products:
+      if(getZeroVariableReferenceOffset() == 2)
         {  
           theGetPropensityMethodPtr = RealMethodProxy::
             create<&SpatiocyteNextReactionProcess::
             getPropensity_SecondOrder_TwoSubstrates>();
-          theGetMinValueMethodPtr = RealMethodProxy::create<
-            &SpatiocyteNextReactionProcess::
-            getMinValue_SecondOrder_TwoSubstrates>();
-          theGetPDMethodPtr = 
-            &SpatiocyteNextReactionProcess::getPD_SecondOrder_TwoSubstrates;
         }
-      else // one substrate, second order (coeff == -2)
+      //One substrate species, second order
+      //A + A -> products:
+      else
         {
           theGetPropensityMethodPtr = RealMethodProxy::
             create<&SpatiocyteNextReactionProcess::
             getPropensity_SecondOrder_OneSubstrate>();
-          theGetMinValueMethodPtr = RealMethodProxy::create<
-            &SpatiocyteNextReactionProcess::
-            getMinValue_SecondOrder_OneSubstrate>();
-          theGetPDMethodPtr =
-            &SpatiocyteNextReactionProcess::getPD_SecondOrder_OneSubstrate;
         }
     }
   else
     {
-      //FIXME: generic functions should come here.
-      theGetPropensityMethodPtr =
-        RealMethodProxy::create<&SpatiocyteNextReactionProcess::getZero>();
-      theGetPropensityMethodPtr =
-        RealMethodProxy::create<&SpatiocyteNextReactionProcess::getZero>();
-      theGetPDMethodPtr = &SpatiocyteNextReactionProcess::getPD_Zero;
+      NEVER_GET_HERE;
     }
 }
 

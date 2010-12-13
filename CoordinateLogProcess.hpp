@@ -85,22 +85,30 @@ protected:
     {
       Point aCenterPoint(theSpatiocyteStepper->getCenterPoint());
       theLogFile
-        << "startCoord:" << theSpatiocyteStepper->getStartCoord()
-        << " rowSize:" << theSpatiocyteStepper->getRowSize() 
-        << " layerSize:" << theSpatiocyteStepper->getLayerSize()
-        << " colSize:" << theSpatiocyteStepper->getColSize()
-        << " width:" << aCenterPoint.z*2
-        << " height:" << aCenterPoint.y*2
-        << " length:" <<  aCenterPoint.x*2
-        << " voxelRadius:" << theSpatiocyteStepper->getVoxelRadius()
-        << " moleculeSize:" << theMoleculeSize << endl;
+        << "interval:" << theStepInterval
+        << ",startCoord:" << theSpatiocyteStepper->getStartCoord()
+        << ",rowSize:" << theSpatiocyteStepper->getRowSize() 
+        << ",layerSize:" << theSpatiocyteStepper->getLayerSize()
+        << ",colSize:" << theSpatiocyteStepper->getColSize()
+        << ",width:" << aCenterPoint.z*2
+        << ",height:" << aCenterPoint.y*2
+        << ",length:" <<  aCenterPoint.x*2
+        << ",voxelRadius:" << theSpatiocyteStepper->getVoxelRadius();
     }
   void logMolecules(int anIndex)
     {
       Species* aSpecies(theProcessSpecies[anIndex]);
-      for(unsigned int i(0); i != aSpecies->size(); ++i)
+      if(aSpecies->size())
         {
-          theLogFile << ", " << aSpecies->getCoord(i);
+          theLogFile << aSpecies->getCoord(0);
+        }
+      else
+        {
+          theLogFile << endl;
+        }
+      for(unsigned int i(1); i < aSpecies->size(); ++i)
+        {
+          theLogFile << "," << aSpecies->getCoord(i);
         }
     }
 private:

@@ -51,6 +51,10 @@ public:
   virtual ~PolymerizationParameterProcess() {}
   virtual void initialize()
     {
+      if(isInitialized)
+        {
+          return;
+        }
       SpatiocyteProcess::initialize();
       for(vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
