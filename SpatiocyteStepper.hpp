@@ -84,6 +84,7 @@ public:
   double getNormalizedVoxelRadius();
   Voxel* point2voxel(Point);
 private:
+  void setReactiveCompartments(Compartment*);
   void printProcessParameters();
   void checkSurfaceCompartment();
   void shuffleAdjoiningVoxels();
@@ -119,6 +120,7 @@ private:
   void coord2global(unsigned int, unsigned int*, unsigned int*, unsigned int*);
   void replaceVoxel(Voxel*, Voxel*);
   void replaceUniVoxel(Voxel*, Voxel*);
+  bool isReactiveCompartment(Compartment*, Compartment*);
   bool isInsideCoord(unsigned int, Compartment*, double);
   bool isPeriodicEdgeCoord(unsigned int, Compartment*);
   bool isSurfaceVoxel(Voxel*, Compartment*);

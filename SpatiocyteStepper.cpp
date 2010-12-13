@@ -660,6 +660,14 @@ void SpatiocyteStepper::registerCompartmentSpecies(Compartment* aCompartment)
       Variable* aVariable(i->second);
       if(aVariable->getID() == "LIPID" || aVariable->getID() == "VACANT")
         {
+          if(aVariable->getValue())
+            {
+              aCompartment->isEnclosed = true;
+            }
+          else
+            {
+              aCompartment->isEnclosed = false;
+            }
           //Set the number of lipid/vacant molecules to be always 0 because
           //when we populate lattice we shouldn't create more lipid/vacant
           //molecules than the ones already created for the compartment:
@@ -1591,6 +1599,7 @@ void SpatiocyteStepper::setSurfaceVoxelProperties()
     {
       if((*i)->isSurface)
         {
+          setReactiveCompartments(*i);
           removePeriodicEdgeVoxels(*i);
           for(vector<unsigned int>::iterator j((*i)->coords.begin());
               j != (*i)->coords.end(); ++j)
@@ -1649,7 +1658,8 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(Voxel* aVoxel,
   for(vector<Voxel*>::iterator l(adjoiningCopy.begin());
       l != adjoiningCopy.end(); ++l)
     {
-      if((*l)->id == surfaceID && (*l) != aVoxel)
+      if((*l) != aVoxel && ((*l)->id == surfaceID || 
+                isReactiveCompartment(aCompartment, id2compartment((*l)->id))))
         {
           (*forward) = (*l);
           ++forward;
@@ -1713,6 +1723,35 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(Voxel* aVoxel,
       aVoxel->surfaceVoxels->push_back(*i);
     }
   aVoxel->adjoiningSize = forward-aVoxel->adjoiningVoxels;
+}
+
+void SpatiocyteStepper::setReactiveCompartments(Compartment* aCompartment)
+{
+  FOR_ALL(System::Variables, aCompartment->system->getVariables())
+    {
+      Variable* aVariable(i->second);
+      if(aVariable->getID() == "REACTIVE")
+        {
+          String aStringID(aVariable->getName()); 
+          aStringID = "System:" + aStringID;
+          FullID aFullID(aStringID);
+          System* aSystem(static_cast<System*>(getModel()->getEntity(aFullID)));
+          aCompartment->reactiveComps.push_back(system2compartment(aSystem));
+        }
+    }
+}
+
+bool SpatiocyteStepper::isReactiveCompartment(Compartment* sourceCompartment,
+                                              Compartment* targetCompartment)
+{
+  for(unsigned int i(0); i != sourceCompartment->reactiveComps.size(); ++i) 
+    {
+      if(sourceCompartment->reactiveComps[i] == targetCompartment)
+        {
+          return true;
+        }
+    }
+  return false;
 }
 
 Species* SpatiocyteStepper::id2species(unsigned short id)
@@ -1819,7 +1858,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel,
 
 bool SpatiocyteStepper::isSurfaceVoxel(Voxel* aVoxel, Compartment* aCompartment)
 {
-  if(isInsideCoord(aVoxel->coord, aCompartment, 2))
+  if(!aCompartment->isEnclosed && isInsideCoord(aVoxel->coord, aCompartment, 4))
     {
       return false;
     }
@@ -1839,6 +1878,12 @@ bool SpatiocyteStepper::isSurfaceVoxel(Voxel* aVoxel, Compartment* aCompartment)
       for(unsigned int i(0); i != ADJOINING_VOXEL_SIZE; ++i)
         {
           if(!isInsideCoord(aVoxel->adjoiningVoxels[i]->coord, aCompartment, 0))
+            {
+              return true;
+            }
+          if(aCompartment->isEnclosed && (
+             aVoxel->adjoiningVoxels[i]->id == theNullID || 
+             aVoxel->adjoiningVoxels[i] == aVoxel))
             {
               return true;
             }

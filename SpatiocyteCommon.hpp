@@ -116,6 +116,7 @@ struct Point
 
 struct Compartment
 {
+  bool isEnclosed;
   bool isSurface;
   unsigned short vacantID; 
   int shape;
@@ -128,11 +129,12 @@ struct Compartment
   double actualArea;
   System* system;
   Compartment* surfaceSub;
-  Point westPoint;
-  Point eastPoint;
   Point centerPoint;
-  vector<Compartment*> immediateSubs;
+  Point eastPoint;
+  Point westPoint;
   vector<Compartment*> allSubs;
+  vector<Compartment*> immediateSubs;
+  vector<Compartment*> reactiveComps;
   vector<Species*> species;
   vector<unsigned int> coords;
 };
