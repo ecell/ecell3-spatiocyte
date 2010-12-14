@@ -60,9 +60,12 @@ typedef ProcessPriorityQueue::ID ProcessID;
 #define CYLINDRICAL   5
 
 //CUBIC shaped compartment surface boundary conditions:
-#define REFLECTIVE 0 
-#define PERIODIC   1
-#define UNIPERIODIC   2
+#define REFLECTIVE     0 
+#define PERIODIC       1
+#define UNIPERIODIC    2
+#define REMOVE_UPPER   3
+#define REMOVE_LOWER   4
+#define REMOVE_BOTH    5
 
 //Number of neighbor voxels for a voxel in the hexagonal close-packed (HCP) lattice: 
 #define ADJOINING_VOXEL_SIZE 12

@@ -1065,6 +1065,38 @@ bool SpatiocyteStepper::isPeriodicEdgeCoord(unsigned int aCoord,
   return false;
 }
 
+bool SpatiocyteStepper::isRemovableEdgeCoord(unsigned int aCoord,
+                                             Compartment* aCompartment)
+{
+  unsigned int aRow;
+  unsigned int aLayer;
+  unsigned int aCol;
+  coord2global(aCoord, &aRow, &aLayer, &aCol);
+  System* aSuperSystem(aCompartment->system->getSuperSystem()); 
+  if((aSuperSystem->getVariable("SURFACEZ")->getValue() == REMOVE_UPPER &&
+      aRow == theRowSize-2) ||
+     (aSuperSystem->getVariable("SURFACEZ")->getValue() == REMOVE_LOWER &&
+      aRow == 1) ||
+     (aSuperSystem->getVariable("SURFACEZ")->getValue() == REMOVE_BOTH &&
+      (aRow == 1 || aRow == theRowSize-2)) ||
+     (aSuperSystem->getVariable("SURFACEY")->getValue() == REMOVE_UPPER &&
+      aLayer == theLayerSize-2) ||
+     (aSuperSystem->getVariable("SURFACEY")->getValue() == REMOVE_LOWER &&
+      aLayer == 1) ||
+     (aSuperSystem->getVariable("SURFACEY")->getValue() == REMOVE_BOTH &&
+      (aLayer == 1 || aLayer == theLayerSize-2)) ||
+     (aSuperSystem->getVariable("SURFACEX")->getValue() == REMOVE_UPPER &&
+      aCol == theColSize-2) ||
+     (aSuperSystem->getVariable("SURFACEX")->getValue() == REMOVE_LOWER &&
+      aCol == 1) ||
+     (aSuperSystem->getVariable("SURFACEX")->getValue() == REMOVE_BOTH &&
+      (aCol == 1 || aCol == theColSize-2)))
+    {
+      return true;
+    }
+  return false;
+}
+
 void SpatiocyteStepper::concatenateVoxel(Voxel* aVoxel,
                                          unsigned int aRow,
                                          unsigned int aLayer,
@@ -1424,6 +1456,7 @@ void SpatiocyteStepper::concatenateRows(Voxel* aVoxel,
   anAdjoiningVoxel->adjoiningVoxels[SOUTH] = aVoxel;
 }
 
+
 void SpatiocyteStepper::concatenatePeriodicSurfaces()
 {
   for(unsigned int i(0); i<=theRowSize*theLayerSize*theColSize-theRowSize;
@@ -1601,6 +1634,7 @@ void SpatiocyteStepper::setSurfaceVoxelProperties()
         {
           setReactiveCompartments(*i);
           removePeriodicEdgeVoxels(*i);
+          removeSurfaces(*i);
           for(vector<unsigned int>::iterator j((*i)->coords.begin());
               j != (*i)->coords.end(); ++j)
             {
@@ -1632,6 +1666,25 @@ void SpatiocyteStepper::removePeriodicEdgeVoxels(Compartment* aCompartment)
         }
       aCompartment->coords = coords;
     }
+}
+
+void SpatiocyteStepper::removeSurfaces(Compartment* aCompartment)
+{ 
+  vector<unsigned int> coords;
+  for(vector<unsigned int>::iterator j(aCompartment->coords.begin());
+      j != aCompartment->coords.end(); ++j)
+    {
+      Voxel* aVoxel(&theLattice[*j]);
+      if(isRemovableEdgeCoord(aVoxel->coord, aCompartment))
+        {
+          aVoxel->id = theNullID;
+        }
+      else
+        {
+          coords.push_back(*j);
+        }
+    }
+  aCompartment->coords = coords;
 }
 
 void SpatiocyteStepper::optimizeSurfaceVoxel(Voxel* aVoxel,
