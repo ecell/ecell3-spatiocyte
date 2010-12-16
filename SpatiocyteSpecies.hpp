@@ -112,10 +112,10 @@ public:
         {
           thePopulateProcess->populateGaussian(this);
         }
-      else
+      else if(theMoleculeSize)
         {
           cout << "Species:" << theVariable->getFullID().asString() <<
-            " not populated." << endl;
+            " not MoleculePopulated." << endl;
         }
     }
   void populateCompartmentUniform(unsigned int voxelIDs[], unsigned int* aCount)
@@ -124,10 +124,10 @@ public:
         {
           thePopulateProcess->populateUniformDense(this, voxelIDs, aCount);
         }
-      else
+      else if(theMoleculeSize)
         {
           cout << "Species:" << theVariable->getFullID().asString() <<
-            " not populated." << endl;
+            " not MoleculePopulated." << endl;
         }
     }
   void populateCompartmentUniformSparse()
@@ -136,10 +136,10 @@ public:
         {
           thePopulateProcess->populateUniformSparse(this);
         }
-      else
+      else if(theMoleculeSize)
         {
           cout << "Species:" << theVariable->getFullID().asString() <<
-            " not populated." << endl;
+            " not MoleculePopulated." << endl;
         }
     }
   Variable* getVariable()

@@ -47,6 +47,10 @@ public:
       PROPERTYSLOT_GET_NO_LOAD_SAVE(Real, Propensity);
     }
   SpatiocyteNextReactionProcess():
+    initSizeA(0),
+    initSizeB(0),
+    initSizeC(0),
+    initSizeD(0),
     theGetPropensityMethodPtr(RealMethodProxy::create<
             &SpatiocyteNextReactionProcess::getPropensity_ZerothOrder>()) {}
   virtual ~SpatiocyteNextReactionProcess() {}
@@ -64,6 +68,42 @@ public:
                           "[" + getFullID().asString() + 
                           "]: Only zeroth, first or second order scheme " + 
                           "is allowed.");
+        }
+      if(variableA)
+        {
+          initSizeA = variableA->getValue();
+        }
+      if(variableB)
+        {
+          initSizeB = variableB->getValue();
+        }
+      if(variableC)
+        {
+          initSizeC = variableC->getValue();
+        }
+      if(variableD)
+        {
+          initSizeD = variableD->getValue();
+        }
+    }
+  virtual void initializeSecond()
+    {
+      ReactionProcess::initializeSecond();
+      if(variableA)
+        {
+          variableA->setValue(initSizeA);
+        }
+      if(variableB)
+        {
+          variableB->setValue(initSizeB);
+        }
+      if(variableC)
+        {
+          variableC->setValue(initSizeC);
+        }
+      if(variableD)
+        {
+          variableD->setValue(initSizeD);
         }
     }
   GET_METHOD(Real, Propensity)
@@ -144,6 +184,10 @@ protected:
     }
 protected:
   RealMethodProxy theGetPropensityMethodPtr;  
+  int initSizeA;
+  int initSizeB;
+  int initSizeC;
+  int initSizeD;
 };
 
 inline void SpatiocyteNextReactionProcess::calculateOrder()
