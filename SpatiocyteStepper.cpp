@@ -925,7 +925,7 @@ void SpatiocyteStepper::readjustSurfaceBoundarySizes()
   //Boundary type can be either PERIODIC or REFLECTIVE.
   //Increase the size of [row,layer,col] by one voxel and make them odd sized
   //if the system uses periodic boundary conditions.
-  if(getModel()->getRootSystem()->getVariable("SURFACEX")->getValue() ==
+  if(getModel()->getRootSystem()->getVariable("PLANEYZ")->getValue() ==
      PERIODIC)
     { 
       if(theColSize%2 != 1)
@@ -941,7 +941,7 @@ void SpatiocyteStepper::readjustSurfaceBoundarySizes()
     {
       theColSize += 2;
     }
-  if(getModel()->getRootSystem()->getVariable("SURFACEY")->getValue() ==
+  if(getModel()->getRootSystem()->getVariable("PLANEXZ")->getValue() ==
      PERIODIC)
     {
       if(theLayerSize%2 != 1)
@@ -957,7 +957,7 @@ void SpatiocyteStepper::readjustSurfaceBoundarySizes()
     {
       theLayerSize += 2;
     }
-  if(getModel()->getRootSystem()->getVariable("SURFACEZ")->getValue() ==
+  if(getModel()->getRootSystem()->getVariable("PLANEXY")->getValue() ==
      PERIODIC)
     {
       if(theRowSize%2 != 1)
@@ -1073,23 +1073,23 @@ bool SpatiocyteStepper::isRemovableEdgeCoord(unsigned int aCoord,
   unsigned int aCol;
   coord2global(aCoord, &aRow, &aLayer, &aCol);
   System* aSuperSystem(aCompartment->system->getSuperSystem()); 
-  if((aSuperSystem->getVariable("SURFACEZ")->getValue() == REMOVE_UPPER &&
+  if((aSuperSystem->getVariable("PLANEXY")->getValue() == REMOVE_UPPER &&
       aRow == theRowSize-2) ||
-     (aSuperSystem->getVariable("SURFACEZ")->getValue() == REMOVE_LOWER &&
+     (aSuperSystem->getVariable("PLANEXY")->getValue() == REMOVE_LOWER &&
       aRow == 1) ||
-     (aSuperSystem->getVariable("SURFACEZ")->getValue() == REMOVE_BOTH &&
+     (aSuperSystem->getVariable("PLANEXY")->getValue() == REMOVE_BOTH &&
       (aRow == 1 || aRow == theRowSize-2)) ||
-     (aSuperSystem->getVariable("SURFACEY")->getValue() == REMOVE_UPPER &&
+     (aSuperSystem->getVariable("PLANEXZ")->getValue() == REMOVE_UPPER &&
       aLayer == theLayerSize-2) ||
-     (aSuperSystem->getVariable("SURFACEY")->getValue() == REMOVE_LOWER &&
+     (aSuperSystem->getVariable("PLANEXZ")->getValue() == REMOVE_LOWER &&
       aLayer == 1) ||
-     (aSuperSystem->getVariable("SURFACEY")->getValue() == REMOVE_BOTH &&
+     (aSuperSystem->getVariable("PLANEXZ")->getValue() == REMOVE_BOTH &&
       (aLayer == 1 || aLayer == theLayerSize-2)) ||
-     (aSuperSystem->getVariable("SURFACEX")->getValue() == REMOVE_UPPER &&
+     (aSuperSystem->getVariable("PLANEYZ")->getValue() == REMOVE_UPPER &&
       aCol == theColSize-2) ||
-     (aSuperSystem->getVariable("SURFACEX")->getValue() == REMOVE_LOWER &&
+     (aSuperSystem->getVariable("PLANEYZ")->getValue() == REMOVE_LOWER &&
       aCol == 1) ||
-     (aSuperSystem->getVariable("SURFACEX")->getValue() == REMOVE_BOTH &&
+     (aSuperSystem->getVariable("PLANEYZ")->getValue() == REMOVE_BOTH &&
       (aCol == 1 || aCol == theColSize-2)))
     {
       return true;
@@ -1165,32 +1165,32 @@ void SpatiocyteStepper::setCompartmentProperties(Compartment* aCompartment)
       aCompartment->lengthZ = aSystem->getVariable("LENGTHZ")->getValue();
       aCompartment->specVolume = aCompartment->lengthX*aCompartment->lengthY*
         aCompartment->lengthZ;
-      if(aSystem->getVariable("SURFACEZ")->getValue() ==
+      if(aSystem->getVariable("PLANEXY")->getValue() ==
          UNIPERIODIC)
         { 
           anArea += aCompartment->lengthY*aCompartment->lengthX; 
         }
-      else if(aSystem->getVariable("SURFACEZ")->getValue()
+      else if(aSystem->getVariable("PLANEXY")->getValue()
               != PERIODIC)
         { 
           anArea += 2*aCompartment->lengthY*aCompartment->lengthX; 
         }
-      if(aSystem->getVariable("SURFACEX")->getValue() ==
+      if(aSystem->getVariable("PLANEYZ")->getValue() ==
          UNIPERIODIC)
         { 
           anArea += aCompartment->lengthY*aCompartment->lengthZ; 
         }
-      else if(aSystem->getVariable("SURFACEX")->getValue()
+      else if(aSystem->getVariable("PLANEYZ")->getValue()
               != PERIODIC)
         { 
           anArea += 2*aCompartment->lengthY*aCompartment->lengthZ; 
         }
-      if(aSystem->getVariable("SURFACEY")->getValue() ==
+      if(aSystem->getVariable("PLANEXZ")->getValue() ==
          UNIPERIODIC)
         { 
           anArea += aCompartment->lengthX*aCompartment->lengthZ; 
         }
-      else if(aSystem->getVariable("SURFACEY")->getValue()
+      else if(aSystem->getVariable("PLANEXZ")->getValue()
               != PERIODIC)
         { 
           anArea += 2*aCompartment->lengthX*aCompartment->lengthZ; 
@@ -1471,12 +1471,12 @@ void SpatiocyteStepper::concatenatePeriodicSurfaces()
                         coord2row(j)+
                         theRowSize*coord2layer(i)+
                         theRowSize*theLayerSize*coord2col(i)]); 
-      if(getModel()->getRootSystem()->getVariable("SURFACEZ")->getValue() ==
+      if(getModel()->getRootSystem()->getVariable("PLANEXY")->getValue() ==
          UNIPERIODIC)
         { 
           replaceUniVoxel(aSrcVoxel, aDestVoxel);
         }
-      else if(getModel()->getRootSystem()->getVariable("SURFACEZ")->getValue()
+      else if(getModel()->getRootSystem()->getVariable("PLANEXY")->getValue()
               == PERIODIC)
         { 
           replaceVoxel(aSrcVoxel, aDestVoxel);
@@ -1501,12 +1501,12 @@ void SpatiocyteStepper::concatenatePeriodicSurfaces()
                         coord2row(i)+
                         theRowSize*coord2layer(j)+ 
                         theRowSize*theLayerSize*coord2col(i)]); 
-      if(getModel()->getRootSystem()->getVariable("SURFACEY")->getValue() ==
+      if(getModel()->getRootSystem()->getVariable("PLANEXZ")->getValue() ==
          UNIPERIODIC)
         {
           replaceUniVoxel(aSrcVoxel, aDestVoxel);
         }
-      else if(getModel()->getRootSystem()->getVariable("SURFACEY")->getValue()
+      else if(getModel()->getRootSystem()->getVariable("PLANEXZ")->getValue()
               == PERIODIC)
         {
           replaceVoxel(aSrcVoxel, aDestVoxel);
@@ -1532,12 +1532,12 @@ void SpatiocyteStepper::concatenatePeriodicSurfaces()
                         coord2row(i)+
                         theRowSize*coord2layer(i)+ 
                         theRowSize*theLayerSize*(theColSize-1)]); 
-      if(getModel()->getRootSystem()->getVariable("SURFACEX")->getValue() ==
+      if(getModel()->getRootSystem()->getVariable("PLANEYZ")->getValue() ==
          UNIPERIODIC)
         {
           replaceUniVoxel(aSrcVoxel, aDestVoxel);
         }
-      else if(getModel()->getRootSystem()->getVariable("SURFACEX")->getValue()
+      else if(getModel()->getRootSystem()->getVariable("PLANEYZ")->getValue()
               == PERIODIC)
         {
           replaceVoxel(aSrcVoxel, aDestVoxel);

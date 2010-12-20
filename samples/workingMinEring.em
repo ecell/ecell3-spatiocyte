@@ -19,7 +19,7 @@ System System( / )
     {
       Value     1;      # { 0: Spherical (uses SIZE) 
                         #   1: Rod (uses SIZE, LENGTHY == 2*radius)
-                        #   2: Cubic (uses SIZE, SURFACEX, SURFACEY, SURFACEZ)
+                        #   2: Cubic (uses SIZE, PLANEYZ, PLANEXZ, PLANEXY)
                         #   3: Cuboid (uses LENGTHX, LENGTHY, LENGTHZ)
                         #   4: Ellipsoid (uses LENGTHX, LENGTHY, LENGTHZ) }
     } 
@@ -47,17 +47,17 @@ System System( / )
       #               = 2.88e-18 m^3
       #               = 2.88e-15 l
     } 
-  Variable Variable( SURFACEX )
+  Variable Variable( PLANEYZ )
     {
       Value     0;               # { 0: Reflective (Impermeable) 
                                  #   1: Periodic (Permeable) }
     } 
-  Variable Variable( SURFACEY )
+  Variable Variable( PLANEXZ )
     {
       Value     0;               # { 0: Reflective (Impermeable) 
                                  #   1: Periodic (Permeable) }
     } 
-  Variable Variable( SURFACEZ )
+  Variable Variable( PLANEXY )
     {
       Value     0;               # { 0: Reflective (Impermeable) 
                                  #   1: Periodic (Permeable) }

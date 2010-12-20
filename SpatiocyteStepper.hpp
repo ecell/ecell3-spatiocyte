@@ -50,7 +50,7 @@ public:
     isInitialized(false),
     isPeriodicEdge(false),
     SearchVacant(true),
-    VoxelRadius(0.5),
+    VoxelRadius(10e-9),
     theNormalizedVoxelRadius(0.5) {}
   virtual ~SpatiocyteStepper() {}
   virtual void initialize();
