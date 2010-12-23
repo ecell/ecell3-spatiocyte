@@ -45,7 +45,7 @@ public:
       PROPERTYSLOT_SET_GET(Real, ExposureTime);
     }
   FluorescentProteinImagingProcess():
-    MeanCount(-1),
+    MeanCount(0),
     theLastExposedTime(0) {}
   virtual ~FluorescentProteinImagingProcess() {}
   SIMPLE_SET_GET_METHOD(Integer, MeanCount);
@@ -115,7 +115,7 @@ public:
           theLattice[i].resize(theLatticeSize);
         }
       resetLattice();
-      if(MeanCount != -1)
+      if(MeanCount > 0)
         {
           theStepInterval = ExposureTime/MeanCount;
         }
