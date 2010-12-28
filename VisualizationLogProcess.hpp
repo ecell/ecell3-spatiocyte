@@ -52,7 +52,7 @@ public:
     Polymer(1),
     theLogMarker(UINT_MAX),
     theMeanCount(0),
-    LogInterval(-1),
+    LogInterval(0),
     FileName("visualLog0.dat") {}
   virtual ~VisualizationLogProcess() {}
   SIMPLE_SET_GET_METHOD(Integer, Polymer);
@@ -74,7 +74,7 @@ public:
 
   virtual void initializeFourth()
     {
-      if(LogInterval != -1)
+      if(LogInterval > 0)
         {
           theStepInterval = LogInterval;
         }
@@ -101,7 +101,7 @@ public:
   virtual void fire()
     {
       logSpecies();
-      if(LogInterval != -1)
+      if(LogInterval > 0)
         {
           theTime += LogInterval;
           thePriorityQueue->moveTop();

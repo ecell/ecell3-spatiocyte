@@ -73,9 +73,9 @@ public:
     Displacement(0),
     InContact(0),
     RebindTime(0),
-    SaveInterval(-1),
+    SaveInterval(0),
     Survival(0),
-    LogInterval(-1) {}
+    LogInterval(0) {}
   virtual ~IteratingLogProcess() {}
   virtual void initializeSecond()
     {
@@ -109,7 +109,7 @@ public:
               theStepInterval = reactantPair->getDiffusionInterval();
             }
         }
-      if(LogInterval != -1)
+      if(LogInterval > 0)
         {
           theStepInterval = LogInterval;
         }
@@ -125,10 +125,6 @@ public:
       theLogFile.open(FileName.c_str(), ios::trunc);
       theTotalIterations = Iterations;
       theLogValues.resize(theProcessSpecies.size());
-      if(SaveInterval == -1)
-        {
-          SaveInterval = Iterations/3;
-        }
       for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
         {
           if(RebindTime)
@@ -178,7 +174,8 @@ public:
           theSpatiocyteStepper->reset(Iterations);
           --Iterations;
           cout << "Iterations left:" << Iterations << endl;
-          if(SaveInterval == 0 || Iterations%SaveInterval == 0)
+          if(SaveInterval > 0 && 
+             Iterations%int(rint(theTotalIterations/SaveInterval)) == 0)
             {
               string aFileName(FileName.c_str());
               aFileName = aFileName + ".back";
