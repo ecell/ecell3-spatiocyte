@@ -46,6 +46,7 @@ public:
     }
   FluorescentProteinImagingProcess():
     MeanCount(0),
+    ExposureTime(0.5),
     theLastExposedTime(0) {}
   virtual ~FluorescentProteinImagingProcess() {}
   SIMPLE_SET_GET_METHOD(Integer, MeanCount);
@@ -135,7 +136,7 @@ public:
                   theStepInterval = reactantPair->getDiffusionInterval();
                 }
             }
-          MeanCount = (int)ceil(ExposureTime/theStepInterval);
+          MeanCount = (int)rint(ExposureTime/theStepInterval);
         }
       theMeanCount = (unsigned int)MeanCount;
       theTime = theStepInterval;

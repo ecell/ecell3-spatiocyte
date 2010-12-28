@@ -175,7 +175,7 @@ public:
           --Iterations;
           cout << "Iterations left:" << Iterations << endl;
           if(SaveInterval > 0 && 
-             Iterations%int(rint(theTotalIterations/SaveInterval)) == 0)
+             Iterations%(int)rint(theTotalIterations/SaveInterval) == 0)
             {
               string aFileName(FileName.c_str());
               aFileName = aFileName + ".back";
