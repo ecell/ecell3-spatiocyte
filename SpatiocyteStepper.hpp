@@ -84,8 +84,7 @@ public:
   double getNormalizedVoxelRadius();
   Voxel* point2voxel(Point);
 private:
-  void removeSurfaces(Compartment*);
-  void setReactiveCompartments(Compartment*);
+  void setCompartmentsCenterPoint();
   void printProcessParameters();
   void checkSurfaceCompartment();
   void shuffleAdjoiningVoxels();
@@ -113,6 +112,9 @@ private:
   void registerCompartmentSpecies(Compartment*);
   void setCompartmentProperties(Compartment*);
   void removePeriodicEdgeVoxels(Compartment*);
+  void removeSurfaces(Compartment*);
+  void setReactiveCompartments(Compartment*);
+  void setCompartmentCenterPoint(Compartment*);
   void populateCompartmentUniformly(Compartment*, unsigned int);
   void concatenateVoxel(Voxel*, unsigned int, unsigned int, unsigned int);
   void concatenateLayers(Voxel*, unsigned int, unsigned int, unsigned int);
@@ -127,10 +129,12 @@ private:
   bool isPeriodicEdgeCoord(unsigned int, Compartment*);
   bool isSurfaceVoxel(Voxel*, Compartment*);
   bool compartmentalizeVoxel(Voxel*, Compartment*);
+  double getCuboidSpecArea(Compartment*);
   unsigned int coord2row(unsigned int);
   unsigned int coord2col(unsigned int);
   unsigned int coord2layer(unsigned int);
   Compartment* registerCompartment(System*, vector<Compartment*>*);
+  Variable* getVariable(System*, String const&);
 private:
   bool isInitialized;
   bool isPeriodicEdge;

@@ -123,9 +123,15 @@ struct Compartment
   bool isSurface;
   unsigned short vacantID; 
   int shape;
+  int xyPlane;
+  int xzPlane;
+  int yzPlane;
   double lengthX;
   double lengthY;
   double lengthZ;
+  double originX;
+  double originY;
+  double originZ;
   double specVolume;
   double specArea;
   double actualVolume;

@@ -55,15 +55,16 @@ void SpatiocyteStepper::initialize()
                       ": at least one Process must be defined in this" +
                       " Stepper.");
     } 
-  cout << "2. setting up lattice properties..." << endl;
-  setLatticeProperties(); 
   //We need a compartment tree to assign the voxels to each compartment
   //and get the available number of vacant voxels. The compartmentalized
   //vacant voxels are needed to randomly place molecules according to the
   //compartment:
-  cout << "3. creating compartments..." << endl;
+  cout << "2. creating compartments..." << endl;
   registerCompartments();
   setCompartmentsProperties();
+  cout << "3. setting up lattice properties..." << endl;
+  setLatticeProperties(); 
+  setCompartmentsCenterPoint();
   //All species have been created at this point, we initialize them now:
   cout << "4. initializing species..." << endl;
   initSpecies();
@@ -611,17 +612,74 @@ void SpatiocyteStepper::registerCompartments()
     }
 }
 
+//allSubs contains all the subCompartments (child, grand child, great grand
+//child, etc). Used to calculate the total number of compartment voxels.
 Compartment* SpatiocyteStepper::registerCompartment(System* aSystem,
                                             vector<Compartment*>* allSubs)
 { 
   //We execute this function to register the System, and its subsystems
   //recursively.
   Compartment* aCompartment(new Compartment);
+  aCompartment->lengthX = 0;
+  aCompartment->lengthY = 0;
+  aCompartment->lengthZ = 0;
+  aCompartment->originX = 0;
+  aCompartment->originY = 0;
+  aCompartment->originZ = 0;
+  aCompartment->xyPlane = 0;
+  aCompartment->xzPlane = 0;
+  aCompartment->yzPlane = 0;
+  aCompartment->specVolume = 0;
   aCompartment->system = aSystem;
   aCompartment->surfaceSub = NULL;
-  if(aSystem->getVariable("TYPE")->getValue() != SURFACE)
+  //TYPE is required for all compartments
+  if(!getVariable(aSystem, "TYPE"))
+    { 
+      THROW_EXCEPTION(NotFound, "Property TYPE of the compartment "
+                      + aSystem->getFullID().asString() + " not defined." );
+    }
+  if(aSystem->getVariable("TYPE")->getValue() == SURFACE)
+    {
+      aCompartment->isSurface = true;
+    }
+  else
     {
       aCompartment->isSurface = false;
+      //SHAPE is required for volume compartments 
+      if(!getVariable(aSystem, "SHAPE"))
+        { 
+          THROW_EXCEPTION(NotFound, "Property SHAPE of the volume compartment "
+                          + aSystem->getFullID().asString() + " not defined." );
+        }
+      aCompartment->shape = aSystem->getVariable("SHAPE")->getValue();
+      if(getVariable(aSystem, "LENGTHX"))
+        {
+          aCompartment->lengthX = aSystem->getVariable("LENGTHX")->getValue();
+        }
+      if(getVariable(aSystem, "LENGTHY"))
+        {
+          aCompartment->lengthY = aSystem->getVariable("LENGTHY")->getValue();
+        }
+      if(getVariable(aSystem, "LENGTHZ"))
+        {
+          aCompartment->lengthZ = aSystem->getVariable("LENGTHZ")->getValue();
+        }
+      if(getVariable(aSystem, "XYPLANE"))
+        {
+          aCompartment->xyPlane = aSystem->getVariable("XYPLANE")->getValue();
+        }
+      if(getVariable(aSystem, "XZPLANE"))
+        {
+          aCompartment->xzPlane = aSystem->getVariable("XZPLANE")->getValue();
+        }
+      if(getVariable(aSystem, "YZPLANE"))
+        {
+          aCompartment->yzPlane = aSystem->getVariable("YZPLANE")->getValue();
+        }
+      if(getVariable(aSystem, "SIZE"))
+        { 
+          aCompartment->specVolume = aSystem->getVariable("SIZE")->getValue();
+        }
     }
   registerCompartmentSpecies(aCompartment);
   //Systems contains all the subsystems of a System.
@@ -631,10 +689,16 @@ Compartment* SpatiocyteStepper::registerCompartment(System* aSystem,
       Compartment* aSubCompartment(registerCompartment(i->second, allSubs)); 
       allSubs->push_back(aSubCompartment);
       aCompartment->immediateSubs.push_back(aSubCompartment);
-      if(aSubCompartment->system->getVariable("TYPE")->getValue() ==
-         SURFACE)
+      if(aSubCompartment->isSurface)
         {
-          aSubCompartment->isSurface = true;
+          aSubCompartment->shape = aCompartment->shape;
+          aSubCompartment->specVolume = aCompartment->specVolume;
+          aSubCompartment->lengthX = aCompartment->lengthX;
+          aSubCompartment->lengthY = aCompartment->lengthY;
+          aSubCompartment->lengthZ = aCompartment->lengthZ;
+          aSubCompartment->xyPlane = aCompartment->xyPlane;
+          aSubCompartment->xzPlane = aCompartment->xzPlane;
+          aSubCompartment->yzPlane = aCompartment->yzPlane;
           aCompartment->surfaceSub = aSubCompartment;
         }
     }
@@ -644,11 +708,18 @@ Compartment* SpatiocyteStepper::registerCompartment(System* aSystem,
 
 void SpatiocyteStepper::setCompartmentsProperties()
 {
-  theCompartments[0]->centerPoint = theCenterPoint;
   for(unsigned int i(0); i != theCompartments.size(); ++i)
     {
       cout << theCompartments[i]->system->getFullID().asString() << endl;
       setCompartmentProperties(theCompartments[i]);
+    }
+}
+
+void SpatiocyteStepper::setCompartmentsCenterPoint()
+{
+  for(unsigned int i(0); i != theCompartments.size(); ++i)
+    {
+      setCompartmentCenterPoint(theCompartments[i]);
     }
 }
 
@@ -685,10 +756,10 @@ void SpatiocyteStepper::registerCompartmentSpecies(Compartment* aCompartment)
         }
       vector<Species*>::iterator j(variable2species(aVariable));
       if(j != theSpecies.end())
-        { 
+        {
           aCompartment->species.push_back(*j);
           (*j)->setCompartment(aCompartment);
-          if(aSystem->getVariable("TYPE")->getValue() == VOLUME)
+          if(!aCompartment->isSurface)
             {
               //By default all biochemical species are assumed to be
               //surface species. Here we set it as a volume species:
@@ -700,88 +771,28 @@ void SpatiocyteStepper::registerCompartmentSpecies(Compartment* aCompartment)
 
 void SpatiocyteStepper::setLatticeProperties()
 {
-  //The root system is the cell:
-  System* aRootSystem(getModel()->getRootSystem());
-  //theCellShape: the shape of the cell, either SPHERICAL, ROD, CUBIC,
-  //CUBOID or ELLIPSOID:
-  theCellShape = (unsigned int)aRootSystem->getVariable("SHAPE")->getValue();
-  double aCellLengthX(0);
-  double aCellLengthY(0);
-  double aCellLengthZ(0);
-  double aVolume;
-  double aCellRadius;
-  switch(theCellShape)
-    {
-    case SPHERICAL:
-      //Convert the value of SIZE in liters to meter^3 for the simulation
-      //volume:
-      aVolume = aRootSystem->getVariable("SIZE")->getValue()*1e-3;
-      aCellLengthX = 2*pow(3*aVolume/(4*M_PI), 1.0/3);
-      aCellLengthY = aCellLengthX;
-      aCellLengthZ = aCellLengthX;
-      break;
-    case ROD:
-      //Convert the value of SIZE in liters to meter^3 for the simulation
-      //volume:
-      aVolume = aRootSystem->getVariable("SIZE")->getValue()*1e-3;
-      //Length of the cell from one end of the pole to the other
-      //(i.e., including the radii of both hemispheres): 
-      aCellLengthY = aRootSystem->getVariable("LENGTHY")->getValue();
-      aCellRadius = aCellLengthY/2;
-      aCellLengthX = aVolume/(M_PI*aCellRadius*aCellRadius)-
-        (4*aCellRadius/3)+(2*aCellRadius);
-      aCellLengthZ = aCellLengthY;
-      break;
-    case CUBIC:
-      //Convert the value of SIZE in liters to meter^3 for the simulation
-      //volume:
-      aVolume = aRootSystem->getVariable("SIZE")->getValue()*1e-3;
-      aCellLengthX = pow(aVolume, 1.0/3);
-      aCellLengthY = aCellLengthX;
-      aCellLengthZ = aCellLengthX;
-      break;
-    case CUBOID:
-      aCellLengthX = aRootSystem->getVariable("LENGTHX")->getValue();
-      aCellLengthY = aRootSystem->getVariable("LENGTHY")->getValue();
-      aCellLengthZ = aRootSystem->getVariable("LENGTHZ")->getValue();
-      break;
-    case ELLIPSOID:
-      aCellLengthX = aRootSystem->getVariable("LENGTHX")->getValue();
-      aCellLengthY = aRootSystem->getVariable("LENGTHY")->getValue();
-      aCellLengthZ = aRootSystem->getVariable("LENGTHZ")->getValue();
-      break;
-    }
-  //VoxelRadius: the radius of a Spatiocyte voxel, r_v in the paper.
-  //VoxelRadius is the actual radius of voxels which is set according to
-  //the radius of simulated molecule. Here we divide theCellLengthXYZ
-  //with VoxelRadius to normalize the voxel length
-  //to 1 (i.e, theNormalizedVoxelRadius = 0.5) to avoid
-  //dealing with very small values during calculations.
-  aCellLengthX /= VoxelRadius*2;
-  aCellLengthY /= VoxelRadius*2;
-  aCellLengthZ /= VoxelRadius*2;
-  //Specific properties of an hexagonal close-packed (HCP) lattice are
-  //as follows:{
+  Compartment* aRootCompartment(theCompartments[0]);
   theHCPk = theNormalizedVoxelRadius/sqrt(3); 
   theHCPh = theNormalizedVoxelRadius*sqrt(8.0/3);
   theHCPl = theNormalizedVoxelRadius*sqrt(3);
-  //theCenterPoint: the center point of the entire simulation space:
-  if(theCellShape == SPHERICAL || theCellShape == ROD ||
-     theCellShape == ELLIPSOID)
+  if(aRootCompartment->shape == SPHERICAL || aRootCompartment->shape == ROD ||
+     aRootCompartment->shape == ELLIPSOID)
     {
-      theCenterPoint.z = aCellLengthZ/2+4*theNormalizedVoxelRadius; //row
-      theCenterPoint.y = aCellLengthY/2+2*theHCPl; //layer
-      theCenterPoint.x = aCellLengthX/2+2*theHCPh; //column
+      theCenterPoint.z = aRootCompartment->lengthZ/2+4*
+        theNormalizedVoxelRadius; //row
+      theCenterPoint.y = aRootCompartment->lengthY/2+2*theHCPl; //layer
+      theCenterPoint.x = aRootCompartment->lengthX/2+2*theHCPh; //column
     }
-  else if(theCellShape == CUBIC || theCellShape == CUBOID)
+  else if(aRootCompartment->shape == CUBIC || aRootCompartment->shape == CUBOID)
     {
       //We do not give any leeway space between the simulation boundary
       //and the cell boundary if it is CUBIC or CUBOID to support
       //periodic boundary conditions:
-      theCenterPoint.z = aCellLengthZ/2; //row
-      theCenterPoint.y = aCellLengthY/2; //layer
-      theCenterPoint.x = aCellLengthX/2; //column
+      theCenterPoint.z = aRootCompartment->lengthZ/2; //row
+      theCenterPoint.y = aRootCompartment->lengthY/2; //layer
+      theCenterPoint.x = aRootCompartment->lengthX/2; //column
     }
+  aRootCompartment->centerPoint = theCenterPoint;
   theRowSize = (unsigned int)rint((theCenterPoint.z)/
                                   (theNormalizedVoxelRadius));
   theLayerSize = (unsigned int)rint((theCenterPoint.y*2)/theHCPl);
@@ -791,7 +802,7 @@ void SpatiocyteStepper::setLatticeProperties()
   //row, layer and column according to the boundary condition of its surfaces
   //to reflect the correct volume. This is because periodic boundary will
   //[consume a layer of the surface voxels:
-  if(theCellShape == CUBIC || theCellShape == CUBOID)
+  if(aRootCompartment->shape == CUBIC || aRootCompartment->shape == CUBOID)
     {
       readjustSurfaceBoundarySizes(); 
     }
@@ -921,12 +932,13 @@ void SpatiocyteStepper::printSimulationParameters()
 
 void SpatiocyteStepper::readjustSurfaceBoundarySizes()
 {
-  //SURFACE[X,Y,Z]: the boundary type of the surface when theCellShape is CUBIC.
+  Compartment* aRootCompartment(theCompartments[0]);
+  //[XY, XZ, YZ]PLANE: the boundary type of the surface when 
+  //the shape of the root compartment is CUBIC or CUBOID.
   //Boundary type can be either PERIODIC or REFLECTIVE.
   //Increase the size of [row,layer,col] by one voxel and make them odd sized
   //if the system uses periodic boundary conditions.
-  if(getModel()->getRootSystem()->getVariable("PLANEYZ")->getValue() ==
-     PERIODIC)
+  if(aRootCompartment->yzPlane == PERIODIC)
     { 
       if(theColSize%2 != 1)
         {
@@ -941,8 +953,7 @@ void SpatiocyteStepper::readjustSurfaceBoundarySizes()
     {
       theColSize += 2;
     }
-  if(getModel()->getRootSystem()->getVariable("PLANEXZ")->getValue() ==
-     PERIODIC)
+  if(aRootCompartment->xzPlane == PERIODIC)
     {
       if(theLayerSize%2 != 1)
         {
@@ -957,8 +968,7 @@ void SpatiocyteStepper::readjustSurfaceBoundarySizes()
     {
       theLayerSize += 2;
     }
-  if(getModel()->getRootSystem()->getVariable("PLANEXY")->getValue() ==
-     PERIODIC)
+  if(aRootCompartment->xyPlane == PERIODIC)
     {
       if(theRowSize%2 != 1)
         {
@@ -1003,7 +1013,8 @@ void SpatiocyteStepper::constructLattice()
       unsigned int aLayer((a%(theRowSize*theLayerSize))/theRowSize); 
       unsigned int aRow((a%(theRowSize*theLayerSize))%theRowSize); 
       (*i).coord = b; 
-      if(theCellShape == CUBIC || theCellShape == CUBOID ||
+      if(aRootCompartment->shape == CUBIC || 
+         aRootCompartment->shape == CUBOID ||
          isInsideCoord(b, aRootCompartment, 0))
         {
           //By default, the voxel is vacant and we set it to the root id:
@@ -1028,7 +1039,7 @@ void SpatiocyteStepper::constructLattice()
             }
         }
     }
-  if(theCellShape == CUBIC || theCellShape == CUBOID)
+  if(aRootCompartment->shape == CUBIC || aRootCompartment->shape == CUBOID)
     {
       concatenatePeriodicSurfaces();
     }
@@ -1072,24 +1083,17 @@ bool SpatiocyteStepper::isRemovableEdgeCoord(unsigned int aCoord,
   unsigned int aLayer;
   unsigned int aCol;
   coord2global(aCoord, &aRow, &aLayer, &aCol);
-  System* aSuperSystem(aCompartment->system->getSuperSystem()); 
-  if((aSuperSystem->getVariable("PLANEXY")->getValue() == REMOVE_UPPER &&
-      aRow == theRowSize-2) ||
-     (aSuperSystem->getVariable("PLANEXY")->getValue() == REMOVE_LOWER &&
-      aRow == 1) ||
-     (aSuperSystem->getVariable("PLANEXY")->getValue() == REMOVE_BOTH &&
+  if((aCompartment->xyPlane == REMOVE_UPPER && aRow == theRowSize-2) ||
+     (aCompartment->xyPlane == REMOVE_LOWER && aRow == 1) ||
+     (aCompartment->xyPlane == REMOVE_BOTH &&
       (aRow == 1 || aRow == theRowSize-2)) ||
-     (aSuperSystem->getVariable("PLANEXZ")->getValue() == REMOVE_UPPER &&
-      aLayer == theLayerSize-2) ||
-     (aSuperSystem->getVariable("PLANEXZ")->getValue() == REMOVE_LOWER &&
-      aLayer == 1) ||
-     (aSuperSystem->getVariable("PLANEXZ")->getValue() == REMOVE_BOTH &&
+     (aCompartment->xzPlane == REMOVE_UPPER && aLayer == theLayerSize-2) ||
+     (aCompartment->xzPlane == REMOVE_LOWER && aLayer == 1) ||
+     (aCompartment->xzPlane == REMOVE_BOTH &&
       (aLayer == 1 || aLayer == theLayerSize-2)) ||
-     (aSuperSystem->getVariable("PLANEYZ")->getValue() == REMOVE_UPPER &&
-      aCol == theColSize-2) ||
-     (aSuperSystem->getVariable("PLANEYZ")->getValue() == REMOVE_LOWER &&
-      aCol == 1) ||
-     (aSuperSystem->getVariable("PLANEYZ")->getValue() == REMOVE_BOTH &&
+     (aCompartment->yzPlane == REMOVE_UPPER && aCol == theColSize-2) ||
+     (aCompartment->yzPlane == REMOVE_LOWER && aCol == 1) ||
+     (aCompartment->yzPlane == REMOVE_BOTH &&
       (aCol == 1 || aCol == theColSize-2)))
     {
       return true;
@@ -1116,26 +1120,31 @@ void SpatiocyteStepper::concatenateVoxel(Voxel* aVoxel,
     }
 }
 
+Variable* SpatiocyteStepper::getVariable(System* aSystem, String const& anID)
+{
+  FOR_ALL(System::Variables, aSystem->getVariables())
+    {
+      Variable* aVariable(i->second);
+      if(aVariable->getID() == anID)
+        {
+          return aVariable;
+        }
+    }
+  return NULL;
+}
+
 void SpatiocyteStepper::setCompartmentProperties(Compartment* aCompartment)
 {
   System* aSystem(aCompartment->system);
-  System* aSuperSystem(aSystem->getSuperSystem());
-  if(aCompartment->isSurface)
-    {
-      aSystem = aCompartment->system->getSuperSystem();
-      aSuperSystem = aSystem->getSuperSystem();
-    }
-  Compartment* aSuperCompartment(system2compartment(aSuperSystem));
-  aCompartment->shape = (unsigned int)aSystem->getVariable("SHAPE")->getValue();
-  double anOriX(aSystem->getVariable("ORIGINX")->getValue());
-  double anOriY(aSystem->getVariable("ORIGINY")->getValue());
-  double anOriZ(aSystem->getVariable("ORIGINZ")->getValue());
-  double aRadius;
-  double anArea(0);
+  double aRadius(0);
   switch(aCompartment->shape)
     {
     case SPHERICAL:
-      aCompartment->specVolume = aSystem->getVariable("SIZE")->getValue()*1e-3;
+      if(!aCompartment->specVolume)
+        {
+          THROW_EXCEPTION(NotFound, "Property SIZE of the Sphere compartment "
+                          + aSystem->getFullID().asString() + " not defined" );
+        }
       aRadius = pow(3*aCompartment->specVolume/(4*M_PI), 1.0/3);
       aCompartment->lengthX = 2*aRadius;
       aCompartment->lengthY = aCompartment->lengthX;
@@ -1143,8 +1152,17 @@ void SpatiocyteStepper::setCompartmentProperties(Compartment* aCompartment)
       aCompartment->specArea = 4*M_PI*aRadius*aRadius;
       break;
     case ROD:
-      aCompartment->specVolume = aSystem->getVariable("SIZE")->getValue()*1e-3;
-      aCompartment->lengthY = aSystem->getVariable("LENGTHY")->getValue();
+      if(!aCompartment->specVolume)
+        {
+          THROW_EXCEPTION(NotFound, "Property SIZE of the Rod compartment "
+                          + aSystem->getFullID().asString() + " not defined." );
+        }
+      if(!aCompartment->lengthY)
+        {
+          THROW_EXCEPTION(NotFound, "Property LENGTHY of the Rod compartment "
+                          + aSystem->getFullID().asString() + ", which "
+                          + "specifies its diameter, not defined." );
+        }
       aRadius = aCompartment->lengthY/2;
       aCompartment->lengthX = aCompartment->specVolume/
         (M_PI*aRadius*aRadius)-(4*aRadius/3)+(2*aRadius);
@@ -1153,54 +1171,58 @@ void SpatiocyteStepper::setCompartmentProperties(Compartment* aCompartment)
         2*M_PI*aRadius*(aCompartment->lengthX-2*aRadius);
       break;
     case CUBIC:
-      aCompartment->specVolume = aSystem->getVariable("SIZE")->getValue()*1e-3;
+      if(!aCompartment->specVolume)
+        {
+          THROW_EXCEPTION(NotFound, "Property SIZE of the Cubic compartment "
+                          + aSystem->getFullID().asString() + " not defined.");
+        }
       aCompartment->lengthX = pow(aCompartment->specVolume, 1.0/3);
       aCompartment->lengthY = aCompartment->lengthX;
       aCompartment->lengthZ = aCompartment->lengthX;
-      aCompartment->specArea = 6*aCompartment->lengthX*aCompartment->lengthX;
+      aCompartment->specArea = getCuboidSpecArea(aCompartment);
       break;
     case CUBOID:
-      aCompartment->lengthX = aSystem->getVariable("LENGTHX")->getValue();
-      aCompartment->lengthY = aSystem->getVariable("LENGTHY")->getValue();
-      aCompartment->lengthZ = aSystem->getVariable("LENGTHZ")->getValue();
+      if(!aCompartment->lengthX)
+        {
+          THROW_EXCEPTION(NotFound,
+                          "Property LENGTHX of the Cuboid compartment " +
+                          aSystem->getFullID().asString() + " is not defined.");
+        }
+      if(!aCompartment->lengthY)
+        {
+          THROW_EXCEPTION(NotFound,
+                          "Property LENGTHY of the Cuboid compartment " +
+                          aSystem->getFullID().asString() + " is not defined.");
+        }
+      if(!aCompartment->lengthZ)
+        {
+          THROW_EXCEPTION(NotFound,
+                          "Property LENGTHZ of the Cuboid compartment " +
+                          aSystem->getFullID().asString() + " is not defined.");
+        }
       aCompartment->specVolume = aCompartment->lengthX*aCompartment->lengthY*
         aCompartment->lengthZ;
-      if(aSystem->getVariable("PLANEXY")->getValue() ==
-         UNIPERIODIC)
-        { 
-          anArea += aCompartment->lengthY*aCompartment->lengthX; 
-        }
-      else if(aSystem->getVariable("PLANEXY")->getValue()
-              != PERIODIC)
-        { 
-          anArea += 2*aCompartment->lengthY*aCompartment->lengthX; 
-        }
-      if(aSystem->getVariable("PLANEYZ")->getValue() ==
-         UNIPERIODIC)
-        { 
-          anArea += aCompartment->lengthY*aCompartment->lengthZ; 
-        }
-      else if(aSystem->getVariable("PLANEYZ")->getValue()
-              != PERIODIC)
-        { 
-          anArea += 2*aCompartment->lengthY*aCompartment->lengthZ; 
-        }
-      if(aSystem->getVariable("PLANEXZ")->getValue() ==
-         UNIPERIODIC)
-        { 
-          anArea += aCompartment->lengthX*aCompartment->lengthZ; 
-        }
-      else if(aSystem->getVariable("PLANEXZ")->getValue()
-              != PERIODIC)
-        { 
-          anArea += 2*aCompartment->lengthX*aCompartment->lengthZ; 
-        }
-      aCompartment->specArea = anArea;
+      aCompartment->specArea = getCuboidSpecArea(aCompartment);
       break;
     case ELLIPSOID:
-      aCompartment->lengthX = aSystem->getVariable("LENGTHX")->getValue();
-      aCompartment->lengthY = aSystem->getVariable("LENGTHY")->getValue();
-      aCompartment->lengthZ = aSystem->getVariable("LENGTHZ")->getValue();
+      if(!aCompartment->lengthX)
+        {
+          THROW_EXCEPTION(NotFound,
+                          "Property LENGTHX of the Ellipsoid compartment " +
+                          aSystem->getFullID().asString() + " is not defined.");
+        }
+      if(!aCompartment->lengthY)
+        {
+          THROW_EXCEPTION(NotFound,
+                          "Property LENGTHY of the Ellipsoid compartment " +
+                          aSystem->getFullID().asString() + " is not defined.");
+        }
+      if(!aCompartment->lengthZ)
+        {
+          THROW_EXCEPTION(NotFound,
+                          "Property LENGTHZ of the Ellipsoid compartment " +
+                          aSystem->getFullID().asString() + " is not defined.");
+        }
       aCompartment->specVolume = 4*M_PI*aCompartment->lengthX*
         aCompartment->lengthY* aCompartment->lengthZ/24;
       aCompartment->specArea = 4*M_PI*
@@ -1215,11 +1237,26 @@ void SpatiocyteStepper::setCompartmentProperties(Compartment* aCompartment)
   aCompartment->lengthX /= VoxelRadius*2;
   aCompartment->lengthY /= VoxelRadius*2;
   aCompartment->lengthZ /= VoxelRadius*2;
+}
+
+void SpatiocyteStepper::setCompartmentCenterPoint(Compartment* aCompartment)
+{
+  System* aSystem(aCompartment->system);
+  System* aSuperSystem(aSystem->getSuperSystem());
+  if(aCompartment->isSurface)
+    {
+      aSystem = aCompartment->system->getSuperSystem();
+      aSuperSystem = aSystem->getSuperSystem();
+    }
+  Compartment* aSuperCompartment(system2compartment(aSuperSystem));
   //The center with reference to the immediate super system:
   aCompartment->centerPoint = aSuperCompartment->centerPoint;
-  aCompartment->centerPoint.x += anOriX*aSuperCompartment->lengthX/2;
-  aCompartment->centerPoint.y += anOriY*aSuperCompartment->lengthY/2;
-  aCompartment->centerPoint.z += anOriZ*aSuperCompartment->lengthZ/2;
+  aCompartment->centerPoint.x += 
+    aCompartment->originX*aSuperCompartment->lengthX/2;
+  aCompartment->centerPoint.y += 
+    aCompartment->originY*aSuperCompartment->lengthY/2;
+  aCompartment->centerPoint.z += 
+    aCompartment->originZ*aSuperCompartment->lengthZ/2;
   //The center of the west hemisphere of the rod:
   aCompartment->westPoint.x = aCompartment->centerPoint.x-
     aCompartment->lengthX/2+aCompartment->lengthY/2;
@@ -1249,6 +1286,41 @@ void SpatiocyteStepper::setCompartmentProperties(Compartment* aCompartment)
     }
 }
 
+double SpatiocyteStepper::getCuboidSpecArea(Compartment* aCompartment)
+{
+  double anArea(0);
+  if(aCompartment->xyPlane == UNIPERIODIC || 
+     aCompartment->xyPlane == REMOVE_UPPER ||
+     aCompartment->xyPlane == REMOVE_LOWER)
+    { 
+      anArea += aCompartment->lengthX*aCompartment->lengthY; 
+    }
+  else if(aCompartment->xyPlane == REFLECTIVE)
+    {
+      anArea += 2*aCompartment->lengthX*aCompartment->lengthY; 
+    }
+  if(aCompartment->xzPlane == UNIPERIODIC || 
+     aCompartment->xzPlane == REMOVE_UPPER ||
+     aCompartment->xzPlane == REMOVE_LOWER)
+    { 
+      anArea += aCompartment->lengthX*aCompartment->lengthZ; 
+    }
+  else if(aCompartment->xzPlane == REFLECTIVE)
+    {
+      anArea += 2*aCompartment->lengthX*aCompartment->lengthZ; 
+    }
+  if(aCompartment->yzPlane == UNIPERIODIC || 
+     aCompartment->yzPlane == REMOVE_UPPER ||
+     aCompartment->yzPlane == REMOVE_LOWER)
+    { 
+      anArea += aCompartment->lengthY*aCompartment->lengthZ; 
+    }
+  else if(aCompartment->yzPlane == REFLECTIVE)
+    {
+      anArea += 2*aCompartment->lengthY*aCompartment->lengthZ; 
+    }
+  return anArea;;
+}
 
 Point SpatiocyteStepper::coord2point(unsigned int aCoord)
 {
@@ -1459,6 +1531,7 @@ void SpatiocyteStepper::concatenateRows(Voxel* aVoxel,
 
 void SpatiocyteStepper::concatenatePeriodicSurfaces()
 {
+  Compartment* aRootCompartment(theCompartments[0]);
   for(unsigned int i(0); i<=theRowSize*theLayerSize*theColSize-theRowSize;
       i+=theRowSize)
     {
@@ -1471,13 +1544,11 @@ void SpatiocyteStepper::concatenatePeriodicSurfaces()
                         coord2row(j)+
                         theRowSize*coord2layer(i)+
                         theRowSize*theLayerSize*coord2col(i)]); 
-      if(getModel()->getRootSystem()->getVariable("PLANEXY")->getValue() ==
-         UNIPERIODIC)
+      if(aRootCompartment->xyPlane == UNIPERIODIC)
         { 
           replaceUniVoxel(aSrcVoxel, aDestVoxel);
         }
-      else if(getModel()->getRootSystem()->getVariable("PLANEXY")->getValue()
-              == PERIODIC)
+      else if(aRootCompartment->xyPlane == PERIODIC)
         { 
           replaceVoxel(aSrcVoxel, aDestVoxel);
         }
@@ -1501,14 +1572,13 @@ void SpatiocyteStepper::concatenatePeriodicSurfaces()
                         coord2row(i)+
                         theRowSize*coord2layer(j)+ 
                         theRowSize*theLayerSize*coord2col(i)]); 
-      if(getModel()->getRootSystem()->getVariable("PLANEXZ")->getValue() ==
-         UNIPERIODIC)
-        {
+
+      if(aRootCompartment->xzPlane == UNIPERIODIC)
+        { 
           replaceUniVoxel(aSrcVoxel, aDestVoxel);
         }
-      else if(getModel()->getRootSystem()->getVariable("PLANEXZ")->getValue()
-              == PERIODIC)
-        {
+      else if(aRootCompartment->xzPlane == PERIODIC)
+        { 
           replaceVoxel(aSrcVoxel, aDestVoxel);
         }
       else if(!isPeriodicEdge)
@@ -1532,14 +1602,12 @@ void SpatiocyteStepper::concatenatePeriodicSurfaces()
                         coord2row(i)+
                         theRowSize*coord2layer(i)+ 
                         theRowSize*theLayerSize*(theColSize-1)]); 
-      if(getModel()->getRootSystem()->getVariable("PLANEYZ")->getValue() ==
-         UNIPERIODIC)
-        {
+      if(aRootCompartment->yzPlane == UNIPERIODIC)
+        { 
           replaceUniVoxel(aSrcVoxel, aDestVoxel);
         }
-      else if(getModel()->getRootSystem()->getVariable("PLANEYZ")->getValue()
-              == PERIODIC)
-        {
+      else if(aRootCompartment->yzPlane == PERIODIC)
+        { 
           replaceVoxel(aSrcVoxel, aDestVoxel);
         }
       else if(!isPeriodicEdge)
@@ -2038,7 +2106,6 @@ void SpatiocyteStepper::populateCompartment(Compartment* aCompartment)
             {
               availableVoxels[i] = i;
             }
-          cout << "here" << endl;
           gsl_ran_choose(getRng(), populateVoxels, populationSize,
                      availableVoxels, availableVoxelSize, sizeof(unsigned int));
           //gsl_ran_choose arranges the position ascending, so we need
