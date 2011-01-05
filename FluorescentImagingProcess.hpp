@@ -29,26 +29,26 @@
 //
 
 
-#ifndef __FluorescentProteinImagingProcess_hpp
-#define __FluorescentProteinImagingProcess_hpp
+#ifndef __FluorescentImagingProcess_hpp
+#define __FluorescentImagingProcess_hpp
 
 #include "VisualizationLogProcess.hpp"
 #include "SpatiocyteSpecies.hpp"
 
-LIBECS_DM_CLASS(FluorescentProteinImagingProcess, VisualizationLogProcess)
+LIBECS_DM_CLASS(FluorescentImagingProcess, VisualizationLogProcess)
 { 
 public:
-  LIBECS_DM_OBJECT(FluorescentProteinImagingProcess, Process)
+  LIBECS_DM_OBJECT(FluorescentImagingProcess, Process)
     {
       INHERIT_PROPERTIES(VisualizationLogProcess);
       PROPERTYSLOT_SET_GET(Integer, MeanCount);
       PROPERTYSLOT_SET_GET(Real, ExposureTime);
     }
-  FluorescentProteinImagingProcess():
+  FluorescentImagingProcess():
     MeanCount(0),
     ExposureTime(0.5),
     theLastExposedTime(0) {}
-  virtual ~FluorescentProteinImagingProcess() {}
+  virtual ~FluorescentImagingProcess() {}
   SIMPLE_SET_GET_METHOD(Integer, MeanCount);
   SIMPLE_SET_GET_METHOD(Real, ExposureTime);
   virtual void initializeFourth()
@@ -187,4 +187,4 @@ protected:
   vector<vector<int> > theProcessSpeciesIndices;
 };
 
-#endif /* __FluorescentProteinImagingProcess_hpp */
+#endif /* __FluorescentImagingProcess_hpp */

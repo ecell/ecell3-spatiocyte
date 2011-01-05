@@ -515,7 +515,7 @@ void SpatiocyteStepper::initPriorityQueue()
          aClassName == "MoleculePopulateProcess" ||
          aClassName == "CoordinateLogProcess" ||
          aClassName == "VisualizationLogProcess" ||
-         aClassName == "FluorescentProteinImagingProcess" ||
+         aClassName == "FluorescentImagingProcess" ||
          aClassName == "OscillationAnalysisProcess" ||
          aClassName == "PeriodicBoundaryDiffusionProcess" ||
          aClassName == "SpatiocyteNextReactionProcess" ||
@@ -532,7 +532,7 @@ void SpatiocyteStepper::initPriorityQueue()
          aClassName != "IteratingLogProcess" &&
          aClassName != "CoordinateLogProcess" &&
          aClassName != "VisualizationLogProcess" &&
-         aClassName != "FluorescentProteinImagingProcess" &&
+         aClassName != "FluorescentImagingProcess" &&
          aClassName != "OscillationAnalysisProcess" &&
          aClassName != "PeriodicBoundaryDiffusionProcess" && 
          aClassName != "PolymerizationParameterProcess")
@@ -679,6 +679,8 @@ Compartment* SpatiocyteStepper::registerCompartment(System* aSystem,
       if(getVariable(aSystem, "SIZE"))
         { 
           aCompartment->specVolume = aSystem->getVariable("SIZE")->getValue();
+          //Change SIZE unit to liter to be consistent with E-Cell's SIZE unit.
+          aSystem->getVariable("SIZE")->setValue(aCompartment->specVolume*1e+3);
         }
     }
   registerCompartmentSpecies(aCompartment);

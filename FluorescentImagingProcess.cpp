@@ -28,11 +28,11 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
-#include "FluorescentProteinImagingProcess.hpp"
+#include "FluorescentImagingProcess.hpp"
 
-LIBECS_DM_INIT(FluorescentProteinImagingProcess, Process); 
+LIBECS_DM_INIT(FluorescentImagingProcess, Process); 
 
-void FluorescentProteinImagingProcess::incSpeciesLatticeCount()
+void FluorescentImagingProcess::incSpeciesLatticeCount()
 {
   for(unsigned int i(0); i != thePositiveSpecies.size(); ++i)
     {
@@ -53,7 +53,7 @@ void FluorescentProteinImagingProcess::incSpeciesLatticeCount()
     }
 }
 
-void FluorescentProteinImagingProcess::logFluorescentSpecies()
+void FluorescentImagingProcess::logFluorescentSpecies()
 {
   vector<int> coordList;
   for(unsigned int i(0); i != theLatticeSize; ++i)

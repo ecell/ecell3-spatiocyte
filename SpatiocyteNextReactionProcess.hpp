@@ -183,11 +183,11 @@ protected:
         }
     }
 protected:
-  RealMethodProxy theGetPropensityMethodPtr;  
   int initSizeA;
   int initSizeB;
   int initSizeC;
   int initSizeD;
+  RealMethodProxy theGetPropensityMethodPtr;  
 };
 
 inline void SpatiocyteNextReactionProcess::calculateOrder()

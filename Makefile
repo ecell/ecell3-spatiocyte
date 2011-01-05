@@ -11,7 +11,7 @@ IteratingLogProcess\
 DiffusionInfluencedReactionProcess\
 OscillationAnalysisProcess\
 SpatiocyteNextReactionProcess\
-FluorescentProteinImagingProcess\
+FluorescentImagingProcess\
 CoordinateLogProcess\
 MoleculePopulateProcess\
 DiffusionProcess\
@@ -32,8 +32,8 @@ all:	$(SOS) $(SPATIOCYTE)
 VisualizationLogProcess.so: 	VisualizationLogProcess.cpp
 	ecell3-dmc -o VisualizationLogProcess.so --ldflags=SpatiocyteProcess.so VisualizationLogProcess.cpp
 
-FluorescentProteinImagingProcess.so: 	FluorescentProteinImagingProcess.cpp
-	ecell3-dmc -o FluorescentProteinImagingProcess.so --ldflags="SpatiocyteProcess.so VisualizationLogProcess.so" FluorescentProteinImagingProcess.cpp
+FluorescentImagingProcess.so: 	FluorescentImagingProcess.cpp
+	ecell3-dmc -o FluorescentImagingProcess.so --ldflags="SpatiocyteProcess.so VisualizationLogProcess.so" FluorescentImagingProcess.cpp
 
 ReactionProcess.so: 	ReactionProcess.cpp
 	ecell3-dmc -o ReactionProcess.so --ldflags=SpatiocyteProcess.so ReactionProcess.cpp

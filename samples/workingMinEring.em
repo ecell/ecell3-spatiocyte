@@ -3,8 +3,7 @@
 
 Stepper SpatiocyteStepper(SS)
 {
-  VoxelRadius 3e-8;
-  SearchVacant 1;
+  VoxelRadius 2e-8;
 }
 
 System System( / )
@@ -23,56 +22,13 @@ System System( / )
                         #   3: Cuboid (uses LENGTHX, LENGTHY, LENGTHZ)
                         #   4: Ellipsoid (uses LENGTHX, LENGTHY, LENGTHZ) }
     } 
-  Variable Variable( LENGTHX )
+  Variable Variable( SIZE )
     {
-      Value     0e-6;        # in meters
+      Value	 2.88e-18;  # volume in m^3 
     } 
   Variable Variable( LENGTHY )
     {
       Value     1e-6;        # in meters
-    } 
-  Variable Variable( LENGTHZ )
-    {
-      Value     0e-6;        # in meters
-    } 
-
-  Variable Variable( SIZE )
-    {
-      Value	 2.88e-15;   # volume in liters
-                              # RAM (memory) required volume/
-                              # 0.85e-14 liter max for 8GB memory
-                              # e.coli sphere radius: 0.5e-6 m 
-                              # e.coli cylinder length: 3e-6 m
-      # e.coli volume = (4*PI*(0.5e-6)^3)/3 + PI*(0.5e-6)^(2)*(3e-6)
-      #               = 2.88e-18 m^3
-      #               = 2.88e-15 l
-    } 
-  Variable Variable( PLANEYZ )
-    {
-      Value     0;               # { 0: Reflective (Impermeable) 
-                                 #   1: Periodic (Permeable) }
-    } 
-  Variable Variable( PLANEXZ )
-    {
-      Value     0;               # { 0: Reflective (Impermeable) 
-                                 #   1: Periodic (Permeable) }
-    } 
-  Variable Variable( PLANEXY )
-    {
-      Value     0;               # { 0: Reflective (Impermeable) 
-                                 #   1: Periodic (Permeable) }
-    } 
-  Variable Variable( ORIGINX )
-    {
-      Value     0;               
-    } 
-  Variable Variable( ORIGINY )
-    {
-      Value     0;          
-    } 
-  Variable Variable( ORIGINZ )
-    {
-      Value     0;       
     } 
   Variable Variable( VACANT )
     {
@@ -104,7 +60,6 @@ System System( / )
                             [ _ Variable:/Surface:MinE_m ]
                             [ _ Variable:/Surface:MinD_ATP_m ];
       LogInterval 0.05;
-      FileName "visualLog0.dat";
     }
   # MinD_ADP -> MinD_ATP
   Process SpatiocyteNextReactionProcess( MinD_ADPtoMinD_ATP )
