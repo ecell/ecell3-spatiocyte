@@ -664,6 +664,18 @@ Compartment* SpatiocyteStepper::registerCompartment(System* aSystem,
         {
           aCompartment->lengthZ = aSystem->getVariable("LENGTHZ")->getValue();
         }
+      if(getVariable(aSystem, "ORIGINX"))
+        {
+          aCompartment->originX = aSystem->getVariable("ORIGINX")->getValue();
+        }
+      if(getVariable(aSystem, "ORIGINY"))
+        {
+          aCompartment->originY = aSystem->getVariable("ORIGINY")->getValue();
+        }
+      if(getVariable(aSystem, "ORIGINZ"))
+        {
+          aCompartment->originZ = aSystem->getVariable("ORIGINZ")->getValue();
+        }
       if(getVariable(aSystem, "XYPLANE"))
         {
           aCompartment->xyPlane = aSystem->getVariable("XYPLANE")->getValue();
@@ -698,6 +710,9 @@ Compartment* SpatiocyteStepper::registerCompartment(System* aSystem,
           aSubCompartment->lengthX = aCompartment->lengthX;
           aSubCompartment->lengthY = aCompartment->lengthY;
           aSubCompartment->lengthZ = aCompartment->lengthZ;
+          aSubCompartment->originX = aCompartment->originX;
+          aSubCompartment->originY = aCompartment->originY;
+          aSubCompartment->originZ = aCompartment->originZ;
           aSubCompartment->xyPlane = aCompartment->xyPlane;
           aSubCompartment->xzPlane = aCompartment->xzPlane;
           aSubCompartment->yzPlane = aCompartment->yzPlane;

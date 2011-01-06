@@ -93,16 +93,16 @@ System System(/)
     }
 }
 
-System System( /Surface )
+System System(/Surface)
 {
   StepperID SS;
 
-  Variable Variable( TYPE )
+  Variable Variable(TYPE)
     {
       Value 1;         # { 0: Volume
                        #   1: Surface }
     } 
-  Variable Variable( LIPID )
+  Variable Variable(LIPID)
     {
       Value 0;
     } 
