@@ -626,6 +626,9 @@ Compartment* SpatiocyteStepper::registerCompartment(System* aSystem,
   aCompartment->originX = 0;
   aCompartment->originY = 0;
   aCompartment->originZ = 0;
+  aCompartment->rotateX = 0;
+  aCompartment->rotateY = 0;
+  aCompartment->rotateZ = 0;
   aCompartment->xyPlane = 0;
   aCompartment->xzPlane = 0;
   aCompartment->yzPlane = 0;
@@ -675,6 +678,18 @@ Compartment* SpatiocyteStepper::registerCompartment(System* aSystem,
       if(getVariable(aSystem, "ORIGINZ"))
         {
           aCompartment->originZ = aSystem->getVariable("ORIGINZ")->getValue();
+        }
+      if(getVariable(aSystem, "ROTATEX"))
+        {
+          aCompartment->rotateX = aSystem->getVariable("ROTATEX")->getValue();
+        }
+      if(getVariable(aSystem, "ROTATEY"))
+        {
+          aCompartment->rotateY = aSystem->getVariable("ROTATEY")->getValue();
+        }
+      if(getVariable(aSystem, "ROTATEZ"))
+        {
+          aCompartment->rotateZ = aSystem->getVariable("ROTATEZ")->getValue();
         }
       if(getVariable(aSystem, "XYPLANE"))
         {
@@ -1961,20 +1976,11 @@ void SpatiocyteStepper::compartmentalizeLattice()
     }
 }
 
+
 bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel,
                                               Compartment* aCompartment)
 {
-  if(aCompartment->isSurface)
-    {
-      if(isSurfaceVoxel(aVoxel, aCompartment))
-        {
-          aVoxel->id = aCompartment->vacantID;
-          aCompartment->coords.push_back(aVoxel->coord-theStartCoord);
-          return true;
-        }
-      return false;
-    }
-  else
+  if(!aCompartment->isSurface)
     {
       if(aCompartment->system->isRootSystem() ||
          isInsideCoord(aVoxel->coord, aCompartment, 0))
@@ -1986,43 +1992,29 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel,
                   return true;
                 }
             }
+          if(aCompartment->surfaceSub && 
+             (aCompartment->system->isRootSystem() ||
+              aCompartment->surfaceSub->isEnclosed))
+            {
+              if(isEnclosedSurfaceVoxel(aVoxel, aCompartment))
+                {
+                  aVoxel->id = aCompartment->surfaceSub->vacantID;
+                  aCompartment->surfaceSub->coords.push_back(
+                                                 aVoxel->coord-theStartCoord);
+                  return true;
+                }
+            }
           aVoxel->id = aCompartment->vacantID;
           aCompartment->coords.push_back(aVoxel->coord-theStartCoord);
           return true;
         }
-      return false;
-    }
-}
-
-bool SpatiocyteStepper::isSurfaceVoxel(Voxel* aVoxel, Compartment* aCompartment)
-{
-  if(!aCompartment->isEnclosed && isInsideCoord(aVoxel->coord, aCompartment, 4))
-    {
-      return false;
-    }
-  if(aCompartment->system->getSuperSystem()->isRootSystem())
-    {
-      for(unsigned int i(0); i != ADJOINING_VOXEL_SIZE; ++i)
+      if(aCompartment->surfaceSub)
         {
-          if(aVoxel->adjoiningVoxels[i]->id == theNullID ||
-             aVoxel->adjoiningVoxels[i] == aVoxel)
+          if(isSurfaceVoxel(aVoxel, aCompartment))
             {
-              return true;
-            }
-        }
-    }
-  else
-    {
-      for(unsigned int i(0); i != ADJOINING_VOXEL_SIZE; ++i)
-        {
-          if(!isInsideCoord(aVoxel->adjoiningVoxels[i]->coord, aCompartment, 0))
-            {
-              return true;
-            }
-          if(aCompartment->isEnclosed && (
-             aVoxel->adjoiningVoxels[i]->id == theNullID || 
-             aVoxel->adjoiningVoxels[i] == aVoxel))
-            {
+              aVoxel->id = aCompartment->surfaceSub->vacantID;
+              aCompartment->surfaceSub->coords.push_back(
+                                         aVoxel->coord-theStartCoord);
               return true;
             }
         }
@@ -2030,11 +2022,84 @@ bool SpatiocyteStepper::isSurfaceVoxel(Voxel* aVoxel, Compartment* aCompartment)
   return false;
 }
 
+bool SpatiocyteStepper::isSurfaceVoxel(Voxel* aVoxel, Compartment* aCompartment)
+{
+  for(unsigned int i(0); i != ADJOINING_VOXEL_SIZE; ++i)
+    {
+      if(isInsideCoord(aVoxel->adjoiningVoxels[i]->coord, aCompartment, 0))
+        {
+          return true;
+        }
+    }
+  return false;
+}
+
+
+bool SpatiocyteStepper::isEnclosedSurfaceVoxel(Voxel* aVoxel,
+                                               Compartment* aCompartment)
+{
+  Compartment* aSuperCompartment(system2compartment(
+                          aCompartment->system->getSuperSystem()));
+  for(unsigned int i(0); i != ADJOINING_VOXEL_SIZE; ++i)
+    {
+      if(aVoxel->adjoiningVoxels[i]->id == theNullID ||
+         aVoxel->adjoiningVoxels[i] == aVoxel ||
+         !isInsideCoord(aVoxel->adjoiningVoxels[i]->coord,
+                        aSuperCompartment, 0))
+        {
+          return true;
+        }
+    }
+  return false;
+}
+
+void SpatiocyteStepper::rotateX(double angle, Point* aPoint)
+{ 
+  if(angle)
+    {
+      double y(aPoint->y);
+      double z(aPoint->z);
+      aPoint->y = y*cos(angle)-z*sin(angle);
+      aPoint->z = y*sin(angle)+z*cos(angle);
+    }
+}
+
+void SpatiocyteStepper::rotateY(double angle, Point* aPoint)
+{ 
+  if(angle)
+    {
+      double x(aPoint->x);
+      double z(aPoint->z);
+      aPoint->x = x*cos(angle)+z*sin(angle);
+      aPoint->z = z*cos(angle)-x*sin(angle);
+    }
+}
+
+void SpatiocyteStepper::rotateZ(double angle, Point* aPoint)
+{ 
+  if(angle)
+    {
+      double x(aPoint->x);
+      double y(aPoint->y);
+      aPoint->x = x*cos(angle)-y*sin(angle);
+      aPoint->y = x*sin(angle)+y*cos(angle);
+    }
+}
+
 bool SpatiocyteStepper::isInsideCoord(unsigned int aCoord,
                                       Compartment* aCompartment, double delta)
 {
   Point aPoint(coord2point(aCoord));
   Point aCenterPoint(aCompartment->centerPoint);
+  aPoint.x = aPoint.x - aCenterPoint.x;
+  aPoint.y = aPoint.y - aCenterPoint.y;
+  aPoint.z = aPoint.z - aCenterPoint.z;
+  rotateX(aCompartment->rotateX, &aPoint);
+  rotateY(aCompartment->rotateY, &aPoint);
+  rotateZ(aCompartment->rotateZ, &aPoint);
+  aPoint.x = aPoint.x + aCenterPoint.x;
+  aPoint.y = aPoint.y + aCenterPoint.y;
+  aPoint.z = aPoint.z + aCenterPoint.z;
   double aRadius(aCompartment->lengthY/2+theNormalizedVoxelRadius-delta);
   switch(aCompartment->shape)
     {

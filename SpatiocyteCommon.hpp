@@ -132,6 +132,9 @@ struct Compartment
   double originX;
   double originY;
   double originZ;
+  double rotateX;
+  double rotateY;
+  double rotateZ;
   double specVolume;
   double specArea;
   double actualVolume;

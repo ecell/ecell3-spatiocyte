@@ -116,6 +116,9 @@ private:
   void setReactiveCompartments(Compartment*);
   void setCompartmentCenterPoint(Compartment*);
   void populateCompartmentUniformly(Compartment*, unsigned int);
+  void rotateX(double, Point*);
+  void rotateY(double, Point*);
+  void rotateZ(double, Point*);
   void concatenateVoxel(Voxel*, unsigned int, unsigned int, unsigned int);
   void concatenateLayers(Voxel*, unsigned int, unsigned int, unsigned int);
   void concatenateRows(Voxel*, unsigned int, unsigned int, unsigned int);
@@ -128,6 +131,7 @@ private:
   bool isInsideCoord(unsigned int, Compartment*, double);
   bool isPeriodicEdgeCoord(unsigned int, Compartment*);
   bool isSurfaceVoxel(Voxel*, Compartment*);
+  bool isEnclosedSurfaceVoxel(Voxel*, Compartment*);
   bool compartmentalizeVoxel(Voxel*, Compartment*);
   double getCuboidSpecArea(Compartment*);
   unsigned int coord2row(unsigned int);
