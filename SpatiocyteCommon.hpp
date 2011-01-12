@@ -39,8 +39,6 @@
 #include <FullID.hpp>
 #include "PriorityQueue.hpp"
 
-USE_LIBECS;
-using namespace std;
 class SpatiocyteProcess;
 class Species;
 struct Subunit;
@@ -107,7 +105,7 @@ struct Voxel
   Voxel* adjoiningVoxels[ADJOINING_VOXEL_SIZE];
   Subunit* subunit;
   //Contains adjoining and extended surface voxels:
-  vector<vector<Voxel*> >* surfaceVoxels;
+  std::vector<std::vector<Voxel*> >* surfaceVoxels;
 };
 
 struct Point 
@@ -144,11 +142,11 @@ struct Compartment
   Point centerPoint;
   Point eastPoint;
   Point westPoint;
-  vector<Compartment*> allSubs;
-  vector<Compartment*> immediateSubs;
-  vector<Compartment*> reactiveComps;
-  vector<Species*> species;
-  vector<unsigned int> coords;
+  std::vector<Compartment*> allSubs;
+  std::vector<Compartment*> immediateSubs;
+  std::vector<Compartment*> reactiveComps;
+  std::vector<Species*> species;
+  std::vector<unsigned int> coords;
 };
 
 struct Origin
@@ -180,20 +178,20 @@ struct Subunit
   //differentiate the shared and actual voxels:
   Voxel* voxel;
   Species* species;
-  vector<Voxel*> targetVoxels;
-  vector<bool> boundBends;
-  vector<Voxel*> sourceVoxels;
-  vector<Voxel*> sharedLipids;
-  vector<Voxel*> tmpVoxels;
-  vector<Point> targetPoints;
-  vector<Bend> targetBends;
+  std::vector<Voxel*> targetVoxels;
+  std::vector<bool> boundBends;
+  std::vector<Voxel*> sourceVoxels;
+  std::vector<Voxel*> sharedLipids;
+  std::vector<Voxel*> tmpVoxels;
+  std::vector<Point> targetPoints;
+  std::vector<Bend> targetBends;
   //contPoints are all the continuous points that are represented by the voxel
   //pointed by this subunit:
   //There shouldn't be duplicate contPoints
-  vector<Point> contPoints;
+  std::vector<Point> contPoints;
   //the contPointSize is the number of times the same continuous point is used.
   //so there can be duplicates of contPoints
-  vector<int> contPointSize;
+  std::vector<int> contPointSize;
 };
 
 #endif /* __SpatiocyteCommon_hpp */

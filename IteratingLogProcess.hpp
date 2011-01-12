@@ -95,7 +95,7 @@ public:
     }
   virtual void initializeFourth()
     {
-      for(vector<Species*>::const_iterator i(theProcessSpecies.begin());
+      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
         {
           if((*i)->getDiffusionInterval() < theStepInterval)
@@ -122,7 +122,7 @@ public:
     }
   virtual void initializeLastOnce()
     {
-      theLogFile.open(FileName.c_str(), ios::trunc);
+      theLogFile.open(FileName.c_str(), std::ios::trunc);
       theTotalIterations = Iterations;
       theLogValues.resize(theProcessSpecies.size());
       for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
@@ -145,24 +145,24 @@ public:
     {
       if(Iterations == 0)
         {
-          cout << "Saving data in: " << FileName.c_str() << endl;
+          std::cout << "Saving data in: " << FileName.c_str() << std::endl;
           double aTime(LogInterval);
           for(unsigned int i(0); i != theLogValues[0].size(); ++i)
             {
-              theLogFile << setprecision(15) << aTime;
+              theLogFile << std::setprecision(15) << aTime;
               for(unsigned int j(0); j != theProcessSpecies.size(); ++j)
                 {
                   if(RebindTime)
                     {
-                      theLogFile << "," << setprecision(15) << theLogValues[j][i];
+                      theLogFile << "," << std::setprecision(15) << theLogValues[j][i];
                     }
                   else
                     {
-                      theLogFile << "," << setprecision(15) << theLogValues[j][i]/
+                      theLogFile << "," << std::setprecision(15) << theLogValues[j][i]/
                         theTotalIterations;
                     }
                 }
-              theLogFile << endl;
+              theLogFile << std::endl;
               aTime += LogInterval;
             }
           theLogFile.close();
@@ -173,15 +173,15 @@ public:
           theStepInterval = LogInterval;
           theSpatiocyteStepper->reset(Iterations);
           --Iterations;
-          cout << "Iterations left:" << Iterations << endl;
+          std::cout << "Iterations left:" << Iterations << std::endl;
           if(SaveInterval > 0 && 
              Iterations%(int)rint(theTotalIterations/SaveInterval) == 0)
             {
-              string aFileName(FileName.c_str());
+              std::string aFileName(FileName.c_str());
               aFileName = aFileName + ".back";
-              cout << "Saving temporary backup data in: " << aFileName << endl;
-              ofstream aFile;
-              aFile.open(aFileName.c_str(), ios::trunc);
+              std::cout << "Saving temporary backup data in: " << aFileName << std::endl;
+              std::ofstream aFile;
+              aFile.open(aFileName.c_str(), std::ios::trunc);
               double aTime(LogInterval);
               int completedIterations(theTotalIterations-Iterations);
               unsigned int aSize(theLogValues[0].size());
@@ -191,21 +191,21 @@ public:
                 }
               for(unsigned int i(0); i != aSize; ++i)
                 {
-                  aFile << setprecision(15) << aTime;
+                  aFile << std::setprecision(15) << aTime;
                   for(unsigned int j(0); j != theProcessSpecies.size(); ++j)
                     {
                       if(RebindTime)
                         {
-                          aFile << "," << setprecision(15) <<
+                          aFile << "," << std::setprecision(15) <<
                             theLogValues[j][i];
                         }
                       else
                         {
-                          aFile << "," << setprecision(15) <<
+                          aFile << "," << std::setprecision(15) <<
                             theLogValues[j][i]/completedIterations;
                         }
                     }
-                  aFile << endl;
+                  aFile << std::endl;
                   aTime += theStepInterval;
                 }
               aFile.close();
@@ -294,8 +294,8 @@ protected:
   double LogDuration;
   double LogInterval;
   String FileName;
-  ofstream theLogFile;
-  vector<vector<double> > theLogValues;
+  std::ofstream theLogFile;
+  std::vector<std::vector<double> > theLogValues;
 };
 
 #endif /* __IteratingLogProcess_hpp */

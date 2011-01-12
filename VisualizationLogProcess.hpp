@@ -91,9 +91,9 @@ public:
     }
   virtual void initializeLastOnce()
     {
-      ostringstream aFilename;
-      aFilename << FileName << ends;
-      theLogFile.open(aFilename.str().c_str(), ios::binary | ios::trunc);
+      std::ostringstream aFilename;
+      aFilename << FileName << std::ends;
+      theLogFile.open(aFilename.str().c_str(), std::ios::binary | std::ios::trunc);
       initializeLog();
       logSurfaceVoxels();
       logSpecies();
@@ -136,10 +136,10 @@ protected:
   unsigned int theMeanCount;
   double LogInterval;
   String FileName;
-  ofstream theLogFile;
-  streampos theStepStartPos;  
-  vector<unsigned int> thePolymerIndex;
-  vector<Species*> thePolymerSpecies;
+  std::ofstream theLogFile;
+  std::streampos theStepStartPos;  
+  std::vector<unsigned int> thePolymerIndex;
+  std::vector<Species*> thePolymerSpecies;
 };
 
 #endif /* __VisualizationLogProcess_hpp */

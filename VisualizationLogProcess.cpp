@@ -127,7 +127,7 @@ void VisualizationLogProcess::logSourceMolecules(int anIndex)
   Species* aSpecies(thePolymerSpecies[anIndex]);
   int aSourceIndex(theProcessSpecies.size()+anIndex);
   theLogFile.write((char*)(&aSourceIndex), sizeof(aSourceIndex));
-  const vector<unsigned int> aCoords(aSpecies->getSourceCoords());
+  const std::vector<unsigned int> aCoords(aSpecies->getSourceCoords());
   int aSize(aCoords.size());
   theLogFile.write((char*)(&aSize), sizeof(aSize)); 
   for(unsigned int i(0); i != aCoords.size(); ++i)
@@ -142,7 +142,7 @@ void VisualizationLogProcess::logTargetMolecules(int anIndex)
   Species* aSpecies(thePolymerSpecies[anIndex]);
   int aTargetIndex(theProcessSpecies.size()+thePolymerSpecies.size()+anIndex);
   theLogFile.write((char*)(&aTargetIndex), sizeof(aTargetIndex));
-  const vector<unsigned int> aCoords(aSpecies->getTargetCoords());
+  const std::vector<unsigned int> aCoords(aSpecies->getTargetCoords());
   int aSize(aCoords.size());
   theLogFile.write((char*)(&aSize), sizeof(aSize)); 
   for(unsigned int i(0); i != aCoords.size(); ++i)
@@ -157,7 +157,7 @@ void VisualizationLogProcess::logSharedMolecules(int anIndex)
   Species* aSpecies(thePolymerSpecies[anIndex]);
   int aSharedIndex(theProcessSpecies.size()+thePolymerSpecies.size()*2+anIndex);
   theLogFile.write((char*)(&aSharedIndex), sizeof(aSharedIndex));
-  const vector<unsigned int> aCoords(aSpecies->getSharedCoords());
+  const std::vector<unsigned int> aCoords(aSpecies->getSharedCoords());
   int aSize(aCoords.size());
   theLogFile.write((char*)(&aSize), sizeof(aSize)); 
   for(unsigned int i(0); i != aCoords.size(); ++i)
@@ -170,7 +170,7 @@ void VisualizationLogProcess::logSharedMolecules(int anIndex)
 void VisualizationLogProcess::logSpecies()
 {
   int aDataSize(0);
-  streampos aStartPos(theLogFile.tellp());
+  std::streampos aStartPos(theLogFile.tellp());
   // write the next size (create a temporary space for it) 
   theLogFile.write((char*)(&aDataSize), sizeof(aDataSize));
   double aCurrentTime(theSpatiocyteStepper->getCurrentTime());
@@ -210,7 +210,7 @@ void VisualizationLogProcess::logSpecies()
   theStepStartPos = theLogFile.tellp();
   // write the prev size at the end of this step
   theLogFile.write((char*)(&aPrevDataSize), sizeof(aPrevDataSize));
-  streampos aCurrentPos(theLogFile.tellp());
+  std::streampos aCurrentPos(theLogFile.tellp());
   theLogFile.seekp(aStartPos);
   // write the next size at the beginning of this step
   theLogFile.write((char*) (&aDataSize), sizeof(aDataSize));
@@ -224,7 +224,7 @@ void VisualizationLogProcess::logSurfaceVoxels()
   // write prev pos = 0;
   int aDataSize(sizeof(int)*2);
   theLogFile.write((char*)(&aDataSize), sizeof(aDataSize));
-  streampos aStartPos(theLogFile.tellp());
+  std::streampos aStartPos(theLogFile.tellp());
   // write the next size (create a temporary space for it) 
   theLogFile.write((char*)(&aDataSize), sizeof(aDataSize));
   theLogFile.write((char*)(&aCurrentTime), sizeof(aCurrentTime));
@@ -240,7 +240,7 @@ void VisualizationLogProcess::logSurfaceVoxels()
           unsigned int aSize(aSurface->coords.size());
           theLogFile.write((char*)(&aSize), sizeof(aSize)); 
           unsigned int aStartCoord(theSpatiocyteStepper->getStartCoord());
-          for(vector<unsigned int>::const_iterator j(
+          for(std::vector<unsigned int>::const_iterator j(
                aSurface->coords.begin()); j != aSurface->coords.end(); ++j)
             {
               unsigned int aCoord((*j)+aStartCoord);
@@ -256,7 +256,7 @@ void VisualizationLogProcess::logSurfaceVoxels()
   theStepStartPos = theLogFile.tellp();
   // write the prev size at the end of this step
   theLogFile.write((char*)(&aPrevDataSize), sizeof(aPrevDataSize));
-  streampos aCurrentPos(theLogFile.tellp());
+  std::streampos aCurrentPos(theLogFile.tellp());
   theLogFile.seekp(aStartPos);
   // write the next size at the beginning of this step
   theLogFile.write((char*)(&aDataSize), sizeof(aDataSize));

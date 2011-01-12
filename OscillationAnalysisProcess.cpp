@@ -38,7 +38,7 @@ void OscillationAnalysisProcess::testMembraneBinding()
     {
       Status = 1;
     }
-  cout << "theTime:" << theTime << " Status:" << Status << endl;
+  std::cout << "theTime:" << theTime << " Status:" << Status << std::endl;
 }  
 
 void OscillationAnalysisProcess::testLocalization(int aStatus)
@@ -69,22 +69,22 @@ void OscillationAnalysisProcess::testLocalization(int aStatus)
         }
     }
   double threshold(0.5*aSize/4);
-  cout << "thresh:" << threshold << " size:" << aSize << endl;
+  std::cout << "thresh:" << threshold << " size:" << aSize << std::endl;
   if(quad1 < threshold || quad2 < threshold || quad3 < threshold ||
      quad4 < threshold)
     {
       Status = aStatus;
     }
-  cout << "theTime:" << theTime << " quad1:" << quad1 << " quad2:" << quad2
+  std::cout << "theTime:" << theTime << " quad1:" << quad1 << " quad2:" << quad2
     << " quad3:" << quad3 << " quad4:" << quad4 <<  " status:" <<
-    Status << endl;
+    Status << std::endl;
 } 
 
 void OscillationAnalysisProcess::testOscillation()
 {
   int aSize(minD_m->size());
-  vector<double> leftPositions;
-  vector<double> rightPositions;
+  std::vector<double> leftPositions;
+  std::vector<double> rightPositions;
   for(int i(0); i != aSize; ++i)
     {
       Point aPoint(theSpatiocyteStepper->coord2point(minD_m->getCoord(i)));
@@ -117,7 +117,7 @@ void OscillationAnalysisProcess::testOscillation()
               ++moleculeCnt;
             }
         }
-      cout << "moleculeCnt:" << moleculeCnt << endl;
+      std::cout << "moleculeCnt:" << moleculeCnt << std::endl;
       int currStatus(4);
       if(moleculeCnt < 0.5*leftPositions.size())
         {
@@ -154,7 +154,7 @@ void OscillationAnalysisProcess::testOscillation()
               ++moleculeCnt;
             }
         }
-      cout << "moleculeCnt:" << moleculeCnt << endl;
+      std::cout << "moleculeCnt:" << moleculeCnt << std::endl;
       int currStatus(4);
       if(moleculeCnt < 0.5*rightPositions.size())
         {
@@ -178,5 +178,5 @@ void OscillationAnalysisProcess::testOscillation()
     }
   prevLeftSize = leftPositions.size();
   prevRightSize = rightPositions.size();
-  cout << "theTime:" << theTime << " left:" << leftPositions.size() << " right:" << rightPositions.size() << " current period:" << Period << " avg period:" << theTotalPeriod/theCycleCount << endl;
+  std::cout << "theTime:" << theTime << " left:" << leftPositions.size() << " right:" << rightPositions.size() << " current period:" << Period << " avg period:" << theTotalPeriod/theCycleCount << std::endl;
 }  

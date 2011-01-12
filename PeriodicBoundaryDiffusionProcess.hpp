@@ -55,7 +55,7 @@ public:
   void initializeThird()
     {
       DiffusionProcess::initializeThird();
-      for(vector<Species*>::const_iterator i(theProcessSpecies.begin());
+      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
         {
           (*i)->initMoleculeOrigins();
@@ -64,7 +64,7 @@ public:
   virtual void fire()
     {
       DiffusionProcess::fire();
-      for(vector<Species*>::const_iterator i(theProcessSpecies.begin());
+      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
         {
           (*i)->relocateBoundaryMolecules();

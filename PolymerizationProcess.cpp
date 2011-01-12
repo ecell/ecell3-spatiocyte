@@ -289,8 +289,8 @@ void PolymerizationProcess::initSubunits(Species* aSpecies)
 {
   if(aSpecies->getIsPolymer() && !aSpecies->getIsSubunitInitialized())
     {
-      vector<Voxel*>& molecules(aSpecies->getMolecules());
-      for(vector<Voxel*>::iterator i(molecules.begin());
+      std::vector<Voxel*>& molecules(aSpecies->getMolecules());
+      for(std::vector<Voxel*>::iterator i(molecules.begin());
           i != molecules.end(); ++i)
         {
           initSubunit(*i, aSpecies);
@@ -301,14 +301,14 @@ void PolymerizationProcess::initSubunits(Species* aSpecies)
 
 void PolymerizationProcess::initSubunit(Voxel* aMolecule, Species* aSpecies)
 {
-  const vector<double>& bendAngles(aSpecies->getBendAngles());
+  const std::vector<double>& bendAngles(aSpecies->getBendAngles());
   Subunit* aSubunit(aMolecule->subunit);
   aSubunit->bendSize = bendAngles.size();
   aSubunit->voxel = aMolecule;
   //Use the surfacePoint as the subunitPoint since the voxel is the
   //origin of the polymer:
   aSubunit->subunitPoint = aSubunit->surfacePoint;
-  for(vector<double>::const_iterator j(bendAngles.begin());
+  for(std::vector<double>::const_iterator j(bendAngles.begin());
       j != bendAngles.end(); ++j)
     {
       pushNewBend(aSubunit, *j);
@@ -352,7 +352,7 @@ bool PolymerizationProcess::isInterrupting(Process* aProcess)
 void PolymerizationProcess::initJoinSubunit(Voxel* aMolecule, Species* aSpecies,
                                             Subunit* refSubunit)
 {
-  const vector<double>& bendAngles(aSpecies->getBendAngles());
+  const std::vector<double>& bendAngles(aSpecies->getBendAngles());
   Subunit* aSubunit(aMolecule->subunit);
   aSubunit->bendSize = bendAngles.size();
   aSubunit->voxel = aMolecule;
@@ -454,7 +454,7 @@ void PolymerizationProcess::removeContPoint(Subunit* aSubunit,  Point* aPoint)
             }
         }
     }
-  cout << "error in remove contPoint at time:" << getStepper()->getCurrentTime() << endl;
+  std::cout << "error in remove contPoint at time:" << getStepper()->getCurrentTime() << std::endl;
 }
 
 void PolymerizationProcess::resetSubunit(Subunit* aSubunit)
@@ -470,7 +470,7 @@ void PolymerizationProcess::resetSubunit(Subunit* aSubunit)
       if(aSubunit->boundBends[i])
         {
           Subunit* boundSubunit(aSubunit->targetVoxels[i]->subunit);
-          vector<Voxel*>& sourceVoxels(boundSubunit->sourceVoxels);
+          std::vector<Voxel*>& sourceVoxels(boundSubunit->sourceVoxels);
           for(unsigned int j(0); j != sourceVoxels.size(); ++j)
             {
               if(sourceVoxels[j] == aSubunit->voxel)
@@ -485,8 +485,8 @@ void PolymerizationProcess::resetSubunit(Subunit* aSubunit)
       if(aSubunit->sourceVoxels[i] != NULL)
         {
           Subunit* boundSubunit(aSubunit->sourceVoxels[i]->subunit);
-          vector<Voxel*>& targetVoxels(boundSubunit->targetVoxels);
-          vector<bool>& boundBends(boundSubunit->boundBends);
+          std::vector<Voxel*>& targetVoxels(boundSubunit->targetVoxels);
+          std::vector<bool>& boundBends(boundSubunit->boundBends);
           for(unsigned int j(0); j != targetVoxels.size(); ++j)
             {
               if(targetVoxels[j] == aSubunit->voxel)
@@ -505,7 +505,7 @@ void PolymerizationProcess::resetSubunit(Subunit* aSubunit)
   aSubunit->boundBends.resize(0);
   //Do not remove aSubunit->contPoints and aSubunit->contPointSize because
   //they hold persistent information of the voxel, not the subunit.
-  //cout << "reset done" << endl;
+  //std::cout << "reset done" << std::endl;
 }
 
 void PolymerizationProcess::removeLipid(Subunit* aSubunit, 
@@ -642,7 +642,7 @@ bool PolymerizationProcess::react(Voxel* moleculeB, Voxel** target)
                       moleculeC = C-> getRandomAdjoiningVoxel(moleculeB);
                       if(moleculeC == NULL)
                         {
-                          //cout << "unavailable" << endl;
+                          //std::cout << "unavailable" << std::endl;
                           return false;
                         }
                     }
@@ -660,7 +660,7 @@ bool PolymerizationProcess::react(Voxel* moleculeB, Voxel** target)
           moleculeB->id = B->getVacantID();
           C->addMolecule(moleculeC);
           resetSubunit(moleculeA->subunit);
-          //cout << "left" << endl;
+          //std::cout << "left" << std::endl;
           return true;
         }
     }
@@ -669,7 +669,7 @@ bool PolymerizationProcess::react(Voxel* moleculeB, Voxel** target)
 
 void PolymerizationProcess::updateSharedLipidsID(Voxel* aMolecule)
 {
-  vector<Voxel*>& sharedLipids(aMolecule->subunit->sharedLipids);
+  std::vector<Voxel*>& sharedLipids(aMolecule->subunit->sharedLipids);
   for(unsigned int i(0); i != sharedLipids.size(); ++i)
     {
       if(sharedLipids[i])
@@ -715,7 +715,7 @@ Voxel* PolymerizationProcess::setNewTargetVoxel(Subunit* aSubunit,
 bool PolymerizationProcess::setTargetVoxels(Subunit* aSubunit)
 {
   bool retValue(true);
-  vector<unsigned int>  nearestBends;
+  std::vector<unsigned int>  nearestBends;
   for(unsigned int i(0); i != aSubunit->bendSize; ++i)
     {
       int j(setExistingTargetVoxel(aSubunit, i));
@@ -728,11 +728,11 @@ bool PolymerizationProcess::setTargetVoxels(Subunit* aSubunit)
           retValue = false;
         }
     } 
-  vector<vector<Voxel*> > targetVoxels; 
-  vector<vector<double> > distances;
-  vector<vector<int> > sharedIndices; 
-  vector<unsigned int> sizes;
-  vector<unsigned int> curr;
+  std::vector<std::vector<Voxel*> > targetVoxels; 
+  std::vector<std::vector<double> > distances;
+  std::vector<std::vector<int> > sharedIndices; 
+  std::vector<unsigned int> sizes;
+  std::vector<unsigned int> curr;
   targetVoxels.resize(nearestBends.size());
   distances.resize(nearestBends.size());
   sharedIndices.resize(nearestBends.size());
@@ -744,17 +744,17 @@ bool PolymerizationProcess::setTargetVoxels(Subunit* aSubunit)
                                               distances[i],
                                               sharedIndices[i]));
       curr[i] = 0;
-      cout << "size:" << sizes[i] << endl;
+      std::cout << "size:" << sizes[i] << std::endl;
     }
   for(unsigned int i(0); i != nearestBends.size(); ++i)
     {
-      cout << "aBend:" << nearestBends[i] << endl;
+      std::cout << "aBend:" << nearestBends[i] << std::endl;
       for(unsigned int j(0); j != sizes[i]; ++j)
         {
-          cout << "dist:" << j << " " << distances[i][j] << endl;
+          std::cout << "dist:" << j << " " << distances[i][j] << std::endl;
         }
     }
-  cout << "before" << endl;
+  std::cout << "before" << std::endl;
   unsigned int j(1);
   while(j != nearestBends.size())
     {
@@ -804,16 +804,16 @@ bool PolymerizationProcess::setTargetVoxels(Subunit* aSubunit)
       ++j;
     }
   /*
-  cout << "end" << endl;
+  std::cout << "end" << std::endl;
   for(unsigned int i(0); i != nearestBends.size(); ++i)
     {
-      cout << "dist:" << distances[i][curr[i]] << endl;
+      std::cout << "dist:" << distances[i][curr[i]] << std::endl;
       if(!i && nearestBends.size() > 1)
         {
-          cout << "In:" << curr[i] << " out:" << curr[i+1] << endl;
+          std::cout << "In:" << curr[i] << " out:" << curr[i+1] << std::endl;
           if(targetVoxels[i][curr[i]] == targetVoxels[i+1][curr[i+1]])
             {
-              cout << "same" << endl;
+              std::cout << "same" << std::endl;
             }
         }
     }
@@ -823,28 +823,28 @@ bool PolymerizationProcess::setTargetVoxels(Subunit* aSubunit)
     { 
       if(sizes[k])
         {
-          //cout << "k:" << k << endl;
+          //std::cout << "k:" << k << std::endl;
           unsigned int i(nearestBends[k]);
           aSubunit->targetVoxels[i] = targetVoxels[k][curr[k]]; 
           Voxel* aRefVoxel(aSubunit->voxel);
           Point* aRefPoint(&aSubunit->targetPoints[i]);
           if(sharedIndices[k][curr[k]] != -1)
             { 
-              //cout << "here:" << sharedIndices[k][curr[k]] << endl;
-              vector<Voxel*>& aSharedList((*aRefVoxel->surfaceVoxels)
+              //std::cout << "here:" << sharedIndices[k][curr[k]] << std::endl;
+              std::vector<Voxel*>& aSharedList((*aRefVoxel->surfaceVoxels)
                                           [SHARED+sharedIndices[k][curr[k]]]);
               double aSharedDist(LARGE_DISTANCE);
               Voxel* aSelectedSharedVoxel(NULL);
               for(unsigned int j(0); j != aSharedList.size(); ++j)
                 { 
-                  //cout << "sharedlist:" << j << endl;
+                  //std::cout << "sharedlist:" << j << std::endl;
                   Voxel* aSharedVoxel(aSharedList[j]);
                   Subunit* aSharedSubunit(aSharedVoxel->subunit);
                   //First find an existing shared voxel which connects
                   //the reference voxel to the extended voxel:
                   if(aSharedSubunit->voxel == aSubunit->voxel)
                     {
-                      //cout << "break" << endl;
+                      //std::cout << "break" << std::endl;
                       aSelectedSharedVoxel = aSharedVoxel;
                       break;
                     }
@@ -852,19 +852,19 @@ bool PolymerizationProcess::setTargetVoxels(Subunit* aSubunit)
                   //protomer:
                   else if(aSharedSubunit->contPoints.empty())
                     {
-                      //cout << "elsse" << endl;
+                      //std::cout << "elsse" << std::endl;
                       double aDist(getDistance(aRefPoint,
                                            &aSharedSubunit->surfacePoint));
                       if(aDist < aSharedDist)
                         {
-                          //cout << "af" << endl;
+                          //std::cout << "af" << std::endl;
                           aSharedDist = aDist;
                           aSelectedSharedVoxel = aSharedVoxel;
                         }
                     }
                   else
                     {
-                      //cout << "failure" << endl;
+                      //std::cout << "failure" << std::endl;
                       return false;
                     }
                 }
@@ -873,10 +873,10 @@ bool PolymerizationProcess::setTargetVoxels(Subunit* aSubunit)
               if(!id2species(aSelectedSharedVoxel->id)->getIsLipid() &&
                  aSelectedSharedVoxel->subunit->voxel != aRefVoxel)
                 {
-                  //cout << "fail1 immed"  << endl;
+                  //std::cout << "fail1 immed"  << std::endl;
                   return false;
                 }
-                          //cout << "afdaff" << endl;
+                          //std::cout << "afdaff" << std::endl;
               aSelectedSharedVoxel->subunit->voxel = aRefVoxel;
               //Add the subunitPoint of the reference protomer to the 
               //list of contPoints of the selected shared subunit:
@@ -884,11 +884,11 @@ bool PolymerizationProcess::setTargetVoxels(Subunit* aSubunit)
                            &aSubunit->subunitPoint);
               aSubunit->sharedLipids[i] = aSelectedSharedVoxel;
             }
-                          //cout << "afllll" << endl;
+                          //std::cout << "afllll" << std::endl;
           addContPoint(aSubunit->targetVoxels[i]->subunit, aRefPoint);
         }
     }
-  //cout << "Herell" << endl;
+  //std::cout << "Herell" << std::endl;
   return retValue;
 }
 
@@ -898,7 +898,7 @@ int PolymerizationProcess::setExistingTargetVoxel(Subunit* aRefSubunit,
 {
   Voxel* aRefVoxel(aRefSubunit->voxel);
   Point* aRefPoint(&aRefSubunit->targetPoints[aBendIndex]);
-  vector<Voxel*>& immediateSurface(aRefVoxel->surfaceVoxels[0][IMMEDIATE]);
+  std::vector<Voxel*>& immediateSurface(aRefVoxel->surfaceVoxels[0][IMMEDIATE]);
   //Check the immediate 6 (usually) surface voxels adjoining the voxel of the
   //reference subunit:
   for(unsigned int i(0); i != immediateSurface.size(); ++i)
@@ -944,7 +944,7 @@ int PolymerizationProcess::setExistingTargetVoxel(Subunit* aRefSubunit,
         }
 
     }
-  vector<Voxel*>& extendedSurface(aRefVoxel->surfaceVoxels[0][EXTENDED]);
+  std::vector<Voxel*>& extendedSurface(aRefVoxel->surfaceVoxels[0][EXTENDED]);
   //Check the immediate surface voxels adjoining the immediate surface voxels
   //of the reference subunit, defined as the extended surface voxels:
   for(unsigned int i(0); i != extendedSurface.size(); ++i)
@@ -973,7 +973,7 @@ int PolymerizationProcess::setExistingTargetVoxel(Subunit* aRefSubunit,
                           i = k;
                         }
                     }
-                  vector<Voxel*>& aSharedList(aRefVoxel->surfaceVoxels[0]
+                  std::vector<Voxel*>& aSharedList(aRefVoxel->surfaceVoxels[0]
                                               [SHARED+i]);
                   //Find out if we can occupy at least one of the shared 
                   //voxels which is either already set to the reference
@@ -1018,13 +1018,13 @@ int PolymerizationProcess::setExistingTargetVoxel(Subunit* aRefSubunit,
 unsigned int PolymerizationProcess::sortNearestTargetVoxels(
                                                   Subunit* aRefSubunit,
                                                   unsigned int aBendIndex,
-                                                  vector<Voxel*>& targetVoxels, 
-                                                  vector<double>& distances,
-                                                  vector<int>& sharedIndices) 
+                                                  std::vector<Voxel*>& targetVoxels, 
+                                                  std::vector<double>& distances,
+                                                  std::vector<int>& sharedIndices) 
 {
   Voxel* aRefVoxel(aRefSubunit->voxel);
   Point* aRefPoint(&aRefSubunit->targetPoints[aBendIndex]);
-  vector<Voxel*>& immediateSurface((*aRefVoxel->surfaceVoxels)[IMMEDIATE]);
+  std::vector<Voxel*>& immediateSurface((*aRefVoxel->surfaceVoxels)[IMMEDIATE]);
   unsigned int bendSize(aRefSubunit->bendSize);
   unsigned int aSize(0);
   distances.resize(bendSize);
@@ -1038,7 +1038,7 @@ unsigned int PolymerizationProcess::sortNearestTargetVoxels(
       if(aSubunit->contPoints.empty())
         {
           double aDist(getDistance(aRefPoint, &aSubunit->surfacePoint));
-          //cout << "immediate:" << aDist << endl;
+          //std::cout << "immediate:" << aDist << std::endl;
           unsigned int j(aSize);
           while(j)
             {
@@ -1066,14 +1066,14 @@ unsigned int PolymerizationProcess::sortNearestTargetVoxels(
             }
         }
     }
-  vector<Voxel*>& extendedSurface((*aRefVoxel->surfaceVoxels)[EXTENDED]);
+  std::vector<Voxel*>& extendedSurface((*aRefVoxel->surfaceVoxels)[EXTENDED]);
   for(unsigned int i(0); i != extendedSurface.size(); ++i)
     { 
       Voxel* aVoxel(extendedSurface[i]);
       Subunit* aSubunit(aVoxel->subunit);
       if(aSubunit->contPoints.empty())
         {
-          vector<Voxel*>& aSharedList((*aRefVoxel->surfaceVoxels)[SHARED+i]);
+          std::vector<Voxel*>& aSharedList((*aRefVoxel->surfaceVoxels)[SHARED+i]);
           for(unsigned int j(0); j!=aSharedList.size(); ++j)
             { 
               Voxel* aSharedVoxel(aSharedList[j]);
@@ -1081,7 +1081,7 @@ unsigned int PolymerizationProcess::sortNearestTargetVoxels(
                  aSharedVoxel->subunit->voxel == aRefVoxel)
                 { 
                   double aDist(getDistance(aRefPoint, &aSubunit->surfacePoint));
-                  //cout << "extended:" << aDist << endl;
+                  //std::cout << "extended:" << aDist << std::endl;
                   unsigned int j(aSize);
                   while(j)
                     {
@@ -1123,7 +1123,7 @@ double PolymerizationProcess::setImmediateTargetVoxel(Subunit* aRefSubunit,
   Voxel* aRefVoxel(aRefSubunit->voxel);
   Point* aRefPoint(&aRefSubunit->targetPoints[aBendIndex]);
   double anImmediateDist(LARGE_DISTANCE);
-  vector<Voxel*>& immediateSurface(aRefVoxel->surfaceVoxels[0][IMMEDIATE]);
+  std::vector<Voxel*>& immediateSurface(aRefVoxel->surfaceVoxels[0][IMMEDIATE]);
   //Check the immediate 6 (usually) surface voxels adjoining the voxel of the
   //reference subunit:
   for(unsigned int i(0); i!=immediateSurface.size(); ++i)
@@ -1163,7 +1163,7 @@ bool PolymerizationProcess::setExtendedTargetVoxel(Subunit* aRefSubunit,
   double immeDist(extDist);
   Voxel* aRefVoxel(aRefSubunit->voxel);
   Point* aRefPoint(&aRefSubunit->targetPoints[aBendIndex]);
-  vector<Voxel*>& extendedSurface(aRefVoxel->surfaceVoxels[0][EXTENDED]);
+  std::vector<Voxel*>& extendedSurface(aRefVoxel->surfaceVoxels[0][EXTENDED]);
   int extIndex(-1);
   //Check the immediate surface voxels adjoining the immediate surface voxels
   //of the reference subunit, defined as the extended surface voxels:
@@ -1181,7 +1181,7 @@ bool PolymerizationProcess::setExtendedTargetVoxel(Subunit* aRefSubunit,
             { 
               //Find the shared voxel which connects the reference voxel
               //to the extended voxel:
-              vector<Voxel*>& 
+              std::vector<Voxel*>& 
                 aSharedList(aRefVoxel->surfaceVoxels[0][SHARED+i]);
               //Check if there is an existing shared voxel or a voxel
               //that is unoccupied by a protomer, which connects
@@ -1208,7 +1208,7 @@ bool PolymerizationProcess::setExtendedTargetVoxel(Subunit* aRefSubunit,
       if(extIndex != -1)
         {
           Voxel* aVoxel(extendedSurface[extIndex]);
-          vector<Voxel*>& 
+          std::vector<Voxel*>& 
             aSharedList(aRefVoxel->surfaceVoxels[0][SHARED+extIndex]);
           double aSharedDist(LARGE_DISTANCE);
           Voxel* aSelectedSharedVoxel(NULL);
@@ -1240,7 +1240,7 @@ bool PolymerizationProcess::setExtendedTargetVoxel(Subunit* aRefSubunit,
           if(!id2species(aSelectedSharedVoxel->id)->getIsLipid() &&
              aSelectedSharedVoxel->subunit->voxel != aRefVoxel)
             {
-              //cout << "fail1 immed:" << immeDist << endl;
+              //std::cout << "fail1 immed:" << immeDist << std::endl;
               return false;
             }
           aSelectedSharedVoxel->subunit->voxel = aRefVoxel;

@@ -59,38 +59,38 @@ void SpatiocyteStepper::initialize()
   //and get the available number of vacant voxels. The compartmentalized
   //vacant voxels are needed to randomly place molecules according to the
   //compartment:
-  cout << "2. creating compartments..." << endl;
+  std::cout << "2. creating compartments..." << std::endl;
   registerCompartments();
   setCompartmentsProperties();
-  cout << "3. setting up lattice properties..." << endl;
+  std::cout << "3. setting up lattice properties..." << std::endl;
   setLatticeProperties(); 
   setCompartmentsCenterPoint();
   //All species have been created at this point, we initialize them now:
-  cout << "4. initializing species..." << endl;
+  std::cout << "4. initializing species..." << std::endl;
   initSpecies();
-  cout << "5. initializing processes the second time..." << endl;
+  std::cout << "5. initializing processes the second time..." << std::endl;
   initProcessSecond();
-  cout << "7. constructing lattice..." << endl;
+  std::cout << "7. constructing lattice..." << std::endl;
   constructLattice();
-  cout << "8. shuffling adjoining voxels..." << endl;
+  std::cout << "8. shuffling adjoining voxels..." << std::endl;
   shuffleAdjoiningVoxels();
-  cout << "9. compartmentalizing lattice..." << endl;
+  std::cout << "9. compartmentalizing lattice..." << std::endl;
   compartmentalizeLattice();
-  cout << "10. setting up properties of surface voxels..." << endl;
+  std::cout << "10. setting up properties of surface voxels..." << std::endl;
   setSurfaceVoxelProperties();
-  cout << "11. populating compartments with molecules..." << endl;
+  std::cout << "11. populating compartments with molecules..." << std::endl;
   populateCompartments();
   storeSimulationParameters();
   //checkSurfaceCompartment();
-  cout << "12. initializing processes the third time..." << endl;
+  std::cout << "12. initializing processes the third time..." << std::endl;
   initProcessThird();
-  cout << "13. initializing the priority queue..." << endl;
+  std::cout << "13. initializing the priority queue..." << std::endl;
   initPriorityQueue();
   printSimulationParameters();
-  cout << "14. initializing processes the fourth time..." << endl;
+  std::cout << "14. initializing processes the fourth time..." << std::endl;
   initProcessFourth();
   initProcessLastOnce();
-  cout << "15. simulation is started..." << endl;
+  std::cout << "15. simulation is started..." << std::endl;
   //checkSurfaceCompartment();
   //checkLattice();
 }
@@ -145,7 +145,7 @@ void SpatiocyteStepper::reset(int seed)
 
 Species* SpatiocyteStepper::addSpecies(Variable* aVariable)
 {
-  vector<Species*>::iterator aSpeciesIter(variable2species(aVariable));
+  std::vector<Species*>::iterator aSpeciesIter(variable2species(aVariable));
   if(aSpeciesIter == theSpecies.end())
     {
       Species *aSpecies(new Species(this, aVariable, theSpecies.size(),
@@ -158,7 +158,7 @@ Species* SpatiocyteStepper::addSpecies(Variable* aVariable)
 
 Species* SpatiocyteStepper::getSpecies(Variable* aVariable)
 {
-  vector<Species*>::iterator aSpeciesIter(variable2species(aVariable));
+  std::vector<Species*>::iterator aSpeciesIter(variable2species(aVariable));
   if(aSpeciesIter == theSpecies.end())
     {
       return NULL;
@@ -166,7 +166,7 @@ Species* SpatiocyteStepper::getSpecies(Variable* aVariable)
   return *aSpeciesIter;
 }
 
-vector<Species*> SpatiocyteStepper::getSpecies()
+std::vector<Species*> SpatiocyteStepper::getSpecies()
 {
   return theSpecies;
 }
@@ -297,10 +297,10 @@ Point SpatiocyteStepper::getPeriodicPoint(unsigned int aCoord,
 }
 
 
-vector<Species*>::iterator
+std::vector<Species*>::iterator
 SpatiocyteStepper::variable2species(Variable* aVariable)
 {
-  for(vector<Species*>::iterator i(theSpecies.begin());
+  for(std::vector<Species*>::iterator i(theSpecies.begin());
       i != theSpecies.end(); ++i)
     {
       if((*i)->getVariable() == aVariable)
@@ -313,7 +313,7 @@ SpatiocyteStepper::variable2species(Variable* aVariable)
 
 void SpatiocyteStepper::checkLattice()
 {
-  vector<int> list;
+  std::vector<int> list;
   for(unsigned int i(0); i!=theSpecies.size(); ++i)
     {
       list.push_back(0);
@@ -326,10 +326,10 @@ void SpatiocyteStepper::checkLattice()
   int surfaceCnt(0);
   for(unsigned int i(0); i!=list.size(); ++i)
     {
-      cout << "i:" << i << " ";
+      std::cout << "i:" << i << " ";
       if(theSpecies[i]->getVariable() != NULL)
         {
-          cout << theSpecies[i]->getVariable()->getFullID().asString();
+          std::cout << theSpecies[i]->getVariable()->getFullID().asString();
           if(theSpecies[i]->getIsVolume())
             {
               volumeCnt += list[i];
@@ -339,11 +339,11 @@ void SpatiocyteStepper::checkLattice()
               surfaceCnt += list[i];
             }
         }
-      cout << " cnt:" << list[i] << endl;
+      std::cout << " cnt:" << list[i] << std::endl;
     }
-  cout << "total volume:" << volumeCnt << endl;
-  cout << "total surface:" << surfaceCnt << endl;
-  cout << "total volume+surface:" << surfaceCnt+volumeCnt << endl;
+  std::cout << "total volume:" << volumeCnt << std::endl;
+  std::cout << "total surface:" << surfaceCnt << std::endl;
+  std::cout << "total volume+surface:" << surfaceCnt+volumeCnt << std::endl;
 }
 
 void SpatiocyteStepper::checkSurfaceCompartment()
@@ -402,7 +402,7 @@ void SpatiocyteStepper::checkSurfaceCompartment()
     {
       if((*i)->isSurface)
         {
-          cout << "size:" << (*i)->coords.size() << endl;
+          std::cout << "size:" << (*i)->coords.size() << std::endl;
           int surfaceID((*i)->vacantID);
           for(vector<unsigned int>::const_iterator j((*i)->coords.begin());
               j != (*i)->coords.end(); ++j )
@@ -429,16 +429,16 @@ void SpatiocyteStepper::checkSurfaceCompartment()
   for(int i(0); i!=12; ++i)
     {
       total += surfaceCnt[i];
-      cout << i << ": " << surfaceCnt[i] << endl;
+      std::cout << i << ": " << surfaceCnt[i] << std::endl;
     }
-  cout << "total:" << total << endl;
-  cout << "size:" << theSpecies.back()->size() << endl;
+  std::cout << "total:" << total << std::endl;
+  std::cout << "size:" << theSpecies.back()->size() << std::endl;
 }
 */
 
 void SpatiocyteStepper::initSpecies()
 {
-  for(vector<Species*>::iterator i(theSpecies.begin());
+  for(std::vector<Species*>::iterator i(theSpecies.begin());
       i != theSpecies.end(); ++i)
     {
       (*i)->initialize(theSpecies.size());
@@ -447,7 +447,7 @@ void SpatiocyteStepper::initSpecies()
 
 void SpatiocyteStepper::initProcessSecond()
 {
-  for(vector<Process*>::const_iterator i(theProcessVector.begin());
+  for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
     {      
       SpatiocyteProcess* aProcess(reinterpret_cast<SpatiocyteProcess*>(*i));
@@ -457,7 +457,7 @@ void SpatiocyteStepper::initProcessSecond()
 
 void SpatiocyteStepper::printProcessParameters()
 {
-  for(vector<Process*>::const_iterator i(theProcessVector.begin());
+  for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
     {      
       SpatiocyteProcess* aProcess(reinterpret_cast<SpatiocyteProcess*>(*i));
@@ -467,7 +467,7 @@ void SpatiocyteStepper::printProcessParameters()
 
 void SpatiocyteStepper::initProcessThird()
 {
-  for(vector<Process*>::const_iterator i(theProcessVector.begin());
+  for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
     {      
       SpatiocyteProcess* aProcess(reinterpret_cast<SpatiocyteProcess*>(*i));
@@ -477,7 +477,7 @@ void SpatiocyteStepper::initProcessThird()
 
 void SpatiocyteStepper::initProcessFourth()
 {
-  for(vector<Process*>::const_iterator i(theProcessVector.begin());
+  for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
     {      
       SpatiocyteProcess* aProcess(reinterpret_cast<SpatiocyteProcess*>(*i));
@@ -488,7 +488,7 @@ void SpatiocyteStepper::initProcessFourth()
 
 void SpatiocyteStepper::initProcessLastOnce()
 {
-  for(vector<Process*>::const_iterator i(theProcessVector.begin());
+  for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
     {      
       SpatiocyteProcess* aProcess(reinterpret_cast<SpatiocyteProcess*>(*i));
@@ -500,7 +500,7 @@ void SpatiocyteStepper::initPriorityQueue()
 {
   const double aCurrentTime(getCurrentTime());
   thePriorityQueue.clear();
-  for(vector<Process*>::const_iterator i(theProcessVector.begin());
+  for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
     {      
       SpatiocyteProcess*
@@ -546,7 +546,7 @@ void SpatiocyteStepper::initPriorityQueue()
 
 void SpatiocyteStepper::populateCompartments()
 {
-  for(vector<Compartment*>::const_iterator i(theCompartments.begin());
+  for(std::vector<Compartment*>::const_iterator i(theCompartments.begin());
       i != theCompartments.end(); ++i)
     {
       populateCompartment(*i);
@@ -555,7 +555,7 @@ void SpatiocyteStepper::populateCompartments()
 
 void SpatiocyteStepper::clearCompartments()
 {
-  for(vector<Compartment*>::const_iterator i(theCompartments.begin());
+  for(std::vector<Compartment*>::const_iterator i(theCompartments.begin());
       i != theCompartments.end(); ++i)
     {
       clearCompartment(*i);
@@ -578,7 +578,7 @@ inline void SpatiocyteStepper::step()
 void SpatiocyteStepper::registerCompartments()
 {
   System* aRootSystem(getModel()->getRootSystem());
-  vector<Compartment*> allSubs;
+  std::vector<Compartment*> allSubs;
   //The root compartment is theCompartments[0]
   theCompartments.push_back(registerCompartment(aRootSystem, &allSubs));
   //After this we will create an species to get an ID to represent
@@ -595,10 +595,10 @@ void SpatiocyteStepper::registerCompartments()
   //Expand the tree of immediate subcompartments into single list such that
   //the super compartments come first while the subcompartments 
   //come later in the list:
-  vector<Compartment*> compartments(theCompartments[0]->immediateSubs);
+  std::vector<Compartment*> compartments(theCompartments[0]->immediateSubs);
   while(!compartments.empty())
     {
-      vector<Compartment*> subCompartments;
+      std::vector<Compartment*> subCompartments;
       for(unsigned int i(0); i != compartments.size(); ++i)
         {
           theCompartments.push_back(compartments[i]);
@@ -615,7 +615,7 @@ void SpatiocyteStepper::registerCompartments()
 //allSubs contains all the subCompartments (child, grand child, great grand
 //child, etc). Used to calculate the total number of compartment voxels.
 Compartment* SpatiocyteStepper::registerCompartment(System* aSystem,
-                                            vector<Compartment*>* allSubs)
+                                            std::vector<Compartment*>* allSubs)
 { 
   //We execute this function to register the System, and its subsystems
   //recursively.
@@ -742,7 +742,7 @@ void SpatiocyteStepper::setCompartmentsProperties()
 {
   for(unsigned int i(0); i != theCompartments.size(); ++i)
     {
-      cout << theCompartments[i]->system->getFullID().asString() << endl;
+      std::cout << theCompartments[i]->system->getFullID().asString() << std::endl;
       setCompartmentProperties(theCompartments[i]);
     }
 }
@@ -786,7 +786,7 @@ void SpatiocyteStepper::registerCompartmentSpecies(Compartment* aCompartment)
               aSpecies->setIsVacant();
             }
         }
-      vector<Species*>::iterator j(variable2species(aVariable));
+      std::vector<Species*>::iterator j(variable2species(aVariable));
       if(j != theSpecies.end())
         {
           aCompartment->species.push_back(*j);
@@ -877,25 +877,25 @@ void SpatiocyteStepper::storeSimulationParameters()
 
 void SpatiocyteStepper::printSimulationParameters()
 {
-  cout << endl;
+  std::cout << std::endl;
   for(unsigned int i(0); i != theSpecies.size()-1; ++i)
     {
-      cout << "id:" << i << " " << 
-        theSpecies[i]->getVariable()->getFullID().asString() << endl;
+      std::cout << "id:" << i << " " << 
+        theSpecies[i]->getVariable()->getFullID().asString() << std::endl;
     }
-  cout << "id:" << theSpecies.size()-1  << " NULL" << endl; 
-  cout << "Voxel radius, r_v:" << VoxelRadius << " m" << endl;
-  cout << "Simulation height:" << theCenterPoint.y*2*VoxelRadius*2 <<
-    " m" << endl;
-  cout << "Simulation width:" << theCenterPoint.z*2*VoxelRadius*2 << 
-    " m" << endl;
-  cout << "Simulation length:" << theCenterPoint.x*2*VoxelRadius*2 <<
-    " m" << endl;
-  cout << "Row size:" << theRowSize << endl;
-  cout << "Layer size:" << theLayerSize << endl;
-  cout << "Column size:" << theColSize << endl;
-  cout << "Total allocated voxels:" << 
-    theRowSize*theLayerSize*theColSize << endl;
+  std::cout << "id:" << theSpecies.size()-1  << " NULL" << std::endl; 
+  std::cout << "Voxel radius, r_v:" << VoxelRadius << " m" << std::endl;
+  std::cout << "Simulation height:" << theCenterPoint.y*2*VoxelRadius*2 <<
+    " m" << std::endl;
+  std::cout << "Simulation width:" << theCenterPoint.z*2*VoxelRadius*2 << 
+    " m" << std::endl;
+  std::cout << "Simulation length:" << theCenterPoint.x*2*VoxelRadius*2 <<
+    " m" << std::endl;
+  std::cout << "Row size:" << theRowSize << std::endl;
+  std::cout << "Layer size:" << theLayerSize << std::endl;
+  std::cout << "Column size:" << theColSize << std::endl;
+  std::cout << "Total allocated voxels:" << 
+    theRowSize*theLayerSize*theColSize << std::endl;
   for(unsigned int i(0); i != theCompartments.size(); ++i)
     {
       Compartment* aCompartment(theCompartments[i]);
@@ -906,59 +906,59 @@ void SpatiocyteStepper::printSimulationParameters()
       switch(aCompartment->shape)
         {
         case SPHERICAL:
-          cout << "Spherical (radius=" << 
+          std::cout << "Spherical (radius=" << 
             pow(3*aSpecVolume/(4*M_PI), 1.0/3) << "m) ";
           break;
         case ROD:
-          cout << "Rod (radius=" << aCompartment->lengthY*VoxelRadius << 
+          std::cout << "Rod (radius=" << aCompartment->lengthY*VoxelRadius << 
             "m, cylinder length=" <<
             (aCompartment->eastPoint.x-aCompartment->westPoint.y)*
             VoxelRadius*2 << "m) ";
           break;
         case CUBIC:
-          cout << "Cubic ";
+          std::cout << "Cubic ";
           break;
         case CUBOID:
-          cout << "Cuboid ";
+          std::cout << "Cuboid ";
           break;
         case ELLIPSOID:
-          cout << "Ellipsoid ";
+          std::cout << "Ellipsoid ";
           break;
         }
-      cout << aCompartment->system->getFullID().asString();
+      std::cout << aCompartment->system->getFullID().asString();
       if(aCompartment->isSurface)
         {
-          cout << " Surface Compartment:" << endl;
-          cout << "  [" << int(aSpecArea*(6*sqrt(2)+4*sqrt(3)+3*sqrt(6))/
+          std::cout << " Surface Compartment:" << std::endl;
+          std::cout << "  [" << int(aSpecArea*(6*sqrt(2)+4*sqrt(3)+3*sqrt(6))/
                               (72*VoxelRadius*VoxelRadius)) << 
             "] Specified surface voxels {n_s = S_specified*"
-            << "(6*2^0.5+4*3^0.5+3*6^0.5)/(72*r_v^2}" << endl;
-          cout << "  [" << aCompartment->coords.size() <<
-            "] Actual surface voxels {n_s}" << endl;
-          cout << "  [" << aSpecArea << " m^2] Specified surface area " <<
-            "{S_specified}" << endl;
-          cout << "  [" << anActualArea << " m^2] Actual surface area " <<
-            "{S = (72*r_v^2)*n_s/(6*2^0.5+4*3^0.5+3*6^0.5)}" << endl;
+            << "(6*2^0.5+4*3^0.5+3*6^0.5)/(72*r_v^2}" << std::endl;
+          std::cout << "  [" << aCompartment->coords.size() <<
+            "] Actual surface voxels {n_s}" << std::endl;
+          std::cout << "  [" << aSpecArea << " m^2] Specified surface area " <<
+            "{S_specified}" << std::endl;
+          std::cout << "  [" << anActualArea << " m^2] Actual surface area " <<
+            "{S = (72*r_v^2)*n_s/(6*2^0.5+4*3^0.5+3*6^0.5)}" << std::endl;
         }
       else
         {
-          cout << " Volume Compartment:" << endl;
+          std::cout << " Volume Compartment:" << std::endl;
           int voxelCnt(aCompartment->coords.size());
           for(unsigned int j(0); j != aCompartment->allSubs.size(); ++j)
             {
               voxelCnt += aCompartment->allSubs[j]->coords.size();
             }
-          cout << "  [" << int(aSpecVolume/(4*sqrt(2)*pow(VoxelRadius, 3))) << 
+          std::cout << "  [" << int(aSpecVolume/(4*sqrt(2)*pow(VoxelRadius, 3))) << 
             "] Specified volume voxels {n_v = V_specified/(4*2^0.5*r_v^3)}" <<
-          endl;  
-          cout << "  [" << voxelCnt << "] Actual volume voxels {n_v}"  << endl;
-          cout << "  [" << aSpecVolume << " m^3] Specified volume {V_specified}"
-            << endl; 
-          cout << "  [" << anActualVolume << " m^3] Actual volume " <<
-            "{V = (4*2^0.5*r_v^3)*n_v}" << endl; 
+          std::endl;  
+          std::cout << "  [" << voxelCnt << "] Actual volume voxels {n_v}"  << std::endl;
+          std::cout << "  [" << aSpecVolume << " m^3] Specified volume {V_specified}"
+            << std::endl; 
+          std::cout << "  [" << anActualVolume << " m^3] Actual volume " <<
+            "{V = (4*2^0.5*r_v^3)*n_v}" << std::endl; 
         }
     }
-  cout << endl;
+  std::cout << std::endl;
   printProcessParameters();
 }
 
@@ -1039,7 +1039,7 @@ void SpatiocyteStepper::constructLattice()
   unsigned int a(0);
   unsigned int b(theStartCoord);
   unsigned short rootID(aRootCompartment->vacantID);
-  for(vector<Voxel>::iterator i(theLattice.begin()); a != aSize; ++i, ++a, ++b)
+  for(std::vector<Voxel>::iterator i(theLattice.begin()); a != aSize; ++i, ++a, ++b)
     { 
       unsigned int aCol(a/(theRowSize*theLayerSize)); 
       unsigned int aLayer((a%(theRowSize*theLayerSize))/theRowSize); 
@@ -1715,7 +1715,7 @@ void SpatiocyteStepper::replaceUniVoxel(Voxel* aSrcVoxel, Voxel* aDestVoxel)
 
 void SpatiocyteStepper::shuffleAdjoiningVoxels()
 {
-  for(vector<Voxel>::iterator i(theLattice.begin()); i != theLattice.end(); ++i)
+  for(std::vector<Voxel>::iterator i(theLattice.begin()); i != theLattice.end(); ++i)
     {
       if((*i).id != theNullID)
         { 
@@ -1727,7 +1727,7 @@ void SpatiocyteStepper::shuffleAdjoiningVoxels()
 
 void SpatiocyteStepper::setSurfaceVoxelProperties()
 {
-  for(vector<Compartment*>::iterator i(theCompartments.begin());
+  for(std::vector<Compartment*>::iterator i(theCompartments.begin());
       i != theCompartments.end(); ++i)
     {
       if((*i)->isSurface)
@@ -1735,7 +1735,7 @@ void SpatiocyteStepper::setSurfaceVoxelProperties()
           setReactiveCompartments(*i);
           removePeriodicEdgeVoxels(*i);
           removeSurfaces(*i);
-          for(vector<unsigned int>::iterator j((*i)->coords.begin());
+          for(std::vector<unsigned int>::iterator j((*i)->coords.begin());
               j != (*i)->coords.end(); ++j)
             {
               Voxel* aVoxel(&theLattice[*j]);
@@ -1750,8 +1750,8 @@ void SpatiocyteStepper::removePeriodicEdgeVoxels(Compartment* aCompartment)
 { 
   if(isPeriodicEdge)
     {
-      vector<unsigned int> coords;
-      for(vector<unsigned int>::iterator j(aCompartment->coords.begin());
+      std::vector<unsigned int> coords;
+      for(std::vector<unsigned int>::iterator j(aCompartment->coords.begin());
           j != aCompartment->coords.end(); ++j)
         {
           Voxel* aVoxel(&theLattice[*j]);
@@ -1770,8 +1770,8 @@ void SpatiocyteStepper::removePeriodicEdgeVoxels(Compartment* aCompartment)
 
 void SpatiocyteStepper::removeSurfaces(Compartment* aCompartment)
 { 
-  vector<unsigned int> coords;
-  for(vector<unsigned int>::iterator j(aCompartment->coords.begin());
+  std::vector<unsigned int> coords;
+  for(std::vector<unsigned int>::iterator j(aCompartment->coords.begin());
       j != aCompartment->coords.end(); ++j)
     {
       Voxel* aVoxel(&theLattice[*j]);
@@ -1791,24 +1791,24 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(Voxel* aVoxel,
                                              Compartment* aCompartment)
 {
   unsigned short surfaceID(aCompartment->vacantID);
-  aVoxel->surfaceVoxels = new vector<vector<Voxel*> >;
+  aVoxel->surfaceVoxels = new std::vector<std::vector<Voxel*> >;
   aVoxel->surfaceVoxels->resize(4);
-  vector<Voxel*>& immediateSurface((*aVoxel->surfaceVoxels)[IMMEDIATE]);
-  vector<Voxel*>& extendedSurface((*aVoxel->surfaceVoxels)[EXTENDED]);
-  vector<Voxel*>& innerVolume((*aVoxel->surfaceVoxels)[INNER]);
-  vector<Voxel*>& outerVolume((*aVoxel->surfaceVoxels)[OUTER]);
-  vector<vector<Voxel*> > sharedVoxelsList;
+  std::vector<Voxel*>& immediateSurface((*aVoxel->surfaceVoxels)[IMMEDIATE]);
+  std::vector<Voxel*>& extendedSurface((*aVoxel->surfaceVoxels)[EXTENDED]);
+  std::vector<Voxel*>& innerVolume((*aVoxel->surfaceVoxels)[INNER]);
+  std::vector<Voxel*>& outerVolume((*aVoxel->surfaceVoxels)[OUTER]);
+  std::vector<std::vector<Voxel*> > sharedVoxelsList;
   Voxel** forward(aVoxel->adjoiningVoxels);
   Voxel** reverse(forward+ADJOINING_VOXEL_SIZE);
-  vector<Voxel*> adjoiningCopy;
+  std::vector<Voxel*> adjoiningCopy;
   for(int k(0); k != ADJOINING_VOXEL_SIZE; ++k)
     {
       adjoiningCopy.push_back(forward[k]);
     }
   //Separate adjoining surface voxels and adjoining volume voxels.
   //Put the adjoining surface voxels at the beginning of the
-  //adjoiningVoxels list while the volume voxels are put at the endl:
-  for(vector<Voxel*>::iterator l(adjoiningCopy.begin());
+  //adjoiningVoxels list while the volume voxels are put at the std::endl:
+  for(std::vector<Voxel*>::iterator l(adjoiningCopy.begin());
       l != adjoiningCopy.end(); ++l)
     {
       if((*l) != aVoxel && ((*l)->id == surfaceID || 
@@ -1829,7 +1829,7 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(Voxel* aVoxel,
                  find(adjoiningCopy.begin(), adjoiningCopy.end(),
                       extendedVoxel) == adjoiningCopy.end())
                 {
-                  vector<Voxel*>::iterator n(find(extendedSurface.begin(),
+                  std::vector<Voxel*>::iterator n(find(extendedSurface.begin(),
                         extendedSurface.end(), extendedVoxel));
                   if(n == extendedSurface.end())
                     {
@@ -1838,7 +1838,7 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(Voxel* aVoxel,
                       //connects the extended voxel with the source voxel 
                       //for polymerization. Create a new list of shared
                       //immediate voxel each time a new extended voxel is added:
-                      vector<Voxel*> sharedVoxels;
+                      std::vector<Voxel*> sharedVoxels;
                       sharedVoxels.push_back(*l);
                       sharedVoxelsList.push_back(sharedVoxels);
                     }
@@ -1870,7 +1870,7 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(Voxel* aVoxel,
             }
         }
     } 
-  for(vector<vector<Voxel*> >::iterator i(sharedVoxelsList.begin());
+  for(std::vector<std::vector<Voxel*> >::iterator i(sharedVoxelsList.begin());
       i != sharedVoxelsList.end(); ++i)
     {
       aVoxel->surfaceVoxels->push_back(*i);
@@ -1967,7 +1967,7 @@ void SpatiocyteStepper::setSurfaceSubunit(Voxel* aVoxel,
 
 void SpatiocyteStepper::compartmentalizeLattice() 
 {
-  for(vector<Voxel>::iterator i(theLattice.begin()); i != theLattice.end(); ++i)
+  for(std::vector<Voxel>::iterator i(theLattice.begin()); i != theLattice.end(); ++i)
     {
       if((*i).id != theNullID)
         { 
@@ -2161,7 +2161,7 @@ void SpatiocyteStepper::populateCompartment(Compartment* aCompartment)
   unsigned int populationSize(0);
   unsigned int gaussianPopulationSize(0);
   //First, populate gaussian distributed molecules, if any:
-  for(vector<Species*>::const_iterator i(aCompartment->species.begin());
+  for(std::vector<Species*>::const_iterator i(aCompartment->species.begin());
       i != aCompartment->species.end(); ++i)
     {
       populationSize += (unsigned int)(*i)->getPopulateMoleculeSize();
@@ -2194,7 +2194,7 @@ void SpatiocyteStepper::populateCompartment(Compartment* aCompartment)
           //to shuffle the order of voxel positions:
           gsl_ran_shuffle(getRng(), populateVoxels, populationSize,
                           sizeof(unsigned int)); 
-          for(vector<Species*>::const_iterator i(aCompartment->species.begin());
+          for(std::vector<Species*>::const_iterator i(aCompartment->species.begin());
               i != aCompartment->species.end(); ++i)
             {
               if(!(*i)->getIsGaussianPopulation())
@@ -2211,7 +2211,7 @@ void SpatiocyteStepper::populateCompartment(Compartment* aCompartment)
       //large compartments with small number of molecules.
       else
         {
-          for(vector<Species*>::const_iterator i(aCompartment->species.begin());
+          for(std::vector<Species*>::const_iterator i(aCompartment->species.begin());
               i != aCompartment->species.end(); ++i)
             {
               if(!(*i)->getIsGaussianPopulation())
@@ -2226,7 +2226,7 @@ void SpatiocyteStepper::populateCompartment(Compartment* aCompartment)
 
 void SpatiocyteStepper::clearCompartment(Compartment* aCompartment)
 {
-  for(vector<Species*>::const_iterator i(aCompartment->species.begin());
+  for(std::vector<Species*>::const_iterator i(aCompartment->species.begin());
       i != aCompartment->species.end(); ++i)
     {
       (*i)->removeMolecules();

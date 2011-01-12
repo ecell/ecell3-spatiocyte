@@ -55,7 +55,7 @@ void FluorescentImagingProcess::incSpeciesLatticeCount()
 
 void FluorescentImagingProcess::logFluorescentSpecies()
 {
-  vector<int> coordList;
+  std::vector<int> coordList;
   for(unsigned int i(0); i != theLatticeSize; ++i)
     { 
       for(unsigned int j(0); j != theProcessSpecies.size(); ++j)
@@ -68,7 +68,7 @@ void FluorescentImagingProcess::logFluorescentSpecies()
         }
     }
   int aDataSize(0);
-  streampos aStartPos(theLogFile.tellp());
+  std::streampos aStartPos(theLogFile.tellp());
   // write the next size (create a temporary space for it) 
   theLogFile.write((char*)(&aDataSize), sizeof(aDataSize));
   double aCurrentTime(theSpatiocyteStepper->getCurrentTime());
@@ -93,7 +93,7 @@ void FluorescentImagingProcess::logFluorescentSpecies()
   theStepStartPos = theLogFile.tellp();
   // write the prev size at the end of this step
   theLogFile.write((char*)(&aPrevDataSize), sizeof(aPrevDataSize));
-  streampos aCurrentPos(theLogFile.tellp());
+  std::streampos aCurrentPos(theLogFile.tellp());
   theLogFile.seekp(aStartPos);
   // write the next size at the beginning of this step
   theLogFile.write((char*) (&aDataSize), sizeof(aDataSize));

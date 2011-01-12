@@ -36,7 +36,7 @@ LIBECS_DM_INIT(MoleculePopulateProcess, Process);
 void MoleculePopulateProcess::initializeSecond()
 {
   SpatiocyteProcess::initializeSecond();
-  for(vector<Species*>::const_iterator i(theProcessSpecies.begin());
+  for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
       i != theProcessSpecies.end(); ++i)
     {
       (*i)->setPopulateProcess(this, GaussianSigma);
@@ -45,7 +45,7 @@ void MoleculePopulateProcess::initializeSecond()
 
 void MoleculePopulateProcess::fire()
 {
-  for(vector<Species*>::const_iterator i(theProcessSpecies.begin());
+  for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
       i != theProcessSpecies.end(); ++i)
     {
       (*i)->removeMolecules();
@@ -123,13 +123,13 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
           aPoint.x = aCompartment->lengthX*OriX*0.5+aCompartment->centerPoint.x;
           aPoint.y = aCompartment->lengthY*OriY*0.5+aCompartment->centerPoint.y;
           aPoint.z = aCompartment->lengthZ*OriZ*0.5+aCompartment->centerPoint.z;
-          cout << "the compartment center point:" << endl;
-          cout << "x:" << aCompartment->centerPoint.x <<
+          std::cout << "the compartment center point:" << std::endl;
+          std::cout << "x:" << aCompartment->centerPoint.x <<
             " y:" << aCompartment->centerPoint.y <<
-            " z:" << aCompartment->centerPoint.z << endl;
-          cout << "the placement target point:" << endl;
-          cout << "x:" << aPoint.x << " y:" << aPoint.y << " z:" << aPoint.z
-            << endl;
+            " z:" << aCompartment->centerPoint.z << std::endl;
+          std::cout << "the placement target point:" << std::endl;
+          std::cout << "x:" << aPoint.x << " y:" << aPoint.y << " z:" << aPoint.z
+            << std::endl;
           for(unsigned int j(0); j != aSize; ++j)
             {
               Voxel* aVoxel;

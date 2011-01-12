@@ -84,7 +84,7 @@ public:
               if(aPositiveCoefficient > 0)
                 {
                   thePositiveSpecies.push_back(aSpecies);
-                  vector<int> aProcessSpeciesIndices;
+                  std::vector<int> aProcessSpeciesIndices;
                   do
                     {
                       int aNegativeCoefficient(
@@ -122,7 +122,7 @@ public:
         }
       else
         {
-          for(vector<Species*>::const_iterator i(thePositiveSpecies.begin());
+          for(std::vector<Species*>::const_iterator i(thePositiveSpecies.begin());
               i != thePositiveSpecies.end(); ++i)
             {
               if((*i)->getDiffusionInterval() < theStepInterval)
@@ -145,9 +145,9 @@ public:
     }
   virtual void initializeLastOnce()
     {  
-      ostringstream aFilename;
-      aFilename << FileName << ends;
-      theLogFile.open(aFilename.str().c_str(), ios::binary | ios::trunc);
+      std::ostringstream aFilename;
+      aFilename << FileName << std::ends;
+      theLogFile.open(aFilename.str().c_str(), std::ios::binary | std::ios::trunc);
       initializeLog();
       logSurfaceVoxels();
     }
@@ -182,9 +182,9 @@ protected:
   int MeanCount;
   double ExposureTime;
   double theLastExposedTime;
-  vector<Species*> thePositiveSpecies;
-  vector<vector<int> > theLattice;
-  vector<vector<int> > theProcessSpeciesIndices;
+  std::vector<Species*> thePositiveSpecies;
+  std::vector<std::vector<int> > theLattice;
+  std::vector<std::vector<int> > theProcessSpeciesIndices;
 };
 
 #endif /* __FluorescentImagingProcess_hpp */

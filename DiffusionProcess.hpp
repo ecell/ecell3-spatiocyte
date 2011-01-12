@@ -64,7 +64,7 @@ public:
           return;
         }
       SpatiocyteProcess::initialize();
-      for(vector<Species*>::const_iterator i(theProcessSpecies.begin());
+      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
         {
           (*i)->setDiffusionCoefficient(D);
@@ -77,7 +77,7 @@ public:
       double rho(aSpecies->getMaxReactionProbability());
       if(D > 0)
         {
-          for(vector<Species*>::const_iterator i(theProcessSpecies.begin());
+          for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
               i != theProcessSpecies.end(); ++i)
             {
               if((*i)->getIsVolume() != isVolume)
@@ -117,7 +117,7 @@ public:
         {
           WalkProbability = P/rho;
         }
-      for(vector<Species*>::const_iterator i(theProcessSpecies.begin());
+      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
         {
           (*i)->rescaleReactionProbabilities(WalkProbability);
@@ -133,7 +133,7 @@ public:
             }
           theStepInterval = lambda*r_v*r_v*WalkProbability/D;
         }
-      for(vector<Species*>::const_iterator i(theProcessSpecies.begin());
+      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
         {
           (*i)->setDiffusionInterval(theStepInterval);
@@ -167,14 +167,14 @@ public:
     }
   virtual void printParameters()
     {
-      for(vector<Species*>::const_iterator i(theProcessSpecies.begin());
+      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
         {
-          cout << getIDString(*i) << " ";
+          std::cout << getIDString(*i) << " ";
         }
-      cout << ":" << endl << "  Diffusion interval=" << theStepInterval <<
+      std::cout << ":" << std::endl << "  Diffusion interval=" << theStepInterval <<
         ", D=" << D << ", Walk probability (P/rho)=" <<
-        WalkProbability << endl;
+        WalkProbability << std::endl;
     }
   virtual void fire()
     {
@@ -184,7 +184,7 @@ public:
     }
   const void volumeWalk() const
     {
-      for(vector<Species*>::const_iterator i(theProcessSpecies.begin());
+      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
         {
           (*i)->volumeWalk();
@@ -192,7 +192,7 @@ public:
     }
   const void volumeWalkCollide() const
     {
-      for(vector<Species*>::const_iterator i(theProcessSpecies.begin());
+      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
         {
           (*i)->volumeWalkCollide();
@@ -200,7 +200,7 @@ public:
     }
   const void surfaceWalk() const
     {
-      for(vector<Species*>::const_iterator i(theProcessSpecies.begin());
+      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
         {
           (*i)->surfaceWalk();
@@ -208,7 +208,7 @@ public:
     }
   const void surfaceWalkCollide() const
     {
-      for(vector<Species*>::const_iterator i(theProcessSpecies.begin());
+      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
         {
           (*i)->surfaceWalkCollide();
@@ -216,7 +216,7 @@ public:
     }
   virtual void initializeLastOnce()
     {
-      for(vector<Species*>::const_iterator i(theProcessSpecies.begin());
+      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
         {
           (*i)->addInterruptedProcess(
@@ -236,7 +236,7 @@ public:
     {
       if(theStepInterval != libecs::INF)
         {
-          for(vector<Species*>::const_iterator i(theProcessSpecies.begin());
+          for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
               i != theProcessSpecies.end(); ++i)
             {
               if((*i)->size())

@@ -163,7 +163,7 @@ void PolymerFragmentationProcess::fire()
       //the processes when checking:
       thePolymerizeProcess->resetSubunit(moleculeA->subunit);
     }
-  for(vector<ReactionProcess*>::const_iterator 
+  for(std::vector<ReactionProcess*>::const_iterator 
       i(theInterruptingProcesses.begin());
       i!=theInterruptingProcesses.end(); ++i)
     {

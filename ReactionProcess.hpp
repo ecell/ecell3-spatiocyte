@@ -66,7 +66,7 @@ public:
     {
       const Time aCurrentTime(theTime); // do this only for the Processes in Q
       requeue();
-      for(vector<ReactionProcess*>::const_iterator 
+      for(std::vector<ReactionProcess*>::const_iterator 
           i(theInterruptingProcesses.begin());
           i!=theInterruptingProcesses.end(); ++i)
         {
@@ -116,9 +116,9 @@ public:
           thePriorityQueue->moveUp(theQueueID);
         }          
     }
-  void setInterrupt(vector<Process*> &aProcessList, Process* aProcess)
+  void setInterrupt(std::vector<Process*> &aProcessList, Process* aProcess)
     {
-      for(vector<Process*>::const_iterator i(aProcessList.begin());
+      for(std::vector<Process*>::const_iterator i(aProcessList.begin());
           i != aProcessList.end(); ++i)
         {
           if(aProcess != (*i) && isInterrupting(*i))
@@ -169,7 +169,7 @@ protected:
   Variable* variableC;
   Variable* variableD;
   Variable* variableE;
-  vector<ReactionProcess*> theInterruptingProcesses;
+  std::vector<ReactionProcess*> theInterruptingProcesses;
 };
 
 inline void ReactionProcess::calculateOrder()
@@ -269,12 +269,12 @@ bool ReactionProcess::isInterrupting(Process* aProcess)
      "SpatiocyteNextReactionProcess") 
     {
       //First get the unique variable pointers of this process:
-      vector<Variable*> aVariableList;
+      std::vector<Variable*> aVariableList;
       for(VariableReferenceVector::iterator
           i(theVariableReferenceVector.begin());
           i != theVariableReferenceVector.end(); ++i)
         {
-          vector<Variable*>::const_iterator j(aVariableList.begin());
+          std::vector<Variable*>::const_iterator j(aVariableList.begin());
           while(j!=aVariableList.end())
             {
               if((*i).getVariable() == (*j))
@@ -290,9 +290,9 @@ bool ReactionProcess::isInterrupting(Process* aProcess)
         }
       //Find out if the values of the unique variables will be changed
       //by this process, i.e, netCoefficient != 0:
-      vector<int> aNetCoefficientList;
+      std::vector<int> aNetCoefficientList;
       aNetCoefficientList.resize(aVariableList.size());
-      for(vector<int>::iterator i(aNetCoefficientList.begin());
+      for(std::vector<int>::iterator i(aNetCoefficientList.begin());
           i!=aNetCoefficientList.end(); ++i)
         {
           (*i) = 0;
@@ -301,7 +301,7 @@ bool ReactionProcess::isInterrupting(Process* aProcess)
           i(theVariableReferenceVector.begin());
           i != theVariableReferenceVector.end(); ++i)
         {
-          for(vector<Variable*>::const_iterator j(aVariableList.begin());
+          for(std::vector<Variable*>::const_iterator j(aVariableList.begin());
               j!=aVariableList.end(); ++j)
             {
               if((*i).getVariable() == (*j))
@@ -321,7 +321,7 @@ bool ReactionProcess::isInterrupting(Process* aProcess)
         {
           if((*i).isAccessor())
             {
-              for(vector<Variable*>::const_iterator j(aVariableList.begin());
+              for(std::vector<Variable*>::const_iterator j(aVariableList.begin());
                   j!=aVariableList.end(); ++j)
                 {
                   if((*i).getVariable() == (*j) && 

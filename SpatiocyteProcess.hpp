@@ -142,8 +142,8 @@ protected:
   ProcessID theQueueID;
   ProcessPriorityQueue* thePriorityQueue; 
   SpatiocyteStepper* theSpatiocyteStepper;
-  vector<Species*> theSpecies;
-  vector<Species*> theProcessSpecies;
+  std::vector<Species*> theSpecies;
+  std::vector<Species*> theProcessSpecies;
   VariableReferenceVector thePositiveVariableReferences;
   VariableReferenceVector theNegativeVariableReferences;
   VariableReferenceVector theZeroVariableReferences;

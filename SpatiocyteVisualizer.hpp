@@ -41,8 +41,6 @@
 #define CUBIC_CLOSE_PACKING      1
 #define HEXAGONAL_CLOSE_PACKING  2
 
-using namespace std;
-
 struct Color
 {
   float r;

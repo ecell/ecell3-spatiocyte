@@ -78,8 +78,8 @@ protected:
   bool setTargetVoxels(Subunit*);
   void removeUnboundTargetVoxels(Subunit*);
   Voxel* setNewTargetVoxel(Subunit*, unsigned int);
-  unsigned int sortNearestTargetVoxels(Subunit*, unsigned int, vector<Voxel*>&,
-                                       vector<double>&, vector<int>&);
+  unsigned int sortNearestTargetVoxels(Subunit*, unsigned int, std::vector<Voxel*>&,
+                                       std::vector<double>&, std::vector<int>&);
   int getLocation(double x)
     {
       if(x > theMinX && x < theMaxX)

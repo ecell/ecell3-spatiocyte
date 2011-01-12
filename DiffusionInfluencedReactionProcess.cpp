@@ -154,7 +154,7 @@ void DiffusionInfluencedReactionProcess::finalizeReaction()
   //The number of molecules may have changed for both reactant and product
   //species. We need to update SpatiocyteNextReactionProcesses which are
   //dependent on these species:
-  for(vector<ReactionProcess*>::const_iterator 
+  for(std::vector<ReactionProcess*>::const_iterator 
       i(theInterruptingProcesses.begin());
       i!=theInterruptingProcesses.end(); ++i)
     {
@@ -281,38 +281,38 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
 
 void DiffusionInfluencedReactionProcess::printParameters()
 {
-  cout << "[" <<
+  std::cout << "[" <<
     A->getVariable()->getSystemPath().asString() << ":" <<
     A->getVariable()->getID() << "] + [" << 
     B->getVariable()->getSystemPath().asString() << ":" <<
     B->getVariable()->getID() << "] -> [";
   if(C)
     {
-      cout << 
+      std::cout << 
         C->getVariable()->getSystemPath().asString() << ":" <<
         C->getVariable()->getID() << "]";
     }
   else
     {
-      cout << 
+      std::cout << 
         variableC->getSystemPath().asString() << ":" <<
         variableC->getID() << "]";
     }
   if(D)
     {
-      cout << " + [" <<
+      std::cout << " + [" <<
         D->getVariable()->getSystemPath().asString() << ":" <<
         D->getVariable()->getID() << "]";
     }
   else if(variableD)
     {
-      cout << " + [" <<
+      std::cout << " + [" <<
         variableD->getSystemPath().asString() << ":" <<
         variableD->getID() << "]";
     }
-  cout << ": k=" << k << ", p=" << p << 
+  std::cout << ": k=" << k << ", p=" << p << 
     ", p_A=" << A->getReactionProbability(B->getID()) <<
-    ", p_B=" << B->getReactionProbability(A->getID()) << endl; 
+    ", p_B=" << B->getReactionProbability(A->getID()) << std::endl; 
 }
 
 

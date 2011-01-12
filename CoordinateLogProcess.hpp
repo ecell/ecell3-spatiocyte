@@ -53,7 +53,7 @@ public:
         {
           theMoleculeSize += theProcessSpecies[i]->size();
         }
-      theLogFile.open(FileName.c_str(), ios::trunc);
+      theLogFile.open(FileName.c_str(), std::ios::trunc);
       initializeLog();
       logSpecies();
     }
@@ -78,7 +78,7 @@ public:
         {
           logMolecules(i);
         }
-      theLogFile << endl;
+      theLogFile << std::endl;
     }
 protected:
   void initializeLog()
@@ -104,7 +104,7 @@ protected:
         }
       else
         {
-          theLogFile << endl;
+          theLogFile << std::endl;
         }
       for(unsigned int i(1); i < aSpecies->size(); ++i)
         {

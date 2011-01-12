@@ -52,12 +52,12 @@ void MassActionProcess::fire()
       if(aSpecies->getIsVolume())
         {
           theSpace = aSpecies->getCompartment()->actualVolume;
-          cout << "Mass Action Volume:" << theSpace << endl;
+          std::cout << "Mass Action Volume:" << theSpace << std::endl;
         }
       else
         {
           theSpace = aSpecies->getCompartment()->actualArea;
-          cout << "Mass Action Area:" << theSpace << endl;
+          std::cout << "Mass Action Area:" << theSpace << std::endl;
         }
     }
   double velocity(k);

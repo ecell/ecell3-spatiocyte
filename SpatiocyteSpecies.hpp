@@ -114,8 +114,8 @@ public:
         }
       else if(theMoleculeSize)
         {
-          cout << "Species:" << theVariable->getFullID().asString() <<
-            " not MoleculePopulated." << endl;
+          std::cout << "Species:" << theVariable->getFullID().asString() <<
+            " not MoleculePopulated." << std::endl;
         }
     }
   void populateCompartmentUniform(unsigned int voxelIDs[], unsigned int* aCount)
@@ -126,8 +126,8 @@ public:
         }
       else if(theMoleculeSize)
         {
-          cout << "Species:" << theVariable->getFullID().asString() <<
-            " not MoleculePopulated." << endl;
+          std::cout << "Species:" << theVariable->getFullID().asString() <<
+            " not MoleculePopulated." << std::endl;
         }
     }
   void populateCompartmentUniformSparse()
@@ -138,20 +138,20 @@ public:
         }
       else if(theMoleculeSize)
         {
-          cout << "Species:" << theVariable->getFullID().asString() <<
-            " not MoleculePopulated." << endl;
+          std::cout << "Species:" << theVariable->getFullID().asString() <<
+            " not MoleculePopulated." << std::endl;
         }
     }
   Variable* getVariable()
     {
       return theVariable;
     }
-  vector<unsigned int> getSourceCoords()
+  std::vector<unsigned int> getSourceCoords()
     {
-      vector<unsigned int> aCoords;
+      std::vector<unsigned int> aCoords;
       for(unsigned int i(0); i != theMoleculeSize; ++i)
         {
-          vector<Voxel*>& aSourceVoxels(theMolecules[i]->subunit->sourceVoxels);
+          std::vector<Voxel*>& aSourceVoxels(theMolecules[i]->subunit->sourceVoxels);
           for(unsigned int j(0); j != aSourceVoxels.size(); ++j)
             {
               if(aSourceVoxels[j])
@@ -162,12 +162,12 @@ public:
         }
       return aCoords;
     }
-  vector<unsigned int> getTargetCoords()
+  std::vector<unsigned int> getTargetCoords()
     {
-      vector<unsigned int> aCoords;
+      std::vector<unsigned int> aCoords;
       for(unsigned int i(0); i != theMoleculeSize; ++i)
         {
-          vector<Voxel*>& aTargetVoxels(theMolecules[i]->subunit->targetVoxels);
+          std::vector<Voxel*>& aTargetVoxels(theMolecules[i]->subunit->targetVoxels);
           for(unsigned int j(0); j != aTargetVoxels.size(); ++j)
             {
               if(aTargetVoxels[j])
@@ -178,12 +178,12 @@ public:
         }
       return aCoords;
     }
-  vector<unsigned int> getSharedCoords()
+  std::vector<unsigned int> getSharedCoords()
     {
-      vector<unsigned int> aCoords;
+      std::vector<unsigned int> aCoords;
       for(unsigned int i(0); i != theMoleculeSize; ++i)
         {
-          vector<Voxel*>& aSharedLipids(theMolecules[i]->subunit->sharedLipids);
+          std::vector<Voxel*>& aSharedLipids(theMolecules[i]->subunit->sharedLipids);
           for(unsigned int j(0); j != aSharedLipids.size(); ++j)
             {
               if(aSharedLipids[j])
@@ -194,7 +194,7 @@ public:
         }
       return aCoords;
     }
-  vector<Voxel*>& getMolecules()
+  std::vector<Voxel*>& getMolecules()
     {
       return theMolecules;
     }
@@ -268,12 +268,12 @@ public:
     {
       getVariable()->setValue(theMoleculeSize);
     }
-  void setIsPolymer(vector<double> bendAngles, int aDirectionality)
+  void setIsPolymer(std::vector<double> bendAngles, int aDirectionality)
     {
       theBendAngles.resize(0);
       thePolymerDirectionality = aDirectionality;
       isPolymer = true;
-      for(vector<double>::const_iterator i(bendAngles.begin()); 
+      for(std::vector<double>::const_iterator i(bendAngles.begin()); 
           i != bendAngles.end(); ++i)
         {
           theBendAngles.push_back(*i);
@@ -371,7 +371,7 @@ public:
             }
           if(source == target)
             {
-              cout << "error surface" << endl;
+              std::cout << "error surface" << std::endl;
             }
           if(target->id == vacantID)
             {
@@ -423,7 +423,7 @@ public:
               //We cannot have a volume/surface molecule colliding with itself
               //because we need to ensure homodimerization reaction is
               //correct.
-              cout << "error volume" << endl;
+              std::cout << "error volume" << std::endl;
             }
           //walk:
           if(target->id == vacantID)
@@ -491,7 +491,7 @@ public:
             }
           if(source == target)
             {
-              cout << "error surface" << endl;
+              std::cout << "error surface" << std::endl;
             }
           if(target->id == vacantID)
             {
@@ -540,7 +540,7 @@ public:
               //We cannot have a volume/surface molecule colliding with itself
               //because we need to ensure homodimerization reaction is
               //correct.
-              cout << "error volume" << endl;
+              std::cout << "error volume" << std::endl;
             }
           if(target->id == vacantID)
             {
@@ -643,13 +643,13 @@ public:
         {
           if(aMolecule != aMolecule->subunit->voxel)
             {
-              cout << "it is a shared molecule" << endl;
+              std::cout << "it is a shared molecule" << std::endl;
             }
-          cout << "error in soft removing molecule, couldn't find the"
+          std::cout << "error in soft removing molecule, couldn't find the"
            " specified molecule to be removed, molecule size:" << 
             theMoleculeSize << " value:" << theVariable->getValue() <<
-            getVariable()->getFullID().asString() << endl;
-          cout << "species:" << theStepper->id2species(aMolecule->id)->getVariable()->getFullID().asString() << endl;
+            getVariable()->getFullID().asString() << std::endl;
+          std::cout << "species:" << theStepper->id2species(aMolecule->id)->getVariable()->getFullID().asString() << std::endl;
         }
     }
   void removeMolecule(Voxel* aMolecule)
@@ -671,10 +671,10 @@ public:
         }
       if(!isLipid)
         {
-          cout << "error in removing molecule, couldn't find the specified" <<
+          std::cout << "error in removing molecule, couldn't find the specified" <<
             " molecule to be removed, molecule size:" << 
             theMoleculeSize << " value:" << theVariable->getValue() <<
-            getVariable()->getFullID().asString() << endl;
+            getVariable()->getFullID().asString() << std::endl;
         }
     }
   void removeMolecules()
@@ -712,7 +712,7 @@ public:
         {
           if(theStepper->isBoundaryCoord(theMolecules[i]->coord, isVolume))
             {
-              cout << "is still there" << endl;
+              std::cout << "is still there" << std::endl;
             }
         }
       theVariable->setValue(theMoleculeSize);
@@ -740,7 +740,7 @@ public:
     {
       return theCompartment->vacantID;
     }
-  const vector<double>& getBendAngles() const
+  const std::vector<double>& getBendAngles() const
     {
       return theBendAngles;
     }
@@ -771,7 +771,7 @@ public:
   double getMaxReactionProbability()
     {
       double maxProbability(0);
-      for(vector<double>::const_iterator i(theReactionProbabilities.begin()); 
+      for(std::vector<double>::const_iterator i(theReactionProbabilities.begin()); 
           i != theReactionProbabilities.end(); ++i)
         {
           if(maxProbability < *i)
@@ -784,7 +784,7 @@ public:
   void rescaleReactionProbabilities(double aWalkProbability)
     {
       theWalkProbability = aWalkProbability;
-      for(vector<double>::iterator i(theReactionProbabilities.begin()); 
+      for(std::vector<double>::iterator i(theReactionProbabilities.begin()); 
           i != theReactionProbabilities.end(); ++i)
         {
           *i = (*i)*aWalkProbability;
@@ -798,8 +798,8 @@ public:
     {
       if(theMoleculeSize == 0)
         {
-          cout << theVariable->getFullID().asString() << endl;
-          cout << "size:" << theVariable->getValue() << endl;
+          std::cout << theVariable->getFullID().asString() << std::endl;
+          std::cout << "size:" << theVariable->getValue() << std::endl;
         }
       return theMolecules[gsl_rng_uniform_int(theRng, theMoleculeSize)];
     }
@@ -820,7 +820,7 @@ public:
     }
   Voxel* getRandomAdjoiningVoxel(Voxel* source)
     {
-      vector<Voxel*> compartmentVoxels;
+      std::vector<Voxel*> compartmentVoxels;
       if(theStepper->getSearchVacant())
         { 
           for(unsigned int i(0); i != ADJOINING_VOXEL_SIZE; ++i)
@@ -847,7 +847,7 @@ public:
     } 
   Voxel* getRandomAdjoiningVoxel(Voxel* source, Voxel* target)
     {
-      vector<Voxel*> compartmentVoxels;
+      std::vector<Voxel*> compartmentVoxels;
       if(theStepper->getSearchVacant())
         { 
           for(unsigned int i(0); i != ADJOINING_VOXEL_SIZE; ++i)
@@ -876,7 +876,7 @@ public:
     }
   Voxel* getRandomAdjoiningVoxel(Voxel* source, Voxel* targetA, Voxel* targetB)
     {
-      vector<Voxel*> compartmentVoxels;
+      std::vector<Voxel*> compartmentVoxels;
       if(theStepper->getSearchVacant())
         { 
           for(unsigned int i(0); i != ADJOINING_VOXEL_SIZE; ++i)
@@ -903,7 +903,7 @@ public:
         }
       return getRandomVacantVoxel(&compartmentVoxels);
     }
-  Voxel* getRandomVacantVoxel(vector<Voxel*>* voxels)
+  Voxel* getRandomVacantVoxel(std::vector<Voxel*>* voxels)
     {
       if(voxels->size())
         {
@@ -972,13 +972,13 @@ private:
   MoleculePopulateProcess* thePopulateProcess;
   SpatiocyteStepper* theStepper;
   Variable* theVariable;
-  vector<double> theBendAngles;
-  vector<double> theReactionProbabilities;
-  vector<Voxel*> theMolecules;
-  vector<Species*> theDiffusionInfluencedReactantPairs;
-  vector<DiffusionInfluencedReactionProcess*> theDiffusionInfluencedReactions;
-  vector<SpatiocyteProcess*> theInterruptedProcesses;
-  vector<Origin> theMoleculeOrigins;
+  std::vector<double> theBendAngles;
+  std::vector<double> theReactionProbabilities;
+  std::vector<Voxel*> theMolecules;
+  std::vector<Species*> theDiffusionInfluencedReactantPairs;
+  std::vector<DiffusionInfluencedReactionProcess*> theDiffusionInfluencedReactions;
+  std::vector<SpatiocyteProcess*> theInterruptedProcesses;
+  std::vector<Origin> theMoleculeOrigins;
 };
 
 

@@ -56,7 +56,7 @@ public:
           return;
         }
       SpatiocyteProcess::initialize();
-      for(vector<Species*>::const_iterator i(theProcessSpecies.begin());
+      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
         {
           (*i)->setIsPolymer(theBendAngles, PolymerDirectionality);
@@ -73,7 +73,7 @@ public:
     }
   virtual void initializeThird()
     {
-      for(vector<Species*>::const_iterator i(theProcessSpecies.begin());
+      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
         {
           if((*i)->getIsDiffusing())
@@ -100,7 +100,7 @@ public:
     }
 protected:
   Polymorph BendAngles;
-  vector<double> theBendAngles;
+  std::vector<double> theBendAngles;
   int PolymerDirectionality;
 };
 

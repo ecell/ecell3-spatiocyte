@@ -61,7 +61,7 @@ public:
   void createSpecies();
   Species* addSpecies(Variable*);
   Species* getSpecies(Variable*);
-  vector<Species*> getSpecies();
+  std::vector<Species*> getSpecies();
   Point coord2point(unsigned int);
   void optimizeSurfaceVoxel(Voxel*, Compartment*);
   void setSurfaceSubunit(Voxel*, Compartment*);
@@ -137,7 +137,7 @@ private:
   unsigned int coord2row(unsigned int);
   unsigned int coord2col(unsigned int);
   unsigned int coord2layer(unsigned int);
-  Compartment* registerCompartment(System*, vector<Compartment*>*);
+  Compartment* registerCompartment(System*, std::vector<Compartment*>*);
   Variable* getVariable(System*, String const&);
 private:
   bool isInitialized;
@@ -157,10 +157,10 @@ private:
   double theHCPl;
   Point theCenterPoint;
   ProcessPriorityQueue thePriorityQueue; 
-  vector<Species*>::iterator variable2species(Variable*);
-  vector<Species*> theSpecies;
-  vector<Compartment*> theCompartments;
-  vector<Voxel> theLattice;
+  std::vector<Species*>::iterator variable2species(Variable*);
+  std::vector<Species*> theSpecies;
+  std::vector<Compartment*> theCompartments;
+  std::vector<Voxel> theLattice;
 };
 
 #endif /* __SpatiocyteStepper_hpp */

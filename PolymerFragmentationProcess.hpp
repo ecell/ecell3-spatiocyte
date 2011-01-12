@@ -124,7 +124,7 @@ protected:
   int theBendIndexB;
   double BendAngle;
   PolymerizationProcess* thePolymerizeProcess;
-  vector<Voxel*> theReactants;
+  std::vector<Voxel*> theReactants;
 };
 
 
