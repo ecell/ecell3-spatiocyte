@@ -20,9 +20,13 @@ PolymerizationProcess\
 PeriodicBoundaryDiffusionProcess\
 PolymerFragmentationProcess
 
+ECELL3_DMC = ecell3-dmc
 CXX = g++
-CXXFLAGS = -Wall -O3 -I/usr/include/freetype2 -I/usr/include/gtkglextmm-1.2 -I/usr/lib/gtkglextmm-1.2/include -I/usr/include/gtkglext-1.0 -I/usr/lib/gtkglext-1.0/include -I/usr/include/gtk-2.0 -I/usr/lib/gtk-2.0/include -I/usr/include/pango-1.0 -I/usr/include/cairo -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/include/gdkmm-2.4 -I/usr/lib/gdkmm-2.4/include -I/usr/include/glibmm-2.4 -I/usr/include/giomm-2.4 -I/usr/lib/glibmm-2.4/include -I/usr/include/cairomm-1.0 -I/usr/include/pangomm-1.4 -I/usr/lib/pangomm-1.4/include -I/usr/include/sigc++-2.0 -I/usr/lib/sigc++-2.0/include -I/usr/include/atk-1.0 -I/usr/include/gtkmm-2.4 -I/usr/lib/gtkmm-2.4/include -I/usr/include/atkmm-1.6 -DG_DISABLE_DEPRECATED -DGDK_DISABLE_DEPRECATED -DGDK_PIXBUF_DISABLE_DEPRECATED -DPNG_SKIP_SETJMP_CHECK -g
-GUILIBS = -lgtkglextmm-x11-1.2 -lgtkglext-x11-1.0 -lgdkglext-x11-1.0 -lGLU -lGL -lXmu -lXt -lSM -lICE -lpangox-1.0 -lgtkmm-2.4 -lgdkmm-2.4 -lgtk-x11-2.0 -lpangomm-1.4 -lglibmm-2.4 -lsigc-2.0 -lgdk-x11-2.0 -latk-1.0 -lgdk_pixbuf-2.0 -lm -lpangocairo-1.0 -lpango-1.0 -lcairo -lgobject-2.0 -lgmodule-2.0 -ldl -lglib-2.0 -lgdkglextmm-x11-1.2 -latkmm-1.6 -lpng12
+CXXFLAGS = -Wall -O3 -g
+CXXFLAGS += $(shell pkg-config --cflags gtkmm-2.4 gtkglextmm-x11-1.2)
+CPPFLAGS = -DG_DISABLE_DEPRECATED -DGDK_PIXBUF_DISABLE_DEPRECATED -DPNG_SKIP_SETJMP_CHECK # -DGDK_DISABLE_DEPRECATED 
+GUILIBS =
+GUILIBS += $(shell pkg-config --libs gtkmm-2.4 gtkglextmm-x11-1.2)
 SPATIOCYTE = spatiocyte
 OBJECTS=${OBJS:=.o}
 SOS=${DMS:=.so}
@@ -30,54 +34,57 @@ SOS=${DMS:=.so}
 all:	$(SOS) $(SPATIOCYTE)
 
 VisualizationLogProcess.so: 	VisualizationLogProcess.cpp
-	ecell3-dmc -o VisualizationLogProcess.so --ldflags=SpatiocyteProcess.so VisualizationLogProcess.cpp
+	$(ECELL3_DMC) -o VisualizationLogProcess.so --ldflags=SpatiocyteProcess.so VisualizationLogProcess.cpp
 
 FluorescentImagingProcess.so: 	FluorescentImagingProcess.cpp
-	ecell3-dmc -o FluorescentImagingProcess.so --ldflags="SpatiocyteProcess.so VisualizationLogProcess.so" FluorescentImagingProcess.cpp
+	$(ECELL3_DMC) -o FluorescentImagingProcess.so --ldflags="SpatiocyteProcess.so VisualizationLogProcess.so" FluorescentImagingProcess.cpp
 
 ReactionProcess.so: 	ReactionProcess.cpp
-	ecell3-dmc -o ReactionProcess.so --ldflags=SpatiocyteProcess.so ReactionProcess.cpp
+	$(ECELL3_DMC) -o ReactionProcess.so --ldflags=SpatiocyteProcess.so ReactionProcess.cpp
 
 IteratingLogProcess.so: 	IteratingLogProcess.cpp
-	ecell3-dmc -o IteratingLogProcess.so --ldflags=SpatiocyteProcess.so IteratingLogProcess.cpp
+	$(ECELL3_DMC) -o IteratingLogProcess.so --ldflags=SpatiocyteProcess.so IteratingLogProcess.cpp
 
 CoordinateLogProcess.so: 	CoordinateLogProcess.cpp
-	ecell3-dmc -o CoordinateLogProcess.so --ldflags="SpatiocyteProcess.so IteratingLogProcess.so" CoordinateLogProcess.cpp
+	$(ECELL3_DMC) -o CoordinateLogProcess.so --ldflags="SpatiocyteProcess.so IteratingLogProcess.so" CoordinateLogProcess.cpp
 
 DiffusionInfluencedReactionProcess.so: 	DiffusionInfluencedReactionProcess.cpp
-	ecell3-dmc -o DiffusionInfluencedReactionProcess.so --ldflags=ReactionProcess.so DiffusionInfluencedReactionProcess.cpp
+	$(ECELL3_DMC) -o DiffusionInfluencedReactionProcess.so --ldflags=ReactionProcess.so DiffusionInfluencedReactionProcess.cpp
 
 OscillationAnalysisProcess.so: 	OscillationAnalysisProcess.cpp
-	ecell3-dmc -o OscillationAnalysisProcess.so --ldflags="SpatiocyteProcess.so" OscillationAnalysisProcess.cpp
+	$(ECELL3_DMC) -o OscillationAnalysisProcess.so --ldflags="SpatiocyteProcess.so" OscillationAnalysisProcess.cpp
 
 SpatiocyteNextReactionProcess.so: 	SpatiocyteNextReactionProcess.cpp
-	ecell3-dmc -o SpatiocyteNextReactionProcess.so --ldflags=ReactionProcess.so SpatiocyteNextReactionProcess.cpp
+	$(ECELL3_DMC) -o SpatiocyteNextReactionProcess.so --ldflags=ReactionProcess.so SpatiocyteNextReactionProcess.cpp
 
 MoleculePopulateProcess.so: 	MoleculePopulateProcess.cpp
-	ecell3-dmc -o MoleculePopulateProcess.so --ldflags="SpatiocyteProcess.so DiffusionInfluencedReactionProcess.so" MoleculePopulateProcess.cpp
+	$(ECELL3_DMC) -o MoleculePopulateProcess.so --ldflags="SpatiocyteProcess.so DiffusionInfluencedReactionProcess.so" MoleculePopulateProcess.cpp
 
 DiffusionProcess.so: 	DiffusionProcess.cpp
-	ecell3-dmc -o DiffusionProcess.so --ldflags="SpatiocyteProcess.so DiffusionInfluencedReactionProcess.so" DiffusionProcess.cpp
+	$(ECELL3_DMC) -o DiffusionProcess.so --ldflags="SpatiocyteProcess.so DiffusionInfluencedReactionProcess.so" DiffusionProcess.cpp
 
 PolymerizationParameterProcess.so: 	PolymerizationParameterProcess.cpp
-	ecell3-dmc -o PolymerizationParameterProcess.so --ldflags="SpatiocyteProcess.so" PolymerizationParameterProcess.cpp
+	$(ECELL3_DMC) -o PolymerizationParameterProcess.so --ldflags="SpatiocyteProcess.so" PolymerizationParameterProcess.cpp
 
 PolymerizationProcess.so: 	PolymerizationProcess.cpp
-	ecell3-dmc -o PolymerizationProcess.so --ldflags="SpatiocyteProcess.so DiffusionInfluencedReactionProcess.so" PolymerizationProcess.cpp
+	$(ECELL3_DMC) -o PolymerizationProcess.so --ldflags="SpatiocyteProcess.so DiffusionInfluencedReactionProcess.so" PolymerizationProcess.cpp
 
 PeriodicBoundaryDiffusionProcess.so: 	PeriodicBoundaryDiffusionProcess.cpp
-	ecell3-dmc -o PeriodicBoundaryDiffusionProcess.so --ldflags=DiffusionProcess.so PeriodicBoundaryDiffusionProcess.cpp
+	$(ECELL3_DMC) -o PeriodicBoundaryDiffusionProcess.so --ldflags=DiffusionProcess.so PeriodicBoundaryDiffusionProcess.cpp
 
 PolymerFragmentationProcess.so: 	PolymerFragmentationProcess.cpp
-	ecell3-dmc -o PolymerFragmentationProcess.so --ldflags=ReactionProcess.so PolymerFragmentationProcess.cpp
+	$(ECELL3_DMC) -o PolymerFragmentationProcess.so --ldflags=ReactionProcess.so PolymerFragmentationProcess.cpp
 
 
 
-%.so: 	%.cpp
-	ecell3-dmc $< 
+%.so: %.cpp
+	$(ECELL3_DMC) $< 
 
-$(SPATIOCYTE):	$(OBJECTS)
-	$(CXX) -v -o spatiocyte $(OBJECTS) $(GUILIBS)
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c -o $@ $<
+
+$(SPATIOCYTE):$(OBJECTS)
+	$(CXX) -v -o $@ $(OBJECTS) $(GUILIBS)
 
 gui:	$(SPATIOCYTE)
 
