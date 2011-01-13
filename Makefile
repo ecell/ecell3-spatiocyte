@@ -26,7 +26,7 @@ CXXFLAGS = -Wall -O3 -g
 CXXFLAGS += $(shell pkg-config --cflags gtkmm-2.4 gtkglextmm-x11-1.2)
 CPPFLAGS = -DG_DISABLE_DEPRECATED -DGDK_PIXBUF_DISABLE_DEPRECATED -DPNG_SKIP_SETJMP_CHECK # -DGDK_DISABLE_DEPRECATED 
 GUILIBS =
-GUILIBS += $(shell pkg-config --libs gtkmm-2.4 gtkglextmm-x11-1.2)
+GUILIBS += $(shell pkg-config --libs gtkmm-2.4 gtkglextmm-x11-1.2 libpng)
 SPATIOCYTE = spatiocyte
 OBJECTS=${OBJS:=.o}
 SOS=${DMS:=.so}
@@ -88,32 +88,6 @@ $(SPATIOCYTE):$(OBJECTS)
 
 gui:	$(SPATIOCYTE)
 
-back:
-	mkdir ../backup/$(VER)
-	cp *.?pp ../backup/$(VER)
-	cp Makefile ../backup/$(VER)
-	cp *.em ../backup/$(VER)
-	cp *.txt ../backup/$(VER)
-	cp *.ess ../backup/$(VER)
-	cp *.py ../backup/$(VER)
-#	cp *.csv ../backup/$(VER)
-
-backBench:
-	mkdir ../backup/$(VER)
-	cp *.?pp ../backup/$(VER)
-	cp Makefile ../backup/$(VER)
-	cp *.em ../backup/$(VER)
-	cp *.ess ../backup/$(VER)
 clean: 
-	rm -f *.so
+	rm -f *.so *.o $(SPATIOCYTE)
 
-allclean: 
-	rm -f *.so *.dat *.o *.png $(SPATIOCYTE)
-
-pclean: 
-	rm -f *Process.so
-
-p:
-	rm -f *Process.so
-	make -j
-	gecell -f membrane.eml
