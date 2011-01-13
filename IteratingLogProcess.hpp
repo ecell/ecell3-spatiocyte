@@ -75,7 +75,8 @@ public:
     RebindTime(0),
     SaveInterval(0),
     Survival(0),
-    LogInterval(0) {}
+    LogInterval(0),
+    FileName("Log.csv") {}
   virtual ~IteratingLogProcess() {}
   virtual void initializeSecond()
     {

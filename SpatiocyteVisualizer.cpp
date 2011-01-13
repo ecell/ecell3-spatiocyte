@@ -126,7 +126,10 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   startRecord(false),
   theResetTime(0),
   showTime(true),
-  theMeanCoordSize(0)
+  theMeanCoordSize(0),
+  xAngle(0),
+  yAngle(0),
+  zAngle(0)
 {
   add_events(Gdk::VISIBILITY_NOTIFY_MASK); 
   
@@ -582,36 +585,6 @@ void GLScene::on_realize()
   */
   glwindow->gl_end();
 }
-/*
-  glClearColor (0, 0, 0, 0);
-  glClearDepth (1);
-  glEnable(GL_DEPTH_TEST); 
-  glEnable(GL_CULL_FACE);
-  glCullFace(GL_BACK);
-  glFrontFace(GL_CCW);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glAlphaFunc(GL_GREATER, 0.1);
-  glEnable(GL_ALPHA_TEST);
-  glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-  // This hint is for antialiasing
-  glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST); 
-  glEnable(GL_TEXTURE_2D);
-  glColorMaterial( GL_FRONT_AND_BACK, GL_DIFFUSE );
-  glEnable(GL_COLOR_MATERIAL);
-  glMatrixMode(GL_MODELVIEW);
-  glTranslatef(-ViewMidx,-ViewMidy,-ViewMidz);
-  glEnable(GL_BLEND); //draw Blend later
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-  GLUquadricObj* qobj = gluNewQuadric();
-  gluQuadricDrawStyle(qobj, GLU_FILL);
-  glNewList(SPHERE, GL_COMPILE);
-  gluSphere(qobj, 0.5, 30, 30);
-  glEndList();
-  glNewList(BOX, GL_COMPILE);
-  //drawBox(0,theRealColSize,0,theRealLayerSize,0,theRealRowSize);
-  glEndList();
-  */
 
 bool GLScene::on_expose_event(GdkEventExpose* event)
 {
@@ -1085,6 +1058,7 @@ void GLScene::setLayerColor( unsigned int aLayer )
     }
   glColor3f(r,g,b);
 }
+
 void GLScene::setTranslucentColor( unsigned int i, GLfloat j )
 {  
   switch(i)
@@ -1129,13 +1103,20 @@ void GLScene::setTranslucentColor( unsigned int i, GLfloat j )
     }
 }
 
-
 void GLScene::rotate(int aMult, int x, int y, int z)
 {
   glMatrixMode(GL_MODELVIEW);
   glRotatef(theRotateAngle*aMult,x,y,z);
   invalidate();
 }
+
+void GLScene::translate(int x, int y, int z)
+{
+  glMatrixMode(GL_MODELVIEW);
+  glTranslatef(x,y,z);
+  invalidate();
+}
+
 
 void GLScene::zoomIn()
 { 
@@ -1331,6 +1312,17 @@ void GLScene::resetView()
   glTranslatef(-ViewMidx,-ViewMidy,-ViewMidz);
   glTranslatef(0,0,-ViewSize/2.0-Near);
   invalidate();
+  xAngle = 0;
+  yAngle = 0;
+  zAngle = 0;
+  m_control->setXangle(xAngle);
+  m_control->setYangle(yAngle);
+  m_control->setZangle(zAngle);
+}
+
+void GLScene::resetBound()
+{
+
 }
 
 void GLScene::rotateMidAxis(int aMult, int x, int y, int z)
@@ -1344,8 +1336,67 @@ void GLScene::rotateMidAxis(int aMult, int x, int y, int z)
   glTranslatef(-Xtrans,-Ytrans,+(Near+ViewSize/2.0));
   glMultMatrixf(m);
   invalidate();
+  if(x)
+    {
+      xAngle += aMult*theRotateAngle;
+      normalizeAngle(xAngle);
+      m_control->setXangle(xAngle);
+    }
+  if(y)
+    {
+      yAngle += aMult*theRotateAngle;
+      normalizeAngle(yAngle);
+      m_control->setYangle(yAngle);
+    }
+  if(z)
+    {
+      zAngle += aMult*theRotateAngle;
+      normalizeAngle(zAngle);
+      m_control->setZangle(zAngle);
+    }
 }
 
+void GLScene::rotateMidAxisAbs(double angle, int x, int y, int z)
+{
+  GLfloat m[16];
+  glMatrixMode(GL_MODELVIEW);
+  glGetFloatv(GL_MODELVIEW_MATRIX,m);
+  glLoadIdentity();
+  glTranslatef(Xtrans,Ytrans,-(Near+ViewSize/2.0));
+  if(x)
+    {
+      glRotatef(angle-xAngle,x,y,z);
+      xAngle = angle;
+      m_control->setXangle(xAngle);
+    }
+  if(y)
+    {
+      glRotatef(angle-yAngle,x,y,z);
+      yAngle = angle;
+      m_control->setYangle(yAngle);
+    }
+  if(z)
+    {
+      glRotatef(angle-zAngle,x,y,z);
+      zAngle = angle;
+      m_control->setZangle(zAngle);
+    }
+  glTranslatef(-Xtrans,-Ytrans,+(Near+ViewSize/2.0));
+  glMultMatrixf(m);
+  invalidate();
+}
+
+void GLScene::normalizeAngle(double &angle)
+{
+  while(angle > 180)
+    {
+      angle -= 360;
+    }
+  while(angle < -180)
+    {
+      angle += 360;
+    }
+}
 
 void GLScene::pause()
 {
@@ -1406,7 +1457,7 @@ ControlBox::ControlBox(GLScene *anArea) :
   theZLowBoundAdj( 0, 0, 100, 1, 0, 0 ),
   theZLowBoundScale( theZLowBoundAdj ),
   theZLowBoundSpin( theZLowBoundAdj, 0, 0  ),
-  theFrameLatticeAdj("Scaling"),
+  theFrameLatticeAdj("Zoom"),
   theResetDepthButton( "Reset" ),
   theCheck3DMolecule( "Show 3D Molecules" ),
   theCheckShowTime( "Show Time" ),
@@ -1441,41 +1492,45 @@ ControlBox::ControlBox(GLScene *anArea) :
   theBoxInFrame.pack_start( theBoxRotFixReset, false, false, 1 );
   //theCheckFix.connect( 'toggled', fixRotToggled );
   theBoxRotFixReset.pack_start( theCheckFix );
-  //theResetRotButton.connect( 'clicked', resetRotClicked )
+  theResetRotButton.signal_clicked().connect( sigc::mem_fun(*this,
+                            &ControlBox::onResetRotation) );
   theBoxRotFixReset.pack_start( theResetRotButton );
 
   // X
   theXLabel.set_width_chars( 1 );
   theXBox.pack_start( theXLabel, false, false, 2 ); 
-  //theXAdj.connect( 'value_changed', xRotChanged )
   theXScale.set_draw_value( false );
   theXBox.pack_start( theXScale );
   theXSpin.set_width_chars( 3 );
   theXSpin.set_wrap( true );
   theXSpin.set_has_frame( false );
   theXBox.pack_start( theXSpin, false, false, 2 );
+  theXAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
+                           &ControlBox::xRotateChanged ) );
 
   // Y
   theYLabel.set_width_chars( 1 );
   theYBox.pack_start( theYLabel, false, false, 2 ); 
-  //theYAdj.connect( 'value_changed', yRotChanged )
   theYScale.set_draw_value( false );
   theYBox.pack_start( theYScale );
   theYSpin.set_width_chars( 3 );
   theYSpin.set_wrap( true );
   theYSpin.set_has_frame( false );
   theYBox.pack_start( theYSpin, false, false, 2 );
+  theYAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
+                           &ControlBox::yRotateChanged ) );
 
   // Z
   theZLabel.set_width_chars( 1 );
   theZBox.pack_start( theZLabel, false, false, 2 ); 
-  //theZAdj.connect( 'value_changed', zRotChanged )
   theZScale.set_draw_value( false );
   theZBox.pack_start( theZScale );
   theZSpin.set_width_chars( 3 );
   theZSpin.set_wrap( true );
   theZSpin.set_has_frame( false );
   theZBox.pack_start( theZSpin, false, false, 2 );
+  theZAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
+                           &ControlBox::zRotateChanged ) );
 
   // Create a frame the will have the lattice boundary adjusters
   // and the Fix and Reset buttons.
@@ -1491,7 +1546,8 @@ ControlBox::ControlBox(GLScene *anArea) :
   theBoxInBound.pack_start( theBoxBoundFixReset, false, false, 1 ); 
   //theCheckFixBound.connect( 'toggled', fixBoundToggled );
   theBoxBoundFixReset.pack_start( theCheckFixBound );
-  //theResetBoundButton.connect( 'clicked', resetBoundClicked );
+  theResetBoundButton.signal_clicked().connect( sigc::mem_fun(*this,
+                            &ControlBox::onResetBound) );
   theBoxBoundFixReset.pack_start( theResetBoundButton );
 
   unsigned int aLayerSize( m_area->getLayerSize() );
@@ -1730,9 +1786,57 @@ ControlBox::on_resetTime_clicked()
 }
 
 void
+ControlBox::onResetRotation()
+{
+  m_area->resetView();
+}
+
+void
+ControlBox::onResetBound()
+{
+  m_area->resetBound();
+}
+
+void
 ControlBox::on_record_toggled()
 {
   m_area->setRecord(theButtonRecord.get_active());
+}
+
+void
+ControlBox::setXangle(double angle)
+{
+  theXAdj.set_value(angle);
+}
+
+void
+ControlBox::setYangle(double angle)
+{
+  theYAdj.set_value(angle);
+}
+
+void
+ControlBox::setZangle(double angle)
+{
+  theZAdj.set_value(angle);
+}
+
+void
+ControlBox::xRotateChanged()
+{
+  m_area->rotateMidAxisAbs(theXAdj.get_value(), 1, 0, 0);
+}
+
+void
+ControlBox::yRotateChanged()
+{
+  m_area->rotateMidAxisAbs(theYAdj.get_value(), 0, 1, 0);
+}
+
+void
+ControlBox::zRotateChanged()
+{
+  m_area->rotateMidAxisAbs(theZAdj.get_value(), 0, 0, 1);
 }
 
 void
@@ -1899,16 +2003,44 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
       m_area.zoomOut();
       break;
     case GDK_Down:
-      m_area.rotateMidAxis(1,1,0,0);
+      if(event->state&Gdk::SHIFT_MASK)
+        {
+          m_area.translate(0,-1,0);
+        }
+      else
+        {
+          m_area.rotateMidAxis(1,1,0,0);
+        }
       break;
     case GDK_Up:
-      m_area.rotateMidAxis(-1,1,0,0);
+      if(event->state&Gdk::SHIFT_MASK)
+        {
+          m_area.translate(0,1,0);
+        }
+      else
+        {
+          m_area.rotateMidAxis(-1,1,0,0);
+        }
       break;
     case GDK_Right:
-      m_area.rotateMidAxis(1,0,1,0);
+      if(event->state&Gdk::SHIFT_MASK)
+        {
+          m_area.translate(1,0,0);
+        }
+      else
+        {
+          m_area.rotateMidAxis(1,0,1,0);
+        }
       break;
     case GDK_Left:
-      m_area.rotateMidAxis(-1,0,1,0);
+      if(event->state&Gdk::SHIFT_MASK)
+        {
+          m_area.translate(-1,0,0);
+        }
+      else
+        {
+          m_area.rotateMidAxis(-1,0,1,0);
+        }
       break;
     case GDK_l:
       m_area.rotateMidAxis(-1,0,0,1);
@@ -2083,4 +2215,5 @@ int main(int argc, char** argv)
   Gtk::Main::run(aRuler);
   return 0;
 }
+
 

@@ -41,6 +41,8 @@
 #define CUBIC_CLOSE_PACKING      1
 #define HEXAGONAL_CLOSE_PACKING  2
 
+using namespace std;
+
 struct Color
 {
   float r;
@@ -64,6 +66,9 @@ public:
   virtual ~ControlBox();
   void setStep(char* buffer);
   void setTime(char* buffer);
+  void setXangle(double);
+  void setYangle(double);
+  void setZangle(double);
 protected:
   void on_checkbutton_toggled(unsigned int id);
   bool on_checkbutton_clicked(GdkEventButton*, unsigned int);
@@ -72,6 +77,11 @@ protected:
   void on_showTime_toggled();
   void on_record_toggled();
   void on_resetTime_clicked();
+  void onResetRotation();
+  void onResetBound();
+  void xRotateChanged();
+  void yRotateChanged();
+  void zRotateChanged();
   void xUpBoundChanged();
   void xLowBoundChanged();
   void yUpBoundChanged();
@@ -189,7 +199,10 @@ protected:
 public:
   // Invalidate whole window.
   void rotate(int aMult, int x, int y, int z);
+  void translate(int x, int y, int z);
   void rotateMidAxis(int aMult, int x, int y, int z);
+  void rotateMidAxisAbs(double, int , int , int );
+  void resetBound();
   void pause();
   void resetView();
   void zoomIn();
@@ -245,6 +258,7 @@ public:
 protected:
   void drawBox(GLfloat xlo, GLfloat xhi, GLfloat ylo, GLfloat yhi,
                       GLfloat zlo, GLfloat zhi);
+  void drawScene(double);
   void timeout_add();
   void plotGrid();
   void plot3DMolecules();
@@ -259,8 +273,11 @@ protected:
   void setLayerColor(unsigned int i);
   void (GLScene::*thePlotFunction)();
   void (GLScene::*theLoadCoordsFunction)();
-
+  void normalizeAngle(double&);
 protected:
+  double xAngle;
+  double yAngle;
+  double zAngle;
   bool m_Run;
   bool m_RunReverse;
   sigc::connection m_ConnectionTimeout;
