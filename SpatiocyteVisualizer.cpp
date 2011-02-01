@@ -58,6 +58,39 @@
 #define MAX_COLORS 20
 #define PNG_NUM_MAX 9999999
 const unsigned int GLScene::TIMEOUT_INTERVAL = 10;
+const GLfloat white[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+const GLfloat black[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+const GLfloat backgroundColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+
+const int numShadowMapSizes=3;
+int shadowMapSizes[numShadowMapSizes]={128, 256, 512};
+int shadowMapSizeIndex=1;
+int shadowMapSize=shadowMapSizes[shadowMapSizeIndex];
+int maxShadowMapSize=shadowMapSizes[numShadowMapSizes-1];
+int depthMapPrecision=8;
+GLubyte * shadowMapData8Bit;
+GLuint shadowMap8Bit;
+GLuint depthRamp8Bit;
+GLubyte * shadowMapData16Bit;
+GLuint shadowMap16Bit;
+GLuint depthRamp16Bit;
+GLuint shadowMap24Bit;
+GLfloat bias2D[16] = {0.5f, 0.0f, 0.0f, 0.0f,	//COLUMN MAJOR
+				 0.0f, 0.5f, 0.0f, 0.0f,
+				 0.0f, 0.0f, 0.5f, 0.0f,
+				 0.5f, 0.5f, 0.5f, 1.0f};
+GLfloat bias1D[16] = {0.0f, 0.0f, 0.0f, 0.0f,
+				 0.0f, 0.0f, 0.0f, 0.0f,
+				 0.5f, 0.0f, 0.0f, 0.0f,
+				 0.5f, 0.0f, 0.0f, 1.0f};
+GLfloat ambient[4] = {0.2f, 0.2f, 0.2f, 0.2f};
+GLfloat dimDiffuse[4] = {0.2f, 0.2f, 0.2f, 0.2f};
+GLfloat brightDiffuse[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+bool drawFrustum=false;
+enum OBJECT_TYPE{SPHERES, TORI};
+OBJECT_TYPE objectType=SPHERES;
+bool regcomShadowMappingSupported=false;
+bool hardwareShadowMappingSupported=false;
 
 double hue2rgb( double a, double b, double h )
 {
@@ -515,75 +548,328 @@ void GLScene::on_realize()
     {
       return;
     }
-  //background color:
-  glClearColor (0, 0, 0, 0);
-  glClearDepth (1);
-  if(!theMeanCount)
-    {
-      glEnable(GL_DEPTH_TEST); //To darken molecules farther away
-      glDepthFunc(GL_LESS); //To show the molecule only if it is nearer (less)
-    }
-  glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-  if(!theMeanCount)
-    {
-      // This hint is for antialiasing
-      glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST); 
-    }
-  glEnable(GL_TEXTURE_2D);
-  glColorMaterial( GL_FRONT_AND_BACK, GL_DIFFUSE );
-  glEnable(GL_COLOR_MATERIAL);
-  glMatrixMode(GL_MODELVIEW);
-  glTranslatef(-ViewMidx,-ViewMidy,-ViewMidz); 
+  //Setup the camera:
+  Point anOrigin;
+  anOrigin.x = ViewMidx-2.5;
+  anOrigin.y = ViewMidy+3.5;
+  anOrigin.z = ViewMidz-2.5;
+  Point aLookAt;
+  aLookAt.x = 0;
+  aLookAt.y = 0;
+  aLookAt.z = 0;
+	theCamera = new Manipulator(anOrigin, aLookAt);
+	
+	//Setup the light:
+  anOrigin.x = ViewMidx+2;
+  anOrigin.y = ViewMidx+3;
+  anOrigin.z = ViewMidx-2;
+  aLookAt.x = 0;
+  aLookAt.y = -0.5;
+  aLookAt.z = 0;
+	theLight = new Light(anOrigin, aLookAt);
+	theLight->setClipDistance(2.0f, 8.0f);
+	theLight->updateMatrices();
 
-  m_FontListBase = glGenLists(128); 
-  m_FontString = "Courier 8";
-  Pango::FontDescription font_desc(m_FontString); 
-  Glib::RefPtr<Pango::Font> font(Gdk::GL::Font::use_pango_font(
-                                         font_desc, 0, 128, m_FontListBase));
-  Pango::FontMetrics font_metrics(font->get_metrics()); 
-  m_FontHeight = font_metrics.get_ascent() + font_metrics.get_descent();
-  m_FontHeight = PANGO_PIXELS(m_FontHeight);
-  m_FontWidth = PANGO_PIXELS(font_metrics.get_approximate_digit_width());
-  if(theMeanCount)
+	//Create the 8 bit shadow map texture
+	shadowMapData8Bit=new GLubyte[maxShadowMapSize*maxShadowMapSize];
+	glGenTextures(1, &shadowMap8Bit);
+	glBindTexture(GL_TEXTURE_2D, shadowMap8Bit);
+	glTexImage2D(	GL_TEXTURE_2D, 0, GL_ALPHA8, shadowMapSize, shadowMapSize,
+					0, GL_ALPHA, GL_UNSIGNED_BYTE, shadowMapData8Bit);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+	//Create the 8 bit depth ramp texture
+	GLubyte * depthRampData8Bit=new GLubyte[256];
+	for(int i=0; i<256; i++)
+		depthRampData8Bit[i]=i;
+
+	glGenTextures(1, &depthRamp8Bit);
+	glBindTexture(GL_TEXTURE_1D, depthRamp8Bit);
+	glTexImage1D(	GL_TEXTURE_1D, 0, GL_ALPHA8, 256,
+					0, GL_ALPHA, GL_UNSIGNED_BYTE, depthRampData8Bit);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+	delete [] depthRampData8Bit;
+	depthRampData8Bit=NULL;
+
+
+  shadowMapData16Bit=new GLubyte[maxShadowMapSize*maxShadowMapSize*2];
+  glGenTextures(1, &shadowMap16Bit);
+  glBindTexture(GL_TEXTURE_2D, shadowMap16Bit);
+  glTexImage2D(	GL_TEXTURE_2D, 0, GL_LUMINANCE8_ALPHA8, shadowMapSize, shadowMapSize,
+          0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, shadowMapData16Bit);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+  //Create the 16 bit depth ramp texture
+  GLubyte * depthRampData16Bit=new GLubyte[65536*2];
+  for(int i=0; i<256; i++)
+  {
+    for(int j=0; j<256; j++)
     {
-      //for GFP visualization:
-      glEnable(GL_BLEND);
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      depthRampData16Bit[i*512+j*2]=i;
+      depthRampData16Bit[i*512+j*2+1]=j;
     }
-  else
-    {
-      //for 3D molecules:
-      glEnable(GL_LIGHTING);
-      GLfloat LightAmbient[]= { 0.8, 0.8, 0.8, 1 }; 
-      GLfloat LightDiffuse[]= { 1, 1, 1, 1 };
-      GLfloat LightPosition[]= { theLayerSize/2, theRowSize/2, theColSize, 1 };
-      glLightfv(GL_LIGHT0, GL_AMBIENT, LightAmbient);
-      glLightfv(GL_LIGHT0, GL_DIFFUSE, LightDiffuse);
-      glLightfv(GL_LIGHT0, GL_POSITION, LightPosition);
-      glEnable(GL_LIGHT0);
-    }
+  }
+
+  glGenTextures(1, &depthRamp16Bit);
+  glBindTexture(GL_TEXTURE_2D, depthRamp16Bit);
+  glTexImage2D(	GL_TEXTURE_2D, 0, GL_LUMINANCE8_ALPHA8, 256, 256,
+          0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, depthRampData16Bit);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+  delete [] depthRampData16Bit;
+  depthRampData16Bit=NULL;
+
+  glGenTextures(1, &shadowMap24Bit);
+  glBindTexture(GL_TEXTURE_2D, shadowMap24Bit);
+  glTexImage2D(	GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowMapSize, shadowMapSize,
+          0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+	//set viewport
+	int height(get_height());
+	int width(get_width());
+	glViewport(0, 0, width, height);					//reset viewport
+
+	//set up projection matrix
+	glMatrixMode(GL_PROJECTION);							//select projection matrix
+	glLoadIdentity();										//reset
+	gluPerspective(45.0f, (GLfloat)width/(GLfloat)height, 1.0f, 500.0f);
+	
+	//load identity modelview
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	//other states
+	//shading
+	glShadeModel(GL_SMOOTH);
+	glClearColor(	backgroundColor[0], backgroundColor[1], backgroundColor[2],
+					backgroundColor[3]);
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+	//depth
+	glClearDepth(1.0f);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+
+	//hints
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
+	//Set up Materials
+	glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+	glEnable(GL_COLOR_MATERIAL);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, white);
+	glMaterialf(GL_FRONT, GL_SHININESS, 16.0f);
   GLUquadricObj* qobj = gluNewQuadric();
   gluQuadricDrawStyle(qobj, GLU_FILL);
   glNewList(SPHERE, GL_COMPILE);
-  if(!theMeanCount)
-    {
-      gluSphere(qobj, 0.5, 30, 30);
-    }
-  else
-    {
-      gluSphere(qobj, 0.5, 10, 10);
-    }
+  gluSphere(qobj, 0.5, 30, 30);
   glEndList();
-  glNewList(BOX, GL_COMPILE);
-  //drawBox(0,theRealColSize,0,theRealLayerSize,0,theRealRowSize);
-  glEndList();
-
-  /*
-  glNewList(GRID, GL_COMPILE);
-  plotGrid();
-  glEndList();
-  */
   glwindow->gl_end();
+}
+
+void GLScene::drawScene(bool updateAngle)
+{
+  glPushMatrix();
+	glTranslatef(-ViewMidx, -ViewMidy, -ViewMidz);
+  plot3DMolecules();
+	//glCallList(spheresList);
+	glPopMatrix();
+/*
+	static GLuint torusList, spheresList, smallTorusList;
+	static float angle;	
+
+  angle+=0.0001;
+
+	if(!torusList)
+	{
+		torusList=glGenLists(1);
+		glNewList(torusList, GL_COMPILE);
+		{
+			glColor3f(0.0f, 0.0f, 1.0f);
+			
+			//Draw Floor
+			glMaterialf(GL_FRONT, GL_SHININESS, 32.0f);
+			float i;
+			//Top
+			glNormal3f(0.0f, 1.0f, 0.0f);
+			for(i=-1.5f; i<1.5f; i+=0.2f)
+			{
+				glBegin(GL_TRIANGLE_STRIP);
+				{
+					for(float j=-1.5f; j<1.7f; j+=0.2f)
+					{
+						glVertex3f(j, 0.1f, i);
+						glVertex3f(j, 0.1f, i+0.2f);
+					}
+				}
+				glEnd();
+			}
+			
+			//bottom
+			glNormal3f(0.0f,-1.0f, 0.0f);
+			for(i=-1.5f; i<1.5f; i+=0.2f)
+			{
+				glBegin(GL_TRIANGLE_STRIP);
+				{
+					for(float j=-1.5f; j<1.7f; j+=0.2f)
+					{
+						glVertex3f(j, 0.0f, i+0.2f);
+						glVertex3f(j, 0.0f, i);
+					}
+				}
+				glEnd();
+			}
+
+			//+x side
+			glNormal3f(1.0f, 0.0f, 0.0f);
+			glBegin(GL_TRIANGLE_STRIP);
+			{
+				for(float j=-1.5f; j<1.7f; j+=0.2f)
+				{
+					glVertex3f(1.5f, 0.0f, j);
+					glVertex3f(1.5f, 0.1f, j);
+				}
+			}
+			glEnd();
+
+			//-x side
+			glNormal3f(-1.0f, 0.0f, 0.0f);
+			glBegin(GL_TRIANGLE_STRIP);
+			{
+				for(float j=-1.5f; j<1.7f; j+=0.2f)
+				{
+					glVertex3f(-1.5f, 0.1f, j);
+					glVertex3f(-1.5f, 0.0f, j);
+				}
+			}
+			glEnd();
+
+			//+z side
+			glNormal3f(0.0f, 0.0f, 1.0f);
+			glBegin(GL_TRIANGLE_STRIP);
+			{
+				for(float j=-1.5f; j<1.7f; j+=0.2f)
+				{
+					glVertex3f(j, 0.1f, 1.5f);
+					glVertex3f(j, 0.0f, 1.5f);
+				}
+			}
+			glEnd();
+
+			//-z side
+			glNormal3f(0.0f, 0.0f,-1.0f);
+			glBegin(GL_TRIANGLE_STRIP);
+			{
+				for(float j=-1.5f; j<1.7f; j+=0.2f)
+				{
+					glVertex3f(j, 0.0f, -1.5f);
+					glVertex3f(j, 0.1f, -1.5f);
+				}
+			}
+			glEnd();
+			glMaterialf(GL_FRONT, GL_SHININESS, 16.0f);
+
+
+			
+			glColor3f(1.0f, 0.0f, 0.0f);
+			glPushMatrix();
+			glTranslatef(0.0f, 0.5f, 0.0f);
+			glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+      GLUquadricObj* qobj = gluNewQuadric();
+      gluQuadricDrawStyle(qobj, GLU_FILL);
+      gluSphere(qobj, 0.5, 30, 30);
+			glPopMatrix();
+		}
+		glEndList();
+	}
+
+	glCallList(torusList);
+
+	glPushMatrix();
+	glRotatef(angle, 0.0f, 1.0f, 0.0f);
+
+	if(objectType==SPHERES)
+	{
+		if(!spheresList)
+		{
+      GLUquadricObj* qobj = gluNewQuadric();
+      gluQuadricDrawStyle(qobj, GLU_FILL);
+			spheresList=glGenLists(1);
+			glNewList(spheresList, GL_COMPILE);
+			{
+				glColor3f(0.0f, 1.0f, 0.0f);
+				glTranslatef(0.45f, 1.0f, 0.45f);
+        gluSphere(qobj, 0.2, 24, 24);
+				glTranslatef(-0.9f, 0.0f, 0.0f);
+        gluSphere(qobj, 0.2, 24, 24);
+				glTranslatef(0.0f, 0.0f, -0.9f);
+        gluSphere(qobj, 0.2, 24, 24);
+				glTranslatef(0.9f, 0.0f, 0.0f);
+        gluSphere(qobj, 0.2, 24, 24);
+				glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+			}
+			glEndList();
+		}
+	
+		glCallList(spheresList);
+	}
+
+	if(objectType==TORI)
+	{
+		if(!smallTorusList)
+		{
+      GLUquadricObj* qobj = gluNewQuadric();
+      gluQuadricDrawStyle(qobj, GLU_FILL);
+			smallTorusList=glGenLists(1);
+			glNewList(smallTorusList, GL_COMPILE);
+      gluSphere(qobj, 0.2, 24, 24);
+			glEndList();
+		}
+
+		glColor3f(0.0f, 1.0f, 0.0f);
+		glPushMatrix();
+		glTranslatef(0.45f, 1.0f, 0.45f);
+		glRotatef(45.0f, 0.0f, 1.0f, 0.0f);
+		glCallList(smallTorusList);
+		glPopMatrix();
+
+		glPushMatrix();
+		glTranslatef(-0.45f, 1.0f, 0.45f);
+		glRotatef(-45.0f, 0.0f, 1.0f, 0.0f);
+		glCallList(smallTorusList);
+		glPopMatrix();
+
+		glPushMatrix();
+		glTranslatef(-0.45f, 1.0f,-0.45f);
+		glRotatef(45.0f, 0.0f, 1.0f, 0.0f);
+		glCallList(smallTorusList);
+		glPopMatrix();
+
+		glPushMatrix();
+		glTranslatef(0.45f, 1.0f,-0.45f);
+		glRotatef(-45.0f, 0.0f, 1.0f, 0.0f);
+		glCallList(smallTorusList);
+		glPopMatrix();
+	}
+
+	glPopMatrix();
+  */
 }
 
 bool GLScene::on_expose_event(GdkEventExpose* event)
@@ -593,32 +879,238 @@ bool GLScene::on_expose_event(GdkEventExpose* event)
     {
       return false;
     }
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  if(show3DMolecule)
-    {
-      (this->*thePlotFunction)();
-    }
-  else
-    { 
-      plotPoints();
-    }
-  if(showTime)
-    {
-      glListBase(m_FontListBase);
-      char buffer[50];
-      sprintf(buffer, "t = %.1fs", theCurrentTime-theResetTime);
-      m_timeString = buffer;
-      //glColor3f(0.2, 0.5, 0.8);
-      glColor3f(1.0, 1.0, 1.0);
-      glRasterPos3f(ViewMidx-(m_timeString.length()*m_FontWidth)/2.0, 0, 0);
-      glCallLists(m_timeString.length(), GL_UNSIGNED_BYTE,
-                  m_timeString.c_str());
-    }
-  glCallList(BOX);
-  //glCallList(GRID);
+	theCamera->update();
+	//theLight->update();
+  depthMapPrecision=8;
+	//Clear buffers
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glLoadIdentity();										//reset modelview matrix
+
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
+
+	//Draw from the light's point of view
+	glViewport(0, 0, shadowMapSize, shadowMapSize);
+
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadMatrixf(theLight->getProjectionMatrix());
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadMatrixf(theLight->getViewMatrix());
+
+	glColorMask(0, 0, 0, 0);
+ 
+  if(depthMapPrecision==8 || depthMapPrecision==16)
+	{
+		glPolygonOffset(1.1f, 4.0f);
+		//only draw back faces into shadow map
+		//for some reason, just using polygon offset doesnt work
+		glCullFace(GL_FRONT);
+		glEnable(GL_CULL_FACE);
+	}
+
+	if(depthMapPrecision==24)
+		glPolygonOffset(8.0f, 1.1f);
+
+	glEnable(GL_POLYGON_OFFSET_FILL);
+
+	drawScene(true);
+
+	glPopAttrib();
+
+
+	if(depthMapPrecision==8)
+	{
+		//Read back the depth values into the shadow map texture image data
+		glReadPixels(	0, 0, shadowMapSize, shadowMapSize, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE,
+						shadowMapData8Bit);
+	
+		//Update shadow map
+		glBindTexture(GL_TEXTURE_2D, shadowMap8Bit);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, shadowMapSize, shadowMapSize,
+						GL_ALPHA, GL_UNSIGNED_BYTE, shadowMapData8Bit);
+	}
+
+  //Clear depth buffer
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	//reset viewport
+	int height(get_height());
+	int width(get_width());
+	glViewport(0, 0, width, height);
+
+	//Reset projection matrix
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+
+	//Draw from camera's point of view
+	glMatrixMode(GL_MODELVIEW);
+	theCamera->initViewMatrix();
+	glLoadMatrixf(theCamera->getViewMatrix());
+	
+
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
+	
+	//Draw ALL shadowed
+  Point aPos(theLight->getPosition());
+  GLfloat aLightPosition[] = {aPos.x, aPos.y, aPos.z, 1};
+	glLightfv(GL_LIGHT1, GL_POSITION, aLightPosition);
+	glLightfv(GL_LIGHT1, GL_AMBIENT, ambient);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, dimDiffuse);
+	glLightfv(GL_LIGHT1, GL_SPECULAR, black);
+	glEnable(GL_LIGHT1);
+	glEnable(GL_LIGHTING);
+	glEnable(GL_CULL_FACE);
+
+	drawScene(false);
+
+	glPopAttrib();
+
+
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
+	
+	//Draw Unshadowed parts
+  aPos = theLight->getPosition();
+  aLightPosition[0] = aPos.x;
+  aLightPosition[1] = aPos.y;
+  aLightPosition[2] = aPos.z;
+	glLightfv(GL_LIGHT1, GL_POSITION, aLightPosition);
+	glLightfv(GL_LIGHT1, GL_AMBIENT, ambient);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, brightDiffuse);
+	glLightfv(GL_LIGHT1, GL_SPECULAR, white);
+	glEnable(GL_LIGHT1);
+	glEnable(GL_LIGHTING);
+	glEnable(GL_CULL_FACE);
+
+	if(depthMapPrecision==8)
+		Draw8BitUnshadowed();
+
+	glPopAttrib();	
+
+	//Draw the light in place
+	glPushMatrix();
+	glColor3f(1.0f, 1.0f, 0.0f);
+  aPos = theLight->getPosition();
+	glTranslatef(aPos.x, aPos.y, aPos.z);
+  GLUquadricObj* qobj = gluNewQuadric();
+  gluQuadricDrawStyle(qobj, GLU_FILL);
+	gluSphere(qobj, 0.05, 12, 12);
+	glPopMatrix();
+	
   glwindow->swap_buffers();
   glwindow->gl_end();
-  return true;
+}
+
+void GLScene::Draw8BitUnshadowed()
+{
+	//Set up texture units
+	//Unit 0
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, shadowMap8Bit);
+	
+	//Set up tex coord generation - s, t, q coords required
+  //
+
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glLoadMatrixf(bias2D);
+  glMultMatrixf(theLight->getProjectionMatrix());
+  glMultMatrixf(theLight->getViewMatrix());
+  GLfloat textureProjectionMatrix2D[16];
+  glGetFloatv(GL_MODELVIEW_MATRIX, textureProjectionMatrix2D);
+  glPopMatrix();
+	glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+  GLfloat m[4] = {textureProjectionMatrix2D[0], textureProjectionMatrix2D[4], 
+    textureProjectionMatrix2D[8], textureProjectionMatrix2D[12]}; 
+	glTexGenfv(GL_S, GL_EYE_PLANE, m);
+	glEnable(GL_TEXTURE_GEN_S);
+	glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+  m[0] = textureProjectionMatrix2D[1];
+  m[1] = textureProjectionMatrix2D[5];
+  m[2] = textureProjectionMatrix2D[9];
+  m[3] = textureProjectionMatrix2D[13];
+	glTexGenfv(GL_T, GL_EYE_PLANE, m);
+	glEnable(GL_TEXTURE_GEN_T);
+	glTexGeni(GL_Q, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+  m[0] = textureProjectionMatrix2D[3];
+  m[1] = textureProjectionMatrix2D[7];
+  m[2] = textureProjectionMatrix2D[11];
+  m[3] = textureProjectionMatrix2D[15];
+	glTexGenfv(GL_Q, GL_EYE_PLANE, m);
+	glEnable(GL_TEXTURE_GEN_Q);
+	
+	//Unit 1
+	glActiveTextureARB(GL_TEXTURE1_ARB);
+	glEnable(GL_TEXTURE_1D);
+	glBindTexture(GL_TEXTURE_1D, depthRamp8Bit);
+
+	//Set up tex coord generation - s, q coords required
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glLoadMatrixf(bias1D);
+  glMultMatrixf(theLight->getProjectionMatrix());
+  glMultMatrixf(theLight->getViewMatrix());
+  GLfloat textureProjectionMatrix1D[16];
+  glGetFloatv(GL_MODELVIEW_MATRIX, textureProjectionMatrix1D);
+  glPopMatrix();
+	glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+  m[0] = textureProjectionMatrix1D[0];
+  m[1] = textureProjectionMatrix1D[4];
+  m[2] = textureProjectionMatrix1D[8];
+  m[3] = textureProjectionMatrix1D[12];
+	glTexGenfv(GL_S, GL_EYE_PLANE, m);
+	glEnable(GL_TEXTURE_GEN_S);
+	glTexGeni(GL_Q, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+  m[0] = textureProjectionMatrix1D[3];
+  m[1] = textureProjectionMatrix1D[7];
+  m[2] = textureProjectionMatrix1D[11];
+  m[3] = textureProjectionMatrix1D[15];
+	glTexGenfv(GL_Q, GL_EYE_PLANE, m);
+	glEnable(GL_TEXTURE_GEN_Q);
+
+	//Set up texture combining
+	//unit 0
+	//alpha=texture alpha
+	glActiveTextureARB(GL_TEXTURE0_ARB);
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_EXT);
+
+	glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA_EXT, GL_TEXTURE);
+	glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA_EXT, GL_SRC_ALPHA);
+	
+	glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA_EXT, GL_REPLACE);
+	//color=primary color
+	glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB_EXT, GL_PRIMARY_COLOR_EXT);
+	glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB_EXT, GL_SRC_COLOR);
+	
+	glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_EXT, GL_REPLACE);
+		
+	//unit 1
+	//alpha =previous (add signed) (1-texture)
+	glActiveTextureARB(GL_TEXTURE1_ARB);
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_EXT);
+
+	glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA_EXT, GL_PREVIOUS_EXT);
+	glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA_EXT, GL_SRC_ALPHA);
+	
+	glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA_EXT, GL_ADD_SIGNED_EXT);
+
+	glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA_EXT, GL_TEXTURE);
+	glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_ALPHA_EXT, GL_ONE_MINUS_SRC_ALPHA);
+	//color=primary color
+	glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB_EXT, GL_PREVIOUS_EXT);
+	glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB_EXT, GL_SRC_COLOR);
+	
+	glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_EXT, GL_REPLACE);
+	
+	glActiveTextureARB(GL_TEXTURE0_ARB);
+
+
+
+	//Use alpha test to reject shadowed fragments
+	glAlphaFunc(GL_GEQUAL, 0.5f);
+	glEnable(GL_ALPHA_TEST);
+
+	drawScene(false);
 }
 
 bool GLScene::writePng()
@@ -726,6 +1218,7 @@ bool GLScene::on_configure_event(GdkEventConfigure* event)
     {
       return false;
     }
+  /*
   GLfloat w = get_width();
   GLfloat h = get_height();
   GLfloat nearold = Near;
@@ -742,6 +1235,7 @@ bool GLScene::on_configure_event(GdkEventConfigure* event)
   glLoadIdentity();
   glTranslatef(0,0,nearold-Near);
   glMultMatrixf(m);
+  */
   glwindow->gl_end();
   return true;
 }
@@ -1103,10 +1597,16 @@ void GLScene::setTranslucentColor( unsigned int i, GLfloat j )
     }
 }
 
-void GLScene::rotate(int aMult, int x, int y, int z)
+void GLScene::rotate(int aDirection, int x, int y, int z)
 {
-  glMatrixMode(GL_MODELVIEW);
-  glRotatef(theRotateAngle*aMult,x,y,z);
+  if(x)
+    {
+      theLight->rotateUpDown(aDirection);
+    }
+  else
+    {
+      theLight->rotateLeftRight(aDirection);
+    }
   invalidate();
 }
 
@@ -1120,25 +1620,13 @@ void GLScene::translate(int x, int y, int z)
 
 void GLScene::zoomIn()
 { 
-  FieldOfView/=1.05;
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near);
-  glMatrixMode(GL_MODELVIEW);
+  theCamera->zoom(-1);
   invalidate();
 }
 
 void GLScene::zoomOut()
 {
-  FieldOfView*=1.05;
-  if(FieldOfView>180)
-    {
-      FieldOfView=180;
-    }
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near);
-  glMatrixMode(GL_MODELVIEW);
+  theCamera->zoom(1);
   invalidate();
 }
 
@@ -1296,6 +1784,7 @@ bool GLScene::on_visibility_notify_event(GdkEventVisibility* event)
 
 void GLScene::resetView()
 {
+  /*
   GLfloat w = get_width();
   GLfloat h = get_height();
   Aspect = w/h;
@@ -1318,6 +1807,7 @@ void GLScene::resetView()
   m_control->setXangle(xAngle);
   m_control->setYangle(yAngle);
   m_control->setZangle(zAngle);
+  */
 }
 
 void GLScene::resetBound()
@@ -2217,3 +2707,155 @@ int main(int argc, char** argv)
 }
 
 
+
+Manipulator::Manipulator(Point aPosition, Point aLookAt):
+  theRotationStep(1),
+  theZoomStep(1),
+  theLookAt(aLookAt),
+  thePosition(aPosition)
+{
+  double x(thePosition.x-theLookAt.x);
+  double y(thePosition.y-theLookAt.y);
+  double z(thePosition.z-theLookAt.z);
+  theZoom = sqrt((x*x)+(y*y)+(z*z));
+	if(z == 0)
+    {
+      if(x > 0)
+        {
+          theLeftRightRotation = -90;
+        }
+      else if(x < 0.0f)
+        {
+          theLeftRightRotation = 90;
+        }
+    }
+	else
+    {
+      if(z < 0)
+        {
+          theLeftRightRotation = 180-(180/M_PI)*atan(x/z);
+        }
+      else if(z > 0)
+        {
+          theLeftRightRotation = -(180/M_PI)*atan(x/z);
+        }
+    }
+	if(x == 0 && z == 0)
+    {
+      theUpDownRotation = 90;
+    }
+  else
+    {
+      theUpDownRotation = (180/M_PI)*atan(y/sqrt((x*x)+(z*z)));
+    }
+}
+
+void Manipulator::update()
+{
+  glPushMatrix();
+  glLoadIdentity();
+  glTranslatef(theLookAt.x, theLookAt.y, theLookAt.z);
+  glRotated(-theLeftRightRotation, 0.0f, 1.0f, 0.0f);
+  glRotated(-theUpDownRotation, 1.0f, 0.0f, 0.0f);
+  glTranslatef(0.0f, 0.0f, theZoom);
+  GLfloat m[16];
+  glGetFloatv(GL_MODELVIEW_MATRIX, m);
+  thePosition.x = m[12];
+  thePosition.y = m[13];
+  thePosition.z = m[14];
+  glPopMatrix();
+}
+
+void Manipulator::rotateLeftRight(int aDirection)
+{
+  theLeftRightRotation += aDirection*theRotationStep;
+  update();
+}
+
+void Manipulator::rotateUpDown(int aDirection)
+{
+  theUpDownRotation += aDirection*theRotationStep;
+  update();
+}
+
+void Manipulator::zoom(int aDirection)
+{
+  theZoom += aDirection*theZoomStep;
+  update();
+}
+
+void Manipulator::initViewMatrix()
+{
+	glPushMatrix();
+	glLoadIdentity();
+	glTranslatef(0.0f, 0.0f, -theZoom);
+	glRotated(theUpDownRotation, 1.0f, 0.0f, 0.0f);
+	glRotated(theLeftRightRotation, 0.0f, 1.0f, 0.0f);
+	glTranslatef(-theLookAt.x, -theLookAt.y, -theLookAt.z);
+	glGetFloatv(GL_MODELVIEW_MATRIX, theViewMatrix);
+	glPopMatrix();
+}
+
+GLfloat* Manipulator::getViewMatrix()
+{
+  return theViewMatrix;
+}
+
+Point Manipulator::getPosition()
+{
+  return thePosition;
+}
+
+void Light::setClipDistance(double aNear, double aFar)
+{
+  theNear = aNear;
+  theFar = aFar;
+  updateMatrices();
+}
+
+void Light::update()
+{
+  if(theZoom < 4)
+    {
+      theZoom = 4.0;
+    }
+  else if(theZoom > 20)
+    {
+      theZoom = 20;
+    }
+  Manipulator::update();
+	updateMatrices();
+}
+
+GLfloat* Light::getProjectionMatrix()
+{
+  return theProjectionMatrix;
+}
+
+void Light::updateMatrices()
+{
+	glPushMatrix();
+	initViewMatrix();
+	glLoadIdentity();
+	gluPerspective(60.0f, 1.0f, theNear, theFar);
+	glGetFloatv(GL_MODELVIEW_MATRIX, theProjectionMatrix);
+	glPopMatrix();
+}
+
+void Light::shrinkFrustum()
+{
+	if(theNear < 2)
+    {
+      theNear += 0.005;
+      theFar -= 0.2;
+    }
+}
+
+void Light::growFrustum()
+{
+	if(theNear > 0.055)
+    {
+      theNear -= 0.005;
+      theFar += 0.2;
+    }
+}
