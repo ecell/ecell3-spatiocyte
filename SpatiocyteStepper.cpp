@@ -1826,10 +1826,10 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(Voxel* aVoxel,
               //and its adjoining voxels:
               Voxel* extendedVoxel((*l)->adjoiningVoxels[m]);
               if(extendedVoxel->id == surfaceID && extendedVoxel != aVoxel &&
-                 find(adjoiningCopy.begin(), adjoiningCopy.end(),
+                 std::find(adjoiningCopy.begin(), adjoiningCopy.end(),
                       extendedVoxel) == adjoiningCopy.end())
                 {
-                  std::vector<Voxel*>::iterator n(find(extendedSurface.begin(),
+                  std::vector<Voxel*>::iterator n(std::find(extendedSurface.begin(),
                         extendedSurface.end(), extendedVoxel));
                   if(n == extendedSurface.end())
                     {

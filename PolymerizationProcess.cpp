@@ -918,7 +918,7 @@ int PolymerizationProcess::setExistingTargetVoxel(Subunit* aRefSubunit,
                     {
                       //Lets use the actual voxel if it is an immediate voxel
                       //of the reference voxel:
-                      if(find(immediateSurface.begin(), immediateSurface.end(),
+                      if(std::find(immediateSurface.begin(), immediateSurface.end(),
                               aSubunit->voxel) != immediateSurface.end() )
                         {
                           aVoxel = aSubunit->voxel;
@@ -964,7 +964,7 @@ int PolymerizationProcess::setExistingTargetVoxel(Subunit* aRefSubunit,
                     {
                       //Lets use the actual voxel if it is an extended voxel
                       //of the reference voxel:
-                      unsigned int k(find(extendedSurface.begin(),
+                      unsigned int k(std::find(extendedSurface.begin(),
                         extendedSurface.end(), aSubunit->voxel)-
                                      extendedSurface.begin());
                       if(k != extendedSurface.size())

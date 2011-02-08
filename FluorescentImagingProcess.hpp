@@ -64,7 +64,7 @@ public:
           Variable* aVariable((*i).getVariable());
           Species* aSpecies(theSpatiocyteStepper->getSpecies(aVariable));
           if(!aSpecies->getIsLipid() &&
-             find(theProcessSpecies.begin(), theProcessSpecies.end(), 
+             std::find(theProcessSpecies.begin(), theProcessSpecies.end(), 
                   aSpecies) == theProcessSpecies.end())
             {
               theProcessSpecies.push_back(aSpecies);
@@ -94,7 +94,7 @@ public:
                       Species* aNegativeSpecies(
                           theSpatiocyteStepper->getSpecies(aNegativeVariable));
                       int aProcessSpeciesIndex(
-                       find(theProcessSpecies.begin(), theProcessSpecies.end(), 
+                       std::find(theProcessSpecies.begin(), theProcessSpecies.end(), 
                             aNegativeSpecies) - theProcessSpecies.begin());
                       while(aNegativeCoefficient)
                         {
