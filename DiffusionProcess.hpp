@@ -39,7 +39,7 @@
 
 LIBECS_DM_CLASS(DiffusionProcess, SpatiocyteProcess)
 { 
-  typedef const void (DiffusionProcess::*WalkMethod)(void) const;
+  typedef void (DiffusionProcess::*WalkMethod)(void) const;
 public:
   LIBECS_DM_OBJECT(DiffusionProcess, Process)
     {
@@ -182,7 +182,7 @@ public:
       theTime += theStepInterval;
       thePriorityQueue->moveTop();
     }
-  const void volumeWalk() const
+  void volumeWalk() const
     {
       for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
@@ -190,7 +190,7 @@ public:
           (*i)->volumeWalk();
         }
     }
-  const void volumeWalkCollide() const
+  void volumeWalkCollide() const
     {
       for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
@@ -198,7 +198,7 @@ public:
           (*i)->volumeWalkCollide();
         }
     }
-  const void surfaceWalk() const
+  void surfaceWalk() const
     {
       for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
@@ -206,7 +206,7 @@ public:
           (*i)->surfaceWalk();
         }
     }
-  const void surfaceWalkCollide() const
+  void surfaceWalkCollide() const
     {
       for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)

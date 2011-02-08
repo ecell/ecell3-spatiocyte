@@ -48,14 +48,14 @@ public:
   typedef typename IDPolicy::IDIterator IDIterator;
 public:
   void clear(); 
-  inline const ID push(const Item& item); 
-  inline void movePos(const Index pos); 
+  inline ID push(const Item& item); 
+  inline void movePos(Index pos); 
   PriorityQueue() {}
-  const bool isEmpty() const
+  bool isEmpty() const
     {
       return this->itemVector.empty();
     } 
-  const Index getSize() const
+  Index getSize() const
     {
       return this->itemVector.size();
     }
@@ -91,11 +91,11 @@ public:
     {
       return this->itemVector[index];
     } 
-  const Index getTopIndex() const 
+  Index getTopIndex() const 
     {
       return this->heap[0];
     } 
-  void move(const Index index)
+  void move(Index index)
     {
       const Index pos(this->positionVector[index]);
       movePos(pos);
@@ -104,21 +104,21 @@ public:
     {
       moveDownPos(0);
     } 
-  void moveUpByIndex(const Index index)
+  void moveUpByIndex(Index index)
     {
       const Index position(this->positionVector[index]);
       moveUpPos(position);
     } 
-  void moveUp(const ID id)
+  void moveUp(ID id)
     {
       moveUpByIndex(pol.getIndex(id));
     } 
-  void moveDownByIndex(const Index index)
+  void moveDownByIndex(Index index)
     {
       const Index position(this->positionVector[index]);
       moveDownPos(position);
     } 
-  void moveDown(const ID id)
+  void moveDown(ID id)
     {
       moveDownByIndex(pol.getIndex(id));
     } 
@@ -131,8 +131,8 @@ public:
       return pol.end();
     }
 private:
-  inline void moveUpPos(const Index position, const Index start = 0);
-  inline void moveDownPos(const Index position); 
+  inline void moveUpPos(Index position, Index start = 0);
+  inline void moveDownPos(Index position); 
 private:
   ItemVector itemVector;
   IndexVector heap; 
@@ -150,7 +150,7 @@ void PriorityQueue<Item, IDPolicy>::clear()
 }
 
 template<typename Item, class IDPolicy>
-void PriorityQueue<Item, IDPolicy>::movePos(const Index pos)
+void PriorityQueue<Item, IDPolicy>::movePos(Index pos)
 {
   const Index index(this->heap[pos]);
   const Item& item(this->itemVector[index]); 
@@ -185,8 +185,8 @@ void PriorityQueue<Item, IDPolicy>::movePos(const Index pos)
 }
 
 template<typename Item, class IDPolicy>
-void PriorityQueue<Item, IDPolicy>::moveUpPos(const Index position,
-                                              const Index start)
+void PriorityQueue<Item, IDPolicy>::moveUpPos(Index position,
+                                              Index start)
 {
   if(position == 0)
     {
@@ -214,7 +214,7 @@ void PriorityQueue<Item, IDPolicy>::moveUpPos(const Index position,
 }
 
 template<typename Item, class IDPolicy>
-void PriorityQueue<Item, IDPolicy>::moveDownPos(const Index position)
+void PriorityQueue<Item, IDPolicy>::moveDownPos(Index position)
 {
   const Index index(this->heap[position]);
   const Index size(getSize()); 
@@ -243,7 +243,7 @@ void PriorityQueue<Item, IDPolicy>::moveDownPos(const Index position)
 } 
 
 template<typename Item, class IDPolicy> 
-const typename PriorityQueue<Item, IDPolicy>::ID
+typename PriorityQueue<Item, IDPolicy>::ID
 PriorityQueue<Item, IDPolicy>::push(const Item& item)
 {
   const Index index(getSize()); 

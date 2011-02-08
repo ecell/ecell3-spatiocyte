@@ -198,7 +198,7 @@ public:
     {
       return theMolecules;
     }
-  const unsigned int size() const
+  unsigned int size() const
     {
       return theMoleculeSize;
     }
@@ -214,11 +214,11 @@ public:
     {
       return theMolecules[anIndex];
     }
-  const unsigned short getID() const
+  unsigned short getID() const
     {
       return theID;
     }
-  const double getMeanSquaredDisplacement()
+  double getMeanSquaredDisplacement()
     {
       if(!theMoleculeSize)
         {
@@ -292,55 +292,55 @@ public:
           isStatic = false;
         }
     }
-  const double getDiffusionCoefficient() const
+  double getDiffusionCoefficient() const
     {
       return D;
     }
-  const double getWalkProbability() const
+  double getWalkProbability() const
     {
       return theWalkProbability;
     }
-  const bool getIsVolume() const
+  bool getIsVolume() const
     {
       return isVolume;
     }
-  const bool getIsStatic() const
+  bool getIsStatic() const
     {
       return isStatic;
     }
-  const bool getIsPolymer() const
+  bool getIsPolymer() const
     {
       return isPolymer;
     }
-  const bool getIsSubunitInitialized() const
+  bool getIsSubunitInitialized() const
     {
       return isSubunitInitialized;
     }
-  const bool getIsDiffusing() const
+  bool getIsDiffusing() const
     {
       return isDiffusing;
     }
-  const bool getIsLipid() const
+  bool getIsLipid() const
     {
       return isLipid;
     }
-  const bool getIsVacant() const
+  bool getIsVacant() const
     {
       return isVacant;
     }
-  const bool getIsInContact() const
+  bool getIsInContact() const
     {
       return isInContact;
     }
-  const bool getIsCentered() const
+  bool getIsCentered() const
     {
       return isCentered;
     }
-  const bool getIsPopulated() const
+  bool getIsPopulated() const
     {
       return theMoleculeSize == theInitMoleculeSize;
     }
-  const double getDiffusionInterval() const
+  double getDiffusionInterval() const
     {
       return theDiffusionInterval;
     }
@@ -736,7 +736,7 @@ public:
             }
         }
     }
-  const int getVacantID() const
+  int getVacantID() const
     {
       return theCompartment->vacantID;
     }
@@ -752,7 +752,7 @@ public:
     {
       return theCompartment->eastPoint;
     }
-  const double getRadius() const
+  double getRadius() const
     {
       return theCompartment->lengthY/2;
     }

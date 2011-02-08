@@ -109,11 +109,11 @@ public:
     {
       thePriorityQueue = aPriorityQueue;
     }
-  const Time getTime() const
+  Time getTime() const
     {
       return theTime;
     }
-  const bool getIsPriority() const
+  bool getIsPriority() const
     {
       return isPriority;
     }
@@ -132,8 +132,8 @@ public:
       return theSpatiocyteStepper->id2species(id);
     }
 protected:
-  const String getIDString(Voxel*) const;
-  const String getIDString(Species*) const;
+  String getIDString(Voxel*) const;
+  String getIDString(Species*) const;
 protected:
   bool isInitialized;
   bool isPriority;

@@ -107,7 +107,7 @@ public:
       thePolymerizeProcess = aProcess;
     }
 protected:
-  const double getPropensity() const
+  double getPropensity() const
     {
       if(theReactantSize > 0 && p > 0)
         {
