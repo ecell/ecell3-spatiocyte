@@ -88,8 +88,8 @@ void FluorescentImagingProcess::logFluorescentSpecies()
           theLogFile.write((char*)(&frequency), sizeof(frequency));
         }
     }
-  aDataSize = (theLogFile.tellp()-aStartPos)-sizeof(aDataSize); 
-  int aPrevDataSize(theLogFile.tellp()-theStepStartPos+sizeof(int)*2);
+  aDataSize = (theLogFile.tellp()-aStartPos)-static_cast<std::streampos>(sizeof(aDataSize)); 
+  int aPrevDataSize(theLogFile.tellp()-theStepStartPos+static_cast<std::streampos>(sizeof(int))*2);
   theStepStartPos = theLogFile.tellp();
   // write the prev size at the end of this step
   theLogFile.write((char*)(&aPrevDataSize), sizeof(aPrevDataSize));

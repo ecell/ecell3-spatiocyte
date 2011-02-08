@@ -205,8 +205,8 @@ void VisualizationLogProcess::logSpecies()
     }
   //theLogMarker is a constant throughout the simulation:
   theLogFile.write((char*)(&theLogMarker), sizeof(theLogMarker));
-  aDataSize = (theLogFile.tellp()-aStartPos)-sizeof(aDataSize); 
-  int aPrevDataSize(theLogFile.tellp()-theStepStartPos+sizeof(int)*2);
+  aDataSize = (theLogFile.tellp()-aStartPos)-static_cast<std::streampos>(sizeof(aDataSize));
+  int aPrevDataSize(theLogFile.tellp()-theStepStartPos+static_cast<std::streampos>(sizeof(int))*2);
   theStepStartPos = theLogFile.tellp();
   // write the prev size at the end of this step
   theLogFile.write((char*)(&aPrevDataSize), sizeof(aPrevDataSize));
@@ -251,8 +251,8 @@ void VisualizationLogProcess::logSurfaceVoxels()
   //theLogMarker is a constant throughout the simulation:
   theLogFile.write((char*)(&theLogMarker), sizeof(theLogMarker));
   theLogFile.write((char*)(&theLogMarker), sizeof(theLogMarker));
-  aDataSize = (theLogFile.tellp()-aStartPos)-sizeof(aDataSize); 
-  int aPrevDataSize(theLogFile.tellp()-theStepStartPos+sizeof(int)*2);
+  aDataSize = (theLogFile.tellp()-aStartPos)-static_cast<std::streampos>(sizeof(aDataSize)); 
+  int aPrevDataSize(theLogFile.tellp()-theStepStartPos+static_cast<std::streampos>(sizeof(int))*2);
   theStepStartPos = theLogFile.tellp();
   // write the prev size at the end of this step
   theLogFile.write((char*)(&aPrevDataSize), sizeof(aPrevDataSize));
