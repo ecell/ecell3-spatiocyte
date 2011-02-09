@@ -343,7 +343,7 @@ bool PolymerizationProcess::isInterrupting(Process* aProcess)
      "PolymerFragmentationProcess") 
     {
       PolymerFragmentationProcess* aDepolymerizeProcess(
-           reinterpret_cast<PolymerFragmentationProcess*>(aProcess));
+           dynamic_cast<PolymerFragmentationProcess*>(aProcess));
       aDepolymerizeProcess->setPolymerizeProcess(this);
     }
   return ReactionProcess::isInterrupting(aProcess);

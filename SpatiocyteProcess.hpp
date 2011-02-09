@@ -35,8 +35,9 @@
 #include <Process.hpp>
 #include "SpatiocyteCommon.hpp"
 #include "SpatiocyteStepper.hpp"
+#include "SpatiocyteProcessInterface.hpp"
 
-LIBECS_DM_CLASS(SpatiocyteProcess, Process)
+LIBECS_DM_CLASS_EXTRA_1(SpatiocyteProcess, Process, virtual SpatiocyteProcessInterface)
 { 
 public:
   LIBECS_DM_OBJECT(SpatiocyteProcess, Process)
@@ -67,7 +68,7 @@ public:
         }
       isInitialized = true;
       Process::initialize();
-      theSpatiocyteStepper = reinterpret_cast<SpatiocyteStepper*>(getStepper());
+      theSpatiocyteStepper = dynamic_cast<SpatiocyteStepper*>(getStepper());
       theSortedVariableReferences.resize(theVariableReferenceVector.size());
       for(VariableReferenceVector::iterator
           i(theVariableReferenceVector.begin());
@@ -105,7 +106,7 @@ public:
     {
       return theStepInterval;
     }
-  void setPriorityQueue(ProcessPriorityQueue* aPriorityQueue)
+  virtual void setPriorityQueue(ProcessPriorityQueue* aPriorityQueue)
     {
       thePriorityQueue = aPriorityQueue;
     }
@@ -113,15 +114,15 @@ public:
     {
       return theTime;
     }
-  bool getIsPriority() const
+  virtual bool getIsPriority() const
     {
       return isPriority;
     }
-  void setTime(Time aTime)
+  virtual void setTime(Time aTime)
     {
       theTime = aTime;
     }
-  void setQueueID(ProcessID anID)
+  virtual void setQueueID(ProcessID anID)
     {
       theQueueID = anID;
     }

@@ -33,8 +33,9 @@
 #define __DiffusionInfluencedReactionProcess_hpp
 
 #include "ReactionProcess.hpp"
+#include "DiffusionInfluencedReactionProcessInterface.hpp"
 
-LIBECS_DM_CLASS(DiffusionInfluencedReactionProcess, ReactionProcess)
+LIBECS_DM_CLASS_EXTRA_1(DiffusionInfluencedReactionProcess, ReactionProcess, virtual DiffusionInfluencedReactionProcessInterface)
 { 
 public:
   LIBECS_DM_OBJECT(DiffusionInfluencedReactionProcess, Process)

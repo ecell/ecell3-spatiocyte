@@ -35,9 +35,9 @@
 #include <Variable.hpp>
 #include "SpatiocyteCommon.hpp"
 #include "SpatiocyteStepper.hpp"
-#include "DiffusionInfluencedReactionProcess.hpp"
-#include "PolymerFragmentationProcess.hpp"
-#include "MoleculePopulateProcess.hpp"
+#include "SpatiocyteProcessInterface.hpp"
+#include "DiffusionInfluencedReactionProcessInterface.hpp"
+#include "MoleculePopulateProcessInterface.hpp"
 
 // The size of Voxel must be 128 bytes to avoid cacheline splits
 // The Core 2 has 64-byte cacheline
@@ -84,7 +84,7 @@ public:
           theReactionProbabilities[i] = 0;
         }
     }
-  void setDiffusionInfluencedReaction(DiffusionInfluencedReactionProcess*
+  void setDiffusionInfluencedReaction(DiffusionInfluencedReactionProcessInterface*
                                       aReaction, int anID, double aProbability)
     {
       theDiffusionInfluencedReactions[anID] = aReaction;
@@ -94,7 +94,7 @@ public:
     {
       theDiffusionInfluencedReactantPairs.push_back(aSpecies);
     }
-  void setPopulateProcess(MoleculePopulateProcess* aProcess, double aDist)
+  void setPopulateProcess(MoleculePopulateProcessInterface* aProcess, double aDist)
     {
       if(aDist)
         {
@@ -388,7 +388,7 @@ public:
               if(gsl_rng_uniform(theRng) < theReactionProbabilities[target->id])
                 { 
                   Species* targetSpecies(theStepper->id2species(target->id));
-                  DiffusionInfluencedReactionProcess* aReaction(
+                  DiffusionInfluencedReactionProcessInterface* aReaction(
                              theDiffusionInfluencedReactions[target->id]);
                   if(aReaction->react(source, &target))
                     {
@@ -442,7 +442,7 @@ public:
               if(gsl_rng_uniform(theRng) < theReactionProbabilities[target->id])
                 { 
                   Species* targetSpecies(theStepper->id2species(target->id));
-                  DiffusionInfluencedReactionProcess* aReaction(
+                  DiffusionInfluencedReactionProcessInterface* aReaction(
                              theDiffusionInfluencedReactions[target->id]);
                   if(aReaction->react(source, &target))
                     {
@@ -505,7 +505,7 @@ public:
               if(gsl_rng_uniform(theRng) < theReactionProbabilities[target->id])
                 { 
                   Species* targetSpecies(theStepper->id2species(target->id));
-                  DiffusionInfluencedReactionProcess* aReaction(
+                  DiffusionInfluencedReactionProcessInterface* aReaction(
                              theDiffusionInfluencedReactions[target->id]);
                   if(aReaction->react(source, &target))
                     {
@@ -554,7 +554,7 @@ public:
               if(gsl_rng_uniform(theRng) < theReactionProbabilities[target->id])
                 { 
                   Species* targetSpecies(theStepper->id2species(target->id));
-                  DiffusionInfluencedReactionProcess* aReaction(
+                  DiffusionInfluencedReactionProcessInterface* aReaction(
                              theDiffusionInfluencedReactions[target->id]);
                   if(aReaction->react(source, &target))
                     {
@@ -565,8 +565,7 @@ public:
                       for(unsigned int j(0);
                           j != theInterruptedProcesses.size(); ++j)
                         {
-                          theInterruptedProcesses[j
-                            ]->removeSubstrateInterrupt(this, source);
+                          theInterruptedProcesses[j]->removeSubstrateInterrupt(this, source);
                         }
                       //Soft remove the target molecule:
                       targetSpecies->softRemoveMolecule(target);
@@ -803,7 +802,7 @@ public:
         }
       return theMolecules[gsl_rng_uniform_int(theRng, theMoleculeSize)];
     }
-  void addInterruptedProcess(SpatiocyteProcess* aProcess)
+  void addInterruptedProcess(SpatiocyteProcessInterface* aProcess)
     {
       theInterruptedProcesses.push_back(aProcess);
     }
@@ -969,15 +968,15 @@ private:
   double theWalkProbability;
   const gsl_rng* theRng;
   Compartment* theCompartment;
-  MoleculePopulateProcess* thePopulateProcess;
+  MoleculePopulateProcessInterface* thePopulateProcess;
   SpatiocyteStepper* theStepper;
   Variable* theVariable;
   std::vector<double> theBendAngles;
   std::vector<double> theReactionProbabilities;
   std::vector<Voxel*> theMolecules;
   std::vector<Species*> theDiffusionInfluencedReactantPairs;
-  std::vector<DiffusionInfluencedReactionProcess*> theDiffusionInfluencedReactions;
-  std::vector<SpatiocyteProcess*> theInterruptedProcesses;
+  std::vector<DiffusionInfluencedReactionProcessInterface*> theDiffusionInfluencedReactions;
+  std::vector<SpatiocyteProcessInterface*> theInterruptedProcesses;
   std::vector<Origin> theMoleculeOrigins;
 };
 

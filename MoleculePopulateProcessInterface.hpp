@@ -29,39 +29,19 @@
 //
 
 
-#ifndef __MassActionProcess_hpp
-#define __MassActionProcess_hpp
+#ifndef __MOLECULEPOPULATEPROCESSINTERFACE_HPP
+#define __MOLECULEPOPULATEPROCESSINTERFACE_HPP
 
-#include <ContinuousProcess.hpp>
-#include "SpatiocyteStepper.hpp"
 #include "SpatiocyteCommon.hpp"
 
-LIBECS_DM_CLASS(MassActionProcess, ContinuousProcess)
+class MoleculePopulateProcessInterface
 { 
 public:
-  LIBECS_DM_OBJECT(MassActionProcess, Process)
-    {
-      INHERIT_PROPERTIES(Process);
-      PROPERTYSLOT_SET_GET(Real, k);
-    }
-  MassActionProcess():
-    k(0),
-    theSpace(0) {}
-  virtual ~MassActionProcess() {}
-  SIMPLE_SET_GET_METHOD(Real, k);
-  virtual void fire();
-  virtual void initialize()
-    {
-      Process::initialize();
-      declareUnidirectional();
-      theSpatiocyteStepper =
-        dynamic_cast<SpatiocyteStepper*>(getSuperSystem()->getStepper());
-    }
-protected:
-  double k;
-  double theSpace;
-  SpatiocyteStepper* theSpatiocyteStepper;
+  virtual ~MoleculePopulateProcessInterface() {}
+
+  virtual void populateGaussian(Species*) = 0;
+  virtual void populateUniformDense(Species*, unsigned int[], unsigned int*) = 0;
+  virtual void populateUniformSparse(Species* aSpecies) = 0;
 };
 
-#endif /* __MassActionProcess_hpp */
-
+#endif /* __MOLECULEPOPULATEPROCESSINTERFACE_HPP */

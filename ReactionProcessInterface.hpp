@@ -29,39 +29,18 @@
 //
 
 
-#ifndef __MassActionProcess_hpp
-#define __MassActionProcess_hpp
+#ifndef __REACTIONPROCESSINTERFACE_HPP
+#define __REACTIONPROCESSINTERFACE_HPP
 
-#include <ContinuousProcess.hpp>
-#include "SpatiocyteStepper.hpp"
-#include "SpatiocyteCommon.hpp"
+namespace libecs {
+class Process;
+}
 
-LIBECS_DM_CLASS(MassActionProcess, ContinuousProcess)
+class ReactionProcessInterface
 { 
 public:
-  LIBECS_DM_OBJECT(MassActionProcess, Process)
-    {
-      INHERIT_PROPERTIES(Process);
-      PROPERTYSLOT_SET_GET(Real, k);
-    }
-  MassActionProcess():
-    k(0),
-    theSpace(0) {}
-  virtual ~MassActionProcess() {}
-  SIMPLE_SET_GET_METHOD(Real, k);
-  virtual void fire();
-  virtual void initialize()
-    {
-      Process::initialize();
-      declareUnidirectional();
-      theSpatiocyteStepper =
-        dynamic_cast<SpatiocyteStepper*>(getSuperSystem()->getStepper());
-    }
-protected:
-  double k;
-  double theSpace;
-  SpatiocyteStepper* theSpatiocyteStepper;
+  virtual ~ReactionProcessInterface() {}
+  virtual void setInterrupt(std::vector<Process*> const &aProcessList, Process* aProcess) = 0;
 };
 
-#endif /* __MassActionProcess_hpp */
-
+#endif /* __REACTIONPROCESSINTERFACE_HPP */

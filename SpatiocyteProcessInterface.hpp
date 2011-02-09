@@ -29,39 +29,29 @@
 //
 
 
-#ifndef __MassActionProcess_hpp
-#define __MassActionProcess_hpp
+#ifndef __SPATIOCYTEPROCESSINTERFACE_HPP
+#define __SPATIOCYTEPROCESSINTERFACE_HPP
 
-#include <ContinuousProcess.hpp>
-#include "SpatiocyteStepper.hpp"
 #include "SpatiocyteCommon.hpp"
 
-LIBECS_DM_CLASS(MassActionProcess, ContinuousProcess)
+class SpatiocyteProcessInterface
 { 
 public:
-  LIBECS_DM_OBJECT(MassActionProcess, Process)
-    {
-      INHERIT_PROPERTIES(Process);
-      PROPERTYSLOT_SET_GET(Real, k);
-    }
-  MassActionProcess():
-    k(0),
-    theSpace(0) {}
-  virtual ~MassActionProcess() {}
-  SIMPLE_SET_GET_METHOD(Real, k);
-  virtual void fire();
-  virtual void initialize()
-    {
-      Process::initialize();
-      declareUnidirectional();
-      theSpatiocyteStepper =
-        dynamic_cast<SpatiocyteStepper*>(getSuperSystem()->getStepper());
-    }
-protected:
-  double k;
-  double theSpace;
-  SpatiocyteStepper* theSpatiocyteStepper;
+  virtual ~SpatiocyteProcessInterface() {}
+  virtual void initializeSecond() = 0;
+  virtual void initializeThird() = 0;
+  virtual void initializeFourth() = 0;
+  virtual void initializeLastOnce() = 0;
+  virtual void printParameters() = 0;
+  virtual void substrateValueChanged(Time) = 0;
+  virtual void setPriorityQueue(ProcessPriorityQueue* aPriorityQueue) = 0;
+  virtual void setTime(Time aTime) = 0;
+  virtual Time getTime() const = 0;
+  virtual bool getIsPriority() const = 0;
+  virtual void setQueueID(ProcessID anID) = 0;
+  virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) = 0;
+  virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) = 0;
+  virtual void fire() = 0;
 };
 
-#endif /* __MassActionProcess_hpp */
-
+#endif /* __SPATIOCYTEPROCESSINTERFACE_HPP */

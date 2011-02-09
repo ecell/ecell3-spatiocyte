@@ -31,12 +31,13 @@
 
 #include <time.h>
 #include <gsl/gsl_randist.h>
-#include <Model.hpp>
-#include <System.hpp>
+#include <libecs/Model.hpp>
+#include <libecs/System.hpp>
+#include <libecs/Process.hpp>
 #include "SpatiocyteStepper.hpp"
 #include "SpatiocyteSpecies.hpp"
-#include "SpatiocyteProcess.hpp"
-#include "ReactionProcess.hpp"
+#include "SpatiocyteProcessInterface.hpp"
+#include "ReactionProcessInterface.hpp"
 
 LIBECS_DM_INIT(SpatiocyteStepper, Stepper);
 
@@ -450,7 +451,7 @@ void SpatiocyteStepper::initProcessSecond()
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
     {      
-      SpatiocyteProcess* aProcess(reinterpret_cast<SpatiocyteProcess*>(*i));
+      SpatiocyteProcessInterface* aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
       aProcess->initializeSecond();
     }
 }
@@ -460,7 +461,7 @@ void SpatiocyteStepper::printProcessParameters()
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
     {      
-      SpatiocyteProcess* aProcess(reinterpret_cast<SpatiocyteProcess*>(*i));
+      SpatiocyteProcessInterface* aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
       aProcess->printParameters();
     }
 }
@@ -470,7 +471,7 @@ void SpatiocyteStepper::initProcessThird()
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
     {      
-      SpatiocyteProcess* aProcess(reinterpret_cast<SpatiocyteProcess*>(*i));
+      SpatiocyteProcessInterface* aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
       aProcess->initializeThird();
     }
 }
@@ -480,7 +481,7 @@ void SpatiocyteStepper::initProcessFourth()
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
     {      
-      SpatiocyteProcess* aProcess(reinterpret_cast<SpatiocyteProcess*>(*i));
+      SpatiocyteProcessInterface* aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
       aProcess->initializeFourth();
     }
   setStepInterval(thePriorityQueue.getTop()->getTime()-getCurrentTime());
@@ -491,7 +492,7 @@ void SpatiocyteStepper::initProcessLastOnce()
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
     {      
-      SpatiocyteProcess* aProcess(reinterpret_cast<SpatiocyteProcess*>(*i));
+      SpatiocyteProcessInterface* aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
       aProcess->initializeLastOnce();
     }
 }
@@ -503,42 +504,25 @@ void SpatiocyteStepper::initPriorityQueue()
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
     {      
-      SpatiocyteProcess*
-        aProcess(reinterpret_cast<SpatiocyteProcess*>(*i));
-      aProcess->setTime(aCurrentTime+aProcess->getStepInterval());
-      aProcess->setPriorityQueue(&thePriorityQueue);
+      Process* const aProcess(*i);
       //The following processes are inserted in the PriorityQueue and
       //executed at simulation steps according to their execution times:
-      String aClassName(aProcess->getPropertyInterface().getClassName());
-      if(aClassName == "DiffusionProcess" ||
-         aClassName == "IteratingLogProcess" ||
-         aClassName == "MoleculePopulateProcess" ||
-         aClassName == "CoordinateLogProcess" ||
-         aClassName == "VisualizationLogProcess" ||
-         aClassName == "FluorescentImagingProcess" ||
-         aClassName == "OscillationAnalysisProcess" ||
-         aClassName == "PeriodicBoundaryDiffusionProcess" ||
-         aClassName == "SpatiocyteNextReactionProcess" ||
-         aClassName == "PolymerFragmentationProcess")
+      SpatiocyteProcessInterface*
+        aSpatiocyteProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
+      if(aSpatiocyteProcess != NULL)
         {
-          aProcess->setQueueID(thePriorityQueue.push(aProcess));
+          aSpatiocyteProcess->setQueueID(thePriorityQueue.push(aSpatiocyteProcess));
+          aSpatiocyteProcess->setTime(aCurrentTime + aProcess->getStepInterval());
+          aSpatiocyteProcess->setPriorityQueue(&thePriorityQueue);
         }
       //The following processes never interrupt other Processes.
       //We exclude them here and set up the interrupt for the remaining
       //processes. All processes which interrupt other processes have
       //the ReactionProcess as the base class.
-      if(aClassName != "DiffusionProcess" && 
-         aClassName != "MoleculePopulateProcess" &&
-         aClassName != "IteratingLogProcess" &&
-         aClassName != "CoordinateLogProcess" &&
-         aClassName != "VisualizationLogProcess" &&
-         aClassName != "FluorescentImagingProcess" &&
-         aClassName != "OscillationAnalysisProcess" &&
-         aClassName != "PeriodicBoundaryDiffusionProcess" && 
-         aClassName != "PolymerizationParameterProcess")
+      ReactionProcessInterface*
+        aReactionProcess(dynamic_cast<ReactionProcessInterface*>(*i));
+      if(aReactionProcess != NULL)
         {
-          ReactionProcess*
-            aReactionProcess(reinterpret_cast<ReactionProcess*>(*i));
           aReactionProcess->setInterrupt(theProcessVector, *i);
         }
     } 

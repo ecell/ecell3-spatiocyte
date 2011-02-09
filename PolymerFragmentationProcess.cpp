@@ -242,13 +242,13 @@ void PolymerFragmentationProcess::removeSubstrateInterrupt(Species* aSpecies,
 
 void PolymerFragmentationProcess::initializeLastOnce()
 {
-  A->addInterruptedProcess(reinterpret_cast<SpatiocyteProcess*>(this));
+  A->addInterruptedProcess(this);
   theBendIndexA = A->getBendIndex(BendAngle);
   if(B)
     {
       if(A != B)
         {
-          B->addInterruptedProcess(reinterpret_cast<SpatiocyteProcess*>(this));
+          B->addInterruptedProcess(this);
         }
       theBendIndexB = B->getBendIndex(BendAngle);
     }

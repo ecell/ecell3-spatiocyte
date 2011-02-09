@@ -33,8 +33,9 @@
 #define __ReactionProcess_hpp
 
 #include "SpatiocyteProcess.hpp"
+#include "ReactionProcessInterface.hpp"
 
-LIBECS_DM_CLASS(ReactionProcess, SpatiocyteProcess)
+LIBECS_DM_CLASS_EXTRA_1(ReactionProcess, SpatiocyteProcess, ReactionProcessInterface)
 { 
 public:
   LIBECS_DM_OBJECT(ReactionProcess, Process)
@@ -116,7 +117,7 @@ public:
           thePriorityQueue->moveUp(theQueueID);
         }          
     }
-  void setInterrupt(std::vector<Process*> &aProcessList, Process* aProcess)
+  virtual void setInterrupt(std::vector<Process*> const &aProcessList, Process* aProcess)
     {
       for(std::vector<Process*>::const_iterator i(aProcessList.begin());
           i != aProcessList.end(); ++i)
@@ -124,7 +125,7 @@ public:
           if(aProcess != (*i) && isInterrupting(*i))
             {
               theInterruptingProcesses.push_back(
-                                     reinterpret_cast<ReactionProcess*>(*i));
+                                     dynamic_cast<ReactionProcess*>(*i));
 
             }
         }

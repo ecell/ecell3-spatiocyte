@@ -219,8 +219,7 @@ public:
       for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
         {
-          (*i)->addInterruptedProcess(
-                            reinterpret_cast<SpatiocyteProcess*>(this));
+          (*i)->addInterruptedProcess(this);
         }
     }
   virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule)

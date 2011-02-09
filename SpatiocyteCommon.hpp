@@ -39,10 +39,10 @@
 #include <FullID.hpp>
 #include "PriorityQueue.hpp"
 
-class SpatiocyteProcess;
+class SpatiocyteProcessInterface;
 class Species;
 struct Subunit;
-typedef PriorityQueue<SpatiocyteProcess*> ProcessPriorityQueue;
+typedef PriorityQueue<SpatiocyteProcessInterface*> ProcessPriorityQueue;
 typedef ProcessPriorityQueue::ID ProcessID;
 
 //Compartment type:
