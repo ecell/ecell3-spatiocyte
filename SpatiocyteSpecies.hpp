@@ -142,7 +142,7 @@ public:
             " not MoleculePopulated." << std::endl;
         }
     }
-  Variable* getVariable()
+  Variable* getVariable() const
     {
       return theVariable;
     }
