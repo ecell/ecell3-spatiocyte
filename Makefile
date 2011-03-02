@@ -7,6 +7,7 @@ SpatiocyteProcess\
 MassActionProcess\
 ReactionProcess\
 VisualizationLogProcess\
+H5VisualizationLogProcess\
 IteratingLogProcess\
 DiffusionInfluencedReactionProcess\
 OscillationAnalysisProcess\
@@ -35,6 +36,9 @@ all:	$(SOS) $(SPATIOCYTE)
 
 VisualizationLogProcess.so: 	VisualizationLogProcess.cpp
 	$(ECELL3_DMC) -o VisualizationLogProcess.so --ldflags=SpatiocyteProcess.so VisualizationLogProcess.cpp
+
+H5VisualizationLogProcess.so: 	H5VisualizationLogProcess.cpp
+	$(ECELL3_DMC) -o H5VisualizationLogProcess.so --ldflags=SpatiocyteProcess.so --ldflags=-lhdf5 --ldflags=-lhdf5_cpp H5VisualizationLogProcess.cpp
 
 FluorescentImagingProcess.so: 	FluorescentImagingProcess.cpp
 	$(ECELL3_DMC) -o FluorescentImagingProcess.so --ldflags="SpatiocyteProcess.so VisualizationLogProcess.so" FluorescentImagingProcess.cpp
