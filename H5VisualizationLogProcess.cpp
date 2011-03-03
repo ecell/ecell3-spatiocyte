@@ -44,28 +44,22 @@
 class ParticleData
 {
 public:
-    std::size_t getID() const
-    {
-        return theID;
-    }
-
     unsigned short getSpeciesID() const
     {
         return theSpeciesID;
     }
 
-    unsigned short getVoxelID() const
+    unsigned int getCoordinate() const
     {
-        return theVoxelID;
+        return theCoord;
     }
 
-    ParticleData(std::size_t id, unsigned short speciesID, unsigned short voxelID)
-        : theID(id), theSpeciesID(speciesID), theVoxelID(voxelID) {}
+    ParticleData(unsigned short speciesID, unsigned int coord)
+        : theSpeciesID(speciesID), theCoord(coord) {}
 
 private:
-    const unsigned int theID;
     const unsigned short theSpeciesID;
-    const unsigned short theVoxelID;
+    const unsigned int theCoord;
 };
 
 
@@ -89,9 +83,8 @@ struct ParticleDataPacker
 
     void operator()(archiver_type& arc, ParticleData const* data = 0) const
     {
-        arc << field<uint64_t>("id", &ParticleData::getID, data);
         arc << field<uint64_t>("species_id", &ParticleData::getSpeciesID, data);
-        arc << field<uint64_t>("voxel_id", &ParticleData::getVoxelID, data);
+        arc << field<uint64_t>("coord", &ParticleData::getCoordinate, data);
     }
 };
 
@@ -297,7 +290,9 @@ void H5VisualizationLogProcess::logMolecules(H5::DataSpace const& space, H5::Dat
     unsigned char* p = buf.get();
     for(int i(0); i != aSize; ++i)
     {
-        p = pack<ParticleDataPacker>(p, ParticleData(i, aSpecies->getID(), aSpecies->getMolecule(i)->id));
+        Voxel* const voxel(aSpecies->getMolecule(i));
+        BOOST_ASSERT(voxel->id == aSpecies->getID());
+        p = pack<ParticleDataPacker>(p, ParticleData(aSpecies->getID(), voxel->coord));
     }
     dataSet.write(buf.get(), particleDataType, mem, slab);
 }
