@@ -44,6 +44,11 @@
 class ParticleData
 {
 public:
+    uint64_t getID() const
+    {
+        return theID;
+    }
+
     unsigned short getSpeciesID() const
     {
         return theSpeciesID;
@@ -54,10 +59,11 @@ public:
         return theCoord;
     }
 
-    ParticleData(unsigned short speciesID, unsigned int coord)
-        : theSpeciesID(speciesID), theCoord(coord) {}
+    ParticleData(uint64_t id, unsigned short speciesID, unsigned int coord)
+        : theID(id), theSpeciesID(speciesID), theCoord(coord) {}
 
 private:
+    const uint64_t theID;
     const unsigned short theSpeciesID;
     const unsigned int theCoord;
 };
@@ -83,8 +89,9 @@ struct ParticleDataPacker
 
     void operator()(archiver_type& arc, ParticleData const* data = 0) const
     {
+        arc << field<uint64_t>("id", &ParticleData::getID, data);
         arc << field<uint64_t>("species_id", &ParticleData::getSpeciesID, data);
-        arc << field<uint64_t>("coord", &ParticleData::getCoordinate, data);
+        arc << field<uint64_t>("lattice_id", &ParticleData::getCoordinate, data);
     }
 };
 
@@ -202,9 +209,8 @@ protected:
     void logMolecules(H5::DataSpace const& space, H5::DataSet const& dataSet, hsize_t (&dims)[1], Species *);
 
     template<typename T>
-    void setH5Attribute(const char* name, T const& data);
-
-    void setH5Attribute(const char* name, Point const& data);
+    void setH5Attribute(H5::Group& dg, const char* name, T const& data);
+    void setH5Attribute(H5::Group& dg, const char* name, Point const& data);
 
 protected:
     unsigned int Polymer;
@@ -232,17 +238,17 @@ H5VisualizationLogProcess::H5VisualizationLogProcess()
 }
 
 template<typename T>
-void H5VisualizationLogProcess::setH5Attribute(const char* name, T const& data)
+void H5VisualizationLogProcess::setH5Attribute(H5::Group& dg, const char* name, T const& data)
 {
     H5::DataType dataType = get_h5_scalar_data_type_le<T>()();
     unsigned char buf[sizeof(T)];
     packer(buf, data);
-    theDataGroup.createAttribute(name, dataType, H5::DataSpace()).write(dataType, buf); 
+    dg.createAttribute(name, dataType, H5::DataSpace()).write(dataType, buf); 
 }
 
-void H5VisualizationLogProcess::setH5Attribute(const char* name, Point const& data)
+void H5VisualizationLogProcess::setH5Attribute(H5::Group& dg, const char* name, Point const& data)
 {
-    H5::Attribute attr(theDataGroup.createAttribute(name, pointDataType, H5::DataSpace()));
+    H5::Attribute attr(dg.createAttribute(name, pointDataType, H5::DataSpace()));
     unsigned char buf[24];
     BOOST_ASSERT(sizeof(buf) >= pointDataType.getSize());
     pack<PointDataPacker>(buf, data);
@@ -251,16 +257,16 @@ void H5VisualizationLogProcess::setH5Attribute(const char* name, Point const& da
 
 void H5VisualizationLogProcess::initializeLog()
 {
-    setH5Attribute("start_coord", theSpatiocyteStepper->getStartCoord());
-    setH5Attribute("row_size", theSpatiocyteStepper->getRowSize());
-    setH5Attribute("layer_size", theSpatiocyteStepper->getLayerSize());
-    setH5Attribute("column_size", theSpatiocyteStepper->getColSize());
-    Point aCenterPoint(theSpatiocyteStepper->getCenterPoint());
-    setH5Attribute("center_point", aCenterPoint);
-    setH5Attribute("real_row_size", aCenterPoint.z * 2);
-    setH5Attribute("real_layer_size", aCenterPoint.y * 2);
-    setH5Attribute("real_col_size", aCenterPoint.x * 2);
-    setH5Attribute("normalized_voxel_radius",  theSpatiocyteStepper->getNormalizedVoxelRadius());
+    setH5Attribute(theDataGroup, "start_coord", theSpatiocyteStepper->getStartCoord());
+    setH5Attribute(theDataGroup, "row_size", theSpatiocyteStepper->getRowSize());
+    setH5Attribute(theDataGroup, "layer_size", theSpatiocyteStepper->getLayerSize());
+    setH5Attribute(theDataGroup, "column_size", theSpatiocyteStepper->getColSize());
+    const Point aCenterPoint(theSpatiocyteStepper->getCenterPoint());
+    setH5Attribute(theDataGroup, "center_point", aCenterPoint);
+    setH5Attribute(theDataGroup, "real_row_size", aCenterPoint.z * 2);
+    setH5Attribute(theDataGroup, "real_layer_size", aCenterPoint.y * 2);
+    setH5Attribute(theDataGroup, "real_col_size", aCenterPoint.x * 2);
+    setH5Attribute(theDataGroup, "normalized_voxel_radius",  theSpatiocyteStepper->getNormalizedVoxelRadius());
 }
 
 void H5VisualizationLogProcess::logMolecules(H5::DataSpace const& space, H5::DataSet const& dataSet, hsize_t (&dims)[1], Species* aSpecies)
@@ -292,7 +298,7 @@ void H5VisualizationLogProcess::logMolecules(H5::DataSpace const& space, H5::Dat
     {
         Voxel* const voxel(aSpecies->getMolecule(i));
         BOOST_ASSERT(voxel->id == aSpecies->getID());
-        p = pack<ParticleDataPacker>(p, ParticleData(aSpecies->getID(), voxel->coord));
+        p = pack<ParticleDataPacker>(p, ParticleData(offset[0] + i, aSpecies->getID(), voxel->coord));
     }
     dataSet.write(buf.get(), particleDataType, mem, slab);
 }
@@ -302,12 +308,13 @@ void H5VisualizationLogProcess::logSpecies()
     const Time currentTime(theSpatiocyteStepper->getCurrentTime());
 
     H5::Group perTimeDataGroup(theDataGroup.createGroup(boost::lexical_cast<std::string>(currentTime).c_str()));
+    setH5Attribute(perTimeDataGroup, "t", currentTime);
     H5::DataSpace space;
     H5::DataSet dataSet;
     {
         static const hsize_t initdims[] = { 0 };
         static const hsize_t maxdims[] = { H5S_UNLIMITED };
-        static const hsize_t chunkdims[] = { 4096 };
+        static const hsize_t chunkdims[] = { 128 };
         space = H5::DataSpace(1, initdims, maxdims);
         H5::DSetCreatPropList props;
         props.setChunk(1, chunkdims);
