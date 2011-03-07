@@ -31,6 +31,7 @@
 #include <H5Cpp.h>
 #include "H5Support.hpp"
 #include <MethodProxy.hpp>
+#include <boost/foreach.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/mpl/and.hpp>
 #include <boost/utility/enable_if.hpp>
@@ -95,23 +96,63 @@ struct ParticleDataPacker
     }
 };
 
+/* XXX: not reentrant, but it should be ok */
 template<typename Tarc>
-struct SpeciesDataPacker
+struct SpeciesPacker
 {
     typedef Tarc archiver_type;
 
-    static const char* Species_getName(Species const& self)
+    static std::string Species_getName(Species const& self)
     {
-        return self.getVariable()->getName().c_str();
+        std::string name;
+        libecs::Variable const* variable(self.getVariable());
+        name = variable->getName();
+        if (name.empty())
+        {
+            name = variable->getID();
+        }
+        return name;
     }
 
     void operator()(archiver_type& arc, Species const* data = 0) const
     {
         arc << field<uint64_t>("id", &Species::getID, data);
         arc << field<char[32]>("name", &Species_getName, data);
-        arc << field<Species, double, double>("radius", 0.);
-        arc << field<Species, double, double>("D", 0.);
+        arc << field<double>("radius", &Species::getRadius, data);
+        arc << field<double>("D", &Species::getDiffusionCoefficient, data);
     }
+};
+
+template<typename Tarc>
+struct CompartmentPacker
+{
+    typedef Tarc archiver_type;
+
+    static boost::array<double, 3> Compartment_lengths(Compartment const& compartment)
+    {
+        boost::array<double, 3> retval;
+        retval[0] = compartment.lengthX;
+        retval[1] = compartment.lengthY;
+        retval[2] = compartment.lengthZ;
+        return retval;
+    }
+
+    void operator()(archiver_type& arc, Compartment const* data = 0) const
+    {
+        arc << field<uint8_t>("id", &Compartment::vacantID, data);
+        arc << field<boost::array<double, 3> >("lengths", &Compartment_lengths, data);
+        arc << field<Compartment, double, double>("voxelRadius", voxelRadius);
+        arc << field<Compartment, double, double>("normalizedVoxelRadius", normalizedVoxelRadius);
+    }
+
+    CompartmentPacker(double voxelRadius, double normalizedVoxelRadius)
+        : voxelRadius(voxelRadius), normalizedVoxelRadius(normalizedVoxelRadius) {}
+
+    CompartmentPacker(): voxelRadius(0.), normalizedVoxelRadius(0.) {}
+
+private:
+    const double voxelRadius;
+    const double normalizedVoxelRadius;
 };
 
 template<template<typename> class TTserialize_>
@@ -204,7 +245,7 @@ public:
         }
     }
 protected:
-    virtual void initializeLog();
+    void initializeLog();
     void logSpecies();
     void logMolecules(H5::DataSpace const& space, H5::DataSet const& dataSet, hsize_t (&dims)[1], Species *);
 
@@ -223,6 +264,7 @@ protected:
     H5::CompType pointDataType;
     H5::CompType particleDataType;
     H5::CompType speciesDataType;
+    H5::CompType compartmentDataType;
 };
 
 H5VisualizationLogProcess::H5VisualizationLogProcess()
@@ -233,7 +275,8 @@ H5VisualizationLogProcess::H5VisualizationLogProcess()
         FileName("visualLog.h5"),
         pointDataType(getH5Type<PointDataPacker>()),
         particleDataType(getH5Type<ParticleDataPacker>()),
-        speciesDataType(getH5Type<SpeciesDataPacker>())
+        speciesDataType(getH5Type<SpeciesPacker>()),
+        compartmentDataType(getH5Type<CompartmentPacker>())
 {
 }
 
@@ -255,18 +298,39 @@ void H5VisualizationLogProcess::setH5Attribute(H5::Group& dg, const char* name, 
     attr.write(pointDataType, buf); 
 }
 
+
 void H5VisualizationLogProcess::initializeLog()
 {
-    setH5Attribute(theDataGroup, "start_coord", theSpatiocyteStepper->getStartCoord());
-    setH5Attribute(theDataGroup, "row_size", theSpatiocyteStepper->getRowSize());
-    setH5Attribute(theDataGroup, "layer_size", theSpatiocyteStepper->getLayerSize());
-    setH5Attribute(theDataGroup, "column_size", theSpatiocyteStepper->getColSize());
-    const Point aCenterPoint(theSpatiocyteStepper->getCenterPoint());
-    setH5Attribute(theDataGroup, "center_point", aCenterPoint);
-    setH5Attribute(theDataGroup, "real_row_size", aCenterPoint.z * 2);
-    setH5Attribute(theDataGroup, "real_layer_size", aCenterPoint.y * 2);
-    setH5Attribute(theDataGroup, "real_col_size", aCenterPoint.x * 2);
-    setH5Attribute(theDataGroup, "normalized_voxel_radius",  theSpatiocyteStepper->getNormalizedVoxelRadius());
+    {
+        std::vector<Compartment*> const& compartments(theSpatiocyteStepper->getCompartments());
+        const hsize_t dims[] = { compartments.size() };
+        boost::scoped_array<unsigned char> buf(new unsigned char[compartments.size() * compartmentDataType.getSize()]);
+        field_packer<h5_le_traits> packer(buf.get());
+        CompartmentPacker<field_packer<h5_le_traits> > serializer(
+            theSpatiocyteStepper->getVoxelRadius(),
+            theSpatiocyteStepper->getNormalizedVoxelRadius());
+        H5::Group latticeInfoGroup(theLogFile.createGroup("lattice_info"));
+        H5::DataSpace space(H5::DataSpace(1, dims, dims));
+        H5::DataSet latticeInfoDataSet(latticeInfoGroup.createDataSet("HCP_group", compartmentDataType, space));
+        BOOST_FOREACH(Compartment const* compartment, compartments)
+        {
+            serializer(packer, compartment);
+        }
+        latticeInfoDataSet.write(buf.get(), compartmentDataType, space);
+    }
+
+    {
+        const hsize_t dims[] = { theProcessSpecies.size() };
+        boost::scoped_array<unsigned char> buf(new unsigned char[speciesDataType.getSize() * theProcessSpecies.size()]);
+        H5::DataSpace space(H5::DataSpace(1, dims, dims));
+        H5::DataSet speciesSet(theDataGroup.createDataSet("species", speciesDataType, space));
+        unsigned char* p(buf.get());
+        BOOST_FOREACH(Species const* species, theProcessSpecies)
+        {
+            p = pack<SpeciesPacker>(p, *species);
+        }
+        speciesSet.write(buf.get(), speciesDataType, space);
+    }
 }
 
 void H5VisualizationLogProcess::logMolecules(H5::DataSpace const& space, H5::DataSet const& dataSet, hsize_t (&dims)[1], Species* aSpecies)
