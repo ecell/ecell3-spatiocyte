@@ -4,6 +4,7 @@
 #include <boost/utility/enable_if.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/type_traits/is_integral.hpp>
+#include <boost/array.hpp>
 
 template<typename T>
 struct storage_for
@@ -19,7 +20,30 @@ struct storage_for
     };
 };
 
-struct be_packer
+template<typename Tderived_>
+struct packer_base
+{
+    template<typename T, std::size_t N>
+    std::size_t operator()(unsigned char *buf, T const (&data)[N]) const
+    {
+        unsigned char* p(buf);
+        T const* dp(data);
+        T const* const e(data + N);
+        while (dp < e)
+        {
+            p += static_cast<Tderived_ const&>(*this)(p, dp++);
+        }
+        return sizeof(T[N]);
+    }
+
+    template<typename T, std::size_t N>
+    std::size_t operator()(unsigned char *buf, boost::array<T, N> const& data) const
+    {
+        return (*this)(buf, data);
+    }
+};
+
+struct be_packer: packer_base<be_packer>
 {
     template<typename T>
     std::size_t operator()(unsigned char *buf, T const& data, typename boost::enable_if<boost::is_integral<T> >::type* = 0)
@@ -69,7 +93,7 @@ private:
     }
 };
 
-struct le_packer
+struct le_packer: packer_base<le_packer>
 {
     template<typename T>
     std::size_t operator()(unsigned char *buf, T const& data, typename boost::enable_if<boost::is_integral<T> >::type* = 0)

@@ -10,6 +10,7 @@
 #include <boost/assert.hpp>
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
+#include <boost/array.hpp>
 #include <boost/scoped_array.hpp>
 
 template<typename T>
@@ -22,6 +23,16 @@ struct get_h5_scalar_data_type_le
 
 template<typename T, std::size_t N>
 struct get_h5_scalar_data_type_le<T[N]>
+{
+    H5::ArrayType operator()() const
+    {
+        static const hsize_t dims[] = { N };
+        return H5::ArrayType(get_h5_scalar_data_type_le<T>()(), 1, dims);
+    }
+};
+
+template<typename T, std::size_t N>
+struct get_h5_scalar_data_type_le<boost::array<T, N> >
 {
     H5::ArrayType operator()() const
     {
@@ -67,6 +78,16 @@ struct get_h5_scalar_data_type_be
 
 template<typename T, std::size_t N>
 struct get_h5_scalar_data_type_be<T[N]>
+{
+    H5::ArrayType operator()() const
+    {
+        static const hsize_t dims[] = { N };
+        return H5::ArrayType(get_h5_scalar_data_type_be<T>()(), 1, dims);
+    }
+};
+
+template<typename T, std::size_t N>
+struct get_h5_scalar_data_type_be<boost::array<T, N> >
 {
     H5::ArrayType operator()() const
     {
