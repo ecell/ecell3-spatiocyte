@@ -2218,5 +2218,8 @@ void SpatiocyteStepper::clearCompartment(Compartment* aCompartment)
 }
 
 
-
+std::vector<Compartment*> const& SpatiocyteStepper::getCompartments() const
+{
+    return theCompartments;
+}
 

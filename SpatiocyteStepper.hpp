@@ -83,6 +83,7 @@ public:
   Point getCenterPoint();
   double getNormalizedVoxelRadius();
   Voxel* point2voxel(Point);
+  std::vector<Compartment*> const& getCompartments() const;
 private:
   void setCompartmentsCenterPoint();
   void printProcessParameters();
