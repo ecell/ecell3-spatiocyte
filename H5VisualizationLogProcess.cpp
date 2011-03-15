@@ -45,9 +45,9 @@
 class ParticleData
 {
 public:
-    uint64_t getID() const
+    unsigned int getCoordinate() const
     {
-        return theID;
+        return theCoord;
     }
 
     unsigned short getSpeciesID() const
@@ -55,18 +55,18 @@ public:
         return theSpeciesID;
     }
 
-    unsigned int getCoordinate() const
+    unsigned int getLatticeID() const
     {
-        return theCoord;
+        return theLatticeID;
     }
 
-    ParticleData(uint64_t id, unsigned short speciesID, unsigned int coord)
-        : theID(id), theSpeciesID(speciesID), theCoord(coord) {}
+    ParticleData(unsigned int coord, unsigned short speciesID, unsigned int latticeID)
+        : theCoord(coord), theSpeciesID(speciesID), theLatticeID(latticeID) {}
 
 private:
-    const uint64_t theID;
-    const unsigned short theSpeciesID;
     const unsigned int theCoord;
+    const unsigned short theSpeciesID;
+    const uint64_t theLatticeID;
 };
 
 
@@ -90,9 +90,9 @@ struct ParticleDataPacker
 
     void operator()(archiver_type& arc, ParticleData const* data = 0) const
     {
-        arc << field<uint64_t>("id", &ParticleData::getID, data);
+        arc << field<uint64_t>("id", &ParticleData::getCoordinate, data);
         arc << field<uint64_t>("species_id", &ParticleData::getSpeciesID, data);
-        arc << field<uint64_t>("lattice_id", &ParticleData::getCoordinate, data);
+        arc << field<uint64_t>("lattice_id", &ParticleData::getLatticeID, data);
     }
 };
 
@@ -323,7 +323,7 @@ void H5VisualizationLogProcess::initializeLog()
         const hsize_t dims[] = { theProcessSpecies.size() };
         boost::scoped_array<unsigned char> buf(new unsigned char[speciesDataType.getSize() * theProcessSpecies.size()]);
         H5::DataSpace space(H5::DataSpace(1, dims, dims));
-        H5::DataSet speciesSet(theDataGroup.createDataSet("species", speciesDataType, space));
+        H5::DataSet speciesSet(theLogFile.createDataSet("species", speciesDataType, space));
         unsigned char* p(buf.get());
         BOOST_FOREACH(Species const* species, theProcessSpecies)
         {
@@ -362,7 +362,7 @@ void H5VisualizationLogProcess::logMolecules(H5::DataSpace const& space, H5::Dat
     {
         Voxel* const voxel(aSpecies->getMolecule(i));
         BOOST_ASSERT(voxel->id == aSpecies->getID());
-        p = pack<ParticleDataPacker>(p, ParticleData(offset[0] + i, aSpecies->getID(), voxel->coord));
+        p = pack<ParticleDataPacker>(p, ParticleData(voxel->coord, aSpecies->getID(), aSpecies->getCompartment()->vacantID));
     }
     dataSet.write(buf.get(), particleDataType, mem, slab);
 }
