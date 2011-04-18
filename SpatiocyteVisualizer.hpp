@@ -57,45 +57,6 @@ struct Point
   double  z;
 };
 
-
-class Manipulator
-{
-public:
-  Manipulator(Point, Point);
-	virtual void update();
-	virtual void rotateLeftRight(int);
-	virtual void rotateUpDown(int);
-	virtual void zoom(int);
-  virtual GLfloat* getViewMatrix();
-  virtual Point getPosition();
-	void initViewMatrix();
-protected:
-  double theRotationStep;
-  double theZoomStep;
-  double theLeftRightRotation;
-  double theUpDownRotation;
-  double theZoom;
-  Point theLookAt;
-  Point thePosition;
-	GLfloat theViewMatrix[16];
-};
-
-class Light:public Manipulator
-{
-public:
-  Light(Point aPosition, Point aLookAt):Manipulator(aPosition, aLookAt) {}
-  void setClipDistance(double, double);
-	virtual void update();
-  GLfloat* getProjectionMatrix();
-	void updateMatrices(void);
-	void shrinkFrustum(void);
-	void growFrustum(void);
-protected:
-  double theNear;
-  double theFar;
-	GLfloat theProjectionMatrix[16];
-};
-
 class GLScene;
 
 class ControlBox : public Gtk::ScrolledWindow
@@ -297,8 +258,7 @@ public:
 protected:
   void drawBox(GLfloat xlo, GLfloat xhi, GLfloat ylo, GLfloat yhi,
                       GLfloat zlo, GLfloat zhi);
-  void drawScene(bool);
-  void Draw8BitUnshadowed();
+  void drawScene(double);
   void timeout_add();
   void plotGrid();
   void plot3DMolecules();
@@ -402,9 +362,6 @@ protected:
   unsigned int* theZLowBound;
   double theResetTime;
   bool showTime;
-  Glib::Timer theTimer;
-  Manipulator* theCamera;
-  Light* theLight;
 };
 
 class Rulers : public Gtk::Window
