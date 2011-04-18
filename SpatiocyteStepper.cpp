@@ -505,15 +505,30 @@ void SpatiocyteStepper::initPriorityQueue()
       i != theProcessVector.end(); ++i)
     {      
       Process* const aProcess(*i);
-      //The following processes are inserted in the PriorityQueue and
-      //executed at simulation steps according to their execution times:
       SpatiocyteProcessInterface*
         aSpatiocyteProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
       if(aSpatiocyteProcess != NULL)
         {
-          aSpatiocyteProcess->setQueueID(thePriorityQueue.push(aSpatiocyteProcess));
-          aSpatiocyteProcess->setTime(aCurrentTime + aProcess->getStepInterval());
+          aSpatiocyteProcess->setTime(aCurrentTime+aProcess->getStepInterval());
           aSpatiocyteProcess->setPriorityQueue(&thePriorityQueue);
+          String aClassName(aProcess->getPropertyInterface().getClassName());
+          //Not all SpatiocyteProcesses are inserted into the priority queue.
+          //Only the following processes are inserted in the PriorityQueue and
+          //executed at simulation steps according to their execution times:
+          if(aClassName == "DiffusionProcess" ||
+             aClassName == "IteratingLogProcess" ||
+             aClassName == "MoleculePopulateProcess" ||
+             aClassName == "CoordinateLogProcess" ||
+             aClassName == "VisualizationLogProcess" ||
+             aClassName == "FluorescentImagingProcess" ||
+             aClassName == "OscillationAnalysisProcess" ||
+             aClassName == "PeriodicBoundaryDiffusionProcess" ||
+             aClassName == "SpatiocyteNextReactionProcess" ||
+             aClassName == "PolymerFragmentationProcess")
+            {
+              aSpatiocyteProcess->setQueueID(
+                                   thePriorityQueue.push(aSpatiocyteProcess));
+            }
         }
       //The following processes never interrupt other Processes.
       //We exclude them here and set up the interrupt for the remaining

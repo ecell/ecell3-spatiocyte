@@ -1,200 +1,188 @@
-# A test model for Spatiocyte 
+# Wildtype MinDE model as published in
+# Arjunan, S. N. V. and Tomita, M. (2010). A new multicompartmental
+# reaction-diffusion modeling method links transient membrane attachment of
+# E. coli MinE to E-ring formation. Syst. Synth. Biol. 4(1):35-53.
 # written by Satya Arjunan <satya.arjunan(a)gmail.com>
 
 Stepper SpatiocyteStepper(SS)
 {
-  VoxelRadius 2e-8;
+  VoxelRadius 2e-8;    # m
 }
 
-System System( / )
+System System(/)
 {
   StepperID       SS; 
-  Variable Variable( TYPE )
+  Variable Variable(TYPE)
     {
-      Value     0;              # { 0: Volume (requires SHAPE, RADIUS, SIZE)
-                                #   1: Surface }
+      Value 0;         # { 0: Volume
+                       #   1: Surface }
     } 
-  Variable Variable( SHAPE )
+  Variable Variable(SHAPE)
     {
-      Value     1;      # { 0: Spherical (uses SIZE) 
-                        #   1: Rod (uses SIZE, LENGTHY == 2*radius)
-                        #   2: Cubic (uses SIZE, PLANEYZ, PLANEXZ, PLANEXY)
-                        #   3: Cuboid (uses LENGTHX, LENGTHY, LENGTHZ)
-                        #   4: Ellipsoid (uses LENGTHX, LENGTHY, LENGTHZ) }
+      Value 1;         # { 0: Spherical (uses SIZE) 
+                       #   1: Rod (uses SIZE, LENGTHY=2*radius)
+                       #   2: Cubic (uses SIZE)
+                       #   3: Cuboid (uses LENGTHX, LENGTHY, LENGTHZ)
+                       #   4: Ellipsoid (uses LENGTHX, LENGTHY, LENGTHZ) }
     } 
-  Variable Variable( SIZE )
+  Variable Variable(SIZE)
     {
-      Value	 2.88e-18;  # volume in m^3 
+      Value	3.27e-18;  # m^3
     } 
-  Variable Variable( LENGTHY )
+  Variable Variable(LENGTHY)
     {
-      Value     1e-6;        # in meters
+      Value 1e-6;      # m
     } 
-  Variable Variable( VACANT )
+  Variable Variable(VACANT)
     {
-      Value             0; 
+      Value 0; 
     } 
-  Variable Variable( MinD_ATP )
+  Variable Variable(MinDatp)
     {
-      Value             500; 
+      Value 0;         # molecule number 
     } 
-  Variable Variable( MinD_ADP )
+  Variable Variable(MinDadp)
     {
-      Value             500; 
+      Value 1300;      # molecule number 
     } 
-  Variable Variable( MinE )
+  Variable Variable(MinEE)
     {
-      Value             700; 
+      Value 0;         # molecule number 
     } 
-  Process DiffusionProcess( diffuse )
+  Process DiffusionProcess(diffuseMinD)
     {
-      VariableReferenceList [ _ Variable:/:MinD_ATP ]
-                            [ _ Variable:/:MinD_ADP ]
-                            [ _ Variable:/:MinE ];
-      D 2.5e-12;
+      VariableReferenceList [_ Variable:/:MinDatp]
+                            [_ Variable:/:MinDadp];
+      D 16e-12;        # m^2/s
     }
-  Process VisualizationLogProcess( loggerMean )
+  Process DiffusionProcess(diffuseMinE)
     {
-      VariableReferenceList [ _ Variable:/Surface:MinD_ATP_m_MinE ]
-                            [ _ Variable:/Surface:MinD_ADP_m_MinE ]
-                            [ _ Variable:/Surface:MinE_m ]
-                            [ _ Variable:/Surface:MinD_ATP_m ];
-      LogInterval 0.05;
+      VariableReferenceList [_ Variable:/:MinEE];
+      D 10e-12;        # m^2/s
     }
-  # MinD_ADP -> MinD_ATP
-  Process SpatiocyteNextReactionProcess( MinD_ADPtoMinD_ATP )
+  Process VisualizationLogProcess(visualize)
     {
-      VariableReferenceList [_ Variable:/:MinD_ADP -1]
-                            [_ Variable:/:MinD_ATP 1];
-      k 6; # in s^{-1}
+      VariableReferenceList [_ Variable:/Surface:MinEE]
+                            [_ Variable:/Surface:MinDEE]
+                            [_ Variable:/Surface:MinDEED]
+                            [_ Variable:/Surface:MinD];
+      LogInterval 0.05; # s
     }
-  Process MoleculePopulateProcess( populate )
+  Process MoleculePopulateProcess(populate)
     {
-      VariableReferenceList [_ Variable:/:MinD_ATP ]
-                            [_ Variable:/:MinD_ADP ]
-                            [_ Variable:/:MinE ]
-                            [_ Variable:/Surface:MinD_ATP_m ]
-                            [_ Variable:/Surface:MinD_ATP_m_MinE ]
-                            [_ Variable:/Surface:MinD_ADP_m_MinE ]
-                            [_ Variable:/Surface:MinE_m ];
+      VariableReferenceList [_ Variable:/:MinDatp ]
+                            [_ Variable:/:MinDadp ]
+                            [_ Variable:/:MinEE ]
+                            [_ Variable:/Surface:MinD ]
+                            [_ Variable:/Surface:MinDEE ]
+                            [_ Variable:/Surface:MinDEED ]
+                            [_ Variable:/Surface:MinEE ];
     }
 }
 
-System System( /Surface )
+System System(/Surface)
 {
   StepperID SS;
 
-  Variable Variable( TYPE )
+  Variable Variable(TYPE)
     {
-      Value 1;               # { 0: Cytoplasm (requires SHAPE)
-                             #   1: Surface }
+      Value 1;         # { 0: Volume
+                       #   1: Surface }
     } 
-  Variable Variable( LIPID )
+  Variable Variable(LIPID)
     {
-      Value 0; # value is always 0 for lipids;
+      Value 0;
     } 
-
-  Variable Variable( MinD_ATP_m )
+  Variable Variable(MinD)
     {
-      Value             0; 
+      Value 0;         # molecule number 
     } 
-  Variable Variable( MinD_ATP_m_MinE )
+  Variable Variable(MinEE)
     {
-      Value             0; 
+      Value 0;         # molecule number 
     } 
-  Variable Variable( MinD_ADP_m_MinE )
+  Variable Variable(MinDEE)
     {
-      Value             0; 
+      Value 700;       # molecule number 
     } 
-  Variable Variable( MinE_m )
+  Variable Variable(MinDEED)
     {
-      Value             0; 
+      Value 0;         # molecule number 
     } 
-  Process DiffusionProcess( diffuseS )
+  Process DiffusionProcess(diffuseMinD)
     {
-      VariableReferenceList [ _ Variable:/Surface:MinD_ATP_m ];
-      D 1e-14;
+      VariableReferenceList [_ Variable:/Surface:MinD];
+      D 0.02e-12;      # m^2/s
     }
-  Process DiffusionProcess( diffusee )
+  Process DiffusionProcess(diffuseMinEE)
     {
-      VariableReferenceList [ _ Variable:/Surface:MinE_m ];
-      D 1e-14;
+      VariableReferenceList [_ Variable:/Surface:MinEE];
+      D 0.02e-12;      # m^2/s
     }
-  Process DiffusionProcess( diffuseSss )
+  Process DiffusionProcess(diffuseMinDEE)
     {
-      VariableReferenceList [ _ Variable:/Surface:MinD_ATP_m_MinE ];
-      D 1e-14;
+      VariableReferenceList [_ Variable:/Surface:MinDEE];
+      D 0.02e-12;      # m^2/s
     }
-  Process DiffusionProcess( diffuseSs )
+  Process DiffusionProcess(diffuseMinDEED)
     {
-      VariableReferenceList [ _ Variable:/Surface:MinD_ADP_m_MinE ];
-      D 1e-14;
+      VariableReferenceList [_ Variable:/Surface:MinDEED];
+      D 0.02e-12;      # m^2/s
     }
-  # MinD_ATP + LIPID -> MinD_ATP_m
-  Process DiffusionInfluencedReactionProcess( MinD_ATP_2_MinD_ATP_m ) 
+  Process DiffusionInfluencedReactionProcess(reaction1) 
     {
-      VariableReferenceList   [ _ Variable:/Surface:LIPID -1 ]
-                              [ _ Variable:/:MinD_ATP -1 ]
-                              [ _ Variable:/Surface:MinD_ATP_m 1 ];
-      k 0.0125e-6; # in ms^{-1}
-      # In 2006.fange.plos.comput.biol the value of k is
-      # 0.0125 ums^{1}
+      VariableReferenceList   [_ Variable:/Surface:LIPID -1]
+                              [_ Variable:/:MinDatp -1]
+                              [_ Variable:/Surface:MinD 1];
+      k 2.2e-8;        # m/s
     } 
-  # MinD_ATP_m + MinD_ATP -> MinD_ATP_m + MinD_ATP_m
-  Process DiffusionInfluencedReactionProcess( MinD_ATP_mtoMinD_ATP_m_MinE )
+  Process DiffusionInfluencedReactionProcess(reaction2)
     {
-      VariableReferenceList   [ _ Variable:/:MinD_ATP -1 ]
-                              [ _ Variable:/Surface:MinD_ATP_m -1 ]
-                              [ _ Variable:/Surface:MinD_ATP_m 1 ]
-                              [ _ Variable:/Surface:MinD_ATP_m 1 ];
-      k 1.49448498e-20; # in m^3s^{-1}
-      # In 2006.fange.plos.comput.biol the value of k is
-      # 9e+6 M^{-1}s^{-1} = 9e+6*1e-3/6.0221415e+23 m^3s^{-1}
-      #                   = 1.49448498e-20 m^3s^{-1}
-    } 
-  # MinD_ATP_m_MinE -> MinD_ADP + MinE
-  Process DiffusionInfluencedReactionProcess( MinD_ATP_m_MinEtoMinD_ATP_m_MinE )
+      VariableReferenceList   [_ Variable:/Surface:MinD -1]
+                              [_ Variable:/:MinDatp -1]
+                              [_ Variable:/Surface:MinD 1]
+                              [_ Variable:/Surface:MinD 1];
+      k 3e-20;         # m^3/s
+    }
+  Process DiffusionInfluencedReactionProcess(reaction3)
     {
-      VariableReferenceList   [ _ Variable:/Surface:MinD_ATP_m -1 ]
-                              [ _ Variable:/:MinE -1 ]
-                              [ _ Variable:/Surface:MinD_ATP_m_MinE 1 ];
-      k 9.23259608e-20;
-      #p 1;
-      # k 9.23259608e-20; # in m^3s^{-1}
-      # In 2006.fange.plos.comput.biol the value of k is
-      # 5.56e+7 M^{-1}s^{-1} = 5.6e+7*1e-3/6.0221415e+23 m^3s^{-1}
-      #                      = 9.223259608-20 m^3s^{-1}
-    } 
-  Process SpatiocyteNextReactionProcess( MinD_ATP_m_MinEtoMinD_ADP_MinE )
+      VariableReferenceList   [_ Variable:/Surface:MinD -1]
+                              [_ Variable:/:MinEE -1]
+                              [_ Variable:/Surface:MinDEE 1];
+      k 5e-19;         # m^3/s
+    }
+  Process SpatiocyteNextReactionProcess(reaction4)
     {
-      VariableReferenceList   [ _ Variable:/Surface:MinD_ATP_m_MinE -1 ]
-                              [ _ Variable:/:MinD_ADP 1 ]
-                              [ _ Variable:/:MinE 1 ];
-      k 0.5; # in s^{-1}
-    } 
-  Process DiffusionInfluencedReactionProcess( polymerize2s )
+      VariableReferenceList   [_ Variable:/Surface:MinDEE -1]
+                              [_ Variable:/Surface:MinEE 1]
+                              [_ Variable:/:MinDadp 1];
+      k 1;             # s^{-1}
+    }
+  Process SpatiocyteNextReactionProcess(reaction5)
     {
-      VariableReferenceList   [ _ Variable:/Surface:MinD_ATP_m_MinE -1 ]
-                              [ _ Variable:/Surface:MinD_ATP_m_MinE -1 ]
-                              [ _ Variable:/Surface:MinD_ATP_m_MinE 1 ]
-                              [ _ Variable:/Surface:MinD_ADP_m_MinE 1 ];
-      k 9.23259608e-15;
-    } 
-  Process SpatiocyteNextReactionProcess( MinD_ATP_mp22s )
+      VariableReferenceList [_ Variable:/:MinDadp -1]
+                            [_ Variable:/:MinDatp 1];
+      k 5;             # s^{-1}
+    }
+  Process DiffusionInfluencedReactionProcess(reaction6)
     {
-      VariableReferenceList   [ _ Variable:/Surface:MinD_ADP_m_MinE -1 ]
-                              [ _ Variable:/Surface:MinE_m 1 ]
-                              [ _ Variable:/:MinD_ADP 1 ];
-      k 0.1; # in m^3s^{-1}
-    } 
-  Process SpatiocyteNextReactionProcess( MinD_ATP_mp2s )
+      VariableReferenceList   [_ Variable:/Surface:MinDEE -1]
+                              [_ Variable:/Surface:MinD -1]
+                              [_ Variable:/Surface:MinDEED 1];
+      k 5e-15;         # m^3/s
+    }
+  Process SpatiocyteNextReactionProcess(reaction7)
     {
-      VariableReferenceList   [ _ Variable:/Surface:MinE_m -1 ]
-                              [ _ Variable:/:MinE 1 ];
-      k 0.1; # in m^3s^{-1}
-    } 
+      VariableReferenceList   [_ Variable:/Surface:MinDEED -1]
+                              [_ Variable:/Surface:MinDEE 1]
+                              [_ Variable:/:MinDadp 1];
+      k 1;             # s^{-1}
+    }
+  Process SpatiocyteNextReactionProcess(reaction8)
+    {
+      VariableReferenceList   [_ Variable:/Surface:MinEE -1]
+                              [_ Variable:/:MinEE 1];
+      k 0.83;          # s^{-1}
+    }
 }
-
-
-
 
