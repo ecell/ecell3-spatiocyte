@@ -634,7 +634,9 @@ Compartment* SpatiocyteStepper::registerCompartment(System* aSystem,
   aCompartment->specVolume = 0;
   aCompartment->system = aSystem;
   aCompartment->surfaceSub = NULL;
-  //Default is volume compartment
+  //Default compartment shape is spherical:
+  aCompartment->shape = 0;
+  //Default is volume compartment:
   aCompartment->isSurface = false;
   if(getVariable(aSystem, "TYPE"))
     { 
@@ -645,13 +647,10 @@ Compartment* SpatiocyteStepper::registerCompartment(System* aSystem,
     }
   if(!aCompartment->isSurface)
     {
-      //SHAPE is required for volume compartments 
-      if(!getVariable(aSystem, "SHAPE"))
+      if(getVariable(aSystem, "SHAPE"))
         { 
-          THROW_EXCEPTION(NotFound, "Property SHAPE of the volume compartment "
-                          + aSystem->getFullID().asString() + " not defined." );
+          aCompartment->shape = aSystem->getVariable("SHAPE")->getValue();
         }
-      aCompartment->shape = aSystem->getVariable("SHAPE")->getValue();
       if(getVariable(aSystem, "LENGTHX"))
         {
           aCompartment->lengthX = aSystem->getVariable("LENGTHX")->getValue();
