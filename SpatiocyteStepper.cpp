@@ -634,19 +634,17 @@ Compartment* SpatiocyteStepper::registerCompartment(System* aSystem,
   aCompartment->specVolume = 0;
   aCompartment->system = aSystem;
   aCompartment->surfaceSub = NULL;
-  //TYPE is required for all compartments
-  if(!getVariable(aSystem, "TYPE"))
+  //Default is volume compartment
+  aCompartment->isSurface = false;
+  if(getVariable(aSystem, "TYPE"))
     { 
-      THROW_EXCEPTION(NotFound, "Property TYPE of the compartment "
-                      + aSystem->getFullID().asString() + " not defined." );
+      if(aSystem->getVariable("TYPE")->getValue() == SURFACE)
+        {
+          aCompartment->isSurface = true;
+        }
     }
-  if(aSystem->getVariable("TYPE")->getValue() == SURFACE)
+  if(!aCompartment->isSurface)
     {
-      aCompartment->isSurface = true;
-    }
-  else
-    {
-      aCompartment->isSurface = false;
       //SHAPE is required for volume compartments 
       if(!getVariable(aSystem, "SHAPE"))
         { 
