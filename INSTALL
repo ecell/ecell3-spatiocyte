@@ -38,4 +38,5 @@ ecell3-em2eml 2010.arjunan.syst.synth.biol.wt.em
 ecell3-sessiom-monitor
 load the model 2010.arjunan.syst.synth.biol.wt.eml and run
 
-
+to create a lossless movie:
+ffmpeg -i image%07d.png -vcodec ffv1 -sameq test.avi
