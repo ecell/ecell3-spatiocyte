@@ -977,10 +977,6 @@ void SpatiocyteStepper::readjustSurfaceBoundarySizes()
           theColSize += 2;
         }
     }
-  else
-    {
-      theColSize += 2;
-    }
   if(aRootCompartment->xzPlane == PERIODIC)
     {
       if(theLayerSize%2 != 1)
@@ -992,10 +988,6 @@ void SpatiocyteStepper::readjustSurfaceBoundarySizes()
           theLayerSize += 2;
         }
     }
-  else
-    {
-      theLayerSize += 2;
-    }
   if(aRootCompartment->xyPlane == PERIODIC)
     {
       if(theRowSize%2 != 1)
@@ -1006,10 +998,6 @@ void SpatiocyteStepper::readjustSurfaceBoundarySizes()
         {
           theRowSize += 2;
         }
-    }
-  else
-    {
-      theRowSize += 2;
     }
   if(isPeriodicEdge)
     {
