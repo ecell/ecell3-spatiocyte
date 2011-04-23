@@ -638,7 +638,7 @@ public:
               return;
             }
         }
-      if(!isLipid)
+      if(!isVacant && !isLipid)
         {
           if(aMolecule != aMolecule->subunit->voxel)
             {

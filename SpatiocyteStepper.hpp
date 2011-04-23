@@ -42,14 +42,17 @@ public:
     {
       INHERIT_PROPERTIES(Stepper);
       PROPERTYSLOT_SET_GET(Real, VoxelRadius);
+      PROPERTYSLOT_SET_GET(Integer, LatticeType);
       PROPERTYSLOT_SET_GET(Integer, SearchVacant);
     }
   SIMPLE_SET_GET_METHOD(Real, VoxelRadius); 
+  SIMPLE_SET_GET_METHOD(Integer, LatticeType); 
   SIMPLE_SET_GET_METHOD(Integer, SearchVacant); 
   SpatiocyteStepper():
     isInitialized(false),
     isPeriodicEdge(false),
     SearchVacant(true),
+    LatticeType(HCP_LATTICE),
     VoxelRadius(10e-9),
     theNormalizedVoxelRadius(0.5) {}
   virtual ~SpatiocyteStepper() {}
@@ -145,6 +148,7 @@ private:
   bool isPeriodicEdge;
   bool SearchVacant;
   unsigned short theNullID;
+  int LatticeType; 
   unsigned int theCellShape;
   unsigned int theStartCoord;
   unsigned int theRowSize;

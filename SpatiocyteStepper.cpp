@@ -288,12 +288,20 @@ Point SpatiocyteStepper::getPeriodicPoint(unsigned int aCoord,
   int aLayer(aGlobalLayer+anOrigin->layer*layer);
   int aCol(aGlobalCol+anOrigin->col*col);
   Point aPoint;
-  //Specific for HCP lattice:{
-  aPoint.y = (aCol%2)*theHCPk+theHCPl*aLayer;
-  aPoint.z = aRow*2*theNormalizedVoxelRadius+
-    ((aLayer+aCol)%2)*theNormalizedVoxelRadius;
-  aPoint.x = aCol*theHCPh;
-  //}
+  switch(LatticeType)
+    {
+    case HCP_LATTICE: 
+      aPoint.y = (aCol%2)*theHCPk+theHCPl*aLayer;
+      aPoint.z = aRow*2*theNormalizedVoxelRadius+
+        ((aLayer+aCol)%2)*theNormalizedVoxelRadius;
+      aPoint.x = aCol*theHCPh;
+      break;
+    case CUBIC_LATTICE:
+      aPoint.y = aLayer*2*theNormalizedVoxelRadius;
+      aPoint.z = aRow*2*theNormalizedVoxelRadius;
+      aPoint.x = aCol*2*theNormalizedVoxelRadius;
+      break;
+    }
   return aPoint;
 }
 
@@ -806,10 +814,23 @@ void SpatiocyteStepper::setLatticeProperties()
   if(aRootCompartment->shape == SPHERICAL || aRootCompartment->shape == ROD ||
      aRootCompartment->shape == ELLIPSOID)
     {
-      theCenterPoint.z = aRootCompartment->lengthZ/2+4*
-        theNormalizedVoxelRadius; //row
-      theCenterPoint.y = aRootCompartment->lengthY/2+2*theHCPl; //layer
-      theCenterPoint.x = aRootCompartment->lengthX/2+2*theHCPh; //column
+      switch(LatticeType)
+        {
+        case HCP_LATTICE: 
+          theCenterPoint.z = aRootCompartment->lengthZ/2+4*
+            theNormalizedVoxelRadius; //row
+          theCenterPoint.y = aRootCompartment->lengthY/2+2*theHCPl; //layer
+          theCenterPoint.x = aRootCompartment->lengthX/2+2*theHCPh; //column
+          break;
+        case CUBIC_LATTICE:
+          theCenterPoint.z = aRootCompartment->lengthZ/2+4*
+            theNormalizedVoxelRadius; //row
+          theCenterPoint.y = aRootCompartment->lengthY/2+4*
+            theNormalizedVoxelRadius; //layer
+          theCenterPoint.x = aRootCompartment->lengthX/2+4*
+            theNormalizedVoxelRadius; //column
+          break;
+        }
     }
   else if(aRootCompartment->shape == CUBIC || aRootCompartment->shape == CUBOID)
     {
@@ -820,12 +841,24 @@ void SpatiocyteStepper::setLatticeProperties()
       theCenterPoint.y = aRootCompartment->lengthY/2; //layer
       theCenterPoint.x = aRootCompartment->lengthX/2; //column
     }
-  aRootCompartment->centerPoint = theCenterPoint;
-  theRowSize = (unsigned int)rint((theCenterPoint.z)/
-                                  (theNormalizedVoxelRadius));
-  theLayerSize = (unsigned int)rint((theCenterPoint.y*2)/theHCPl);
-  theColSize = (unsigned int)rint((theCenterPoint.x*2)/theHCPh);
-  //}
+  aRootCompartment->centerPoint = theCenterPoint; 
+  switch(LatticeType)
+    {
+    case HCP_LATTICE: 
+      theRowSize = (unsigned int)rint((theCenterPoint.z)/
+                                      (theNormalizedVoxelRadius));
+      theLayerSize = (unsigned int)rint((theCenterPoint.y*2)/theHCPl);
+      theColSize = (unsigned int)rint((theCenterPoint.x*2)/theHCPh);
+      break;
+    case CUBIC_LATTICE:
+      theRowSize = (unsigned int)rint((theCenterPoint.z)/
+                                      (theNormalizedVoxelRadius));
+      theLayerSize = (unsigned int)rint((theCenterPoint.y)/
+                                      (theNormalizedVoxelRadius));
+      theColSize = (unsigned int)rint((theCenterPoint.x)/
+                                      (theNormalizedVoxelRadius));
+      break;
+    }
   //For the CUBIC and CUBOID cell shapes, we need to readjust the size of
   //row, layer and column according to the boundary condition of its surfaces
   //to reflect the correct volume. This is because periodic boundary will
@@ -1346,12 +1379,20 @@ Point SpatiocyteStepper::coord2point(unsigned int aCoord)
   coord2global(aCoord, &aGlobalRow, &aGlobalLayer, &aGlobalCol);
   //the center point of a voxel 
   Point aPoint;
-  //Specific for HCP lattice:{
-  aPoint.y = (aGlobalCol%2)*theHCPk+theHCPl*aGlobalLayer;
-  aPoint.z = aGlobalRow*2*theNormalizedVoxelRadius+
-    ((aGlobalLayer+aGlobalCol)%2)*theNormalizedVoxelRadius;
-  aPoint.x = aGlobalCol*theHCPh;
-  //}
+  switch(LatticeType)
+    {
+    case HCP_LATTICE: 
+      aPoint.y = (aGlobalCol%2)*theHCPk+theHCPl*aGlobalLayer;
+      aPoint.z = aGlobalRow*2*theNormalizedVoxelRadius+
+        ((aGlobalLayer+aGlobalCol)%2)*theNormalizedVoxelRadius;
+      aPoint.x = aGlobalCol*theHCPh;
+      break;
+    case CUBIC_LATTICE:
+      aPoint.y = aGlobalLayer*2*theNormalizedVoxelRadius;
+      aPoint.z = aGlobalRow*2*theNormalizedVoxelRadius;
+      aPoint.x = aGlobalCol*2*theNormalizedVoxelRadius;
+      break;
+    }
   return aPoint;
 }
 

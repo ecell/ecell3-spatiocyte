@@ -45,6 +45,10 @@ struct Subunit;
 typedef PriorityQueue<SpatiocyteProcessInterface*> ProcessPriorityQueue;
 typedef ProcessPriorityQueue::ID ProcessID;
 
+//Lattice type:
+#define HCP_LATTICE   0
+#define CUBIC_LATTICE 1
+
 //Compartment type:
 #define VOLUME  0
 #define SURFACE 1
