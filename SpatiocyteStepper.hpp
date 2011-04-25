@@ -136,6 +136,7 @@ private:
   bool isPeriodicEdgeCoord(unsigned int, Compartment*);
   bool isSurfaceVoxel(Voxel*, Compartment*);
   bool isEnclosedSurfaceVoxel(Voxel*, Compartment*);
+  bool isPeerVoxel(Voxel*, Compartment*);
   bool compartmentalizeVoxel(Voxel*, Compartment*);
   double getCuboidSpecArea(Compartment*);
   unsigned int coord2row(unsigned int);

@@ -2010,6 +2010,10 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel,
       if(aCompartment->system->isRootSystem() ||
          isInsideCoord(aVoxel->coord, aCompartment, 0))
         {
+          if(aCompartment->isEnclosed && isPeerVoxel(aVoxel, aCompartment))
+            { 
+              return false;
+            }
           for(unsigned int i(0); i != aCompartment->immediateSubs.size(); ++i)
             {
               if(compartmentalizeVoxel(aVoxel, aCompartment->immediateSubs[i]))
@@ -2035,6 +2039,10 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel,
         }
       if(aCompartment->surfaceSub)
         {
+          if(aCompartment->isEnclosed && isPeerVoxel(aVoxel, aCompartment))
+            { 
+              return false;
+            }
           if(isSurfaceVoxel(aVoxel, aCompartment))
             {
               aVoxel->id = aCompartment->surfaceSub->vacantID;
@@ -2059,6 +2067,21 @@ bool SpatiocyteStepper::isSurfaceVoxel(Voxel* aVoxel, Compartment* aCompartment)
   return false;
 }
 
+bool SpatiocyteStepper::isPeerVoxel(Voxel* aVoxel, Compartment* aCompartment)
+{
+  Compartment* aSuperCompartment(system2compartment(
+                          aCompartment->system->getSuperSystem())); 
+  for(unsigned int i(0); i != aSuperCompartment->immediateSubs.size(); ++i)
+    {
+      Compartment* aPeerComp(aSuperCompartment->immediateSubs[i]);
+      if(aPeerComp != aCompartment &&
+         isInsideCoord(aVoxel->coord, aPeerComp, 0))
+        {
+          return true;
+        }
+    }
+  return false;
+}
 
 bool SpatiocyteStepper::isEnclosedSurfaceVoxel(Voxel* aVoxel,
                                                Compartment* aCompartment)
