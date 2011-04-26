@@ -77,8 +77,8 @@ void SpatiocyteStepper::initialize()
   shuffleAdjoiningVoxels();
   std::cout << "9. compartmentalizing lattice..." << std::endl;
   compartmentalizeLattice();
-  std::cout << "10. setting up properties of surface voxels..." << std::endl;
-  setSurfaceVoxelProperties();
+  std::cout << "10. setting up compartment voxels properties..." << std::endl;
+  setCompartmentVoxelProperties();
   std::cout << "11. populating compartments with molecules..." << std::endl;
   populateCompartments();
   storeSimulationParameters();
@@ -642,6 +642,7 @@ Compartment* SpatiocyteStepper::registerCompartment(System* aSystem,
   aCompartment->specVolume = 0;
   aCompartment->system = aSystem;
   aCompartment->surfaceSub = NULL;
+  aCompartment->diffusiveComp = NULL;
   //Default compartment shape is spherical:
   aCompartment->shape = 0;
   //Default is volume compartment:
@@ -1750,26 +1751,77 @@ void SpatiocyteStepper::shuffleAdjoiningVoxels()
     }
 }
 
-void SpatiocyteStepper::setSurfaceVoxelProperties()
+void SpatiocyteStepper::setCompartmentVoxelProperties()
 {
   for(std::vector<Compartment*>::iterator i(theCompartments.begin());
       i != theCompartments.end(); ++i)
     {
       if((*i)->isSurface)
         {
-          setReactiveCompartments(*i);
-          removePeriodicEdgeVoxels(*i);
-          removeSurfaces(*i);
-          for(std::vector<unsigned int>::iterator j((*i)->coords.begin());
-              j != (*i)->coords.end(); ++j)
-            {
-              Voxel* aVoxel(&theLattice[*j]);
-              optimizeSurfaceVoxel(aVoxel, *i);
-              setSurfaceSubunit(aVoxel, *i);
-            }
+          setSurfaceCompartmentProperties(*i);
+          setSurfaceVoxelProperties(*i);
+        }
+      else
+        {
+          setVolumeCompartmentProperties(*i);
         }
     }
 }
+
+void SpatiocyteStepper::setSurfaceCompartmentProperties(Compartment* aComp)
+{
+  setReactiveCompartments(aComp);
+  removePeriodicEdgeVoxels(aComp);
+  removeSurfaces(aComp);
+  setDiffusiveCompartment(aComp);
+}
+
+void SpatiocyteStepper::setVolumeCompartmentProperties(Compartment* aComp)
+{
+  setDiffusiveCompartment(aComp);
+}
+
+void SpatiocyteStepper::setSurfaceVoxelProperties(Compartment* aComp)
+{
+  if(!aComp->diffusiveComp)
+    {
+      for(std::vector<unsigned int>::iterator i(aComp->coords.begin());
+          i != aComp->coords.end(); ++i)
+        {
+          Voxel* aVoxel(&theLattice[*i]);
+          optimizeSurfaceVoxel(aVoxel, aComp);
+          setSurfaceSubunit(aVoxel, aComp);
+        }
+    }
+}
+
+void SpatiocyteStepper::setDiffusiveCompartment(Compartment* aComp)
+{
+  FOR_ALL(System::Variables, aComp->system->getVariables())
+    {
+      Variable* aVariable(i->second);
+      if(aVariable->getID() == "DIFFUSIVE")
+        {
+          String aStringID(aVariable->getName()); 
+          aStringID = "System:" + aStringID;
+          FullID aFullID(aStringID);
+          System* aSystem(static_cast<System*>(getModel()->getEntity(aFullID)));
+          aComp->diffusiveComp = system2compartment(aSystem);
+        }
+    }
+  if(aComp->diffusiveComp)
+    {
+      for(std::vector<unsigned int>::iterator j(aComp->coords.begin());
+          j != aComp->coords.end(); ++j)
+        {
+          Voxel* aVoxel(&theLattice[*j]);
+          aVoxel->id = aComp->diffusiveComp->vacantID;
+          aComp->diffusiveComp->coords.push_back( aVoxel->coord-theStartCoord);
+        }
+      aComp->coords.clear();
+    }
+}
+
 
 void SpatiocyteStepper::removePeriodicEdgeVoxels(Compartment* aCompartment)
 { 

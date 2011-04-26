@@ -143,6 +143,10 @@ struct Compartment
   double actualArea;
   System* system;
   Compartment* surfaceSub;
+  //Even if there are many adjacent diffusive compartents, use only one single
+  //common id. So unlike reactive compartments, there is only one common
+  //diffusive compartment:
+  Compartment* diffusiveComp;
   Point centerPoint;
   Point eastPoint;
   Point westPoint;

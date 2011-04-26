@@ -100,7 +100,7 @@ private:
   void initProcessLastOnce();
   void storeSimulationParameters();
   void printSimulationParameters();
-  void setSurfaceVoxelProperties();
+  void setCompartmentProperties();
   void initSpecies();
   void readjustSurfaceBoundarySizes();
   void constructLattice();
@@ -108,6 +108,7 @@ private:
   void concatenatePeriodicSurfaces();
   void registerCompartments();
   void setCompartmentsProperties();
+  void setCompartmentVoxelProperties();
   void populateCompartments();
   void clearCompartments();
   void clearCompartment(Compartment*);
@@ -118,7 +119,11 @@ private:
   void removePeriodicEdgeVoxels(Compartment*);
   void removeSurfaces(Compartment*);
   void setReactiveCompartments(Compartment*);
+  void setDiffusiveCompartment(Compartment*);
   void setCompartmentCenterPoint(Compartment*);
+  void setSurfaceVoxelProperties(Compartment*);
+  void setSurfaceCompartmentProperties(Compartment*);
+  void setVolumeCompartmentProperties(Compartment*);
   void populateCompartmentUniformly(Compartment*, unsigned int);
   void rotateX(double, Point*);
   void rotateY(double, Point*);
