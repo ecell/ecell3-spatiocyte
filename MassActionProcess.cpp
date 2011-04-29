@@ -51,12 +51,12 @@ void MassActionProcess::fire()
         }
       if(aSpecies->getIsVolume())
         {
-          theSpace = aSpecies->getCompartment()->actualVolume;
+          theSpace = aSpecies->getComp()->actualVolume;
           std::cout << "Mass Action Volume:" << theSpace << std::endl;
         }
       else
         {
-          theSpace = aSpecies->getCompartment()->actualArea;
+          theSpace = aSpecies->getComp()->actualArea;
           std::cout << "Mass Action Area:" << theSpace << std::endl;
         }
     }

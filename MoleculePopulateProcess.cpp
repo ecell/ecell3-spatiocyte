@@ -64,7 +64,7 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
                                               unsigned int aList[], 
                                               unsigned int* aCount)
 {
-  Compartment* aCompartment(aSpecies->getCompartment());
+  Comp* aComp(aSpecies->getComp());
   if(!aSpecies->getIsPopulated())
     {
       unsigned int aSize(aSpecies->getPopulateMoleculeSize());
@@ -74,9 +74,9 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
           do
             {
               aVoxel = theSpatiocyteStepper->coord2voxel(
-                aCompartment->coords[aList[(*aCount)++]]);
+                aComp->coords[aList[(*aCount)++]]);
             }
-          while(aVoxel->id != aCompartment->vacantID);
+          while(aVoxel->id != aComp->vacantID);
           aSpecies->addMolecule(aVoxel);
         }
       aSpecies->setIsPopulated();
@@ -85,31 +85,31 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
 
 void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
 {
-  Compartment* aCompartment(aSpecies->getCompartment());
+  Comp* aComp(aSpecies->getComp());
   if(!aSpecies->getIsPopulated())
     {
       unsigned int aSize(aSpecies->getPopulateMoleculeSize());
       if(UniformRadius == 1 && !OriX && !OriY && !OriZ)
         {
-          int availableVoxelSize(aCompartment->coords.size());
+          int availableVoxelSize(aComp->coords.size());
           for(unsigned int j(0); j != aSize; ++j)
             {
               Voxel* aVoxel;
               do
                 {
                   aVoxel = theSpatiocyteStepper->coord2voxel(
-                     aCompartment->coords[gsl_rng_uniform_int(
+                     aComp->coords[gsl_rng_uniform_int(
                                 getStepper()->getRng(), availableVoxelSize)]);
                 }
-              while(aVoxel->id != aCompartment->vacantID);
+              while(aVoxel->id != aComp->vacantID);
               aSpecies->addMolecule(aVoxel);
             }
         }
       else
         {
-          double diaX(UniformRadius*aCompartment->lengthX*(1-sqrt(OriX*OriX)));
-          double diaY(UniformRadius*aCompartment->lengthY*(1-sqrt(OriY*OriY)));
-          double diaZ(UniformRadius*aCompartment->lengthZ*(1-sqrt(OriZ*OriZ)));
+          double diaX(UniformRadius*aComp->lengthX*(1-sqrt(OriX*OriX)));
+          double diaY(UniformRadius*aComp->lengthY*(1-sqrt(OriY*OriY)));
+          double diaZ(UniformRadius*aComp->lengthZ*(1-sqrt(OriZ*OriZ)));
           double dia(diaX);
           if(diaY < dia)
             {
@@ -120,13 +120,13 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
               dia = diaZ;
             }
           Point aPoint;
-          aPoint.x = aCompartment->lengthX*OriX*0.5+aCompartment->centerPoint.x;
-          aPoint.y = aCompartment->lengthY*OriY*0.5+aCompartment->centerPoint.y;
-          aPoint.z = aCompartment->lengthZ*OriZ*0.5+aCompartment->centerPoint.z;
-          std::cout << "the compartment center point:" << std::endl;
-          std::cout << "x:" << aCompartment->centerPoint.x <<
-            " y:" << aCompartment->centerPoint.y <<
-            " z:" << aCompartment->centerPoint.z << std::endl;
+          aPoint.x = aComp->lengthX*OriX*0.5+aComp->centerPoint.x;
+          aPoint.y = aComp->lengthY*OriY*0.5+aComp->centerPoint.y;
+          aPoint.z = aComp->lengthZ*OriZ*0.5+aComp->centerPoint.z;
+          std::cout << "the Comp center point:" << std::endl;
+          std::cout << "x:" << aComp->centerPoint.x <<
+            " y:" << aComp->centerPoint.y <<
+            " z:" << aComp->centerPoint.z << std::endl;
           std::cout << "the placement target point:" << std::endl;
           std::cout << "x:" << aPoint.x << " y:" << aPoint.y << " z:" << aPoint.z
             << std::endl;
@@ -144,7 +144,7 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
                   aTargetPoint.z = aPoint.z+dia*(aRandZ-0.5);
                   aVoxel = theSpatiocyteStepper->point2voxel(aTargetPoint);
                 }
-              while(aVoxel->id != aCompartment->vacantID);
+              while(aVoxel->id != aComp->vacantID);
               aSpecies->addMolecule(aVoxel);
             }
         }

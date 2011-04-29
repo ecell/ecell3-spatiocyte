@@ -106,7 +106,7 @@ public:
     {
       return isGaussianPopulation;
     }
-  void populateCompartmentGaussian()
+  void populateCompGaussian()
     {
       if(thePopulateProcess)
         {
@@ -118,7 +118,7 @@ public:
             " not MoleculePopulated." << std::endl;
         }
     }
-  void populateCompartmentUniform(unsigned int voxelIDs[], unsigned int* aCount)
+  void populateCompUniform(unsigned int voxelIDs[], unsigned int* aCount)
     {
       if(thePopulateProcess)
         {
@@ -130,7 +130,7 @@ public:
             " not MoleculePopulated." << std::endl;
         }
     }
-  void populateCompartmentUniformSparse()
+  void populateCompUniformSparse()
     {
       if(thePopulateProcess)
         {
@@ -346,7 +346,7 @@ public:
     }
   void surfaceWalkCollide()
     {
-      int vacantID(theCompartment->vacantID);
+      int vacantID(theComp->vacantID);
       const int r(gsl_rng_uniform_int(theRng, 6));
       Voxel* target;
       for(unsigned int i(0); i < theMoleculeSize; ++i)
@@ -412,7 +412,7 @@ public:
     }
   void volumeWalkCollide()
     {
-      int vacantID(theCompartment->vacantID);
+      int vacantID(theComp->vacantID);
       const int r(gsl_rng_uniform_int(theRng, ADJOINING_VOXEL_SIZE));
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
@@ -466,7 +466,7 @@ public:
     }
   void surfaceWalk()
     {
-      int vacantID(theCompartment->vacantID);
+      int vacantID(theComp->vacantID);
       const int r(gsl_rng_uniform_int(theRng, 6));
       Voxel* target;
       for(unsigned int i(0); i < theMoleculeSize; ++i)
@@ -529,7 +529,7 @@ public:
     }
   void volumeWalk()
     {
-      int vacantID(theCompartment->vacantID);
+      int vacantID(theComp->vacantID);
       const int r(gsl_rng_uniform_int(theRng, ADJOINING_VOXEL_SIZE));
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
@@ -575,13 +575,13 @@ public:
             }
         }
     }
-  void setCompartment(Compartment* aCompartment)
+  void setComp(Comp* aComp)
     {
-      theCompartment = aCompartment;
+      theComp = aComp;
     }
-  Compartment* getCompartment()
+  Comp* getComp()
     {
-      return theCompartment;
+      return theComp;
     }
   void setVariable(Variable* aVariable)
     {
@@ -657,7 +657,7 @@ public:
         {
           if(theMolecules[i] == aMolecule)
             {
-              aMolecule->id = theCompartment->vacantID;
+              aMolecule->id = theComp->vacantID;
               theMolecules[i] = theMolecules[--theMoleculeSize];
               theVariable->setValue(theMoleculeSize);
               for(unsigned int i(0); i != theInterruptedProcesses.size(); ++i)
@@ -680,7 +680,7 @@ public:
     {
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
-          theMolecules[i]->id = theCompartment->vacantID;
+          theMolecules[i]->id = theComp->vacantID;
         }
       theMoleculeSize = 0;
       theVariable->setValue(theMoleculeSize);
@@ -726,9 +726,9 @@ public:
                                                 isVolume,
                                                 &anOrigin));
           if(periodicVoxel != NULL && 
-             periodicVoxel->id == theCompartment->vacantID)
+             periodicVoxel->id == theComp->vacantID)
             {
-              theMolecules[i]->id = theCompartment->vacantID;
+              theMolecules[i]->id = theComp->vacantID;
               theMolecules[i] = periodicVoxel;
               theMolecules[i]->id = theID;
               theMoleculeOrigins[i] = anOrigin;
@@ -737,7 +737,7 @@ public:
     }
   int getVacantID() const
     {
-      return theCompartment->vacantID;
+      return theComp->vacantID;
     }
   const std::vector<double>& getBendAngles() const
     {
@@ -745,15 +745,15 @@ public:
     }
   const Point& getWestPoint() const
     {
-      return theCompartment->westPoint;
+      return theComp->westPoint;
     }
   const Point& getEastPoint() const
     {
-      return theCompartment->eastPoint;
+      return theComp->eastPoint;
     }
   double getRadius() const
     {
-      return theCompartment->lengthY/2;
+      return theComp->lengthY/2;
     }
   Species* getDiffusionInfluencedReactantPair()
     {
@@ -819,15 +819,15 @@ public:
     }
   Voxel* getRandomAdjoiningVoxel(Voxel* source)
     {
-      std::vector<Voxel*> compartmentVoxels;
+      std::vector<Voxel*> CompVoxels;
       if(theStepper->getSearchVacant())
         { 
           for(unsigned int i(0); i != ADJOINING_VOXEL_SIZE; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
-              if(aVoxel->id == theCompartment->vacantID)
+              if(aVoxel->id == theComp->vacantID)
                 {
-                  compartmentVoxels.push_back(aVoxel);
+                  CompVoxels.push_back(aVoxel);
                 }
             }
         }
@@ -836,26 +836,26 @@ public:
           for(unsigned int i(0); i != ADJOINING_VOXEL_SIZE; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
-              if(theStepper->id2compartment(aVoxel->id) == theCompartment)
+              if(theStepper->id2Comp(aVoxel->id) == theComp)
                 {
-                  compartmentVoxels.push_back(aVoxel);
+                  CompVoxels.push_back(aVoxel);
                 }
             }
         }
-      return getRandomVacantVoxel(&compartmentVoxels);
+      return getRandomVacantVoxel(&CompVoxels);
     } 
   Voxel* getRandomAdjoiningVoxel(Voxel* source, Voxel* target)
     {
-      std::vector<Voxel*> compartmentVoxels;
+      std::vector<Voxel*> CompVoxels;
       if(theStepper->getSearchVacant())
         { 
           for(unsigned int i(0); i != ADJOINING_VOXEL_SIZE; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
-              if(aVoxel->id == theCompartment->vacantID &&
+              if(aVoxel->id == theComp->vacantID &&
                  aVoxel != target)
                 {
-                  compartmentVoxels.push_back(aVoxel);
+                  CompVoxels.push_back(aVoxel);
                 }
             }
         }
@@ -864,27 +864,27 @@ public:
           for(unsigned int i(0); i != ADJOINING_VOXEL_SIZE; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
-              if(theStepper->id2compartment(aVoxel->id) == theCompartment &&
+              if(theStepper->id2Comp(aVoxel->id) == theComp &&
                  aVoxel != target)
                 {
-                  compartmentVoxels.push_back(aVoxel);
+                  CompVoxels.push_back(aVoxel);
                 }
             }
         }
-      return getRandomVacantVoxel(&compartmentVoxels);
+      return getRandomVacantVoxel(&CompVoxels);
     }
   Voxel* getRandomAdjoiningVoxel(Voxel* source, Voxel* targetA, Voxel* targetB)
     {
-      std::vector<Voxel*> compartmentVoxels;
+      std::vector<Voxel*> CompVoxels;
       if(theStepper->getSearchVacant())
         { 
           for(unsigned int i(0); i != ADJOINING_VOXEL_SIZE; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
-              if(aVoxel->id == theCompartment->vacantID &&
+              if(aVoxel->id == theComp->vacantID &&
                  aVoxel != targetA && aVoxel != targetB)
                 {
-                  compartmentVoxels.push_back(aVoxel);
+                  CompVoxels.push_back(aVoxel);
                 }
             }
         }
@@ -893,14 +893,14 @@ public:
           for(unsigned int i(0); i != ADJOINING_VOXEL_SIZE; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
-              if(theStepper->id2compartment(aVoxel->id) == theCompartment &&
+              if(theStepper->id2Comp(aVoxel->id) == theComp &&
                  aVoxel != targetA && aVoxel != targetB)
                 {
-                  compartmentVoxels.push_back(aVoxel);
+                  CompVoxels.push_back(aVoxel);
                 }
             }
         }
-      return getRandomVacantVoxel(&compartmentVoxels);
+      return getRandomVacantVoxel(&CompVoxels);
     }
   Voxel* getRandomVacantVoxel(std::vector<Voxel*>* voxels)
     {
@@ -908,31 +908,31 @@ public:
         {
           const int r(gsl_rng_uniform_int(theRng, voxels->size())); 
           Voxel* aVoxel((*voxels)[r]);
-          if(aVoxel->id == theCompartment->vacantID)
+          if(aVoxel->id == theComp->vacantID)
             {
               return aVoxel;
             }
         }
       return NULL;
     }
-  Voxel* getRandomCompartmentVoxel()
+  Voxel* getRandomCompVoxel()
     {
-      int aSize(theCompartment->coords.size());
+      int aSize(theComp->coords.size());
       int r(gsl_rng_uniform_int(theRng, aSize));
       if(theStepper->getSearchVacant())
         {
           for(int i(r); i != aSize; ++i)
             {
-              Voxel* aVoxel(theStepper->coord2voxel(theCompartment->coords[i]));
-              if(aVoxel->id == theCompartment->vacantID)
+              Voxel* aVoxel(theStepper->coord2voxel(theComp->coords[i]));
+              if(aVoxel->id == theComp->vacantID)
                 {
                   return aVoxel;
                 }
             }
           for(int i(0); i != r; ++i)
             {
-              Voxel* aVoxel(theStepper->coord2voxel(theCompartment->coords[i]));
-              if(aVoxel->id == theCompartment->vacantID)
+              Voxel* aVoxel(theStepper->coord2voxel(theComp->coords[i]));
+              if(aVoxel->id == theComp->vacantID)
                 {
                   return aVoxel;
                 }
@@ -940,8 +940,8 @@ public:
         }
       else
         {
-          Voxel* aVoxel(theStepper->coord2voxel(theCompartment->coords[r]));
-          if(aVoxel->id == theCompartment->vacantID)
+          Voxel* aVoxel(theStepper->coord2voxel(theComp->coords[r]));
+          if(aVoxel->id == theComp->vacantID)
             {
               return aVoxel;
             }
@@ -967,7 +967,7 @@ private:
   double theDiffusionInterval;
   double theWalkProbability;
   const gsl_rng* theRng;
-  Compartment* theCompartment;
+  Comp* theComp;
   MoleculePopulateProcessInterface* thePopulateProcess;
   SpatiocyteStepper* theStepper;
   Variable* theVariable;

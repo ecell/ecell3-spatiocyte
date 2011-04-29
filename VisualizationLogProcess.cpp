@@ -235,7 +235,7 @@ void VisualizationLogProcess::logSurfaceVoxels()
           Species* aLipid(theProcessSpecies[i]);
           //The species index in the process:
           theLogFile.write((char*)(&i), sizeof(i));
-          const Compartment* aSurface(aLipid->getCompartment());
+          const Comp* aSurface(aLipid->getComp());
           //The species molecule size:
           unsigned int aSize(aSurface->coords.size());
           theLogFile.write((char*)(&aSize), sizeof(aSize)); 

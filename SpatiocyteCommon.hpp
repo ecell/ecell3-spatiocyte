@@ -49,11 +49,11 @@ typedef ProcessPriorityQueue::ID ProcessID;
 #define HCP_LATTICE   0
 #define CUBIC_LATTICE 1
 
-//Compartment type:
+//Comp type:
 #define VOLUME  0
 #define SURFACE 1
 
-//Compartment shape:
+//Comp shape:
 #define SPHERICAL     0
 #define ROD           1
 #define CUBIC         2
@@ -61,7 +61,7 @@ typedef ProcessPriorityQueue::ID ProcessID;
 #define ELLIPSOID     4
 #define CYLINDRICAL   5
 
-//CUBIC shaped compartment surface boundary conditions:
+//CUBIC shaped Comp surface boundary conditions:
 #define REFLECTIVE     0 
 #define PERIODIC       1
 #define UNIPERIODIC    2
@@ -119,7 +119,7 @@ struct Point
   double z;
 };
 
-struct Compartment
+struct Comp
 {
   bool isEnclosed;
   bool isSurface;
@@ -128,6 +128,12 @@ struct Compartment
   int xyPlane;
   int xzPlane;
   int yzPlane;
+  unsigned int minRow;
+  unsigned int minCol;
+  unsigned int minLayer;
+  unsigned int maxRow;
+  unsigned int maxCol;
+  unsigned int maxLayer;
   double lengthX;
   double lengthY;
   double lengthZ;
@@ -142,17 +148,17 @@ struct Compartment
   double actualVolume;
   double actualArea;
   System* system;
-  Compartment* surfaceSub;
+  Comp* surfaceSub;
   //Even if there are many adjacent diffusive compartents, use only one single
-  //common id. So unlike reactive compartments, there is only one common
-  //diffusive compartment:
-  Compartment* diffusiveComp;
+  //common id. So unlike reactive Comps, there is only one common
+  //diffusive Comp:
+  Comp* diffusiveComp;
   Point centerPoint;
   Point eastPoint;
   Point westPoint;
-  std::vector<Compartment*> allSubs;
-  std::vector<Compartment*> immediateSubs;
-  std::vector<Compartment*> reactiveComps;
+  std::vector<Comp*> allSubs;
+  std::vector<Comp*> immediateSubs;
+  std::vector<Comp*> reactiveComps;
   std::vector<Species*> species;
   std::vector<unsigned int> coords;
 };

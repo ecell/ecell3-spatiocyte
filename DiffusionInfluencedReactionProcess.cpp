@@ -59,11 +59,11 @@ void DiffusionInfluencedReactionProcess::initializeThird()
 
 //Do the reaction A + B -> C + D. So that A <- C and B <- D.
 //We need to consider that the source molecule can be either A or B.
-//If A and C belong to the same compartment, A <- C.
-//Otherwise, find a vacant adjoining voxel of A, X which is the same compartment
+//If A and C belong to the same Comp, A <- C.
+//Otherwise, find a vacant adjoining voxel of A, X which is the same Comp
 //as C and X <- C.
-//Similarly, if B and D belong to the same compartment, B <- D.
-//Otherwise, find a vacant adjoining voxel of C, Y which is the same compartment
+//Similarly, if B and D belong to the same Comp, B <- D.
+//Otherwise, find a vacant adjoining voxel of C, Y which is the same Comp
 //as D and Y <- D.
 bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeB, Voxel** target)
 {
@@ -80,9 +80,9 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeB, Voxel** target)
       moleculeA = moleculeB;
       moleculeB = tempA;
     }
-  //If the product C is not in the same compartment as A,
+  //If the product C is not in the same Comp as A,
   //we need to find a vacant adjoining voxel of A that belongs
-  //to the compartment of C:
+  //to the Comp of C:
   Voxel* moleculeC;
   if(A->getVacantID() != C->getVacantID())
     {
@@ -101,9 +101,9 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeB, Voxel** target)
   //If it has two products:
   if(D != NULL)
     { 
-      //If the product D is not in the same compartment as B,
+      //If the product D is not in the same Comp as B,
       //we need to find a vacant adjoining voxel of C that belongs
-      //to the compartment of D:
+      //to the Comp of D:
       Voxel* moleculeD;
       if(B->getVacantID() != D->getVacantID())
         {
@@ -143,7 +143,7 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeB, Voxel** target)
       //Hard remove the B molecule since this is a single product reaction:
       moleculeB->id = B->getVacantID();
     }
-  //Hard remove the A molecule, in case C is in a different compartment:
+  //Hard remove the A molecule, in case C is in a different Comp:
   moleculeA->id = A->getVacantID();
   C->addMolecule(moleculeC);
   return true;
@@ -193,9 +193,9 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
     }
   else if(!A->getIsVolume() && !B->getIsVolume())
     {
-      //Inter-surface compartment reaction.
+      //Inter-surface Comp reaction.
       //For surface edge absorbing reactions:
-      if(A->getCompartment() != B->getCompartment())
+      if(A->getComp() != B->getComp())
         {
           k = p;
         }

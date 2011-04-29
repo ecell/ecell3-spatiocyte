@@ -39,7 +39,7 @@ void SpatiocyteNextReactionProcess::fire()
     {
       if(C)
         { 
-          Voxel* moleculeC(C->getRandomCompartmentVoxel());
+          Voxel* moleculeC(C->getRandomCompVoxel());
           if(moleculeC == NULL)
             {
               requeue();
@@ -58,11 +58,11 @@ void SpatiocyteNextReactionProcess::fire()
       if(A && C && D)
         {
           Voxel* moleculeA(A->getRandomMolecule());
-          //If the product C is not in the same compartment as A,
+          //If the product C is not in the same Comp as A,
           //we need to find a vacant adjoining voxel of A that belongs
-          //to the compartment of C:
+          //to the Comp of C:
           Voxel* moleculeC;
-          if(A->getCompartment() != C->getCompartment())
+          if(A->getComp() != C->getComp())
             {
               moleculeC = C->getRandomAdjoiningVoxel(moleculeA);
               //Only proceed if we can find an adjoining vacant voxel
@@ -93,11 +93,11 @@ void SpatiocyteNextReactionProcess::fire()
       else if(A && C && !D && !variableD)
         {
           Voxel* moleculeA(A->getRandomMolecule());
-          //If the product C is not in the same compartment as A,
+          //If the product C is not in the same Comp as A,
           //we need to find a vacant adjoining voxel of A that belongs
-          //to the compartment of C:
+          //to the Comp of C:
           Voxel* moleculeC;
-          if(A->getCompartment() != C->getCompartment())
+          if(A->getComp() != C->getComp())
             {
               moleculeC = C->getRandomAdjoiningVoxel(moleculeA);
               //Only proceed if we can find an adjoining vacant voxel
@@ -128,7 +128,7 @@ void SpatiocyteNextReactionProcess::fire()
         {
           Voxel* moleculeA(A->getRandomMolecule());
           Voxel* moleculeC;
-          if(A->getCompartment() != C->getCompartment())
+          if(A->getComp() != C->getComp())
             {
               moleculeC = C->getRandomAdjoiningVoxel(moleculeA);
               //Only proceed if we can find an adjoining vacant voxel
@@ -168,7 +168,7 @@ void SpatiocyteNextReactionProcess::fire()
             }
           Voxel* moleculeA(A->getRandomMolecule());
           Voxel* molecule;
-          if(A->getCompartment() != nonHD_p->getCompartment())
+          if(A->getComp() != nonHD_p->getComp())
             {
               molecule = nonHD_p->getRandomAdjoiningVoxel(moleculeA);
               //Only proceed if we can find an adjoining vacant voxel
@@ -194,7 +194,7 @@ void SpatiocyteNextReactionProcess::fire()
       //HD_A -> nonHD_C:
       else if(variableA && C && !D && !variableD)
         {
-          Voxel* moleculeC(C->getRandomCompartmentVoxel());
+          Voxel* moleculeC(C->getRandomCompVoxel());
           if(moleculeC == NULL)
             {
               requeue();
@@ -227,7 +227,7 @@ void SpatiocyteNextReactionProcess::fire()
               HD_p = variableD;
               nonHD_p = C;
             }
-          Voxel* molecule(nonHD_p->getRandomCompartmentVoxel());
+          Voxel* molecule(nonHD_p->getRandomCompVoxel());
           if(molecule == NULL)
             {
               requeue();
@@ -252,11 +252,11 @@ void SpatiocyteNextReactionProcess::fire()
       if(C && D)
         {
           Voxel* moleculeNonHD(nonHD->getRandomMolecule());
-          //If the product C is not in the same compartment as nonHD,
+          //If the product C is not in the same Comp as nonHD,
           //we need to find a vacant adjoining voxel of nonHD that belongs
-          //to the compartment of C:
+          //to the Comp of C:
           Voxel* moleculeC;
-          if(nonHD->getCompartment() != C->getCompartment())
+          if(nonHD->getComp() != C->getComp())
             {
               moleculeC = C->getRandomAdjoiningVoxel(moleculeNonHD);
               //Only proceed if we can find an adjoining vacant voxel
@@ -289,11 +289,11 @@ void SpatiocyteNextReactionProcess::fire()
       else if(C && !D)
         {
           Voxel* moleculeNonHD(nonHD->getRandomMolecule());
-          //If the product C is not in the same compartment as nonHD,
+          //If the product C is not in the same Comp as nonHD,
           //we need to find a vacant adjoining voxel of nonHD that belongs
-          //to the compartment of C:
+          //to the Comp of C:
           Voxel* moleculeC;
-          if(nonHD->getCompartment() != C->getCompartment())
+          if(nonHD->getComp() != C->getComp())
             {
               moleculeC = C->getRandomAdjoiningVoxel(moleculeNonHD);
               //Only proceed if we can find an adjoining vacant voxel
@@ -325,14 +325,14 @@ void SpatiocyteNextReactionProcess::initializeThird()
     }
   if(theOrder == 0)
     {
-      Compartment* compC(NULL);
+      Comp* compC(NULL);
       if(C)
         {
-          compC = C->getCompartment();
+          compC = C->getComp();
         }
       else
         {
-          compC = theSpatiocyteStepper->system2compartment(
+          compC = theSpatiocyteStepper->system2Comp(
                              variableC->getSuperSystem());
         }
       double aSpace(0);
@@ -352,48 +352,48 @@ void SpatiocyteNextReactionProcess::initializeThird()
     }
   else if(theOrder == 2)
     {
-      Compartment* compA(NULL);
-      Compartment* compB(NULL);
-      Compartment* compC(NULL);
-      Compartment* compD(NULL);
+      Comp* compA(NULL);
+      Comp* compB(NULL);
+      Comp* compC(NULL);
+      Comp* compD(NULL);
       if(A)
         {
-          compA = A->getCompartment();
+          compA = A->getComp();
         }
       else
         {
-          compA = theSpatiocyteStepper->system2compartment(
+          compA = theSpatiocyteStepper->system2Comp(
                              variableA->getSuperSystem());
         }
       if(B)
         {
-          compB = B->getCompartment();
+          compB = B->getComp();
         }
       else
         {
-          compB = theSpatiocyteStepper->system2compartment(
+          compB = theSpatiocyteStepper->system2Comp(
                              variableB->getSuperSystem());
         }
       if(C)
         {
-          compC = C->getCompartment();
+          compC = C->getComp();
         }
       else
         {
-          compC = theSpatiocyteStepper->system2compartment(
+          compC = theSpatiocyteStepper->system2Comp(
                              variableC->getSuperSystem());
         }
       if(D)
         {
-          compD = D->getCompartment();
+          compD = D->getComp();
         }
       else if(variableD)
         {
-          compD = theSpatiocyteStepper->system2compartment(
+          compD = theSpatiocyteStepper->system2Comp(
                              variableD->getSuperSystem());
         }
       //If there are two products, both C and D must belong to the
-      //same compartment:
+      //same Comp:
       if(compD && compD != compC)
         {
           NEVER_GET_HERE;

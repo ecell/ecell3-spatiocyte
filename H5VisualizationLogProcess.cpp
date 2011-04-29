@@ -124,31 +124,31 @@ struct SpeciesPacker
 };
 
 template<typename Tarc>
-struct CompartmentPacker
+struct CompPacker
 {
     typedef Tarc archiver_type;
 
-    static boost::array<double, 3> Compartment_lengths(Compartment const& compartment)
+    static boost::array<double, 3> Comp_lengths(Comp const& Comp)
     {
         boost::array<double, 3> retval;
-        retval[0] = compartment.lengthX;
-        retval[1] = compartment.lengthY;
-        retval[2] = compartment.lengthZ;
+        retval[0] = Comp.lengthX;
+        retval[1] = Comp.lengthY;
+        retval[2] = Comp.lengthZ;
         return retval;
     }
 
-    void operator()(archiver_type& arc, Compartment const* data = 0) const
+    void operator()(archiver_type& arc, Comp const* data = 0) const
     {
-        arc << field<uint8_t>("id", &Compartment::vacantID, data);
-        arc << field<boost::array<double, 3> >("lengths", &Compartment_lengths, data);
-        arc << field<Compartment, double, double>("voxelRadius", voxelRadius);
-        arc << field<Compartment, double, double>("normalizedVoxelRadius", normalizedVoxelRadius);
+        arc << field<uint8_t>("id", &Comp::vacantID, data);
+        arc << field<boost::array<double, 3> >("lengths", &Comp_lengths, data);
+        arc << field<Comp, double, double>("voxelRadius", voxelRadius);
+        arc << field<Comp, double, double>("normalizedVoxelRadius", normalizedVoxelRadius);
     }
 
-    CompartmentPacker(double voxelRadius, double normalizedVoxelRadius)
+    CompPacker(double voxelRadius, double normalizedVoxelRadius)
         : voxelRadius(voxelRadius), normalizedVoxelRadius(normalizedVoxelRadius) {}
 
-    CompartmentPacker(): voxelRadius(0.), normalizedVoxelRadius(0.) {}
+    CompPacker(): voxelRadius(0.), normalizedVoxelRadius(0.) {}
 
 private:
     const double voxelRadius;
@@ -264,7 +264,7 @@ protected:
     H5::CompType pointDataType;
     H5::CompType particleDataType;
     H5::CompType speciesDataType;
-    H5::CompType compartmentDataType;
+    H5::CompType CompDataType;
 };
 
 H5VisualizationLogProcess::H5VisualizationLogProcess()
@@ -276,7 +276,7 @@ H5VisualizationLogProcess::H5VisualizationLogProcess()
         pointDataType(getH5Type<PointDataPacker>()),
         particleDataType(getH5Type<ParticleDataPacker>()),
         speciesDataType(getH5Type<SpeciesPacker>()),
-        compartmentDataType(getH5Type<CompartmentPacker>())
+        CompDataType(getH5Type<CompPacker>())
 {
 }
 
@@ -302,21 +302,21 @@ void H5VisualizationLogProcess::setH5Attribute(H5::Group& dg, const char* name, 
 void H5VisualizationLogProcess::initializeLog()
 {
     {
-        std::vector<Compartment*> const& compartments(theSpatiocyteStepper->getCompartments());
-        const hsize_t dims[] = { compartments.size() };
-        boost::scoped_array<unsigned char> buf(new unsigned char[compartments.size() * compartmentDataType.getSize()]);
+        std::vector<Comp*> const& Comps(theSpatiocyteStepper->getComps());
+        const hsize_t dims[] = { Comps.size() };
+        boost::scoped_array<unsigned char> buf(new unsigned char[Comps.size() * CompDataType.getSize()]);
         field_packer<h5_le_traits> packer(buf.get());
-        CompartmentPacker<field_packer<h5_le_traits> > serializer(
+        CompPacker<field_packer<h5_le_traits> > serializer(
             theSpatiocyteStepper->getVoxelRadius(),
             theSpatiocyteStepper->getNormalizedVoxelRadius());
         H5::Group latticeInfoGroup(theLogFile.createGroup("lattice_info"));
         H5::DataSpace space(H5::DataSpace(1, dims, dims));
-        H5::DataSet latticeInfoDataSet(latticeInfoGroup.createDataSet("HCP_group", compartmentDataType, space));
-        BOOST_FOREACH(Compartment const* compartment, compartments)
+        H5::DataSet latticeInfoDataSet(latticeInfoGroup.createDataSet("HCP_group", CompDataType, space));
+        BOOST_FOREACH(Comp const* Comp, Comps)
         {
-            serializer(packer, compartment);
+            serializer(packer, Comp);
         }
-        latticeInfoDataSet.write(buf.get(), compartmentDataType, space);
+        latticeInfoDataSet.write(buf.get(), CompDataType, space);
     }
 
     {
@@ -362,7 +362,7 @@ void H5VisualizationLogProcess::logMolecules(H5::DataSpace const& space, H5::Dat
     {
         Voxel* const voxel(aSpecies->getMolecule(i));
         BOOST_ASSERT(voxel->id == aSpecies->getID());
-        p = pack<ParticleDataPacker>(p, ParticleData(voxel->coord, aSpecies->getID(), aSpecies->getCompartment()->vacantID));
+        p = pack<ParticleDataPacker>(p, ParticleData(voxel->coord, aSpecies->getID(), aSpecies->getComp()->vacantID));
     }
     dataSet.write(buf.get(), particleDataType, mem, slab);
 }

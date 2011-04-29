@@ -41,4 +41,8 @@ load the model 2010.arjunan.syst.synth.biol.wt.eml and run
 to create a lossless movie:
 ffmpeg -i image%07d.png -vcodec ffv1 -sameq test.avi
 ffmpeg -i image%07d.png -vcodec huffyuv test.avi
-mencoder "mf://*.png" -mf type=png:fps=30 -ovc xvid -xvidencopts fixed_quant=1 -o outputXvid.mov
+mencoder mf://*.png -mf w=800:h=600:fps=25:type=png -ovc raw -oac copy -o output.avi
+mencoder mf://*.png -mf w=800:h=600:fps=25:type=png -ovc copy -oac copy -o output.avi
+
+compressed high quality:
+mencoder mf://*.png -mf w=500:h=500:fps=25:type=png -ovc x264 -x264encopts crf=19 -o out.mp4
