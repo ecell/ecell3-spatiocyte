@@ -535,6 +535,7 @@ void GLScene::on_realize()
   glMatrixMode(GL_MODELVIEW);
   glTranslatef(-ViewMidx,-ViewMidy,-ViewMidz); 
 
+  /*
   m_FontListBase = glGenLists(128); 
   m_FontString = "Courier 8";
   Pango::FontDescription font_desc(m_FontString); 
@@ -544,6 +545,7 @@ void GLScene::on_realize()
   m_FontHeight = font_metrics.get_ascent() + font_metrics.get_descent();
   m_FontHeight = PANGO_PIXELS(m_FontHeight);
   m_FontWidth = PANGO_PIXELS(font_metrics.get_approximate_digit_width());
+  */
   if(theMeanCount)
     {
       //for GFP visualization:
@@ -604,6 +606,7 @@ bool GLScene::on_expose_event(GdkEventExpose* event)
     }
   if(showTime)
     {
+      /*
       glListBase(m_FontListBase);
       char buffer[50];
       sprintf(buffer, "t = %.1fs", theCurrentTime-theResetTime);
@@ -613,6 +616,7 @@ bool GLScene::on_expose_event(GdkEventExpose* event)
       glRasterPos3f(ViewMidx-(m_timeString.length()*m_FontWidth)/2.0, 0, 0);
       glCallLists(m_timeString.length(), GL_UNSIGNED_BYTE,
                   m_timeString.c_str());
+                  */
     }
   glCallList(BOX);
   //glCallList(GRID);
