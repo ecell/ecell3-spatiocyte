@@ -1821,7 +1821,6 @@ void SpatiocyteStepper::setCompVoxelProperties()
 
 void SpatiocyteStepper::setSurfaceCompProperties(Comp* aComp)
 {
-  setReactiveComps(aComp);
   removePeriodicEdgeVoxels(aComp);
   removeSurfaces(aComp);
   setDiffusiveComp(aComp);
@@ -1941,8 +1940,8 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(Voxel* aVoxel,
   for(std::vector<Voxel*>::iterator l(adjoiningCopy.begin());
       l != adjoiningCopy.end(); ++l)
     {
-      if((*l) != aVoxel && ((*l)->id == surfaceID || 
-                isReactiveComp(aComp, id2Comp((*l)->id))))
+      if((*l) != aVoxel && (*l)->id != theNullID 
+         && id2Comp((*l)->id)->isSurface)
         {
           (*forward) = (*l);
           ++forward;
@@ -2006,35 +2005,6 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(Voxel* aVoxel,
       aVoxel->surfaceVoxels->push_back(*i);
     }
   aVoxel->adjoiningSize = forward-aVoxel->adjoiningVoxels;
-}
-
-void SpatiocyteStepper::setReactiveComps(Comp* aComp)
-{
-  FOR_ALL(System::Variables, aComp->system->getVariables())
-    {
-      Variable* aVariable(i->second);
-      if(aVariable->getID() == "REACTIVE")
-        {
-          String aStringID(aVariable->getName()); 
-          aStringID = "System:" + aStringID;
-          FullID aFullID(aStringID);
-          System* aSystem(static_cast<System*>(getModel()->getEntity(aFullID)));
-          aComp->reactiveComps.push_back(system2Comp(aSystem));
-        }
-    }
-}
-
-bool SpatiocyteStepper::isReactiveComp(Comp* sourceComp,
-                                              Comp* targetComp)
-{
-  for(unsigned int i(0); i != sourceComp->reactiveComps.size(); ++i) 
-    {
-      if(sourceComp->reactiveComps[i] == targetComp)
-        {
-          return true;
-        }
-    }
-  return false;
 }
 
 Species* SpatiocyteStepper::id2species(unsigned short id)

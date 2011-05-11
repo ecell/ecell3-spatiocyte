@@ -150,15 +150,13 @@ struct Comp
   System* system;
   Comp* surfaceSub;
   //Even if there are many adjacent diffusive compartents, use only one single
-  //common id. So unlike reactive Comps, there is only one common
-  //diffusive Comp:
+  //common id. So There is only one common diffusive Comp:
   Comp* diffusiveComp;
   Point centerPoint;
   Point eastPoint;
   Point westPoint;
   std::vector<Comp*> allSubs;
   std::vector<Comp*> immediateSubs;
-  std::vector<Comp*> reactiveComps;
   std::vector<Species*> species;
   std::vector<unsigned int> coords;
 };

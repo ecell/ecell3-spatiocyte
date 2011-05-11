@@ -118,7 +118,6 @@ private:
   void setCompProperties(Comp*);
   void removePeriodicEdgeVoxels(Comp*);
   void removeSurfaces(Comp*);
-  void setReactiveComps(Comp*);
   void setDiffusiveComp(Comp*);
   void setCompCenterPoint(Comp*);
   void setSurfaceVoxelProperties(Comp*);
@@ -137,7 +136,6 @@ private:
   void replaceUniVoxel(Voxel*, Voxel*);
   void setMinMaxSurfaceDimensions(unsigned int, Comp*);
   bool isRemovableEdgeCoord(unsigned int, Comp*);
-  bool isReactiveComp(Comp*, Comp*);
   bool isInsideCoord(unsigned int, Comp*, double);
   bool isPeriodicEdgeCoord(unsigned int, Comp*);
   bool isSurfaceVoxel(Voxel*, Comp*);
