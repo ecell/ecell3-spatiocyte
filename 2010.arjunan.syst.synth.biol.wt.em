@@ -12,11 +12,6 @@ Stepper SpatiocyteStepper(SS)
 System System(/)
 {
   StepperID       SS; 
-  Variable Variable(TYPE)
-    {
-      Value 0;         # { 0: Volume
-                       #   1: Surface }
-    } 
   Variable Variable(SHAPE)
     {
       Value 1;         # { 0: Spherical (uses SIZE) 
