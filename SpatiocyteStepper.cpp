@@ -75,7 +75,7 @@ void SpatiocyteStepper::initialize()
   constructLattice();
   std::cout << "8. shuffling adjoining voxels..." << std::endl;
   shuffleAdjoiningVoxels();
-  std::cout << "9. Compalizing lattice..." << std::endl;
+  std::cout << "9. Compartmentalizing lattice..." << std::endl;
   CompartmentalizeLattice();
   std::cout << "10. setting up Comp voxels properties..." << std::endl;
   setCompVoxelProperties();
