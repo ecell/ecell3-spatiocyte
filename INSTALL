@@ -1,5 +1,5 @@
 Packages to be installed on a fresh version of Ubuntu 11.04:
-sudo apt-get install subversion automake libtool g++ libgsl0-dev python-numpy python-ply libboost-python-dev mercurial libgtkmm-2.4-dev libgtkglextmm-x11-1.2-dev libhdf5-serial-dev
+sudo apt-get install subversion automake libtool g++ libgsl0-dev python-numpy python-ply libboost-python-dev mercurial libgtkmm-2.4-dev libgtkglextmm-x11-1.2-dev libhdf5-serial-dev git
 
 Steps to install E-Cell System v3:
 cd
@@ -11,11 +11,11 @@ cd ecell3svn
 ./configure --prefix=$HOME/root
 make -j3
 make install (files will be installed in the $HOME/root directory)
-gedit .bashrc
+gedit ~/.bashrc
   add the following at the bottom
       export PATH=$HOME/root/bin:$PATH
       export LD_LIBRARY_PATH=$HOME/root/lib:$HOME/wrk/ecell3-spatiocyte:$LD_LIBRARY_PATH:.
-      export PYTHONPATH=$HOME/root/lib/python:$HOME/root/lib/python2.7/site-packages:$HOME/src/epdp:$PYTHONPATH
+      export PYTHONPATH=$HOME/root/lib/python:$HOME/root/lib/python2.7/site-packages:$PYTHONPATH
       export ECELL3_DM_PATH=.
 source ~/.bashrc
 
@@ -23,13 +23,14 @@ Try running a simple model:
 ecell3-session-monitor (try opening it, and then close it)
 cd $HOME/wrk/ecell3svn/doc/samples/simple/
 ecell3-em2eml simple.em
-ecell3-session-monitor -f simple.eml
+ecell3-session-monitor
+load the model simple.eml and run
 
 Steps to install E-Cell3-Spatiocyte:
 cd $HOME/wrk
 git clone git://github.com/ecell/ecell3-spatiocyte.git
 cd ecell3-spatiocyte
-make -j3
+make (or make -j3 if you have CPU with two or more cores)
 
 Steps to run E-Cell3-Spatiocyte MinDE model:
 cd $HOME/wrk/ecell3-spatiocyte/
