@@ -1,5 +1,5 @@
 Packages to be installed on a fresh version of Ubuntu 11.04:
-sudo apt-get install subversion automake libtool g++ libgsl0-dev python-numpy python-ply libboost-python-dev mercurial libgtkmm-2.4-dev libgtkglextmm-x11-1.2-dev libhdf5-serial-dev git
+sudo apt-get install subversion automake libtool g++ libgsl0-dev python-numpy python-ply libboost-python-dev libgtkmm-2.4-dev libgtkglextmm-x11-1.2-dev libhdf5-serial-dev git
 
 Steps to install E-Cell System v3:
 cd
