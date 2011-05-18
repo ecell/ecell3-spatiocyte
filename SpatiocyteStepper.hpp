@@ -83,6 +83,7 @@ public:
   unsigned int getLayerSize();
   unsigned int getColSize();
   unsigned int getLatticeSize();
+  unsigned int getLatticeType();
   Point getCenterPoint();
   double getNormalizedVoxelRadius();
   Voxel* point2voxel(Point);
@@ -153,7 +154,8 @@ private:
   bool isPeriodicEdge;
   bool SearchVacant;
   unsigned short theNullID;
-  int LatticeType; 
+  unsigned int LatticeType; 
+  unsigned int theAdjoiningVoxelSize;
   unsigned int theCellShape;
   unsigned int theStartCoord;
   unsigned int theRowSize;

@@ -74,8 +74,9 @@ public:
     theStepper(aStepper),
     theVariable(aVariable) {}
   ~Species() {}
-  void initialize(int speciesSize)
+  void initialize(int speciesSize, int anAdjoiningVoxelSize)
     {
+      theAdjoiningVoxelSize = anAdjoiningVoxelSize;
       theReactionProbabilities.resize(speciesSize);
       theDiffusionInfluencedReactions.resize(speciesSize);
       for(int i(0); i != speciesSize; ++ i)
@@ -413,7 +414,7 @@ public:
   void volumeWalkCollide()
     {
       int vacantID(theComp->vacantID);
-      const int r(gsl_rng_uniform_int(theRng, ADJOINING_VOXEL_SIZE));
+      const int r(gsl_rng_uniform_int(theRng, theAdjoiningVoxelSize));
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
@@ -530,7 +531,7 @@ public:
   void volumeWalk()
     {
       int vacantID(theComp->vacantID);
-      const int r(gsl_rng_uniform_int(theRng, ADJOINING_VOXEL_SIZE));
+      const int r(gsl_rng_uniform_int(theRng, theAdjoiningVoxelSize));
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
@@ -822,7 +823,7 @@ public:
       std::vector<Voxel*> CompVoxels;
       if(theStepper->getSearchVacant())
         { 
-          for(unsigned int i(0); i != ADJOINING_VOXEL_SIZE; ++i)
+          for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
               if(aVoxel->id == theComp->vacantID)
@@ -833,7 +834,7 @@ public:
         }
       else
         {
-          for(unsigned int i(0); i != ADJOINING_VOXEL_SIZE; ++i)
+          for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
               if(theStepper->id2Comp(aVoxel->id) == theComp)
@@ -849,7 +850,7 @@ public:
       std::vector<Voxel*> CompVoxels;
       if(theStepper->getSearchVacant())
         { 
-          for(unsigned int i(0); i != ADJOINING_VOXEL_SIZE; ++i)
+          for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
               if(aVoxel->id == theComp->vacantID &&
@@ -861,7 +862,7 @@ public:
         }
       else
         {
-          for(unsigned int i(0); i != ADJOINING_VOXEL_SIZE; ++i)
+          for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
               if(theStepper->id2Comp(aVoxel->id) == theComp &&
@@ -878,7 +879,7 @@ public:
       std::vector<Voxel*> CompVoxels;
       if(theStepper->getSearchVacant())
         { 
-          for(unsigned int i(0); i != ADJOINING_VOXEL_SIZE; ++i)
+          for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
               if(aVoxel->id == theComp->vacantID &&
@@ -890,7 +891,7 @@ public:
         }
       else
         {
-          for(unsigned int i(0); i != ADJOINING_VOXEL_SIZE; ++i)
+          for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
               if(theStepper->id2Comp(aVoxel->id) == theComp &&
@@ -962,6 +963,7 @@ private:
   const unsigned short theID;
   const unsigned int theInitMoleculeSize;
   unsigned int theMoleculeSize;
+  unsigned int theAdjoiningVoxelSize;
   int thePolymerDirectionality;
   double D;
   double theDiffusionInterval;

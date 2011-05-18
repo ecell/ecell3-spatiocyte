@@ -148,8 +148,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
         new std::ifstream( aFileName.str().c_str(), std::ios::binary );
     }
   theFile[0]->read((char*) (&theThreadSize), sizeof(theThreadSize));
-  //theFile[0]->read((char*) (&theStructure), sizeof(theStructure));
-  theStructure = HEXAGONAL_CLOSE_PACKING;
+  theFile[0]->read((char*) (&theLatticeType), sizeof(theLatticeType));
   theFile[0]->read((char*) (&theMeanCount), sizeof(theMeanCount));
   theFile[0]->read((char*) (&theStartCoord), sizeof(theStartCoord));
   theFile[0]->read((char*) (&theRowSize), sizeof(theRowSize));
@@ -336,21 +335,37 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   theLayerSize = 3;
   */
   theRadius = 0.5;
-  if( theStructure == HEXAGONAL_CLOSE_PACKING )
+  switch(theLatticeType)
     {
+    case HCP_LATTICE: 
       theHCPk = theRadius/sqrt(3); 
       theHCPl = theRadius*sqrt(3);
       theHCPh = theRadius*sqrt(8.0/3.0); // for division require .0
       if(theMeanCount)
         {
-          thePlotFunction = &GLScene::plotMean3DMolecules;
+          thePlot3DFunction = &GLScene::plotMean3DHCPMolecules;
           theLoadCoordsFunction = &GLScene::loadMeanCoords;
         }
       else
         {
-          thePlotFunction = &GLScene::plot3DMolecules;
+          thePlotFunction = &GLScene::plotHCPPoints;
+          thePlot3DFunction = &GLScene::plot3DHCPMolecules;
           theLoadCoordsFunction = &GLScene::loadCoords;
         }
+      break;
+    case CUBIC_LATTICE:
+      if(theMeanCount)
+        {
+          thePlot3DFunction = &GLScene::plotMean3DCubicMolecules;
+          theLoadCoordsFunction = &GLScene::loadMeanCoords;
+        }
+      else
+        {
+          thePlotFunction = &GLScene::plotCubicPoints;
+          thePlot3DFunction = &GLScene::plot3DCubicMolecules;
+          theLoadCoordsFunction = &GLScene::loadCoords;
+        }
+      break;
     }
   ViewSize = 1.05*sqrt((theRealColSize)*(theRealColSize)+
                        (theRealLayerSize)*(theRealLayerSize)+
@@ -515,7 +530,7 @@ void GLScene::on_realize()
     {
       return;
     }
-  //background color:
+  //background color3D:
   glClearColor (0, 0, 0, 0);
   glClearDepth (1);
   if(!theMeanCount)
@@ -598,11 +613,11 @@ bool GLScene::on_expose_event(GdkEventExpose* event)
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   if(show3DMolecule)
     {
-      (this->*thePlotFunction)();
+      (this->*thePlot3DFunction)();
     }
   else
     { 
-      plotPoints();
+      (this->*thePlotFunction)();
     }
   if(showTime)
     {
@@ -857,7 +872,7 @@ void GLScene::loadMeanCoords()
     }
 }
 
-void GLScene::plotMean3DMolecules()
+void GLScene::plotMean3DHCPMolecules()
 {
   unsigned int col, layer, row;
   double x,y,z;
@@ -926,7 +941,76 @@ void GLScene::plotMean3DMolecules()
     }
 }
 
-void GLScene::plot3DMolecules()
+void GLScene::plotMean3DCubicMolecules()
+{
+  unsigned int col, layer, row;
+  double x,y,z;
+  for(unsigned int i(0); i != theThreadSize; ++i)
+    { 
+      for(unsigned int k(0); k != theMeanCoordSize; ++k)
+        {
+          col = theMeanCoords[i][k]/(theRowSize*theLayerSize)-theOriCol; 
+          layer = (theMeanCoords[i][k]%(theRowSize*theLayerSize))/theRowSize;
+          row = (theMeanCoords[i][k]%(theRowSize*theLayerSize))%theRowSize;
+          y = layer*2*theRadius + theRadius;
+          z = row*2*theRadius + theRadius;
+          x = col*2*theRadius + theRadius; 
+          for(unsigned int j(0); j!=theSpeciesSize; ++j)
+            {
+              if(theSpeciesVisibility[j])
+                {
+                  Color clr(theSpeciesColor[j]);
+                  double intensity((double)(theFrequency[i][j][k])/
+                                   (double)(theMeanCount/4));
+                  //glColor3f(clr.r*intensity, clr.g*intensity, clr.b*intensity); 
+                  glColor4f(clr.r, clr.g, clr.b, intensity);
+                  //glColor4f(clr.r*intensity, clr.g*intensity, clr.b*intensity,
+                   //         0.5f); 
+                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                      y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                      z <= theZUpBound[j] && z >= theZLowBound[j]))
+                    {
+                      glPushMatrix();
+                      glTranslatef(x,y,z);
+                      glCallList(SPHERE);
+                      glPopMatrix();
+                    }
+                }
+            }
+        }
+      for( unsigned int j(theSpeciesSize);
+           j!=theTotalCoordSpeciesSize; ++j )
+        {
+          if(theSpeciesVisibility[j])
+            {
+              Color clr(theSpeciesColor[j]);
+              glColor3f(clr.r, clr.g, clr.b); 
+              for( unsigned int k(0); k!=theMoleculeSize[i][j]; ++k )
+                {
+                  col = theCoords[i][j][k]/(theRowSize*theLayerSize)-theOriCol; 
+                  layer =
+                    (theCoords[i][j][k]%(theRowSize*theLayerSize))/theRowSize;
+                  row =
+                    (theCoords[i][j][k]%(theRowSize*theLayerSize))%theRowSize;
+                  y = layer*2*theRadius + theRadius;
+                  z = row*2*theRadius + theRadius;
+                  x = col*2*theRadius + theRadius; 
+                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                      y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                      z <= theZUpBound[j] && z >= theZLowBound[j]))
+                    {
+                      glPushMatrix();
+                      glTranslatef(x,y,z);
+                      glCallList(SPHERE);
+                      glPopMatrix();
+                    }
+                }
+            }
+        }
+    }
+}
+
+void GLScene::plot3DHCPMolecules()
 {
   unsigned int col, layer, row;
   double x,y,z;
@@ -986,7 +1070,67 @@ void GLScene::plot3DMolecules()
     }
 }
 
-void GLScene::plotPoints()
+void GLScene::plot3DCubicMolecules()
+{
+  unsigned int col, layer, row;
+  double x,y,z;
+  for( unsigned int i(0); i!=theThreadSize; ++i )
+    {
+      for( unsigned int j(0); j!=theTotalCoordSpeciesSize; ++j )
+        {
+          if( theSpeciesVisibility[j] )
+            {
+              Color clr(theSpeciesColor[j]);
+              glColor3f(clr.r, clr.g, clr.b); 
+              for( unsigned int k(0); k!=theMoleculeSize[i][j]; ++k )
+                {
+                  col = theCoords[i][j][k]/(theRowSize*theLayerSize)-theOriCol; 
+                  layer =
+                    (theCoords[i][j][k]%(theRowSize*theLayerSize))/theRowSize;
+                  row =
+                    (theCoords[i][j][k]%(theRowSize*theLayerSize))%theRowSize;
+                  y = layer*2*theRadius + theRadius;
+                  z = row*2*theRadius + theRadius;
+                  x = col*2*theRadius + theRadius; 
+                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                      y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                      z <= theZUpBound[j] && z >= theZLowBound[j]))
+                    {
+                      glPushMatrix();
+                      glTranslatef(x,y,z);
+                      glCallList(SPHERE);
+                      glPopMatrix();
+                    }
+                }
+            }
+        }
+      for(int j(thePolymerSize-1); j!=-1; --j )
+        {
+          if( theSpeciesVisibility[j+theTotalCoordSpeciesSize] )
+            {
+              Color clr(theSpeciesColor[j+theTotalCoordSpeciesSize]);
+              glColor3f(clr.r, clr.g, clr.b); 
+              for( unsigned int k(0); k!=thePolymerMoleculeSize[i][j]; ++k )
+                {
+                  x = (thePoints[i][j][k].x/theResolution)*theRadius+theRadius;
+                  y = (thePoints[i][j][k].y/theResolution)*theRadius+theRadius;
+                  z = (thePoints[i][j][k].z/theResolution)*theRadius+theRadius;
+                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                      y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                      z <= theZUpBound[j] && z >= theZLowBound[j]))
+                    {
+                      glPushMatrix();
+                      glTranslatef(x,y,z);
+                      glCallList(SPHERE);
+                      glPopMatrix();
+                    }
+                }
+            }
+        }
+    }
+}
+
+void GLScene::plotHCPPoints()
 {
   glBegin(GL_POINTS);
   unsigned int col, layer, row;
@@ -1009,6 +1153,62 @@ void GLScene::plotPoints()
                   y = (col%2)*theHCPk + theHCPl*layer + theRadius;
                   z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
                   x = col*theHCPh + theRadius;
+                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                      y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                      z <= theZUpBound[j] && z >= theZLowBound[j]))
+                    {
+                      glVertex3f(x, y, z);
+                    }
+                }
+            }
+        }
+      for(int j(thePolymerSize-1); j!=-1; --j )
+        {
+          if( theSpeciesVisibility[j+theTotalCoordSpeciesSize] )
+            {
+              Color clr(theSpeciesColor[j+theTotalCoordSpeciesSize]);
+              glColor3f(clr.r, clr.g, clr.b); 
+              for( unsigned int k(0); k!=thePolymerMoleculeSize[i][j]; ++k )
+                {
+                  x = (thePoints[i][j][k].x/theResolution)*theRadius+theRadius;
+                  y = (thePoints[i][j][k].y/theResolution)*theRadius+theRadius;
+                  z = (thePoints[i][j][k].z/theResolution)*theRadius+theRadius;
+                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                      y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                      z <= theZUpBound[j] && z >= theZLowBound[j]))
+                    {
+                      glVertex3f(x, y, z);
+                    }
+                }
+            }
+        }
+    }
+  glEnd();
+}
+
+void GLScene::plotCubicPoints()
+{
+  glBegin(GL_POINTS);
+  unsigned int col, layer, row;
+  double x,y,z;
+  for( unsigned int i(0); i!=theThreadSize; ++i )
+    {
+      for( unsigned int j(0); j!=theTotalCoordSpeciesSize; ++j )
+        {
+          if( theSpeciesVisibility[j] )
+            {
+              Color clr(theSpeciesColor[j]);
+              glColor3f(clr.r, clr.g, clr.b); 
+              for( unsigned int k(0); k!=theMoleculeSize[i][j]; ++k )
+                {
+                  col = theCoords[i][j][k]/(theRowSize*theLayerSize)-theOriCol; 
+                  layer =
+                    (theCoords[i][j][k]%(theRowSize*theLayerSize))/theRowSize;
+                  row =
+                    (theCoords[i][j][k]%(theRowSize*theLayerSize))%theRowSize;
+                  y = layer*2*theRadius + theRadius;
+                  z = row*2*theRadius + theRadius;
+                  x = col*2*theRadius + theRadius; 
                   if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
                       y <= theYUpBound[j] && y >= theYLowBound[j] &&
                       z <= theZUpBound[j] && z >= theZLowBound[j]))

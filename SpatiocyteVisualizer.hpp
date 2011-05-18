@@ -36,10 +36,9 @@
 #define BOX             2
 #define GRID            3
 
-// Lattice structures
-#define SIMPLE_CUBIC             0
-#define CUBIC_CLOSE_PACKING      1
-#define HEXAGONAL_CLOSE_PACKING  2
+//Lattice type:
+#define HCP_LATTICE   0
+#define CUBIC_LATTICE 1
 
 using namespace std;
 
@@ -261,9 +260,12 @@ protected:
   void drawScene(double);
   void timeout_add();
   void plotGrid();
-  void plot3DMolecules();
-  void plotMean3DMolecules();
-  void plotPoints();
+  void plot3DHCPMolecules();
+  void plotMean3DHCPMolecules();
+  void plotHCPPoints();
+  void plot3DCubicMolecules();
+  void plotMean3DCubicMolecules();
+  void plotCubicPoints();
   void timeout_remove();
   void loadCoords();
   void loadMeanCoords();
@@ -272,6 +274,7 @@ protected:
   void setTranslucentColor(unsigned int i, GLfloat j);
   void setLayerColor(unsigned int i);
   void (GLScene::*thePlotFunction)();
+  void (GLScene::*thePlot3DFunction)();
   void (GLScene::*theLoadCoordsFunction)();
   void normalizeAngle(double&);
 protected:
@@ -288,7 +291,7 @@ protected:
   int m_FontWidth;
 protected:
   unsigned int theThreadSize;
-  unsigned int theStructure;
+  unsigned int theLatticeType;
   unsigned int theDimension;
   unsigned int theColSize;
   unsigned int theRowSize;

@@ -69,9 +69,6 @@ typedef ProcessPriorityQueue::ID ProcessID;
 #define REMOVE_LOWER   4
 #define REMOVE_BOTH    5
 
-//Number of neighbor voxels for a voxel in the hexagonal close-packed (HCP) lattice: 
-#define ADJOINING_VOXEL_SIZE 12
-
 //The 12 adjoining voxels of a voxel in the HCP lattice:
 #define NORTH    0 
 #define SOUTH    1
@@ -85,6 +82,10 @@ typedef ProcessPriorityQueue::ID ProcessID;
 #define DORSALS  9
 #define VENTRALN 10 
 #define VENTRALS 11
+
+//The 6 adjoining voxels of a voxel in the CUBIC lattice:
+#define DORSAL   4 
+#define VENTRAL  5
 
 #define INNER     0
 #define OUTER     1
@@ -106,7 +107,7 @@ struct Voxel
   //Try to limit the adjoiningSize <= 6:
   unsigned short adjoiningSize;
   unsigned int coord;
-  Voxel* adjoiningVoxels[ADJOINING_VOXEL_SIZE];
+  Voxel** adjoiningVoxels;
   Subunit* subunit;
   //Contains adjoining and extended surface voxels:
   std::vector<std::vector<Voxel*> >* surfaceVoxels;
