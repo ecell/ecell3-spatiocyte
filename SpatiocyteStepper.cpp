@@ -371,80 +371,6 @@ void SpatiocyteStepper::checkSurfaceComp()
     }
 }
 
-/*
-void SpatiocyteStepper::checkSurfaceComp()
-{
-  for(vector<Comp*>::const_iterator i(theComps.begin());
-      i != theComps.end(); ++i)
-    {
-      if((*i)->isSurface)
-        {
-          for(vector<unsigned int>::const_iterator j((*i)->coords.begin());
-              j != (*i)->coords.end(); ++j )
-            {
-              Voxel* aVoxel(&theLattice[*j]);
-              for(int k(0); k != theAdjoiningVoxelSize; ++k)
-                {
-                  if(aVoxel == aVoxel->adjoiningVoxels[k])
-                    {
-                      theSpecies[2]->addSimpleMolecule(aVoxel);
-                      break;
-                    }
-                }
-            }
-        }
-    }
-}
-*/
-
-/*
-void SpatiocyteStepper::checkSurfaceComp()
-{
-  vector<int> surfaceCnt;
-  surfaceCnt.resize(12);
-  for(int i(0); i!=12; ++i)
-    {
-      surfaceCnt[i] = 0;
-    }
-  for(vector<Comp*>::const_iterator i(theComps.begin());
-      i != theComps.end(); ++i)
-    {
-      if((*i)->isSurface)
-        {
-          std::cout << "size:" << (*i)->coords.size() << std::endl;
-          int surfaceID((*i)->vacantID);
-          for(vector<unsigned int>::const_iterator j((*i)->coords.begin());
-              j != (*i)->coords.end(); ++j )
-            {
-              Voxel* aVoxel(&theLattice[*j]);
-              int cnt(0);
-              for(int k(0); k != theAdjoiningVoxelSize; ++k)
-                {
-                  if(aVoxel != aVoxel->adjoiningVoxels[k] &&
-                     aVoxel->adjoiningVoxels[k]->id == surfaceID)
-                    {
-                      ++cnt;
-                    }
-                }
-              ++surfaceCnt[cnt];
-              if(cnt > 2 && cnt < 9)
-                {
-                  theSpecies[theSpecies.size()-9+cnt]->addSimpleMolecule(aVoxel);
-                }
-            }
-        }
-    }
-  int total(0);
-  for(int i(0); i!=12; ++i)
-    {
-      total += surfaceCnt[i];
-      std::cout << i << ": " << surfaceCnt[i] << std::endl;
-    }
-  std::cout << "total:" << total << std::endl;
-  std::cout << "size:" << theSpecies.back()->size() << std::endl;
-}
-*/
-
 void SpatiocyteStepper::initSpecies()
 {
   for(std::vector<Species*>::iterator i(theSpecies.begin());
@@ -459,7 +385,8 @@ void SpatiocyteStepper::initProcessSecond()
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
     {      
-      SpatiocyteProcessInterface* aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
+      SpatiocyteProcessInterface*
+        aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
       aProcess->initializeSecond();
     }
 }
@@ -469,7 +396,8 @@ void SpatiocyteStepper::printProcessParameters()
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
     {      
-      SpatiocyteProcessInterface* aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
+      SpatiocyteProcessInterface*
+        aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
       aProcess->printParameters();
     }
 }
@@ -479,7 +407,8 @@ void SpatiocyteStepper::initProcessThird()
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
     {      
-      SpatiocyteProcessInterface* aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
+      SpatiocyteProcessInterface*
+        aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
       aProcess->initializeThird();
     }
 }
@@ -489,7 +418,8 @@ void SpatiocyteStepper::initProcessFourth()
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
     {      
-      SpatiocyteProcessInterface* aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
+      SpatiocyteProcessInterface*
+        aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
       aProcess->initializeFourth();
     }
   setStepInterval(thePriorityQueue.getTop()->getTime()-getCurrentTime());
@@ -500,7 +430,8 @@ void SpatiocyteStepper::initProcessLastOnce()
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
     {      
-      SpatiocyteProcessInterface* aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
+      SpatiocyteProcessInterface*
+        aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
       aProcess->initializeLastOnce();
     }
 }
@@ -831,12 +762,9 @@ void SpatiocyteStepper::setLatticeProperties()
           break;
         case CUBIC_LATTICE:
           theAdjoiningVoxelSize = 6;
-          theCenterPoint.z = aRootComp->lengthZ/2+4*
-            theNormalizedVoxelRadius; //row
-          theCenterPoint.y = aRootComp->lengthY/2+4*
-            theNormalizedVoxelRadius; //layer
-          theCenterPoint.x = aRootComp->lengthX/2+4*
-            theNormalizedVoxelRadius; //column
+          theCenterPoint.z = aRootComp->lengthZ/2+8*theNormalizedVoxelRadius; //row
+          theCenterPoint.y = aRootComp->lengthY/2+8*theNormalizedVoxelRadius; //layer
+          theCenterPoint.x = aRootComp->lengthX/2+8*theNormalizedVoxelRadius; //column
           break;
         }
     }

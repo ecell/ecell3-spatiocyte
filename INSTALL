@@ -14,7 +14,7 @@ make install (files will be installed in the $HOME/root directory)
 gedit ~/.bashrc
   add the following at the bottom
       export PATH=$HOME/root/bin:$PATH
-      export LD_LIBRARY_PATH=$HOME/root/lib:$HOME/wrk/ecell3-spatiocyte:$LD_LIBRARY_PATH:.
+      export LD_LIBRARY_PATH=$HOME/root/lib:$LD_LIBRARY_PATH:.
       export PYTHONPATH=$HOME/root/lib/python:$HOME/root/lib/python2.7/site-packages:$PYTHONPATH
       export ECELL3_DM_PATH=.
 source ~/.bashrc

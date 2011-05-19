@@ -83,7 +83,6 @@ public:
   unsigned int getLayerSize();
   unsigned int getColSize();
   unsigned int getLatticeSize();
-  unsigned int getLatticeType();
   Point getCenterPoint();
   double getNormalizedVoxelRadius();
   Voxel* point2voxel(Point);
