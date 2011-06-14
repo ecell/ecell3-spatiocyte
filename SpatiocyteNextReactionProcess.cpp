@@ -85,6 +85,8 @@ void SpatiocyteNextReactionProcess::fire()
               requeue();
               return;
             }
+          //we occupy the voxel with D first so that it is not selected again
+          //for E
           D->addMolecule(moleculeD);
           Voxel* moleculeE(E->getRandomAdjoiningVoxel(moleculeC, moleculeC));
           //Only proceed if we can find an adjoining vacant voxel
@@ -100,7 +102,7 @@ void SpatiocyteNextReactionProcess::fire()
           C->addMolecule(moleculeC);
         }
       //nonHD_A -> nonHD_C + nonHD_D:
-      else if(A && C && D && !variableE)
+      else if(A && C && D && !E && !variableE)
         {
           Voxel* moleculeA(A->getRandomMolecule());
           //If the product C is not in the same Comp as A,
@@ -161,7 +163,7 @@ void SpatiocyteNextReactionProcess::fire()
           C->addMolecule(moleculeC);
         }
       //nonHD_A -> HD_C + HD_D:
-      else if(A && variableC && variableD && !variableE)
+      else if(A && variableC && variableD && !E && !variableE)
         {
           Voxel* moleculeA(A->getRandomMolecule());
           A->removeMolecule(moleculeA);
@@ -169,7 +171,7 @@ void SpatiocyteNextReactionProcess::fire()
           variableD->addValue(1);
         }
       //nonHD_A -> nonHD_C + HD_D + HD_E:
-      else if(A && C && variableD && variableE)
+      else if(A && C && variableD && !E && !variableE)
         {
           Voxel* moleculeA(A->getRandomMolecule());
           Voxel* moleculeC;
@@ -202,7 +204,7 @@ void SpatiocyteNextReactionProcess::fire()
         }
       //nonHD_A -> nonHD_C + HD_D:
       //nonHD_A -> HD_C + nonHD_D:
-      else if(A && ((variableC && D) || (C && variableD)))
+      else if(A && ((variableC && D) || (C && variableD)) && !E && !variableE)
         {
           Variable* HD_p(variableC);
           Species* nonHD_p(D);
@@ -285,77 +287,158 @@ void SpatiocyteNextReactionProcess::fire()
     }
   else
     {
-      Species* nonHD(A);
-      Variable* HD(variableB);
-      if(B)
+      //HD + HD -> product(s)
+      if(variableA && variableB)
         {
-          nonHD = B;
-          HD = variableA;
-        }
-      //nonHD + HD -> nonHD + nonHD: 
-      //HD + nonHD -> nonHD + nonHD: 
-      if(C && D)
-        {
-          Voxel* moleculeNonHD(nonHD->getRandomMolecule());
-          //If the product C is not in the same Comp as nonHD,
-          //we need to find a vacant adjoining voxel of nonHD that belongs
-          //to the Comp of C:
-          Voxel* moleculeC;
-          if(nonHD->getComp() != C->getComp())
+          //HD + HD -> HD: 
+          if(variableC && !variableD && !D)
             {
-              moleculeC = C->getRandomAdjoiningVoxel(moleculeNonHD);
-              //Only proceed if we can find an adjoining vacant voxel
-              //of nonHD which can be occupied by C:
+              variableA->addValue(-1);
+              variableB->addValue(-1);
+              variableC->addValue(1);
+            }
+          //HD + HD -> nonHD: 
+          else if(C && !variableD && !D)
+            { 
+              Voxel* molecule(C->getRandomCompVoxel());
+              if(molecule == NULL)
+                {
+                  requeue();
+                  return;
+                }
+              variableA->addValue(-1);
+              variableB->addValue(-1);
+              C->addMolecule(molecule);
+            }
+          //HD + HD -> HD + HD: 
+          else if(variableC && variableD)
+            {
+              variableA->addValue(-1);
+              variableB->addValue(-1);
+              variableC->addValue(1);
+              variableD->addValue(1);
+            }
+          //HD + HD -> HD + nonHD: 
+          //HD + HD -> nonHD + HD: 
+          else if((variableC && D) || (C && variableD))
+            {
+              Variable* HD_p(variableC);
+              Species* nonHD_p(D);
+              if(variableD)
+                {
+                  HD_p = variableD;
+                  nonHD_p = C;
+                }
+              Voxel* molecule(nonHD_p->getRandomCompVoxel());
+              if(molecule == NULL)
+                {
+                  requeue();
+                  return;
+                }
+              variableA->addValue(-1);
+              variableB->addValue(-1);
+              nonHD_p->addMolecule(molecule);
+              HD_p->addValue(1);
+            }
+          //HD + HD -> nonHD + nonHD: 
+          else if(C && D)
+            {
+              Voxel* moleculeC(C->getRandomCompVoxel());
               if(moleculeC == NULL)
                 {
                   requeue();
                   return;
                 }
-            }
-          else
-            {
-              moleculeC = moleculeNonHD;
-            }
-          Voxel* moleculeD(D->getRandomAdjoiningVoxel(moleculeC, moleculeC));
-          //Only proceed if we can find an adjoining vacant voxel
-          //of A which can be occupied by D:
-          if(moleculeD == NULL)
-            {
-              requeue();
-              return;
-            }
-          HD->addValue(-1);
-          nonHD->removeMolecule(moleculeNonHD);
-          D->addMolecule(moleculeD);
-          C->addMolecule(moleculeC);
-        }
-      //nonHD + HD -> nonHD:
-      //HD + nonHD -> nonHD:
-      else if(C && !D)
-        {
-          Voxel* moleculeNonHD(nonHD->getRandomMolecule());
-          //If the product C is not in the same Comp as nonHD,
-          //we need to find a vacant adjoining voxel of nonHD that belongs
-          //to the Comp of C:
-          Voxel* moleculeC;
-          if(nonHD->getComp() != C->getComp())
-            {
-              moleculeC = C->getRandomAdjoiningVoxel(moleculeNonHD);
+              Voxel* moleculeD(D->getRandomAdjoiningVoxel(moleculeC));
               //Only proceed if we can find an adjoining vacant voxel
-              //of nonHD which can be occupied by C:
-              if(moleculeC == NULL)
+              //of C which can be occupied by D:
+              if(moleculeD == NULL)
                 {
                   requeue();
                   return;
                 }
+              variableA->addValue(-1);
+              variableB->addValue(-1);
+              C->addMolecule(moleculeC);
+              D->addMolecule(moleculeD);
             }
-          else
+        }
+      //HD + nonHD -> product(s)
+      //nonHD + HD -> product(s)
+      else
+        {
+          Species* nonHD(A);
+          Variable* HD(variableB);
+          if(B)
             {
-              moleculeC = moleculeNonHD;
+              nonHD = B;
+              HD = variableA;
             }
-          HD->addValue(-1);
-          nonHD->removeMolecule(moleculeNonHD);
-          C->addMolecule(moleculeC);
+          //nonHD + HD -> nonHD + nonHD: 
+          //HD + nonHD -> nonHD + nonHD: 
+          else if(C && D)
+            {
+              Voxel* moleculeNonHD(nonHD->getRandomMolecule());
+              //If the product C is not in the same Comp as nonHD,
+              //we need to find a vacant adjoining voxel of nonHD that belongs
+              //to the Comp of C:
+              Voxel* moleculeC;
+              if(nonHD->getComp() != C->getComp())
+                {
+                  moleculeC = C->getRandomAdjoiningVoxel(moleculeNonHD);
+                  //Only proceed if we can find an adjoining vacant voxel
+                  //of nonHD which can be occupied by C:
+                  if(moleculeC == NULL)
+                    {
+                      requeue();
+                      return;
+                    }
+                }
+              else
+                {
+                  moleculeC = moleculeNonHD;
+                }
+              Voxel* moleculeD(D->getRandomAdjoiningVoxel(moleculeC,moleculeC));
+              //Only proceed if we can find an adjoining vacant voxel
+              //of A which can be occupied by D:
+              if(moleculeD == NULL)
+                {
+                  requeue();
+                  return;
+                }
+              HD->addValue(-1);
+              nonHD->removeMolecule(moleculeNonHD);
+              D->addMolecule(moleculeD);
+              C->addMolecule(moleculeC);
+            }
+          //nonHD + HD -> nonHD:
+          //HD + nonHD -> nonHD:
+          else if(C && !D)
+            {
+              Voxel* moleculeNonHD(nonHD->getRandomMolecule());
+              //If the product C is not in the same Comp as nonHD,
+              //we need to find a vacant adjoining voxel of nonHD that belongs
+              //to the Comp of C:
+              Voxel* moleculeC;
+              if(nonHD->getComp() != C->getComp())
+                {
+                  moleculeC = C->getRandomAdjoiningVoxel(moleculeNonHD);
+                  //Only proceed if we can find an adjoining vacant voxel
+                  //of nonHD which can be occupied by C:
+                  if(moleculeC == NULL)
+                    {
+                      requeue();
+                      return;
+                    }
+                }
+              else
+                {
+                  moleculeC = moleculeNonHD;
+                }
+              HD->addValue(-1);
+              nonHD->removeMolecule(moleculeNonHD);
+              C->addMolecule(moleculeC);
+            }
         }
     }
   ReactionProcess::fire();
