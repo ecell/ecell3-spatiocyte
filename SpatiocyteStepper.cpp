@@ -645,9 +645,9 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
         {
           aComp->yzPlane = aSystem->getVariable("YZPLANE")->getValue();
         }
-      if(getVariable(aSystem, "SIZE"))
+      if(getVariable(aSystem, "VOLUME"))
         { 
-          aComp->specVolume = aSystem->getVariable("SIZE")->getValue();
+          aComp->specVolume = aSystem->getVariable("VOLUME")->getValue();
           //Change SIZE unit to liter to be consistent with E-Cell's SIZE unit.
           aSystem->getVariable("SIZE")->setValue(aComp->specVolume*1e+3);
         }
@@ -745,26 +745,33 @@ void SpatiocyteStepper::registerCompSpecies(Comp* aComp)
 void SpatiocyteStepper::setLatticeProperties()
 {
   Comp* aRootComp(theComps[0]);
-  theHCPk = theNormalizedVoxelRadius/sqrt(3); 
-  theHCPh = theNormalizedVoxelRadius*sqrt(8.0/3);
-  theHCPl = theNormalizedVoxelRadius*sqrt(3);
+  switch(LatticeType)
+    {
+    case HCP_LATTICE: 
+      theAdjoiningVoxelSize = 12;
+      theHCPk = theNormalizedVoxelRadius/sqrt(3); 
+      theHCPh = theNormalizedVoxelRadius*sqrt(8.0/3);
+      theHCPl = theNormalizedVoxelRadius*sqrt(3);
+      break;
+    case CUBIC_LATTICE:
+      theAdjoiningVoxelSize = 6;
+      break;
+    }
   if(aRootComp->shape == SPHERICAL || aRootComp->shape == ROD ||
      aRootComp->shape == ELLIPSOID)
     {
       switch(LatticeType)
         {
         case HCP_LATTICE: 
-          theAdjoiningVoxelSize = 12;
           theCenterPoint.z = aRootComp->lengthZ/2+4*
             theNormalizedVoxelRadius; //row
           theCenterPoint.y = aRootComp->lengthY/2+2*theHCPl; //layer
           theCenterPoint.x = aRootComp->lengthX/2+2*theHCPh; //column
           break;
         case CUBIC_LATTICE:
-          theAdjoiningVoxelSize = 6;
-          theCenterPoint.z = aRootComp->lengthZ/2+8*theNormalizedVoxelRadius; //row
-          theCenterPoint.y = aRootComp->lengthY/2+8*theNormalizedVoxelRadius; //layer
-          theCenterPoint.x = aRootComp->lengthX/2+8*theNormalizedVoxelRadius; //column
+          theCenterPoint.z = aRootComp->lengthZ/2+8*theNormalizedVoxelRadius;
+          theCenterPoint.y = aRootComp->lengthY/2+8*theNormalizedVoxelRadius;
+          theCenterPoint.x = aRootComp->lengthX/2+8*theNormalizedVoxelRadius;
           break;
         }
     }
@@ -999,8 +1006,7 @@ void SpatiocyteStepper::constructLattice()
       unsigned int aLayer((a%(theRowSize*theLayerSize))/theRowSize); 
       unsigned int aRow((a%(theRowSize*theLayerSize))%theRowSize); 
       (*i).coord = b; 
-      if(aRootComp->shape == CUBIC || 
-         aRootComp->shape == CUBOID ||
+      if(aRootComp->shape == CUBOID || aRootComp->shape == CUBOID ||
          isInsideCoord(b, aRootComp, 0))
         {
           //By default, the voxel is vacant and we set it to the root id:
@@ -1018,7 +1024,7 @@ void SpatiocyteStepper::constructLattice()
           //We set id = theNullID if it is an invalid voxel, i.e., no molecules
           //will occupy it:
           (*i).id = theNullID;
-          //Concatenate the some of the null voxels close to the surface:
+          //Concatenate some of the null voxels close to the surface:
           if(isInsideCoord(b, aRootComp, -4))
             {
               concatenateVoxel(&(*i), aRow, aLayer, aCol);
@@ -1205,7 +1211,7 @@ void SpatiocyteStepper::setCompProperties(Comp* aComp)
     case CUBIC:
       if(!aComp->specVolume)
         {
-          THROW_EXCEPTION(NotFound, "Property SIZE of the Cubic Comp "
+          THROW_EXCEPTION(NotFound, "Property VOLUME of the Cubic Comp "
                           + aSystem->getFullID().asString() + " not defined.");
         }
       aComp->lengthX = pow(aComp->specVolume, 1.0/3);
