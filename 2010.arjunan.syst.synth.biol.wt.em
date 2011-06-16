@@ -14,13 +14,13 @@ System System(/)
   StepperID       SS; 
   Variable Variable(SHAPE)
     {
-      Value 1;         # { 0: Spherical (uses SIZE) 
-                       #   1: Rod (uses SIZE, LENGTHY=2*radius)
-                       #   2: Cubic (uses SIZE)
+      Value 1;         # { 0: Spherical (uses VOLUME) 
+                       #   1: Rod (uses VOLUME, LENGTHY=2*radius)
+                       #   2: Cubic (uses VOLUME)
                        #   3: Cuboid (uses LENGTHX, LENGTHY, LENGTHZ)
                        #   4: Ellipsoid (uses LENGTHX, LENGTHY, LENGTHZ) }
     } 
-  Variable Variable(SIZE)
+  Variable Variable(VOLUME)
     {
       Value	3.27e-18;  # m^3
     } 
