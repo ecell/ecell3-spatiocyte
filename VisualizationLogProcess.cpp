@@ -37,7 +37,7 @@ void VisualizationLogProcess::initializeLog()
   unsigned int aThreadSize(1);
   unsigned int aLatticeType(theSpatiocyteStepper->getLatticeType());
   theLogFile.write((char*)(&aThreadSize), sizeof(aThreadSize));
-  theLogFile.write((char*)(&aThreadSize), sizeof(aLatticeType));
+  theLogFile.write((char*)(&aLatticeType), sizeof(aLatticeType));
   theLogFile.write((char*)(&theMeanCount), sizeof(theMeanCount));
   unsigned int aStartCoord(theSpatiocyteStepper->getStartCoord());
   theLogFile.write((char*)(&aStartCoord), sizeof(aStartCoord));

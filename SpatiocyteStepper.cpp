@@ -57,43 +57,42 @@ void SpatiocyteStepper::initialize()
                       " Stepper.");
     } 
   //We need a Comp tree to assign the voxels to each Comp
-  //and get the available number of vacant voxels. The Compartmentalized
+  //and get the available number of vacant voxels. The compartmentalized
   //vacant voxels are needed to randomly place molecules according to the
   //Comp:
-  std::cout << "2. creating Comps..." << std::endl;
+  std::cout << "1. creating compartments..." << std::endl;
   registerComps();
   setCompsProperties();
-  std::cout << "3. setting up lattice properties..." << std::endl;
+  std::cout << "2. setting up lattice properties..." << std::endl;
   setLatticeProperties(); 
   setCompsCenterPoint();
   //All species have been created at this point, we initialize them now:
-  std::cout << "4. initializing species..." << std::endl;
+  std::cout << "3. initializing species..." << std::endl;
   initSpecies();
-  std::cout << "5. initializing processes the second time..." << std::endl;
+  std::cout << "4. initializing processes the second time..." << std::endl;
   initProcessSecond();
-  std::cout << "7. constructing lattice..." << std::endl;
+  std::cout << "5. constructing lattice..." << std::endl;
   constructLattice();
-  std::cout << "8. shuffling adjoining voxels..." << std::endl;
+  std::cout << "6. shuffling adjoining voxels..." << std::endl;
   shuffleAdjoiningVoxels();
-  std::cout << "9. Compartmentalizing lattice..." << std::endl;
-  CompartmentalizeLattice();
-  std::cout << "10. setting up Comp voxels properties..." << std::endl;
+  std::cout << "7. compartmentalizing lattice..." << std::endl;
+  compartmentalizeLattice();
+  std::cout << "8. setting up compartment voxels properties..." << std::endl;
   setCompVoxelProperties();
-  std::cout << "11. populating Comps with molecules..." << std::endl;
-  populateComps();
+  std::cout << "9. printing simulation parameters..." << std::endl;
   storeSimulationParameters();
-  //checkSurfaceComp();
-  std::cout << "12. initializing processes the third time..." << std::endl;
-  initProcessThird();
-  std::cout << "13. initializing the priority queue..." << std::endl;
-  initPriorityQueue();
   printSimulationParameters();
-  std::cout << "14. initializing processes the fourth time..." << std::endl;
+  std::cout << "10. populating compartments with molecules..." << std::endl;
+  populateComps();
+  std::cout << "11. initializing processes the third time..." << std::endl;
+  initProcessThird();
+  std::cout << "12. initializing the priority queue..." << std::endl;
+  initPriorityQueue();
+  std::cout << "13. initializing processes the fourth time..." << std::endl;
   initProcessFourth();
+  std::cout << "14. initializing processes the last time..." << std::endl;
   initProcessLastOnce();
   std::cout << "15. simulation is started..." << std::endl;
-  //checkSurfaceComp();
-  //checkLattice();
 }
 
 unsigned int SpatiocyteStepper::getStartCoord()
@@ -657,8 +656,13 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
   //For example /membrane is the subsystem of /:
   FOR_ALL(System::Systems, aSystem->getSystems())
     {
-      Comp* aSubComp(registerComp(i->second, allSubs)); 
+      std::vector<Comp*> currSubs; 
+      Comp* aSubComp(registerComp(i->second, &currSubs)); 
       allSubs->push_back(aSubComp);
+      for(unsigned int j(0); j != currSubs.size(); ++j)
+        {
+          allSubs->push_back(currSubs[j]);
+        }
       aComp->immediateSubs.push_back(aSubComp);
       if(aSubComp->isSurface)
         {
@@ -850,23 +854,17 @@ void SpatiocyteStepper::storeSimulationParameters()
 void SpatiocyteStepper::printSimulationParameters()
 {
   std::cout << std::endl;
-  for(unsigned int i(0); i != theSpecies.size()-1; ++i)
-    {
-      std::cout << "id:" << i << " " << 
-        theSpecies[i]->getVariable()->getFullID().asString() << std::endl;
-    }
-  std::cout << "id:" << theSpecies.size()-1  << " NULL" << std::endl; 
-  std::cout << "Voxel radius, r_v:" << VoxelRadius << " m" << std::endl;
-  std::cout << "Simulation height:" << theCenterPoint.y*2*VoxelRadius*2 <<
+  std::cout << "   Voxel radius, r_v:" << VoxelRadius << " m" << std::endl;
+  std::cout << "   Simulation height:" << theCenterPoint.y*2*VoxelRadius*2 <<
     " m" << std::endl;
-  std::cout << "Simulation width:" << theCenterPoint.z*2*VoxelRadius*2 << 
+  std::cout << "   Simulation width:" << theCenterPoint.z*2*VoxelRadius*2 << 
     " m" << std::endl;
-  std::cout << "Simulation length:" << theCenterPoint.x*2*VoxelRadius*2 <<
+  std::cout << "   Simulation length:" << theCenterPoint.x*2*VoxelRadius*2 <<
     " m" << std::endl;
-  std::cout << "Row size:" << theRowSize << std::endl;
-  std::cout << "Layer size:" << theLayerSize << std::endl;
-  std::cout << "Column size:" << theColSize << std::endl;
-  std::cout << "Total allocated voxels:" << 
+  std::cout << "   Row size:" << theRowSize << std::endl;
+  std::cout << "   Layer size:" << theLayerSize << std::endl;
+  std::cout << "   Column size:" << theColSize << std::endl;
+  std::cout << "   Total allocated voxels:" << 
     theRowSize*theLayerSize*theColSize << std::endl;
   for(unsigned int i(0); i != theComps.size(); ++i)
     {
@@ -878,55 +876,55 @@ void SpatiocyteStepper::printSimulationParameters()
       switch(aComp->shape)
         {
         case SPHERICAL:
-          std::cout << "Spherical (radius=" << 
+          std::cout << "   Spherical (radius=" << 
             pow(3*aSpecVolume/(4*M_PI), 1.0/3) << "m) ";
           break;
         case ROD:
-          std::cout << "Rod (radius=" << aComp->lengthY*VoxelRadius << 
+          std::cout << "   Rod (radius=" << aComp->lengthY*VoxelRadius << 
             "m, cylinder length=" <<
             (aComp->eastPoint.x-aComp->westPoint.y)*
             VoxelRadius*2 << "m) ";
           break;
         case CUBIC:
-          std::cout << "Cubic ";
+          std::cout << "   Cubic ";
           break;
         case CUBOID:
-          std::cout << "Cuboid ";
+          std::cout << "   Cuboid ";
           break;
         case ELLIPSOID:
-          std::cout << "Ellipsoid ";
+          std::cout << "   Ellipsoid ";
           break;
         }
       std::cout << aComp->system->getFullID().asString();
       if(aComp->isSurface)
         {
-          std::cout << " Surface Comp:" << std::endl;
-          std::cout << "  [" << int(aSpecArea*(6*sqrt(2)+4*sqrt(3)+3*sqrt(6))/
+          std::cout << " Surface compartment:" << std::endl;
+          std::cout << "     [" << int(aSpecArea*(6*sqrt(2)+4*sqrt(3)+3*sqrt(6))/
                               (72*VoxelRadius*VoxelRadius)) << 
             "] Specified surface voxels {n_s = S_specified*"
             << "(6*2^0.5+4*3^0.5+3*6^0.5)/(72*r_v^2}" << std::endl;
-          std::cout << "  [" << aComp->coords.size() <<
+          std::cout << "     [" << aComp->coords.size() <<
             "] Actual surface voxels {n_s}" << std::endl;
-          std::cout << "  [" << aSpecArea << " m^2] Specified surface area " <<
+          std::cout << "     [" << aSpecArea << " m^2] Specified surface area " <<
             "{S_specified}" << std::endl;
-          std::cout << "  [" << anActualArea << " m^2] Actual surface area " <<
+          std::cout << "     [" << anActualArea << " m^2] Actual surface area " <<
             "{S = (72*r_v^2)*n_s/(6*2^0.5+4*3^0.5+3*6^0.5)}" << std::endl;
         }
       else
         {
-          std::cout << " Volume Comp:" << std::endl;
+          std::cout << " Volume compartment:" << std::endl;
           int voxelCnt(aComp->coords.size());
           for(unsigned int j(0); j != aComp->allSubs.size(); ++j)
             {
               voxelCnt += aComp->allSubs[j]->coords.size();
             }
-          std::cout << "  [" << int(aSpecVolume/(4*sqrt(2)*pow(VoxelRadius, 3))) << 
+          std::cout << "     [" << int(aSpecVolume/(4*sqrt(2)*pow(VoxelRadius, 3))) << 
             "] Specified volume voxels {n_v = V_specified/(4*2^0.5*r_v^3)}" <<
           std::endl;  
-          std::cout << "  [" << voxelCnt << "] Actual volume voxels {n_v}"  << std::endl;
-          std::cout << "  [" << aSpecVolume << " m^3] Specified volume {V_specified}"
+          std::cout << "     [" << voxelCnt << "] Actual volume voxels {n_v}"  << std::endl;
+          std::cout << "     [" << aSpecVolume << " m^3] Specified volume {V_specified}"
             << std::endl; 
-          std::cout << "  [" << anActualVolume << " m^3] Actual volume " <<
+          std::cout << "     [" << anActualVolume << " m^3] Actual volume " <<
             "{V = (4*2^0.5*r_v^3)*n_v}" << std::endl; 
         }
     }
@@ -2027,19 +2025,19 @@ void SpatiocyteStepper::setSurfaceSubunit(Voxel* aVoxel,
   aPoint.z = aCenterPoint.z + cos(f)*aRadius*sin(d);
 }
 
-void SpatiocyteStepper::CompartmentalizeLattice() 
+void SpatiocyteStepper::compartmentalizeLattice() 
 {
   for(std::vector<Voxel>::iterator i(theLattice.begin()); i != theLattice.end(); ++i)
     {
       if((*i).id != theNullID)
         { 
-          CompartmentalizeVoxel(&(*i), theComps[0]);
+          compartmentalizeVoxel(&(*i), theComps[0]);
         }
     }
 }
 
 
-bool SpatiocyteStepper::CompartmentalizeVoxel(Voxel* aVoxel,
+bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel,
                                               Comp* aComp)
 {
   if(!aComp->isSurface)
@@ -2053,7 +2051,7 @@ bool SpatiocyteStepper::CompartmentalizeVoxel(Voxel* aVoxel,
             }
           for(unsigned int i(0); i != aComp->immediateSubs.size(); ++i)
             {
-              if(CompartmentalizeVoxel(aVoxel, aComp->immediateSubs[i]))
+              if(compartmentalizeVoxel(aVoxel, aComp->immediateSubs[i]))
                 {
                   return true;
                 }

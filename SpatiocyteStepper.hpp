@@ -104,7 +104,7 @@ private:
   void initSpecies();
   void readjustSurfaceBoundarySizes();
   void constructLattice();
-  void CompartmentalizeLattice();
+  void compartmentalizeLattice();
   void concatenatePeriodicSurfaces();
   void registerComps();
   void setCompsProperties();
@@ -141,7 +141,7 @@ private:
   bool isSurfaceVoxel(Voxel*, Comp*);
   bool isEnclosedSurfaceVoxel(Voxel*, Comp*);
   bool isPeerVoxel(Voxel*, Comp*);
-  bool CompartmentalizeVoxel(Voxel*, Comp*);
+  bool compartmentalizeVoxel(Voxel*, Comp*);
   double getCuboidSpecArea(Comp*);
   unsigned int coord2row(unsigned int);
   unsigned int coord2col(unsigned int);

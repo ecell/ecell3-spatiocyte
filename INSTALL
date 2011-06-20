@@ -41,11 +41,12 @@ load the model 2010.arjunan.syst.synth.biol.wt.eml and run
 Creating movies from snapshot png files
 Lossless movie:
 mencoder mf://*.png -mf w=400:h=400:fps=25:type=png -ovc copy -oac copy -o output.avi
-ffmpeg -i image%07d.png -vcodec ffv1 -sameq test.avi
-ffmpeg -i image%07d.png -vcodec huffyuv test.avi
-
+ffmpeg -i image%07d.png -vcodec ffv1 -sameq test.mp4
+ffmpeg -i image%07d.png -vcodec huffyuv test.mp4
+Recoding larger avi movies to smaller mp4:
+ffmpeg -i input.avi -sameq output.mp4
 Compressed high quality:
 mencoder mf://*.png -mf w=400:h=400:fps=25:type=png -ovc x264 -x264encopts crf=19 -o out.mp4
 
 Memory debugging:
-valgrind --tool=memcheck --num-callers=40 --leak-check=full python /home/satya/root/bin/ecell3-session -f test.eml
+valgrind --tool=memcheck --num-callers=40 --leak-check=full python $HOME/root/bin/ecell3-session -f test.eml
