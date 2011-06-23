@@ -861,8 +861,8 @@ void SpatiocyteStepper::printSimulationParameters()
     " m" << std::endl;
   std::cout << "   Simulation length:" << theCenterPoint.x*2*VoxelRadius*2 <<
     " m" << std::endl;
-  std::cout << "   Row size:" << theRowSize << std::endl;
   std::cout << "   Layer size:" << theLayerSize << std::endl;
+  std::cout << "   Row size:" << theRowSize << std::endl;
   std::cout << "   Column size:" << theColSize << std::endl;
   std::cout << "   Total allocated voxels:" << 
     theRowSize*theLayerSize*theColSize << std::endl;
