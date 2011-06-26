@@ -647,8 +647,6 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
       if(getVariable(aSystem, "VOLUME"))
         { 
           aComp->specVolume = aSystem->getVariable("VOLUME")->getValue();
-          //Change SIZE unit to liter to be consistent with E-Cell's SIZE unit.
-          aSystem->getVariable("SIZE")->setValue(aComp->specVolume*1e+3);
         }
     }
   registerCompSpecies(aComp);
