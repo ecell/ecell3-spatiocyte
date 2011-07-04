@@ -139,8 +139,7 @@ private:
   bool isInsideCoord(unsigned int, Comp*, double);
   bool isPeriodicEdgeCoord(unsigned int, Comp*);
   bool isSurfaceVoxel(Voxel*, Comp*);
-  bool isPeerEnclosedSurfaceVoxel(Voxel*, Comp*);
-  bool isSuperEnclosedSurfaceVoxel(Voxel*, Comp*);
+  bool isEnclosedSurfaceVoxel(Voxel*, Comp*);
   bool isPeerVoxel(Voxel*, Comp*);
   bool compartmentalizeVoxel(Voxel*, Comp*);
   double getCuboidSpecArea(Comp*);

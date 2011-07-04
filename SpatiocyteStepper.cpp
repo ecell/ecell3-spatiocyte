@@ -2049,56 +2049,27 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel,
       if(aComp->system->isRootSystem() ||
          isInsideCoord(aVoxel->coord, aComp, 0))
         {
-          if(aComp->system->isRootSystem() && aComp->surfaceSub &&
-             aComp->surfaceSub->isEnclosed)
-            {
-              if(isSuperEnclosedSurfaceVoxel(aVoxel, aComp))
-                {
-                  aVoxel->id = aComp->surfaceSub->vacantID;
-                  aComp->surfaceSub->coords.push_back(
-                                                 aVoxel->coord-theStartCoord);
-                  setMinMaxSurfaceDimensions(aVoxel->coord, aComp);
-                  return true;
-                }
-            }
-          //If this compartment is not enclosed (i.e., can be cut off)
-          //and if the voxel belongs to a sibling/peer compartment:
-          if(!aComp->system->isRootSystem() && !aComp->isEnclosed &&
-             isPeerVoxel(aVoxel, aComp))
+          if(aComp->isEnclosed && isPeerVoxel(aVoxel, aComp))
             { 
-              std::cout << aComp->system->getFullID().asString() << std::endl;
-              //If this compartment has surface compartment which is
-              //enclosed:
-              if(aComp->surfaceSub && aComp->surfaceSub->isEnclosed)
-                {
-                  //If the voxel is at the border between aComp and one of its
-                  //peer compartments: 
-                  if(isPeerEnclosedSurfaceVoxel(aVoxel, aComp))
-                    {
-                      aVoxel->id = aComp->surfaceSub->vacantID;
-                      aComp->surfaceSub->coords.push_back(
-                                                 aVoxel->coord-theStartCoord);
-                      setMinMaxSurfaceDimensions(aVoxel->coord, aComp);
-                      return true;
-                    }
-                }
               return false;
-            }
-          if(aComp->surfaceSub && aComp->surfaceSub->isEnclosed)
-            {
-              if(isSuperEnclosedSurfaceVoxel(aVoxel, aComp))
-                {
-                  aVoxel->id = aComp->surfaceSub->vacantID;
-                  aComp->surfaceSub->coords.push_back(
-                                                 aVoxel->coord-theStartCoord);
-                  setMinMaxSurfaceDimensions(aVoxel->coord, aComp);
-                  return true;
-                }
             }
           for(unsigned int i(0); i != aComp->immediateSubs.size(); ++i)
             {
               if(compartmentalizeVoxel(aVoxel, aComp->immediateSubs[i]))
                 {
+                  return true;
+                }
+            }
+          if(aComp->surfaceSub && 
+             (aComp->system->isRootSystem() ||
+              aComp->surfaceSub->isEnclosed))
+            {
+              if(isEnclosedSurfaceVoxel(aVoxel, aComp))
+                {
+                  aVoxel->id = aComp->surfaceSub->vacantID;
+                  aComp->surfaceSub->coords.push_back(
+                                                 aVoxel->coord-theStartCoord);
+                  setMinMaxSurfaceDimensions(aVoxel->coord, aComp);
                   return true;
                 }
             }
@@ -2108,8 +2079,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel,
         }
       if(aComp->surfaceSub)
         {
-          if(!aComp->isEnclosed && !aComp->surfaceSub->isEnclosed &&
-             isPeerVoxel(aVoxel, aComp))
+          if(aComp->isEnclosed && isPeerVoxel(aVoxel, aComp))
             { 
               return false;
             }
@@ -2177,18 +2147,15 @@ bool SpatiocyteStepper::isSurfaceVoxel(Voxel* aVoxel, Comp* aComp)
   return false;
 }
 
-bool SpatiocyteStepper::isPeerEnclosedSurfaceVoxel(Voxel* aVoxel, Comp* aComp)
+bool SpatiocyteStepper::isPeerVoxel(Voxel* aVoxel, Comp* aComp)
 {
-  //Return true if one of the adjoining voxels belongs to the aComp and if it
-  //doesn't belong to any of aComp's peer compartments and if the adjoining
-  //voxel is not already a surface voxel of aComp:
-  //We are now checking if aVoxel is a candidate surface voxel that can
-  //enclose aComp.
-  for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+  Comp* aSuperComp(system2Comp(
+                          aComp->system->getSuperSystem())); 
+  for(unsigned int i(0); i != aSuperComp->immediateSubs.size(); ++i)
     {
-      if(isInsideCoord(aVoxel->adjoiningVoxels[i]->coord, aComp, 0) && 
-         !isPeerVoxel(aVoxel->adjoiningVoxels[i], aComp))// &&
-    //     aVoxel->adjoiningVoxels[i]->id != aComp->surfaceSub->vacantID)
+      Comp* aPeerComp(aSuperComp->immediateSubs[i]);
+      if(aPeerComp != aComp &&
+         isInsideCoord(aVoxel->coord, aPeerComp, 0))
         {
           return true;
         }
@@ -2196,39 +2163,22 @@ bool SpatiocyteStepper::isPeerEnclosedSurfaceVoxel(Voxel* aVoxel, Comp* aComp)
   return false;
 }
 
-bool SpatiocyteStepper::isSuperEnclosedSurfaceVoxel(Voxel* aVoxel, Comp* aComp)
+bool SpatiocyteStepper::isEnclosedSurfaceVoxel(Voxel* aVoxel,
+                                               Comp* aComp)
 {
-  //Return true if one of the adjoining voxels belongs to aComp and if it
-  //doesn't belong to any of aComp's peer compartments:
   Comp* aSuperComp(system2Comp(aComp->system->getSuperSystem()));
   for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
     {
       if(aVoxel->adjoiningVoxels[i]->id == theNullID ||
          aVoxel->adjoiningVoxels[i] == aVoxel ||
-         !isInsideCoord(aVoxel->adjoiningVoxels[i]->coord, aSuperComp, 0))
+         !isInsideCoord(aVoxel->adjoiningVoxels[i]->coord,
+                        aSuperComp, 0))
         {
           return true;
         }
     }
   return false;
 }
-
-bool SpatiocyteStepper::isPeerVoxel(Voxel* aVoxel, Comp* aComp)
-{
-  Comp* aSuperComp(system2Comp(aComp->system->getSuperSystem())); 
-  for(unsigned int i(0); i != aSuperComp->immediateSubs.size(); ++i)
-    {
-      Comp* aPeerComp(aSuperComp->immediateSubs[i]);
-      if(aPeerComp != aComp && !aPeerComp->isSurface &&
-         isInsideCoord(aVoxel->coord, aPeerComp, 0))
-        {
-          std::cout << "true:" << aComp->system->getFullID().asString() << " " << aPeerComp->system->getFullID().asString() << std::endl;
-          return true;
-        }
-    }
-  return false;
-}
-
 
 void SpatiocyteStepper::rotateX(double angle, Point* aPoint)
 { 
