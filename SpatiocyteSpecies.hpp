@@ -348,28 +348,12 @@ public:
   void surfaceWalkCollide()
     {
       int vacantID(theComp->vacantID);
-      const int r(gsl_rng_uniform_int(theRng, 6));
       Voxel* target;
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
           const unsigned short size(source->adjoiningSize);
-          if(size > 6 || size <= r)
-            { 
-              if(size)
-                {
-                  target = source->adjoiningVoxels[
-                    gsl_rng_uniform_int(theRng, size)];
-                }
-              else
-                {
-                  continue;
-                }
-            }
-          else
-            {
-              target = source->adjoiningVoxels[r];
-            }
+          target = source->adjoiningVoxels[gsl_rng_uniform_int(theRng, size)];
           if(source == target)
             {
               std::cout << "error surface" << std::endl;
@@ -414,10 +398,10 @@ public:
   void volumeWalkCollide()
     {
       int vacantID(theComp->vacantID);
-      const int r(gsl_rng_uniform_int(theRng, theAdjoiningVoxelSize));
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
-          Voxel* source(theMolecules[i]);
+          Voxel* source(theMolecules[i]); 
+          const int r(gsl_rng_uniform_int(theRng, theAdjoiningVoxelSize));
           Voxel* target(source->adjoiningVoxels[r]);
           if(source == target)
             {
@@ -468,28 +452,12 @@ public:
   void surfaceWalk()
     {
       int vacantID(theComp->vacantID);
-      const int r(gsl_rng_uniform_int(theRng, 6));
       Voxel* target;
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
-          const unsigned short size(source->adjoiningSize);
-          if(size > 6 || size <= r)
-            { 
-              if(size)
-                {
-                  target = source->adjoiningVoxels[
-                    gsl_rng_uniform_int(theRng, size)];
-                }
-              else
-                {
-                  continue;
-                }
-            }
-          else
-            {
-              target = source->adjoiningVoxels[r];
-            }
+          const unsigned short size(source->adjoiningSize); 
+          target = source->adjoiningVoxels[gsl_rng_uniform_int(theRng, size)];
           if(source == target)
             {
               std::cout << "error surface" << std::endl;
@@ -531,10 +499,10 @@ public:
   void volumeWalk()
     {
       int vacantID(theComp->vacantID);
-      const int r(gsl_rng_uniform_int(theRng, theAdjoiningVoxelSize));
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
+          const int r(gsl_rng_uniform_int(theRng, theAdjoiningVoxelSize));
           Voxel* target(source->adjoiningVoxels[r]);
           if(source == target)
             {
