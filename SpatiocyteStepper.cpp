@@ -73,8 +73,10 @@ void SpatiocyteStepper::initialize()
   initProcessSecond();
   std::cout << "5. constructing lattice..." << std::endl;
   constructLattice();
+  /*
   std::cout << "6. shuffling adjoining voxels..." << std::endl;
   shuffleAdjoiningVoxels();
+  */
   std::cout << "7. compartmentalizing lattice..." << std::endl;
   compartmentalizeLattice();
   std::cout << "8. setting up compartment voxels properties..." << std::endl;
