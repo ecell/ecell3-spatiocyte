@@ -120,6 +120,8 @@ private:
   void removeSurfaces(Comp*);
   void setDiffusiveComp(Comp*);
   void setCompCenterPoint(Comp*);
+  void setLineVoxelProperties(Comp*);
+  void setLineCompProperties(Comp*);
   void setSurfaceVoxelProperties(Comp*);
   void setSurfaceCompProperties(Comp*);
   void setVolumeCompProperties(Comp*);
@@ -139,6 +141,7 @@ private:
   bool isInsideCoord(unsigned int, Comp*, double);
   bool isPeriodicEdgeCoord(unsigned int, Comp*);
   bool isSurfaceVoxel(Voxel*, Comp*);
+  bool isLineVoxel(Voxel*, Comp*);
   bool isEnclosedSurfaceVoxel(Voxel*, Comp*);
   bool isPeerVoxel(Voxel*, Comp*);
   bool compartmentalizeVoxel(Voxel*, Comp*);

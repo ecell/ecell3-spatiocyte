@@ -464,7 +464,7 @@ void SpatiocyteNextReactionProcess::initializeThird()
                              variableC->getSuperSystem());
         }
       double aSpace(0);
-      if(compC->isSurface)
+      if(compC->dimension == 2)
         {
           aSpace = compC->actualArea;
         }
@@ -528,7 +528,7 @@ void SpatiocyteNextReactionProcess::initializeThird()
         }
       double aVolume(compA->actualVolume);
       double anArea(compA->actualArea);
-      if(compB->isSurface)
+      if(compB->dimension == 2)
         {
           anArea = compB->actualArea;
         }
@@ -536,7 +536,7 @@ void SpatiocyteNextReactionProcess::initializeThird()
         {
           aVolume = compB->actualVolume;
         }
-      if(compC->isSurface)
+      if(compC->dimension == 2)
         {
           anArea = compC->actualArea;
         }
@@ -547,18 +547,24 @@ void SpatiocyteNextReactionProcess::initializeThird()
       //If volume (+volume) = k(volume)(volume) or
       //   surface (+surface) = k(volume)(surface) or
       //   surface (+surface) = k(surface)(volume)
-      if((!compC->isSurface && !compA->isSurface && !compB->isSurface) ||
-         (compC->isSurface && !compA->isSurface && compB->isSurface) ||
-         (compC->isSurface && compA->isSurface && !compB->isSurface))
+      if((compC->dimension == 3 && compA->dimension == 3
+          && compB->dimension == 3) ||
+         (compC->dimension == 2 && compA->dimension == 3 
+          && compB->dimension == 2) ||
+         (compC->dimension == 2 && compA->dimension == 2 
+          && compB->dimension == 3))
         {
           p = k/aVolume;
         }
       //If surface (+surface) = k(surface)(surface) or
       //   volume (+volume) = k(volume)(surface) or
       //   volume (+volume) = k(surface)(volume)
-      else if((compC->isSurface && compA->isSurface && compB->isSurface) ||
-              (!compC->isSurface && !compA->isSurface && compB->isSurface) ||
-              (!compC->isSurface && compA->isSurface && !compB->isSurface))
+      else if((compC->dimension == 2 && compA->dimension == 2 
+               && compB->dimension == 2) ||
+              (compC->dimension == 3 && compA->dimension == 3 
+               && compB->dimension == 2) ||
+              (compC->dimension == 3 && compA->dimension == 2 
+               && compB->dimension == 3))
         {
           p = k/anArea;
         }

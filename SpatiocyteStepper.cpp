@@ -584,15 +584,20 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
   //Default Comp shape is spherical:
   aComp->shape = 0;
   //Default is volume Comp:
-  aComp->isSurface = false;
+  aComp->dimension = 3;
   if(getVariable(aSystem, "TYPE"))
     { 
-      if(aSystem->getVariable("TYPE")->getValue() == SURFACE)
+        const double compType(aSystem->getVariable("TYPE")->getValue());
+        if (compType == SURFACE)
         {
-          aComp->isSurface = true;
+            aComp->dimension = 2;
+        }
+        else if (compType == LINE) 
+        {
+            aComp->dimension = 1;
         }
     }
-  if(!aComp->isSurface)
+  if(aComp->dimension == 3)
     {
       if(getVariable(aSystem, "SHAPE"))
         { 
@@ -664,8 +669,8 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
           allSubs->push_back(currSubs[j]);
         }
       aComp->immediateSubs.push_back(aSubComp);
-      if(aSubComp->isSurface)
-        {
+      if(aSubComp->dimension == 2)
+      {
           aSubComp->shape = aComp->shape;
           aSubComp->specVolume = aComp->specVolume;
           aSubComp->lengthX = aComp->lengthX;
@@ -677,8 +682,30 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
           aSubComp->xyPlane = aComp->xyPlane;
           aSubComp->xzPlane = aComp->xzPlane;
           aSubComp->yzPlane = aComp->yzPlane;
+
+          for(unsigned int i(0); i != aSubComp->lineSubs.size(); ++i)
+          {
+              Comp* lineComp(aSubComp->lineSubs[i]);
+              lineComp->shape = aComp->shape;
+              lineComp->specVolume = aComp->specVolume;
+              lineComp->lengthX = aComp->lengthX;
+              lineComp->lengthY = aComp->lengthY;
+              lineComp->lengthZ = aComp->lengthZ;
+              lineComp->originX = aComp->originX;
+              lineComp->originY = aComp->originY;
+              lineComp->originZ = aComp->originZ;
+              lineComp->xyPlane = aComp->xyPlane;
+              lineComp->xzPlane = aComp->xzPlane;
+              lineComp->yzPlane = aComp->yzPlane;
+          }
+
           aComp->surfaceSub = aSubComp;
-        }
+      }
+      else if(aSubComp->dimension == 1)
+      {
+          // Properties of aComp (dimension == 2) is not fully set here yet.
+          aComp->lineSubs.push_back(aSubComp);
+      }
     }
   aComp->allSubs = *allSubs;
   return aComp;
@@ -706,7 +733,8 @@ void SpatiocyteStepper::registerCompSpecies(Comp* aComp)
   FOR_ALL(System::Variables, aSystem->getVariables())
     {
       Variable* aVariable(i->second);
-      if(aVariable->getID() == "LIPID" || aVariable->getID() == "VACANT")
+      if(aVariable->getID() == "LIPID" || aVariable->getID() == "VACANT"
+         || aVariable->getID() == "SEGMENT")
         {
           if(aVariable->getValue())
             {
@@ -726,6 +754,10 @@ void SpatiocyteStepper::registerCompSpecies(Comp* aComp)
             { 
               aSpecies->setIsLipid();
             }
+          else if (aVariable->getID() == "SEGMENT")
+          {
+              aSpecies->setIsSegment();
+          }
           else
             {
               aSpecies->setIsVacant();
@@ -736,7 +768,7 @@ void SpatiocyteStepper::registerCompSpecies(Comp* aComp)
         {
           aComp->species.push_back(*j);
           (*j)->setComp(aComp);
-          if(!aComp->isSurface)
+          if(aComp->dimension == 3)
             {
               //By default all biochemical species are assumed to be
               //surface species. Here we set it as a volume species:
@@ -832,13 +864,13 @@ void SpatiocyteStepper::storeSimulationParameters()
   for(unsigned int i(0); i != theComps.size(); ++i)
     {
       Comp* aComp(theComps[i]); 
-      if(aComp->isSurface)
+      if(aComp->dimension == 2)
         {
           aComp->actualArea =  (72*pow(VoxelRadius,2))*
             aComp->coords.size()/(6*pow(2,0.5)+4*pow(3,0.5)+
                                          3*pow(6, 0.5));
         }
-      else
+      else // (aComp->dimension == 3)
         { 
           int voxelCnt(aComp->coords.size());
           for(unsigned int j(0); j != aComp->allSubs.size(); ++j)
@@ -896,8 +928,12 @@ void SpatiocyteStepper::printSimulationParameters()
           break;
         }
       std::cout << aComp->system->getFullID().asString();
-      if(aComp->isSurface)
-        {
+      switch (aComp->dimension)
+      { 
+      case 1:
+          std::cout << " Line compartment:" << std::endl;
+          break;
+      case 2:
           std::cout << " Surface compartment:" << std::endl;
           std::cout << "     [" << int(aSpecArea*(6*sqrt(2)+4*sqrt(3)+3*sqrt(6))/
                               (72*VoxelRadius*VoxelRadius)) << 
@@ -909,9 +945,9 @@ void SpatiocyteStepper::printSimulationParameters()
             "{S_specified}" << std::endl;
           std::cout << "     [" << anActualArea << " m^2] Actual surface area " <<
             "{S = (72*r_v^2)*n_s/(6*2^0.5+4*3^0.5+3*6^0.5)}" << std::endl;
-        }
-      else
-        {
+          break;
+      case 3:
+      default:
           std::cout << " Volume compartment:" << std::endl;
           int voxelCnt(aComp->coords.size());
           for(unsigned int j(0); j != aComp->allSubs.size(); ++j)
@@ -926,7 +962,7 @@ void SpatiocyteStepper::printSimulationParameters()
             << std::endl; 
           std::cout << "     [" << anActualVolume << " m^3] Actual volume " <<
             "{V = (4*2^0.5*r_v^3)*n_v}" << std::endl; 
-        }
+      }
     }
   std::cout << std::endl;
   printProcessParameters();
@@ -1279,9 +1315,14 @@ void SpatiocyteStepper::setCompCenterPoint(Comp* aComp)
 {
   System* aSystem(aComp->system);
   System* aSuperSystem(aSystem->getSuperSystem());
-  if(aComp->isSurface)
+  if(aComp->dimension == 2)
     {
       aSystem = aComp->system->getSuperSystem();
+      aSuperSystem = aSystem->getSuperSystem();
+    }
+  else if(aComp->dimension == 1)
+    {
+      aSystem = aComp->system->getSuperSystem()->getSuperSystem();
       aSuperSystem = aSystem->getSuperSystem();
     }
   Comp* aSuperComp(system2Comp(aSuperSystem));
@@ -1767,16 +1808,31 @@ void SpatiocyteStepper::setCompVoxelProperties()
   for(std::vector<Comp*>::iterator i(theComps.begin());
       i != theComps.end(); ++i)
     {
-      if((*i)->isSurface)
+        switch ((*i)->dimension)
         {
+        case 1:
+            setLineCompProperties(*i);
+            setLineVoxelProperties(*i);
+            break;
+        case 2:
           setSurfaceCompProperties(*i);
           setSurfaceVoxelProperties(*i);
-        }
-      else
-        {
-          setVolumeCompProperties(*i);
+          break;
+        case 3:
+        default:
+            setVolumeCompProperties(*i);
         }
     }
+}
+
+void SpatiocyteStepper::setLineCompProperties(Comp* aComp)
+{
+    setSurfaceCompProperties(aComp);
+}
+
+void SpatiocyteStepper::setLineVoxelProperties(Comp* aComp)
+{
+    setSurfaceVoxelProperties(aComp);
 }
 
 void SpatiocyteStepper::setSurfaceCompProperties(Comp* aComp)
@@ -1896,12 +1952,12 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(Voxel* aVoxel,
     }
   //Separate adjoining surface voxels and adjoining volume voxels.
   //Put the adjoining surface voxels at the beginning of the
-  //adjoiningVoxels list while the volume voxels are put at the std::endl:
+  //adjoiningVoxels list while the volume voxels are put at the end:
   for(std::vector<Voxel*>::iterator l(adjoiningCopy.begin());
       l != adjoiningCopy.end(); ++l)
     {
       if((*l) != aVoxel && (*l)->id != theNullID 
-         && id2Comp((*l)->id)->isSurface)
+         && id2Comp((*l)->id)->dimension <= aComp->dimension)
         {
           (*forward) = (*l);
           ++forward;
@@ -1997,6 +2053,8 @@ Comp* SpatiocyteStepper::system2Comp(System* aSystem)
 void SpatiocyteStepper::setSurfaceSubunit(Voxel* aVoxel,
                                           Comp* aComp)
 {
+  // The subunit is only useful for a cylindrical surface
+  // and for polymerization on it.
   aVoxel->subunit = new Subunit;
   aVoxel->subunit->voxel = aVoxel;
   Point& aPoint(aVoxel->subunit->surfacePoint);
@@ -2046,7 +2104,7 @@ void SpatiocyteStepper::compartmentalizeLattice()
 bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel,
                                               Comp* aComp)
 {
-  if(!aComp->isSurface)
+  if(aComp->dimension == 3)
     {
       if(aComp->system->isRootSystem() ||
          isInsideCoord(aVoxel->coord, aComp, 0))
@@ -2087,9 +2145,36 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel,
             }
           if(isSurfaceVoxel(aVoxel, aComp))
             {
-              aVoxel->id = aComp->surfaceSub->vacantID;
-              aComp->surfaceSub->coords.push_back(aVoxel->coord-theStartCoord);
-              setMinMaxSurfaceDimensions(aVoxel->coord, aComp);
+                for(unsigned int i(0); 
+                    i != aComp->surfaceSub->lineSubs.size(); ++i)
+                {
+                    // Peer should be check between lineSubs in future.
+                    Comp* lineComp(aComp->surfaceSub->lineSubs[i]);
+                    if(isLineVoxel(aVoxel, lineComp))
+                    {
+                        aVoxel->id = lineComp->vacantID;
+                        lineComp->coords.push_back(
+                            aVoxel->coord - theStartCoord);
+                        setMinMaxSurfaceDimensions(aVoxel->coord, aComp);
+                        unsigned int aRow, aLayer, aCol;
+                        coord2global(aVoxel->coord, &aRow, &aLayer, &aCol);
+                        lineComp->minRow = std::min(lineComp->minRow, aRow);
+                        lineComp->minLayer = std::min(
+                            lineComp->minLayer, aLayer);
+                        lineComp->minCol = std::min(lineComp->minCol, aCol);
+                        lineComp->maxRow = std::max(lineComp->maxRow, aRow);
+                        lineComp->maxLayer = std::max(
+                            lineComp->maxLayer, aLayer);
+                        lineComp->maxCol = std::max(lineComp->maxCol, aCol);
+
+                        return true;
+                    }
+                }
+
+                aVoxel->id = aComp->surfaceSub->vacantID;
+                aComp->surfaceSub->coords.push_back(
+                    aVoxel->coord-theStartCoord);
+                setMinMaxSurfaceDimensions(aVoxel->coord, aComp);
               return true;
             }
         }
@@ -2148,6 +2233,51 @@ bool SpatiocyteStepper::isSurfaceVoxel(Voxel* aVoxel, Comp* aComp)
     }
   return false;
 }
+
+bool SpatiocyteStepper::isLineVoxel(Voxel* aVoxel, Comp* aComp)
+{
+    const double safety(2.0);
+    const Point aPoint(coord2point(aVoxel->coord));
+
+    double distance(aPoint.x - aComp->centerPoint.x);
+    if (-safety < distance && distance <= 0)
+    {
+        // This is not efficient because we don't need to check volume voxels.
+        // However, at this time, aVoxel->adjoinigVoxels is not properly 
+        // aligned yet.
+        for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+        {
+            const Voxel* adjoiningVoxel(aVoxel->adjoiningVoxels[i]);
+            const Point adjoiningPoint(coord2point(adjoiningVoxel->coord));
+            const double distance_i(adjoiningPoint.x - aComp->centerPoint.x);
+            if (distance_i > 0)
+            {
+                return true;
+            }
+        }
+    }
+                       
+    distance = aPoint.y - aComp->centerPoint.y;
+    if (-safety < distance && distance <= 0)
+    {
+        // This is not efficient because we don't need to check volume voxels.
+        // However, at this time, aVoxel->adjoinigVoxels is not properly 
+        // aligned yet.
+        for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+        {
+            const Voxel* adjoiningVoxel(aVoxel->adjoiningVoxels[i]);
+            const Point adjoiningPoint(coord2point(adjoiningVoxel->coord));
+            const double distance_i(adjoiningPoint.y - aComp->centerPoint.y);
+            if (distance_i > 0)
+            {
+                return true;
+            }
+        }
+    }
+                       
+    return false;
+}
+
 
 bool SpatiocyteStepper::isPeerVoxel(Voxel* aVoxel, Comp* aComp)
 {

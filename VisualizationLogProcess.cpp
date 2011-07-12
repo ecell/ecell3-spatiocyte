@@ -95,7 +95,8 @@ void VisualizationLogProcess::logMolecules(int anIndex)
 {
   Species* aSpecies(theProcessSpecies[anIndex]);
   //No need to log lipid or vacant molecules since the size is 0:
-  if(aSpecies->getIsLipid() || aSpecies->getIsVacant())
+  if(aSpecies->getIsLipid() || aSpecies->getIsVacant() 
+     || aSpecies->getIsSegment())
     {
       return;
     }
@@ -232,7 +233,8 @@ void VisualizationLogProcess::logSurfaceVoxels()
   theLogFile.write((char*)(&aCurrentTime), sizeof(aCurrentTime));
   for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
     {
-      if(theProcessSpecies[i]->getIsLipid())
+        if(theProcessSpecies[i]->getIsLipid() ||
+           theProcessSpecies[i]->getIsSegment())
         {
           Species* aLipid(theProcessSpecies[i]);
           //The species index in the process:

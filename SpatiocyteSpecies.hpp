@@ -53,16 +53,17 @@ class Species
 public:
   Species(SpatiocyteStepper* aStepper, Variable* aVariable, int anID, 
           int anInitMoleculeSize, const gsl_rng* aRng):
+      isLipid(false),
+      isVacant(false),
+      isSegment(false),
+      isVolume(false),
     isCentered(false),
     isDiffusing(false),
     isGaussianPopulation(false),
     isInContact(false),
-    isLipid(false),
     isPolymer(false),
     isStatic(true),
     isSubunitInitialized(false),
-    isVacant(false),
-    isVolume(false),
     theID(anID),
     theInitMoleculeSize(anInitMoleculeSize),
     theMoleculeSize(0),
@@ -230,7 +231,7 @@ public:
         {
           Point aCurrentPoint(theStepper->getPeriodicPoint(
                                                  theMolecules[i]->coord,
-                                                 isVolume,
+                                                 getIsVolume(),
                                                  &theMoleculeOrigins[i]));
           double aDistance(getDistance(&theMoleculeOrigins[i].point,
                                        &aCurrentPoint));
@@ -241,21 +242,26 @@ public:
     }
   void setIsLipid()
     {
-      isLipid = true;
+        isLipid = true;
       isStatic = false;
     }
   void setIsSubunitInitialized()
     {
       isSubunitInitialized = true;
     }
+  void setIsSegment()
+    {
+        isSegment = true;
+      isStatic = false;
+    }
   void setIsVacant()
     {
-      isVacant = true;
+        isVacant = true;
       isStatic = false;
     }
   void setIsVolume()
     {
-      isVolume = true;
+        isVolume = true;
     }
   void setIsInContact()
     {
@@ -303,7 +309,7 @@ public:
     }
   bool getIsVolume() const
     {
-      return isVolume;
+        return isVolume;
     }
   bool getIsStatic() const
     {
@@ -323,11 +329,15 @@ public:
     }
   bool getIsLipid() const
     {
-      return isLipid;
+        return isLipid;
+    }
+  bool getIsSegment() const
+    {
+        return isSegment;
     }
   bool getIsVacant() const
     {
-      return isVacant;
+        return isVacant;
     }
   bool getIsInContact() const
     {
@@ -571,7 +581,7 @@ public:
     }
   void addMolecule(Voxel* aMolecule)
     {
-      if(!isVacant && !isLipid)
+        if(!getIsVacant() && !getIsLipid() && !getIsSegment())
         {
           ++theMoleculeSize;
           aMolecule->id = theID;
@@ -607,7 +617,7 @@ public:
               return;
             }
         }
-      if(!isVacant && !isLipid)
+      if(!getIsVacant() && !getIsLipid() && !getIsSegment())
         {
           if(aMolecule != aMolecule->subunit->voxel)
             {
@@ -637,7 +647,7 @@ public:
               return;
             }
         }
-      if(!isLipid)
+      if(!getIsLipid() && !getIsSegment())
         {
           std::cout << "error in removing molecule, couldn't find the specified" <<
             " molecule to be removed, molecule size:" << 
@@ -678,7 +688,8 @@ public:
     {
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
-          if(theStepper->isBoundaryCoord(theMolecules[i]->coord, isVolume))
+            if(theStepper->isBoundaryCoord(
+                   theMolecules[i]->coord, getIsVolume()))
             {
               std::cout << "is still there" << std::endl;
             }
@@ -692,7 +703,7 @@ public:
           Origin anOrigin(theMoleculeOrigins[i]);
           Voxel* periodicVoxel(theStepper->getPeriodicVoxel(
                                                 theMolecules[i]->coord,
-                                                isVolume,
+                                                getIsVolume(),
                                                 &anOrigin));
           if(periodicVoxel != NULL && 
              periodicVoxel->id == theComp->vacantID)
@@ -918,16 +929,18 @@ public:
       return NULL;
     }
 private:
+    bool isLipid;
+    bool isVacant;
+    bool isSegment;
+    bool isVolume;
+
   bool isCentered;
   bool isDiffusing;
   bool isGaussianPopulation;
   bool isInContact;
-  bool isLipid;
   bool isPolymer;
   bool isStatic;
   bool isSubunitInitialized;
-  bool isVacant;
-  bool isVolume;
   const unsigned short theID;
   const unsigned int theInitMoleculeSize;
   unsigned int theMoleculeSize;
