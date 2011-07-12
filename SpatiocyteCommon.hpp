@@ -94,11 +94,6 @@ typedef ProcessPriorityQueue::ID ProcessID;
 #define EXTENDED  3
 #define SHARED    4
 
-//Species types
-#define VOLUME_SPECIES 1
-#define VACANT_SPECIES 2
-#define LIPID_SPECIES  3
-
 //Polymerization parameters
 #define LARGE_DISTANCE 50
 #define MAX_MONOMER_OVERLAP 0.2
