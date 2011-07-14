@@ -63,19 +63,19 @@ System System(/)
                             [_ Variable:/Surface:MinD];
       LogInterval 0.5; # s
     }
-  Process FluorescentImagingProcess(fluorescence)
-    {
-      VariableReferenceList [_ Variable:/Surface:MinEE 2]
-                            [_ Variable:/Surface:MinDEE 3]
-                            [_ Variable:/Surface:MinDEED 4]
-                            [_ Variable:/Surface:MinD 1]
-                            [_ Variable:/Surface:MinEE -2]
-                            [_ Variable:/Surface:MinDEED -2]
-                            [_ Variable:/Surface:MinEE -1]
-                            [_ Variable:/Surface:MinDEED -4]
-                            [_ Variable:/Surface:MinD -1];
-      FileName "fluorescenceLog0.dat";
-    }
+#  Process FluorescentImagingProcess(fluorescence)
+#    {
+#      VariableReferenceList [_ Variable:/Surface:MinEE 2]
+#                            [_ Variable:/Surface:MinDEE 3]
+#                            [_ Variable:/Surface:MinDEED 4]
+#                            [_ Variable:/Surface:MinD 1]
+#                            [_ Variable:/Surface:MinEE -2]
+#                            [_ Variable:/Surface:MinDEED -2]
+#                            [_ Variable:/Surface:MinEE -1]
+#                            [_ Variable:/Surface:MinDEED -4]
+#                            [_ Variable:/Surface:MinD -1];
+#      FileName "fluorescenceLog0.dat";
+#    }
   Process MoleculePopulateProcess(populate)
     {
       VariableReferenceList [_ Variable:/:MinDatp ]
