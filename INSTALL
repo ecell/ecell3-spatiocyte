@@ -38,6 +38,22 @@ ecell3-em2eml 2010.arjunan.syst.synth.biol.wt.em
 ecell3-sessiom-monitor
 load the model 2010.arjunan.syst.synth.biol.wt.eml and run
 
+Steps to view the simulation:
+The simulation data will be logged in visualLog0.dat
+To view the logged simulation, type
+./spatiocyte
+The programme spatiocyte will load the visualLog0.dat file.
+The following keyboard shortcuts are available for the visualizer:
+enter: pause/step forward once/change the simulation direction to be forward
+space bar: pause/step backward once/change the simulation direction to be reverse
+pause: play/pause the visualizer
+arrow keys: rotate the visualizer
+page up: zoom in
+page down: zoom out
+home: go to default zoom level and orientation settings
+Right click on the molecule species name to change the species color.
+
+
 Creating movies from snapshot png files
 Lossless movie:
 mencoder mf://*.png -mf w=400:h=400:fps=25:type=png -ovc copy -oac copy -o output.avi
@@ -50,3 +66,4 @@ mencoder mf://*.png -mf w=400:h=400:fps=25:type=png -ovc x264 -x264encopts crf=1
 
 Memory debugging:
 valgrind --tool=memcheck --num-callers=40 --leak-check=full python $HOME/root/bin/ecell3-session -f test.eml
+
