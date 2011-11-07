@@ -376,7 +376,7 @@ void SpatiocyteNextReactionProcess::fire()
             }
           //nonHD + HD -> nonHD + nonHD: 
           //HD + nonHD -> nonHD + nonHD: 
-          else if(C && D)
+          if(C && D)
             {
               Voxel* moleculeNonHD(nonHD->getRandomMolecule());
               //If the product C is not in the same Comp as nonHD,
