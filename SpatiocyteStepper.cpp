@@ -89,7 +89,7 @@ void SpatiocyteStepper::initialize()
   populateComps();
 
   // loadVTKPolygonData("./poly.vtk");
-  loadVTKPolygonData("./test.ply");
+  loadVTKPolygonData("./polygon-test.ply");
 
   std::cout << "11. initializing processes the third time..." << std::endl;
   initProcessThird();
