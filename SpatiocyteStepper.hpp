@@ -35,6 +35,13 @@
 #include <Stepper.hpp>
 #include "SpatiocyteCommon.hpp"
 
+#include "vtkPolyData.h"
+#include "vtkPolyDataReader.h"
+#include "vtkPLYReader.h"
+#include "vtkTriangle.h"
+#include "vtkIdList.h"
+#include "vtkMath.h"
+
 LIBECS_DM_CLASS(SpatiocyteStepper, Stepper)
 { 
 public: 
@@ -86,6 +93,7 @@ public:
   Point getCenterPoint();
   double getNormalizedVoxelRadius();
   Voxel* point2voxel(Point);
+  Voxel* point2voxel(double*);
   std::vector<Comp*> const& getComps() const;
 private:
   void setCompsCenterPoint();
@@ -151,6 +159,10 @@ private:
   unsigned int coord2layer(unsigned int);
   Comp* registerComp(System*, std::vector<Comp*>*);
   Variable* getVariable(System*, String const&);
+  const bool isInsidePlane(Voxel*, double*, double*);
+  std::pair<bool, bool> isInsideTriangle(
+      Voxel*, vtkPolyData*, double(*)[3], vtkIdType);
+  void loadVTKPolygonData(String);
 private:
   bool isInitialized;
   bool isPeriodicEdge;

@@ -209,4 +209,15 @@ struct Subunit
   std::vector<int> contPointSize;
 };
 
+static void Add(const double a[3], const double b[3], double c[3]) {
+    for (int i = 0; i < 3; ++i)
+        c[i] = a[i] + b[i];
+}
+
+static void Subtract(const double a[3], const double b[3], double c[3]) {
+    for (int i = 0; i < 3; ++i)
+        c[i] = a[i] - b[i];
+}
+
+
 #endif /* __SpatiocyteCommon_hpp */

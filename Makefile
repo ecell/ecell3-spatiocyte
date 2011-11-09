@@ -21,7 +21,7 @@ PolymerizationProcess\
 PeriodicBoundaryDiffusionProcess\
 PolymerFragmentationProcess
 
-ECELL3_DMC = ecell3-dmc
+ECELL3_DMC = ecell3-dmc --cxxflags="-I/usr/include/vtk-5.2 -lvtkCommon -lvtkRendering"
 CXX = g++
 CXXFLAGS = -Wall -O3 -g
 CXXFLAGS += $(shell pkg-config --cflags gtkmm-2.4 gtkglextmm-x11-1.2)

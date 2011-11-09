@@ -34,6 +34,7 @@
 #include <libecs/Model.hpp>
 #include <libecs/System.hpp>
 #include <libecs/Process.hpp>
+
 #include "SpatiocyteStepper.hpp"
 #include "SpatiocyteSpecies.hpp"
 #include "SpatiocyteProcessInterface.hpp"
@@ -86,6 +87,10 @@ void SpatiocyteStepper::initialize()
   printSimulationParameters();
   std::cout << "10. populating compartments with molecules..." << std::endl;
   populateComps();
+
+  // loadVTKPolygonData("./poly.vtk");
+  loadVTKPolygonData("./test.ply");
+
   std::cout << "11. initializing processes the third time..." << std::endl;
   initProcessThird();
   std::cout << "12. initializing the priority queue..." << std::endl;
@@ -1448,6 +1453,30 @@ Voxel* SpatiocyteStepper::point2voxel(Point aPoint)
                      theRowSize*theLayerSize*aGlobalCol];
 }
 
+Voxel* SpatiocyteStepper::point2voxel(double* pos)
+{
+  unsigned int aGlobalCol(0);
+  unsigned int aGlobalLayer(0);
+  unsigned int aGlobalRow(0);
+  switch(LatticeType)
+    {
+    case HCP_LATTICE: 
+      aGlobalCol = (unsigned int)(pos[0]/theHCPh);
+      aGlobalLayer = (unsigned int)((pos[1]-(aGlobalCol%2)*theHCPk)/theHCPl);
+      aGlobalRow = (unsigned int)((pos[2]-((aGlobalLayer+aGlobalCol)%2)*
+          theNormalizedVoxelRadius)/(2*theNormalizedVoxelRadius));
+      break;
+    case CUBIC_LATTICE:
+      aGlobalCol = (unsigned int)(pos[0]/(2*theNormalizedVoxelRadius));
+      aGlobalLayer = (unsigned int)(pos[1]/(2*theNormalizedVoxelRadius));
+      aGlobalRow = (unsigned int)(pos[2]/(2*theNormalizedVoxelRadius));
+      break;
+    }
+  return &theLattice[aGlobalRow+
+                     theRowSize*aGlobalLayer+
+                     theRowSize*theLayerSize*aGlobalCol];
+}
+
 void SpatiocyteStepper::coord2global(unsigned int aCoord,
                                      unsigned int* aGlobalRow,
                                      unsigned int* aGlobalLayer,
@@ -2498,3 +2527,321 @@ std::vector<Comp*> const& SpatiocyteStepper::getComps() const
     return theComps;
 }
 
+const bool SpatiocyteStepper::isInsidePlane(
+    Voxel* aVoxel, double normal[3], double p0[3])
+{
+    Point aPoint(coord2point(aVoxel->coord));
+    aPoint.x *= VoxelRadius * 2;
+    aPoint.y *= VoxelRadius * 2;
+    aPoint.z *= VoxelRadius * 2;
+    // std::cout << "(" << aPoint.x << ", " << aPoint.y << ", " 
+    //           << aPoint.z << ")" << std::endl;
+    
+    double distance((aPoint.x - p0[0]) * normal[0]
+                    + (aPoint.y - p0[1]) * normal[1] 
+                    + (aPoint.z - p0[2]) * normal[2]);
+    return (distance <= 0);
+}
+
+std::pair<bool, bool> SpatiocyteStepper::isInsideTriangle(
+    Voxel* aVoxel, vtkPolyData* aPolyData, double (*normals)[3], 
+    vtkIdType cellId)
+{
+    vtkIdList *ptIds = vtkIdList::New();
+    aPolyData->GetCellPoints(cellId, ptIds);
+    vtkCell* aCell(aPolyData->GetCell(cellId));
+    if (aCell->GetCellType() != VTK_TRIANGLE)
+    {
+        return std::pair<bool, bool>(false, false);
+    }
+
+    vtkTriangle* aTriangle(dynamic_cast<vtkTriangle*>(aCell));
+    double p0[3], p1[3], p2[3];
+    aTriangle->GetPoints()->GetPoint(0, p0);
+    aTriangle->GetPoints()->GetPoint(1, p1);
+    aTriangle->GetPoints()->GetPoint(2, p2);
+        
+    double dp[3], edgeNormal[3], planeNormals[3][3];
+    vtkIdList *edgeNeighbors = vtkIdList::New();
+    // const bool edgeDirections[3] = {
+    //     ptIds->GetId(0) < ptIds->GetId(1), 
+    //     ptIds->GetId(1) < ptIds->GetId(2), 
+    //     ptIds->GetId(2) < ptIds->GetId(0)};
+        
+    aPolyData->GetCellEdgeNeighbors(
+        cellId, ptIds->GetId(0), ptIds->GetId(1), edgeNeighbors);
+    Add(normals[cellId], normals[edgeNeighbors->GetId(0)], edgeNormal);
+    Subtract(p1, p0, dp);
+    vtkMath::Cross(dp, edgeNormal, planeNormals[0]);
+
+    aPolyData->GetCellEdgeNeighbors(
+        cellId, ptIds->GetId(1), ptIds->GetId(2), edgeNeighbors);
+    Add(normals[cellId], normals[edgeNeighbors->GetId(0)], edgeNormal);
+    Subtract(p2, p1, dp);
+    vtkMath::Cross(dp, edgeNormal, planeNormals[1]);
+
+    aPolyData->GetCellEdgeNeighbors(
+        cellId, ptIds->GetId(2), ptIds->GetId(0), edgeNeighbors);
+    Add(normals[cellId], normals[edgeNeighbors->GetId(0)], edgeNormal);
+    Subtract(p0, p2, dp);
+    vtkMath::Cross(dp, edgeNormal, planeNormals[2]);
+
+    const bool inside0(isInsidePlane(aVoxel, normals[cellId], p0));
+    const bool inside1(
+        isInsidePlane(aVoxel, planeNormals[0], p0)
+        && isInsidePlane(aVoxel, planeNormals[1], p1)
+        && isInsidePlane(aVoxel, planeNormals[2], p2));
+    // const bool inside1(
+    //     (!isInsidePlane(
+    //         adjVoxel, planeNormals[0], p0))
+    //     || (!isInsidePlane(
+    //             adjVoxel, planeNormals[1], p1))
+    //     || (!isInsidePlane(
+    //             adjVoxel, planeNormals[2], p2)));
+
+    ptIds->Delete();
+    edgeNeighbors->Delete();
+
+    return std::pair<bool, bool>(inside0, inside1);
+}
+
+void SpatiocyteStepper::loadVTKPolygonData(String aFileName)
+{
+    std::cout << aFileName.c_str() << std::endl;
+    vtkPLYReader *aReader(vtkPLYReader::New());
+    // vtkPolyDataReader *aReader(vtkPolyDataReader::New());
+    aReader->SetFileName(aFileName.c_str());
+    aReader->Update();
+
+    vtkPolyData *aPolyData(aReader->GetOutput()); // Never Delete
+    aPolyData->BuildCells();
+    aPolyData->BuildLinks();
+    const vtkIdType aSize(aPolyData->GetNumberOfCells());
+
+    double normals[aSize][3];
+    for (vtkIdType i(0); i < aSize; i++)
+    {
+        vtkCell* aCell(aPolyData->GetCell(i));
+        if (aCell->GetCellType() != VTK_TRIANGLE) continue;
+        vtkTriangle* aTriangle(dynamic_cast<vtkTriangle*>(aCell));
+
+        double p0[3], p1[3], p2[3];
+        aTriangle->GetPoints()->GetPoint(0, p0);
+        aTriangle->GetPoints()->GetPoint(1, p1);
+        aTriangle->GetPoints()->GetPoint(2, p2);
+        aTriangle->ComputeNormal(p0, p1, p2, normals[i]);
+    }
+
+    for (vtkIdType i(0); i < aSize; i++)
+    {
+        vtkCell* aCell(aPolyData->GetCell(i));
+        if (aCell->GetCellType() != VTK_TRIANGLE) continue;
+        vtkTriangle* aTriangle(dynamic_cast<vtkTriangle*>(aCell));
+
+        vtkIdList *ptIds = vtkIdList::New();
+        aPolyData->GetCellPoints(i, ptIds);
+
+        std::vector<vtkIdType> neighbors;
+        neighbors.push_back(i);
+        for (vtkIdType j(0); j != ptIds->GetNumberOfIds(); j++)
+        {
+            vtkIdList *cellNeighbors = vtkIdList::New();
+            aPolyData->GetPointCells(ptIds->GetId(j), cellNeighbors);
+            for (vtkIdType k(0); k != cellNeighbors->GetNumberOfIds(); k++)
+            {
+                neighbors.push_back(cellNeighbors->GetId(k));
+            }
+            cellNeighbors->Delete();
+        }
+
+        // remove redundant elements.
+        std::sort(neighbors.begin(), neighbors.end());
+        neighbors.erase(std::unique(neighbors.begin(), neighbors.end()), 
+                        neighbors.end());
+
+        double p0[3], p1[3], p2[3];
+        aTriangle->GetPoints()->GetPoint(0, p0);
+        aTriangle->GetPoints()->GetPoint(1, p1);
+        aTriangle->GetPoints()->GetPoint(2, p2);
+
+        unsigned int minRow, maxRow, minLayer, maxLayer, minCol, maxCol;
+        unsigned int aRow, aLayer, aCol;
+        coord2global(point2voxel(p0)->coord, &minRow, &minLayer, &minCol);
+        maxRow = minRow; maxLayer = minLayer; maxCol = minCol;
+        coord2global(point2voxel(p1)->coord, &aRow, &aLayer, &aCol);
+        minRow = std::min(aRow, minRow); maxRow = std::max(aRow, maxRow);
+        minLayer = std::min(aLayer, minLayer);
+        maxLayer = std::max(aLayer, maxLayer);
+        minCol = std::min(aCol, minCol); maxCol = std::max(aCol, maxCol);
+        coord2global(point2voxel(p2)->coord, &aRow, &aLayer, &aCol);
+        const unsigned int margin(2);
+        minRow = std::max(std::min(aRow, minRow) - margin, (unsigned int)(0));
+        maxRow = std::min(std::max(aRow, maxRow) + margin, theRowSize - 1);
+        minLayer = std::max(
+            std::min(aLayer, minLayer) - margin, (unsigned int)(0));
+        maxLayer = std::min(
+            std::max(aLayer, maxLayer) + margin, theLayerSize - 1);
+        minCol = std::max(std::min(aCol, minCol) - margin, (unsigned int)(0));
+        maxCol = std::min(std::max(aCol, maxCol) + margin, theColSize - 1);
+
+        ptIds->Delete();
+
+        // for(std::vector<Voxel>::iterator iter(theLattice.begin()); 
+        //     iter != theLattice.end(); ++iter)
+        // {
+        //    Voxel *aVoxel(&(*iter));
+        for (aRow = minRow; aRow != maxRow + 1; aRow++)
+            for (aLayer = minLayer; aLayer != maxLayer + 1; aLayer++)
+                for (aCol = minCol; aCol != maxCol + 1; aCol++)
+                {
+                    std::cout << aRow << ", " << aLayer << ", " << aCol << std::endl;
+                    Voxel *aVoxel(
+                        &theLattice[aRow + theRowSize * (
+                                aLayer + theLayerSize * aCol)]);
+
+            // if (aVoxel->id == theComps[0]->vacantID)
+            if (aVoxel->id != id2species(1)->getID())
+            {
+                std::pair<bool, bool> inside1(
+                    isInsideTriangle(aVoxel, aPolyData, normals, i));
+                if (inside1.first && inside1.second)
+                {
+                    bool isSurface(false), isEdge(false);
+                    for (unsigned int j(0); j != theAdjoiningVoxelSize; ++j)
+                    {
+                        Voxel* adjVoxel(aVoxel->adjoiningVoxels[j]);
+
+                        bool isInDomain(false);
+                        for (std::vector<vtkIdType>::iterator neighborIter(
+                                 neighbors.begin()); 
+                             neighborIter != neighbors.end(); ++neighborIter)
+                        {
+                            vtkIdType cellId((*neighborIter));
+                            std::pair<bool, bool> inside2(
+                                isInsideTriangle(
+                                    adjVoxel, aPolyData, normals, cellId));
+                            if (inside2.second)
+                            {
+                                isInDomain = true;
+                                if (!inside2.first)
+                                {
+                                    isSurface = true;
+                                    if (cellId != i)
+                                    {
+                                        isEdge = true;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+
+                        // if (!isInDomain)
+                        //     std::cout << "Out of domains." << std::endl;
+                        if (isEdge) break;
+                    }
+
+                    if (isEdge) id2species(1)->addMolecule(aVoxel);
+                    else if (isSurface) id2species(0)->addMolecule(aVoxel);
+                }
+            }
+        }
+    }
+
+    for (unsigned int j(0); j != theLayerSize; ++j)
+        for (unsigned int k(0); k != theColSize; ++k)
+        {
+            // unsigned int j(10), k(10);
+            bool isInside(false), isVacant(true);
+            for (unsigned int i(0); i != theRowSize; ++i)
+            {
+                const unsigned int aCoord(
+                    i + theRowSize * (j + theLayerSize * k));
+                Voxel* aVoxel(coord2voxel(aCoord));
+
+                if (aVoxel->id != theComps[0]->vacantID 
+                    && aVoxel->id != theNullID)
+                {
+                    if (isVacant)
+                    {
+                        isVacant = false;
+                        isInside = !isInside;
+                    }
+                }
+                else
+                {
+                    if (!isVacant)
+                        isVacant = true;
+                    if (isInside)
+                        id2species(2)->addMolecule(aVoxel);
+                }
+            }
+    }
+
+    for (unsigned int j(0); j != theLayerSize; ++j)
+        for (unsigned int k(0); k != theColSize; ++k)
+        {
+            // unsigned int j(10), k(10);
+            bool isInside(false), isVacant(true);
+            for (unsigned int i(theRowSize - 1); i != -1; --i)
+            {
+                const unsigned int aCoord(
+                    i + theRowSize * (j + theLayerSize * k));
+                Voxel* aVoxel(coord2voxel(aCoord));
+
+                if (aVoxel->id != theComps[0]->vacantID 
+                    && aVoxel->id != theNullID
+                    && aVoxel->id != id2species(2)->getID())
+                {
+                    if (isVacant)
+                    {
+                        isVacant = false;
+                        isInside = !isInside;
+                    }
+                }
+                else
+                {
+                    if (!isVacant)
+                        isVacant = true;
+                    if (!isInside && aVoxel->id == id2species(2)->getID())
+                    {
+                        id2species(2)->removeMolecule(aVoxel);
+                    }
+                }
+            }
+    }
+
+    // for (unsigned int i(0); i != theRowSize; ++i)
+    //     for (unsigned int k(0); k != theColSize; ++k)
+    //     {
+    //         // unsigned int j(10), k(10);
+    //         bool isInside(false), isVacant(true);
+    //         for (unsigned int j(0); j != theLayerSize; ++j)
+    //         {
+    //             const unsigned int aCoord(
+    //                 i + theRowSize * (j + theLayerSize * k));
+    //             Voxel* aVoxel(coord2voxel(aCoord));
+
+    //             if (aVoxel->id != theComps[0]->vacantID 
+    //                 && aVoxel->id != theNullID
+    //                 && aVoxel->id != id2species(2)->getID())
+    //             {
+    //                 if (isVacant)
+    //                 {
+    //                     isVacant = false;
+    //                     isInside = !isInside;
+    //                 }
+    //             }
+    //             else
+    //             {
+    //                 if (!isVacant)
+    //                     isVacant = true;
+    //                 if (!isInside && aVoxel->id == id2species(2)->getID())
+    //                 {
+    //                     id2species(2)->removeMolecule(aVoxel);
+    //                 }
+    //             }
+    //         }
+    // }
+
+    aReader->Delete();
+}
