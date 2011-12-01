@@ -28,11 +28,11 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
-#include "FluorescentImagingProcess.hpp"
+#include "MicroscopyTrackingProcess.hpp"
 
-LIBECS_DM_INIT(FluorescentImagingProcess, Process); 
+LIBECS_DM_INIT(MicroscopyTrackingProcess, Process); 
 
-void FluorescentImagingProcess::incSpeciesLatticeCount()
+void MicroscopyTrackingProcess::incSpeciesLatticeCount()
 {
   for(unsigned int i(0); i != thePositiveSpecies.size(); ++i)
     {
@@ -53,7 +53,7 @@ void FluorescentImagingProcess::incSpeciesLatticeCount()
     }
 }
 
-void FluorescentImagingProcess::logFluorescentSpecies()
+void MicroscopyTrackingProcess::logFluorescentSpecies()
 {
   std::vector<int> coordList;
   for(unsigned int i(0); i != theLatticeSize; ++i)

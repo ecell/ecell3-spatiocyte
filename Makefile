@@ -12,7 +12,7 @@ IteratingLogProcess\
 DiffusionInfluencedReactionProcess\
 OscillationAnalysisProcess\
 SpatiocyteNextReactionProcess\
-FluorescentImagingProcess\
+MicroscopyTrackingProcess\
 CoordinateLogProcess\
 MoleculePopulateProcess\
 DiffusionProcess\
@@ -40,8 +40,8 @@ VisualizationLogProcess.so: 	VisualizationLogProcess.cpp
 H5VisualizationLogProcess.so: 	H5VisualizationLogProcess.cpp
 	$(ECELL3_DMC) -o H5VisualizationLogProcess.so --ldflags=SpatiocyteProcess.so --ldflags=-lhdf5 --ldflags=-lhdf5_cpp H5VisualizationLogProcess.cpp
 
-FluorescentImagingProcess.so: 	FluorescentImagingProcess.cpp
-	$(ECELL3_DMC) -o FluorescentImagingProcess.so --ldflags="SpatiocyteProcess.so VisualizationLogProcess.so" FluorescentImagingProcess.cpp
+MicroscopyTrackingProcess.so: 	MicroscopyTrackingProcess.cpp
+	$(ECELL3_DMC) -o MicroscopyTrackingProcess.so --ldflags="SpatiocyteProcess.so VisualizationLogProcess.so" MicroscopyTrackingProcess.cpp
 
 ReactionProcess.so: 	ReactionProcess.cpp
 	$(ECELL3_DMC) -o ReactionProcess.so --ldflags=SpatiocyteProcess.so ReactionProcess.cpp

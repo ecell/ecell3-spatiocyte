@@ -29,26 +29,26 @@
 //
 
 
-#ifndef __FluorescentImagingProcess_hpp
-#define __FluorescentImagingProcess_hpp
+#ifndef __MicroscopyTrackingProcess_hpp
+#define __MicroscopyTrackingProcess_hpp
 
 #include "VisualizationLogProcess.hpp"
 #include "SpatiocyteSpecies.hpp"
 
-LIBECS_DM_CLASS(FluorescentImagingProcess, VisualizationLogProcess)
+LIBECS_DM_CLASS(MicroscopyTrackingProcess, VisualizationLogProcess)
 { 
 public:
-  LIBECS_DM_OBJECT(FluorescentImagingProcess, Process)
+  LIBECS_DM_OBJECT(MicroscopyTrackingProcess, Process)
     {
       INHERIT_PROPERTIES(VisualizationLogProcess);
       PROPERTYSLOT_SET_GET(Integer, MeanCount);
       PROPERTYSLOT_SET_GET(Real, ExposureTime);
     }
-  FluorescentImagingProcess():
+  MicroscopyTrackingProcess():
     MeanCount(0),
     ExposureTime(0.5),
     theLastExposedTime(0) {}
-  virtual ~FluorescentImagingProcess() {}
+  virtual ~MicroscopyTrackingProcess() {}
   SIMPLE_SET_GET_METHOD(Integer, MeanCount);
   SIMPLE_SET_GET_METHOD(Real, ExposureTime);
   virtual void initializeFourth()
@@ -187,4 +187,4 @@ protected:
   std::vector<std::vector<int> > theProcessSpeciesIndices;
 };
 
-#endif /* __FluorescentImagingProcess_hpp */
+#endif /* __MicroscopyTrackingProcess_hpp */

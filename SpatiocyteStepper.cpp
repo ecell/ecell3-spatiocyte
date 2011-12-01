@@ -460,7 +460,7 @@ void SpatiocyteStepper::initPriorityQueue()
              aClassName == "MoleculePopulateProcess" ||
              aClassName == "CoordinateLogProcess" ||
              aClassName == "VisualizationLogProcess" ||
-             aClassName == "FluorescentImagingProcess" ||
+             aClassName == "MicroscopyTrackingProcess" ||
              aClassName == "OscillationAnalysisProcess" ||
              aClassName == "PeriodicBoundaryDiffusionProcess" ||
              aClassName == "SpatiocyteNextReactionProcess" ||
