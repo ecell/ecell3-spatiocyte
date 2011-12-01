@@ -2104,7 +2104,7 @@ Rulers::Rulers(const Glib::RefPtr<const Gdk::GL::Config>& config,
   m_control(&m_area)
 {
   m_area.setControlBox(&m_control);
-  set_title("Cell Visualizer");
+  set_title("Spatiocyte Visualizer");
   set_reallocate_redraws(true);
   set_border_width(10);
 
