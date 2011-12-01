@@ -50,9 +50,9 @@ typedef ProcessPriorityQueue::ID ProcessID;
 #define CUBIC_LATTICE 1
 
 //Comp type:
-#define VOLUME  0
-#define SURFACE 1
-#define LINE    2
+#define VOLUME  3
+#define SURFACE 2
+#define LINE    1
 
 //Comp shape:
 #define SPHERICAL     0

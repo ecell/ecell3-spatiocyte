@@ -585,17 +585,10 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
   aComp->shape = 0;
   //Default is volume Comp:
   aComp->dimension = 3;
-  if(getVariable(aSystem, "TYPE"))
+  if(getVariable(aSystem, "DIMENSION"))
     { 
-        const double compType(aSystem->getVariable("TYPE")->getValue());
-        if (compType == SURFACE)
-        {
-            aComp->dimension = 2;
-        }
-        else if (compType == LINE) 
-        {
-            aComp->dimension = 1;
-        }
+      const double aDimension(aSystem->getVariable("DIMENSION")->getValue());
+      aComp->dimension = aDimension;
     }
   if(aComp->dimension == 3)
     {
@@ -733,8 +726,7 @@ void SpatiocyteStepper::registerCompSpecies(Comp* aComp)
   FOR_ALL(System::Variables, aSystem->getVariables())
     {
       Variable* aVariable(i->second);
-      if(aVariable->getID() == "LIPID" || aVariable->getID() == "VACANT"
-         || aVariable->getID() == "SEGMENT")
+      if(aVariable->getID() == "VACANT")
         {
           if(aVariable->getValue())
             {
@@ -744,20 +736,20 @@ void SpatiocyteStepper::registerCompSpecies(Comp* aComp)
             {
               aComp->isEnclosed = false;
             }
-          //Set the number of lipid/vacant molecules to be always 0 because
-          //when we populate lattice we shouldn't create more lipid/vacant
+          //Set the number of vacant molecules to be always 0 because
+          //when we populate lattice we shouldn't create more vacant
           //molecules than the ones already created for the Comp:
           aVariable->setValue(0);
           Species* aSpecies(addSpecies(aVariable));
           aComp->vacantID = aSpecies->getID();
-          if(aVariable->getID() == "LIPID")
-            { 
+          if(aComp->dimension == 2)
+            {
               aSpecies->setIsLipid();
             }
-          else if (aVariable->getID() == "SEGMENT")
-          {
+          else if (aComp->dimension == 1)
+            {
               aSpecies->setIsSegment();
-          }
+            }
           else
             {
               aSpecies->setIsVacant();

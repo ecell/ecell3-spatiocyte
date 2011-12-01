@@ -63,7 +63,7 @@ System System(/)
                             [_ Variable:/Surface:MinD];
       LogInterval 0.5; # s
     }
-#  Process FluorescentImagingProcess(fluorescence)
+#  Process MicroscopyTrackingProcess(microscopy)
 #    {
 #      VariableReferenceList [_ Variable:/Surface:MinEE 2]
 #                            [_ Variable:/Surface:MinDEE 3]
@@ -74,7 +74,7 @@ System System(/)
 #                            [_ Variable:/Surface:MinEE -1]
 #                            [_ Variable:/Surface:MinDEED -4]
 #                            [_ Variable:/Surface:MinD -1];
-#      FileName "fluorescenceLog0.dat";
+#      FileName "microscopyLog0.dat";
 #    }
   Process MoleculePopulateProcess(populate)
     {
@@ -92,12 +92,12 @@ System System(/Surface)
 {
   StepperID SS;
 
-  Variable Variable(TYPE)
+  Variable Variable(DIMENSION)
     {
-      Value 1;         # { 0: Volume
-                       #   1: Surface }
+      Value 2;         # { 3: Volume
+                       #   2: Surface }
     } 
-  Variable Variable(LIPID)
+  Variable Variable(VACANT)
     {
       Value 0;
     } 
@@ -139,7 +139,7 @@ System System(/Surface)
     }
   Process DiffusionInfluencedReactionProcess(reaction1) 
     {
-      VariableReferenceList   [_ Variable:/Surface:LIPID -1]
+      VariableReferenceList   [_ Variable:/Surface:VACANT -1]
                               [_ Variable:/:MinDatp -1]
                               [_ Variable:/Surface:MinD 1];
       k 2.2e-8;        # m/s
