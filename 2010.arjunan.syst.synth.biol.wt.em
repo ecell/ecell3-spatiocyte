@@ -60,7 +60,7 @@ System System(/)
                             [_ Variable:/Surface:MinD];
       LogInterval 0.5; # s
     }
-#  Process MicroscopyTrackingProcess(microscopy)
+#  Process MicroscopyTrackingProcess(track)
 #    {
 #      VariableReferenceList [_ Variable:/Surface:MinEE 2]
 #                            [_ Variable:/Surface:MinDEE 3]
