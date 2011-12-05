@@ -726,18 +726,11 @@ void SpatiocyteStepper::registerCompSpecies(Comp* aComp)
       Variable* aVariable(i->second);
       if(aVariable->getID() == "VACANT")
         {
-          if(aVariable->getValue())
-            {
-              aComp->isEnclosed = true; 
-              //Set the number of vacant molecules to be always 0 because
-              //when we populate lattice we shouldn't create more vacant
-              //molecules than the ones already created for the Comp:
-              aVariable->setValue(0);
-            }
-          else
-            {
-              aComp->isEnclosed = false;
-            }
+          aComp->enclosed = aVariable->getValue();
+          //Set the number of vacant molecules to be always 0 because
+          //when we populate lattice we shouldn't create more vacant
+          //molecules than the ones already created for the Comp:
+          aVariable->setValue(0);
           Species* aSpecies(addSpecies(aVariable));
           aComp->vacantID = aSpecies->getID();
           if(aComp->dimension == 2)
@@ -2120,14 +2113,8 @@ void SpatiocyteStepper::setIntersectingPeers()
                          ((a.z+(*i)->lengthZ/2 > b.z-(*j)->lengthZ/2) ||
                           (a.z-(*i)->lengthZ/2 < b.z+(*j)->lengthZ/2)))
                         {
-                          if(!(*i)->isEnclosed && !(*j)->isEnclosed &&
-                             std::find((*j)->intersectPeers.begin(),
-                                       (*j)->intersectPeers.end(),
-                                       (*i)) == (*j)->intersectPeers.end())
-                            {
-                              (*i)->intersectPeers.push_back(*j);
-                            }
-                          else if((*j)->isEnclosed)
+                          if((*i)->enclosed < (*j)->enclosed ||
+                             (*i)->enclosed == (*j)->enclosed)
                             {
                               (*i)->intersectPeers.push_back(*j);
                             }
@@ -2192,7 +2179,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel, Comp* aComp)
                 { 
                   return false;
                 }
-              if(aComp->surfaceSub && aComp->surfaceSub->isEnclosed)
+              if(aComp->surfaceSub && aComp->surfaceSub->enclosed)
                 {
                   //Check if the voxel is neighbor of a peer voxel (either
                   //a future surface voxel)
@@ -2213,12 +2200,12 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel, Comp* aComp)
               //root compartment:
               if(aParentComp->system->isRootSystem() &&
                  aParentComp->surfaceSub && 
-                 aParentComp->surfaceSub->isEnclosed && 
+                 aParentComp->surfaceSub->enclosed && 
                  isParentSurfaceVoxel(aVoxel, aParentComp))
                 {
                   return false;
                 }
-              if(aComp->surfaceSub && aComp->surfaceSub->isEnclosed)
+              if(aComp->surfaceSub && aComp->surfaceSub->enclosed)
                 {
                   //Check if the voxel is neighbor of a peer voxel (either
                   //a future surface voxel)
@@ -2342,7 +2329,7 @@ bool SpatiocyteStepper::isSurfaceVoxel(Voxel* aVoxel, Comp* aComp)
   if(aComp->isIntersectParent)
     {
       Comp* aParentComp(system2Comp(aComp->system->getSuperSystem())); 
-      if(aParentComp->surfaceSub && aParentComp->surfaceSub->isEnclosed && 
+      if(aParentComp->surfaceSub && aParentComp->surfaceSub->enclosed && 
          isParentSurfaceVoxel(aVoxel, aParentComp))
         {
           return false;
@@ -2444,7 +2431,7 @@ bool SpatiocyteStepper::isPeerVoxel(Voxel* aVoxel, Comp* aComp)
   for(std::vector<Comp*>::iterator i(aComp->intersectPeers.begin());
       i != aComp->intersectPeers.end(); ++i)
     {
-      if((*i)->surfaceSub && (*i)->surfaceSub->isEnclosed)
+      if((*i)->surfaceSub && (*i)->surfaceSub->enclosed)
         { 
           for(unsigned int j(0); j != theAdjoiningVoxelSize; ++j)
             {

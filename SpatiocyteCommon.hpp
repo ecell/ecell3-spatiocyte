@@ -123,10 +123,10 @@ struct Point
 
 struct Comp
 {
-  bool isEnclosed;
   bool isIntersectParent;
   unsigned short dimension;
   unsigned short vacantID; 
+  int enclosed;
   int shape;
   int xyPlane;
   int xzPlane;
