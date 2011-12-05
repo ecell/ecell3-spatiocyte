@@ -723,13 +723,19 @@ public:
     {
       return theBendAngles;
     }
-  const Point& getWestPoint() const
+  const Point getWestPoint() const
     {
-      return theComp->westPoint;
+      Point aWestPoint(theComp->centerPoint);
+      aWestPoint.x = theComp->centerPoint.x-theComp->lengthX/2+
+        theComp->lengthY/2;
+      return aWestPoint;
     }
-  const Point& getEastPoint() const
+  const Point getEastPoint() const
     {
-      return theComp->eastPoint;
+      Point anEastPoint(theComp->centerPoint); 
+      anEastPoint.x = theComp->centerPoint.x+theComp->lengthX/2-
+        theComp->lengthY/2;
+      return anEastPoint;
     }
   double getRadius() const
     {

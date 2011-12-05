@@ -76,7 +76,7 @@ void PolymerizationProcess::pushNewBend(Subunit* aSubunit, double aBendAngle)
   getCylinderDcm(-aBendAngle, -aBendAngle-CylinderYaw, aBend.cylinderDcm);
   getSphereDcm(0, -SphereYaw, aBend.sphereDcm);
   double aDcm[9];
-  if(getLocation(aRefPoint.x) == CYLINDRICAL)
+  if(getLocation(aRefPoint.x) == CYLINDER)
     {
       getCylinderDcm(0, M_PI-aBendAngle, aDcm);
       dcmXdcm(aDcm, tmpDcm, aDcm);
@@ -108,7 +108,7 @@ void PolymerizationProcess::pushJoinBend(Subunit* aSubunit, Subunit* refSubunit,
   currX[0] = aRefPoint.x-theMinX-((theMaxX-theMinX)/2);
   currX[1] = aRefPoint.y-theOriY;
   currX[2] = aRefPoint.z-theOriZ;
-  if(getLocation(aRefPoint.x) == CYLINDRICAL)
+  if(getLocation(aRefPoint.x) == CYLINDER)
     {
       pinStep(currX, aBend.cylinderDcm, aRefBend.dcm, aBend.dcm);
     }
@@ -134,7 +134,7 @@ Bend* PolymerizationProcess::getNewReverseBend(Point* aRefPoint,
   currX[1] = aRefPoint->y-theOriY;
   currX[2] = aRefPoint->z-theOriZ;
   double aDcm[9];
-  if( getLocation( aRefPoint->x ) == CYLINDRICAL )
+  if( getLocation( aRefPoint->x ) == CYLINDER )
     {
       pinStep( currX, aBend->cylinderDcm, aBend->dcm, aDcm );
     }
@@ -175,7 +175,7 @@ Point PolymerizationProcess::getNextPoint(Point* aRefPoint,
   currX[0] = aRefPoint->x-theMinX-((theMaxX-theMinX)/2);
   currX[1] = aRefPoint->y-theOriY;
   currX[2] = aRefPoint->z-theOriZ;
-  if( getLocation( aRefPoint->x ) == CYLINDRICAL )
+  if( getLocation( aRefPoint->x ) == CYLINDER )
     {
       pinStep( currX, aRefBend->cylinderDcm,
                aRefBend->dcm, aDcm );

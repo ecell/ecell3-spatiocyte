@@ -49,20 +49,20 @@ typedef ProcessPriorityQueue::ID ProcessID;
 #define HCP_LATTICE   0
 #define CUBIC_LATTICE 1
 
-//Comp type:
+//Comp dimensions:
 #define VOLUME  3
 #define SURFACE 2
 #define LINE    1
 
-//Comp shape:
-#define SPHERICAL     0
-#define ROD           1
-#define CUBIC         2
-#define CUBOID        3
-#define ELLIPSOID     4
-#define CYLINDRICAL   5
+//Comp geometries:
+#define CUBOID        0
+#define ELLIPSOID     1
+#define CYLINDER      2
+#define ROD           3
+#define TORUS         4
+#define PYRAMID       5
 
-//CUBIC shaped Comp surface boundary conditions:
+//CUBOID Comp surface boundary conditions:
 #define REFLECTIVE     0 
 #define PERIODIC       1
 #define UNIPERIODIC    2
@@ -124,6 +124,7 @@ struct Point
 struct Comp
 {
   bool isEnclosed;
+  bool isIntersectParent;
   unsigned short dimension;
   unsigned short vacantID; 
   int shape;
@@ -155,10 +156,9 @@ struct Comp
   //common id. So There is only one common diffusive Comp:
   Comp* diffusiveComp;
   Point centerPoint;
-  Point eastPoint;
-  Point westPoint;
   std::vector<Comp*> allSubs;
   std::vector<Comp*> immediateSubs;
+  std::vector<Comp*> intersectPeers;
   std::vector<Comp*> lineSubs;
   std::vector<Species*> species;
   std::vector<unsigned int> coords;

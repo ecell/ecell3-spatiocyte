@@ -73,10 +73,8 @@ void SpatiocyteStepper::initialize()
   initProcessSecond();
   std::cout << "5. constructing lattice..." << std::endl;
   constructLattice();
-  /*
-  std::cout << "6. shuffling adjoining voxels..." << std::endl;
-  shuffleAdjoiningVoxels();
-  */
+  std::cout << "6. setting intersecting compartment list..." << std::endl;
+  setIntersectingCompartmentList();
   std::cout << "7. compartmentalizing lattice..." << std::endl;
   compartmentalizeLattice();
   std::cout << "8. setting up compartment voxels properties..." << std::endl;
@@ -182,7 +180,7 @@ bool SpatiocyteStepper::isBoundaryCoord(unsigned int aCoord, bool isVolume)
   coord2global(aCoord, &aRow, &aLayer, &aCol);
   if(isVolume)
     {
-      //If the voxel is on one of the 6 cubic surfaces:
+      //If the voxel is on one of the 6 cuboid surfaces:
       if(aRow == 1 || aLayer == 1 || aCol == 1 ||
          aRow == theRowSize-2 || aLayer == theLayerSize-2 || 
          aCol == theColSize-2)
@@ -581,7 +579,7 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
   aComp->system = aSystem;
   aComp->surfaceSub = NULL;
   aComp->diffusiveComp = NULL;
-  //Default Comp shape is spherical:
+  //Default Comp shape is Cuboid:
   aComp->shape = 0;
   //Default is volume Comp:
   aComp->dimension = 3;
@@ -785,8 +783,16 @@ void SpatiocyteStepper::setLatticeProperties()
       theAdjoiningVoxelSize = 6;
       break;
     }
-  if(aRootComp->shape == SPHERICAL || aRootComp->shape == ROD ||
-     aRootComp->shape == ELLIPSOID)
+  if(aRootComp->shape == CUBOID)
+    {
+      //We do not give any leeway space between the simulation boundary
+      //and the cell boundary if it is CUBOID to support
+      //periodic boundary conditions:
+      theCenterPoint.z = aRootComp->lengthZ/2; //row
+      theCenterPoint.y = aRootComp->lengthY/2; //layer
+      theCenterPoint.x = aRootComp->lengthX/2; //column
+    }
+  else
     {
       switch(LatticeType)
         {
@@ -802,15 +808,6 @@ void SpatiocyteStepper::setLatticeProperties()
           theCenterPoint.x = aRootComp->lengthX/2+8*theNormalizedVoxelRadius;
           break;
         }
-    }
-  else if(aRootComp->shape == CUBIC || aRootComp->shape == CUBOID)
-    {
-      //We do not give any leeway space between the simulation boundary
-      //and the cell boundary if it is CUBIC or CUBOID to support
-      //periodic boundary conditions:
-      theCenterPoint.z = aRootComp->lengthZ/2; //row
-      theCenterPoint.y = aRootComp->lengthY/2; //layer
-      theCenterPoint.x = aRootComp->lengthX/2; //column
     }
   aRootComp->centerPoint = theCenterPoint; 
   switch(LatticeType)
@@ -830,11 +827,11 @@ void SpatiocyteStepper::setLatticeProperties()
                                       (theNormalizedVoxelRadius));
       break;
     }
-  //For the CUBIC and CUBOID cell shapes, we need to readjust the size of
+  //For the CUBOID cell shapes, we need to readjust the size of
   //row, layer and column according to the boundary condition of its surfaces
   //to reflect the correct volume. This is because periodic boundary will
   //[consume a layer of the surface voxels:
-  if(aRootComp->shape == CUBIC || aRootComp->shape == CUBOID)
+  if(aRootComp->shape == CUBOID)
     {
       readjustSurfaceBoundarySizes(); 
     }
@@ -899,24 +896,20 @@ void SpatiocyteStepper::printSimulationParameters()
       double anActualArea(aComp->actualArea);
       switch(aComp->shape)
         {
-        case SPHERICAL:
-          std::cout << "   Spherical (radius=" << 
-            pow(3*aSpecVolume/(4*M_PI), 1.0/3) << "m) ";
-          break;
-        case ROD:
-          std::cout << "   Rod (radius=" << aComp->lengthY*VoxelRadius << 
-            "m, cylinder length=" <<
-            (aComp->eastPoint.x-aComp->westPoint.y)*
-            VoxelRadius*2 << "m) ";
-          break;
-        case CUBIC:
-          std::cout << "   Cubic ";
-          break;
         case CUBOID:
           std::cout << "   Cuboid ";
           break;
         case ELLIPSOID:
           std::cout << "   Ellipsoid ";
+          break;
+        case CYLINDER:
+          std::cout << "   Cylinder (radius=" << aComp->lengthY*VoxelRadius
+            << "m, length=" << (aComp->lengthX)*VoxelRadius*2 << "m) ";
+          break;
+        case ROD:
+          std::cout << "   Rod (radius=" << aComp->lengthY*VoxelRadius << 
+            "m, cylinder length=" <<
+            (aComp->lengthX-aComp->lengthY*2)*VoxelRadius*2 << "m) ";
           break;
         }
       std::cout << aComp->system->getFullID().asString();
@@ -964,7 +957,7 @@ void SpatiocyteStepper::readjustSurfaceBoundarySizes()
 {
   Comp* aRootComp(theComps[0]);
   //[XY, XZ, YZ]PLANE: the boundary type of the surface when 
-  //the shape of the root Comp is CUBIC or CUBOID.
+  //the shape of the root Comp is CUBOID.
   //Boundary type can be either PERIODIC or REFLECTIVE.
   //Increase the size of [row,layer,col] by one voxel and make them odd sized
   //if the system uses periodic boundary conditions.
@@ -1051,13 +1044,13 @@ void SpatiocyteStepper::constructLattice()
           //will occupy it:
           (*i).id = theNullID;
           //Concatenate some of the null voxels close to the surface:
-          if(isInsideCoord(b, aRootComp, -4))
+          if(isInsideCoord(b, aRootComp, 4))
             {
               concatenateVoxel(&(*i), aRow, aLayer, aCol);
             }
         }
     }
-  if(aRootComp->shape == CUBIC || aRootComp->shape == CUBOID)
+  if(aRootComp->shape == CUBOID)
     {
       concatenatePeriodicSurfaces();
     }
@@ -1068,8 +1061,7 @@ void SpatiocyteStepper::setPeriodicEdge()
   isPeriodicEdge = true;
 }
 
-bool SpatiocyteStepper::isPeriodicEdgeCoord(unsigned int aCoord,
-                                            Comp* aComp)
+bool SpatiocyteStepper::isPeriodicEdgeCoord(unsigned int aCoord, Comp* aComp)
 {
   unsigned int aRow;
   unsigned int aLayer;
@@ -1094,8 +1086,7 @@ bool SpatiocyteStepper::isPeriodicEdgeCoord(unsigned int aCoord,
   return false;
 }
 
-bool SpatiocyteStepper::isRemovableEdgeCoord(unsigned int aCoord,
-                                             Comp* aComp)
+bool SpatiocyteStepper::isRemovableEdgeCoord(unsigned int aCoord, Comp* aComp)
 {
   unsigned int aRow;
   unsigned int aLayer;
@@ -1201,50 +1192,9 @@ void SpatiocyteStepper::setCompProperties(Comp* aComp)
 {
   System* aSystem(aComp->system);
   double aRadius(0);
+  double aLongRadius(0);
   switch(aComp->shape)
     {
-    case SPHERICAL:
-      if(!aComp->specVolume)
-        {
-          THROW_EXCEPTION(NotFound, "Property SIZE of the Sphere Comp "
-                          + aSystem->getFullID().asString() + " not defined" );
-        }
-      aRadius = pow(3*aComp->specVolume/(4*M_PI), 1.0/3);
-      aComp->lengthX = 2*aRadius;
-      aComp->lengthY = aComp->lengthX;
-      aComp->lengthZ = aComp->lengthX;
-      aComp->specArea = 4*M_PI*aRadius*aRadius;
-      break;
-    case ROD:
-      if(!aComp->specVolume)
-        {
-          THROW_EXCEPTION(NotFound, "Property SIZE of the Rod Comp "
-                          + aSystem->getFullID().asString() + " not defined." );
-        }
-      if(!aComp->lengthY)
-        {
-          THROW_EXCEPTION(NotFound, "Property LENGTHY of the Rod Comp "
-                          + aSystem->getFullID().asString() + ", which "
-                          + "specifies its diameter, not defined." );
-        }
-      aRadius = aComp->lengthY/2;
-      aComp->lengthX = aComp->specVolume/
-        (M_PI*aRadius*aRadius)-(4*aRadius/3)+(2*aRadius);
-      aComp->lengthZ = aComp->lengthY;
-      aComp->specArea = 4*M_PI*aRadius*aRadius+
-        2*M_PI*aRadius*(aComp->lengthX-2*aRadius);
-      break;
-    case CUBIC:
-      if(!aComp->specVolume)
-        {
-          THROW_EXCEPTION(NotFound, "Property VOLUME of the Cubic Comp "
-                          + aSystem->getFullID().asString() + " not defined.");
-        }
-      aComp->lengthX = pow(aComp->specVolume, 1.0/3);
-      aComp->lengthY = aComp->lengthX;
-      aComp->lengthZ = aComp->lengthX;
-      aComp->specArea = getCuboidSpecArea(aComp);
-      break;
     case CUBOID:
       if(!aComp->lengthX)
         {
@@ -1297,6 +1247,93 @@ void SpatiocyteStepper::setCompProperties(Comp* aComp)
              pow(aComp->lengthY/2, 1.6075)*
              pow(aComp->lengthZ/2, 1.6075))/ 3, 1/1.6075); 
       break;
+    case CYLINDER:
+      if(!aComp->lengthX)
+        {
+          THROW_EXCEPTION(NotFound, "Property LENGTHX of the Cylinder Comp "
+                          + aSystem->getFullID().asString() + " not defined." );
+        }
+      if(!aComp->lengthY)
+        {
+          THROW_EXCEPTION(NotFound, "Property LENGTHY of the Cylinder Comp "
+                          + aSystem->getFullID().asString() + ", which "
+                          + "specifies its diameter, not defined." );
+        }
+      aRadius = aComp->lengthY/2;
+      aComp->specVolume = (aComp->lengthX)*(M_PI*aRadius*aRadius);
+      aComp->lengthZ = aComp->lengthY;
+      aComp->specArea = 2*M_PI*aRadius*(aComp->lengthX)+
+        2*(M_PI*aRadius*aRadius);
+      break;
+    case ROD:
+      if(!aComp->lengthX)
+        {
+          THROW_EXCEPTION(NotFound, "Property LENGTHX of the Rod Comp "
+                          + aSystem->getFullID().asString() + ", which "
+                          + "specifies the rod length (cylinder length + "
+                          + "2*hemisphere radius), not defined." );
+        }
+      if(!aComp->lengthY)
+        {
+          THROW_EXCEPTION(NotFound, "Property LENGTHY of the Rod Comp "
+                          + aSystem->getFullID().asString() + ", which "
+                          + "specifies its diameter, not defined." );
+        }
+      aRadius = aComp->lengthY/2;
+      aComp->specVolume = (aComp->lengthX+(4*aRadius/3)-(2*aRadius))*
+        (M_PI*aRadius*aRadius);
+      aComp->lengthZ = aComp->lengthY;
+      aComp->specArea = 4*M_PI*aRadius*aRadius+
+        2*M_PI*aRadius*(aComp->lengthX-2*aRadius);
+      break;
+    case TORUS:
+      if(!aComp->lengthX)
+        {
+          THROW_EXCEPTION(NotFound, "Property LENGTHX of the Torus Comp "
+                          + aSystem->getFullID().asString() + ", which "
+                          + "specifies the diameter of the torus, "
+                          + "not defined." );
+        }
+      if(!aComp->lengthY)
+        {
+          THROW_EXCEPTION(NotFound, "Property LENGTHY of the Torus Comp "
+                          + aSystem->getFullID().asString() + ", which "
+                          + "specifies the diameter of tube, not defined." );
+        }
+      aRadius = aComp->lengthY/2;
+      aLongRadius = (aComp->lengthX-aComp->lengthY)/2;
+      aComp->lengthZ = aComp->lengthX;
+      aComp->specVolume = M_PI*aRadius*aRadius*2*M_PI*aLongRadius;
+      aComp->specArea = 2*M_PI*aRadius*2*M_PI*aLongRadius;
+      break;
+    case PYRAMID:
+      if(!aComp->lengthX)
+        {
+          THROW_EXCEPTION(NotFound, "Property LENGTHX of the Pyramid Comp "
+                          + aSystem->getFullID().asString() + ", which "
+                          + "specifies the length of the pyramid, "
+                          + "not defined." );
+        }
+      if(!aComp->lengthY)
+        {
+          THROW_EXCEPTION(NotFound, "Property LENGTHY of the Pyramid Comp "
+                          + aSystem->getFullID().asString() + ", which "
+                          + "specifies the height of the pyramid, "
+                          + "not defined." );
+        }
+      if(!aComp->lengthZ)
+        {
+          THROW_EXCEPTION(NotFound, "Property LENGTHZ of the Pyramid Comp "
+                          + aSystem->getFullID().asString() + ", which "
+                          + "specifies the depth of the pyramid, "
+                          + "not defined." );
+        }
+      aComp->specVolume = aComp->lengthX*aComp->lengthY*aComp->lengthZ/3;
+      aRadius = sqrt(pow(aComp->lengthX/2,2)+pow(aComp->lengthY,2));
+      aLongRadius = sqrt(pow(aComp->lengthZ/2,2)+pow(aComp->lengthY,2));
+      aComp->specArea =  aComp->lengthZ*aComp->lengthX+
+        2*(aComp->lengthZ*aRadius)+2*(aComp->lengthX*aRadius);
+      break;
     }
   aComp->lengthX /= VoxelRadius*2;
   aComp->lengthY /= VoxelRadius*2;
@@ -1320,39 +1357,9 @@ void SpatiocyteStepper::setCompCenterPoint(Comp* aComp)
   Comp* aSuperComp(system2Comp(aSuperSystem));
   //The center with reference to the immediate super system:
   aComp->centerPoint = aSuperComp->centerPoint;
-  aComp->centerPoint.x += 
-    aComp->originX*aSuperComp->lengthX/2;
-  aComp->centerPoint.y += 
-    aComp->originY*aSuperComp->lengthY/2;
-  aComp->centerPoint.z += 
-    aComp->originZ*aSuperComp->lengthZ/2;
-  //The center of the west hemisphere of the rod:
-  aComp->westPoint.x = aComp->centerPoint.x-
-    aComp->lengthX/2+aComp->lengthY/2;
-  aComp->westPoint.y = aComp->centerPoint.y;
-  aComp->westPoint.z = aComp->centerPoint.z;
-  //The center of the east hemisphere of the rod
-  aComp->eastPoint.x = aComp->centerPoint.x+
-    aComp->lengthX/2-aComp->lengthY/2;
-  aComp->eastPoint.y = aComp->centerPoint.y;
-  aComp->eastPoint.z = aComp->centerPoint.z;
-  if(aComp->shape == CUBOID)
-    {
-      //The center of the west hemisphere of the rod:
-      aComp->westPoint.x = aComp->centerPoint.x-
-        aComp->lengthX/2;
-      aComp->westPoint.y = aComp->centerPoint.y-
-        aComp->lengthY/2;
-      aComp->westPoint.z = aComp->centerPoint.z-
-        aComp->lengthZ/2;
-      //The center of the east hemisphere of the rod
-      aComp->eastPoint.x = aComp->centerPoint.x+
-        aComp->lengthX/2;
-      aComp->eastPoint.y = aComp->centerPoint.y+
-        aComp->lengthY/2;
-      aComp->eastPoint.z = aComp->centerPoint.z+
-        aComp->lengthZ/2;
-    }
+  aComp->centerPoint.x += aComp->originX*aSuperComp->lengthX/2;
+  aComp->centerPoint.y += aComp->originY*aSuperComp->lengthY/2;
+  aComp->centerPoint.z += aComp->originZ*aSuperComp->lengthZ/2;
 }
 
 double SpatiocyteStepper::getCuboidSpecArea(Comp* aComp)
@@ -2053,13 +2060,17 @@ void SpatiocyteStepper::setSurfaceSubunit(Voxel* aVoxel,
   aPoint = coord2point(aVoxel->coord);
   double aRadius(aComp->lengthY/2);
   Point aCenterPoint(aComp->centerPoint);
-  if(aPoint.x < aComp->westPoint.x)
+  Point aWestPoint(aComp->centerPoint);
+  Point anEastPoint(aComp->centerPoint); 
+  aWestPoint.x = aComp->centerPoint.x-aComp->lengthX/2+aComp->lengthY/2;
+  anEastPoint.x = aComp->centerPoint.x+aComp->lengthX/2-aComp->lengthY/2;
+  if(aPoint.x < aWestPoint.x)
     {
-      aCenterPoint.x = aComp->westPoint.x;
+      aCenterPoint.x = aWestPoint.x;
     }
-  else if(aPoint.x > aComp->eastPoint.x )
+  else if(aPoint.x > anEastPoint.x)
     {
-      aCenterPoint.x = aComp->eastPoint.x;
+      aCenterPoint.x = anEastPoint.x;
     }
   else
     {
@@ -2075,9 +2086,88 @@ void SpatiocyteStepper::setSurfaceSubunit(Voxel* aVoxel,
   aPoint.z = aCenterPoint.z + cos(f)*aRadius*sin(d);
 }
 
+void SpatiocyteStepper::setIntersectingCompartmentList() 
+{
+  setIntersectingPeers();
+  setIntersectingParent();
+}
+
+void SpatiocyteStepper::setIntersectingPeers()
+{
+  for(std::vector<Comp*>::reverse_iterator i(theComps.rbegin());
+      i != theComps.rend(); ++i)
+    {
+      //Only proceed if the volume is not enclosed:
+      if(!(*i)->system->isRootSystem() && (*i)->dimension == 3)
+        {
+          for(std::vector<Comp*>::reverse_iterator j(theComps.rbegin());
+              j != theComps.rend(); ++j)
+            {
+              //Only proceed if the volume of the peer is enclosed:
+              if((*i) != (*j) && !(*j)->system->isRootSystem() &&
+                 (*j)->dimension == 3)
+                {
+                  //If i and j are peer volume compartments:
+                  if((*i)->system->getSuperSystem() == 
+                     (*j)->system->getSuperSystem())
+                    {
+                      Point a((*i)->centerPoint);
+                      Point b((*j)->centerPoint);
+                      if(((a.x+(*i)->lengthX/2 > b.x-(*j)->lengthX/2) ||
+                          (a.x-(*i)->lengthX/2 < b.x+(*j)->lengthX/2)) && 
+                         ((a.y+(*i)->lengthY/2 > b.y-(*j)->lengthY/2) ||
+                          (a.y-(*i)->lengthY/2 < b.y+(*j)->lengthY/2)) &&
+                         ((a.z+(*i)->lengthZ/2 > b.z-(*j)->lengthZ/2) ||
+                          (a.z-(*i)->lengthZ/2 < b.z+(*j)->lengthZ/2)))
+                        {
+                          if(!(*i)->isEnclosed && !(*j)->isEnclosed &&
+                             std::find((*j)->intersectPeers.begin(),
+                                       (*j)->intersectPeers.end(),
+                                       (*i)) == (*j)->intersectPeers.end())
+                            {
+                              (*i)->intersectPeers.push_back(*j);
+                            }
+                          else if((*j)->isEnclosed)
+                            {
+                              (*i)->intersectPeers.push_back(*j);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void SpatiocyteStepper::setIntersectingParent() 
+{
+  for(std::vector<Comp*>::iterator i(theComps.begin());
+      i != theComps.end(); ++i)
+    {
+      (*i)->isIntersectParent = false;
+      //only proceed if the volume is not enclosed:
+      if(!(*i)->system->isRootSystem() && (*i)->dimension == 3)
+        {
+          Comp* aParentComp(system2Comp((*i)->system->getSuperSystem())); 
+          Point a((*i)->centerPoint);
+          Point b(aParentComp->centerPoint);
+          if((a.x+(*i)->lengthX/2 > b.x+aParentComp->lengthX/2) ||
+             (a.x-(*i)->lengthX/2 < b.x-aParentComp->lengthX/2) || 
+             (a.y+(*i)->lengthY/2 > b.y+aParentComp->lengthY/2) ||
+             (a.y-(*i)->lengthY/2 < b.y-aParentComp->lengthY/2) ||
+             (a.z+(*i)->lengthZ/2 > b.z+aParentComp->lengthZ/2) ||
+             (a.z-(*i)->lengthZ/2 < b.z-aParentComp->lengthZ/2))
+            {
+              (*i)->isIntersectParent = true;
+            }
+        }
+    }
+}
+
 void SpatiocyteStepper::compartmentalizeLattice() 
 {
-  for(std::vector<Voxel>::iterator i(theLattice.begin()); i != theLattice.end(); ++i)
+  for(std::vector<Voxel>::iterator i(theLattice.begin());
+      i != theLattice.end(); ++i)
     {
       if((*i).id != theNullID)
         { 
@@ -2086,46 +2176,27 @@ void SpatiocyteStepper::compartmentalizeLattice()
     }
 }
 
-
-/*
-1. Enclose the root system with surface voxels if it has enclosed surface
-   voxels.
-2. Assign the voxel to child compartments 
-3. Enclose the remaining voxels in root compartment with surface voxels
-*/
-
-bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel,
-                                              Comp* aComp)
+bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel, Comp* aComp)
 {
   if(aComp->dimension == 3)
     {
       if(aComp->system->isRootSystem() ||
          isInsideCoord(aVoxel->coord, aComp, 0))
         {
-          if(aComp->system->isRootSystem() && aComp->surfaceSub &&
-             aComp->surfaceSub->isEnclosed)
+          //Check if the voxel belongs to an intersecting peer compartment:
+          if(!aComp->intersectPeers.empty())
             {
-              if(isSuperEnclosedSurfaceVoxel(aVoxel, aComp))
-                {
-                  aVoxel->id = aComp->surfaceSub->vacantID;
-                  aComp->surfaceSub->coords.push_back(
-                                                 aVoxel->coord-theStartCoord);
-                  setMinMaxSurfaceDimensions(aVoxel->coord, aComp);
-                  return true;
+              //The function isPeerVoxel also checks if the voxel is a future
+              //surface voxel of the peer compartment: 
+              if(isPeerVoxel(aVoxel, aComp))
+                { 
+                  return false;
                 }
-            }
-          //If this compartment is not enclosed (i.e., can be cut off)
-          //and if the voxel belongs to a sibling/peer compartment:
-          if(!aComp->system->isRootSystem() && !aComp->isEnclosed &&
-             isPeerVoxel(aVoxel, aComp))
-            { 
-              //If this compartment has surface compartment which is
-              //enclosed:
               if(aComp->surfaceSub && aComp->surfaceSub->isEnclosed)
                 {
-                  //If the voxel is at the border between aComp and one of its
-                  //peer compartments: 
-                  if(isPeerEnclosedSurfaceVoxel(aVoxel, aComp))
+                  //Check if the voxel is neighbor of a peer voxel (either
+                  //a future surface voxel)
+                  if(isEnclosedSurfaceVoxel(aVoxel, aComp))
                     {
                       aVoxel->id = aComp->surfaceSub->vacantID;
                       aComp->surfaceSub->coords.push_back(
@@ -2134,17 +2205,31 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel,
                       return true;
                     }
                 }
-              return false;
             }
-          if(aComp->surfaceSub && aComp->surfaceSub->isEnclosed)
+          if(aComp->isIntersectParent)
             {
-              if(isSuperEnclosedSurfaceVoxel(aVoxel, aComp))
+              Comp* aParentComp(system2Comp(aComp->system->getSuperSystem())); 
+              //The child could intersect with the surface voxels only of the
+              //root compartment:
+              if(aParentComp->system->isRootSystem() &&
+                 aParentComp->surfaceSub && 
+                 aParentComp->surfaceSub->isEnclosed && 
+                 isParentSurfaceVoxel(aVoxel, aParentComp))
                 {
-                  aVoxel->id = aComp->surfaceSub->vacantID;
-                  aComp->surfaceSub->coords.push_back(
-                                                 aVoxel->coord-theStartCoord);
-                  setMinMaxSurfaceDimensions(aVoxel->coord, aComp);
-                  return true;
+                  return false;
+                }
+              if(aComp->surfaceSub && aComp->surfaceSub->isEnclosed)
+                {
+                  //Check if the voxel is neighbor of a peer voxel (either
+                  //a future surface voxel)
+                  if(isEnclosedParentSurfaceVoxel(aVoxel, aParentComp))
+                    {
+                      aVoxel->id = aComp->surfaceSub->vacantID;
+                      aComp->surfaceSub->coords.push_back(
+                                               aVoxel->coord-theStartCoord);
+                      setMinMaxSurfaceDimensions(aVoxel->coord, aComp);
+                      return true;
+                    }
                 }
             }
           for(unsigned int i(0); i != aComp->immediateSubs.size(); ++i)
@@ -2160,47 +2245,29 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel,
         }
       if(aComp->surfaceSub)
         {
-          if(!aComp->isEnclosed && !aComp->surfaceSub->isEnclosed &&
-             isPeerVoxel(aVoxel, aComp))
-            { 
-              return false;
-            }
           if(isSurfaceVoxel(aVoxel, aComp))
             {
-              for(unsigned int i(0); 
-                  i != aComp->surfaceSub->lineSubs.size(); ++i)
-                {
-                  // Peer should be check between lineSubs in future.
-                  Comp* lineComp(aComp->surfaceSub->lineSubs[i]);
-                  if(isLineVoxel(aVoxel, lineComp))
-                    {
-                      aVoxel->id = lineComp->vacantID;
-                      lineComp->coords.push_back(
-                          aVoxel->coord - theStartCoord);
-                      setMinMaxSurfaceDimensions(aVoxel->coord, aComp);
-                      unsigned int aRow, aLayer, aCol;
-                      coord2global(aVoxel->coord, &aRow, &aLayer, &aCol);
-                      lineComp->minRow = std::min(lineComp->minRow, aRow);
-                      lineComp->minLayer = std::min(
-                          lineComp->minLayer, aLayer);
-                      lineComp->minCol = std::min(lineComp->minCol, aCol);
-                      lineComp->maxRow = std::max(lineComp->maxRow, aRow);
-                      lineComp->maxLayer = std::max(
-                          lineComp->maxLayer, aLayer);
-                      lineComp->maxCol = std::max(lineComp->maxCol, aCol);
-                      return true;
-                    }
-                }
-                aVoxel->id = aComp->surfaceSub->vacantID;
-                aComp->surfaceSub->coords.push_back(
-                    aVoxel->coord-theStartCoord);
-                setMinMaxSurfaceDimensions(aVoxel->coord, aComp);
+              aVoxel->id = aComp->surfaceSub->vacantID;
+              aComp->surfaceSub->coords.push_back(
+                                              aVoxel->coord-theStartCoord);
+              setMinMaxSurfaceDimensions(aVoxel->coord, aComp);
               return true;
             }
         }
     }
+  else if(aComp->system->getSuperSystem()->isRootSystem())
+    {
+      Comp* aParentComp(system2Comp(aComp->system->getSuperSystem())); 
+      if(isParentSurfaceVoxel(aVoxel, aParentComp))
+        {
+          aVoxel->id = aComp->vacantID;
+          aComp->coords.push_back(aVoxel->coord-theStartCoord);
+          return true;
+        }
+    }
   return false;
 }
+
 
 void SpatiocyteStepper::setMinMaxSurfaceDimensions(unsigned int aCoord, 
                                                    Comp* aComp)
@@ -2242,8 +2309,45 @@ void SpatiocyteStepper::setMinMaxSurfaceDimensions(unsigned int aCoord,
 }
   
 
+bool SpatiocyteStepper::isParentSurfaceVoxel(Voxel* aVoxel, Comp* aComp)
+{
+  //Only check if the voxels are close to the border of the system:
+  if(!isInsideCoord(aVoxel->coord, aComp, -4))
+    {
+      for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+        {
+          if(aComp->system->isRootSystem())
+            {
+              if(aVoxel->adjoiningVoxels[i]->id == theNullID ||
+                 aVoxel->adjoiningVoxels[i] == aVoxel)
+                {
+                  return true;
+                }
+            }
+          else if(!isInsideCoord(aVoxel->adjoiningVoxels[i]->coord, aComp, 0))
+            {
+              return true;
+            }
+        }
+    }
+  return false;
+}
+
 bool SpatiocyteStepper::isSurfaceVoxel(Voxel* aVoxel, Comp* aComp)
 {
+  if(isPeerVoxel(aVoxel, aComp))
+    { 
+      return false;
+    }
+  if(aComp->isIntersectParent)
+    {
+      Comp* aParentComp(system2Comp(aComp->system->getSuperSystem())); 
+      if(aParentComp->surfaceSub && aParentComp->surfaceSub->isEnclosed && 
+         isParentSurfaceVoxel(aVoxel, aParentComp))
+        {
+          return false;
+        }
+    }
   for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
     {
       if(isInsideCoord(aVoxel->adjoiningVoxels[i]->coord, aComp, 0))
@@ -2294,40 +2398,29 @@ bool SpatiocyteStepper::isLineVoxel(Voxel* aVoxel, Comp* aComp)
             }
         }
     }
-                       
     return false;
 }
 
-
-bool SpatiocyteStepper::isPeerEnclosedSurfaceVoxel(Voxel* aVoxel, Comp* aComp)
-{
-  //Return true if one of the adjoining voxels belongs to the aComp and if it
-  //doesn't belong to any of aComp's peer compartments and if the adjoining
-  //voxel is not already a surface voxel of aComp:
-  //We are now checking if aVoxel is a candidate surface voxel that can
-  //enclose aComp.
-  for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+bool SpatiocyteStepper::isEnclosedParentSurfaceVoxel(Voxel* aVoxel, Comp* aComp)
+{ 
+  if(!isInsideCoord(aVoxel->coord, aComp, -4))
     {
-      if(isInsideCoord(aVoxel->adjoiningVoxels[i]->coord, aComp, 0) && 
-         !isPeerVoxel(aVoxel->adjoiningVoxels[i], aComp))// &&
-    //     aVoxel->adjoiningVoxels[i]->id != aComp->surfaceSub->vacantID)
+      for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
         {
-          return true;
+          if(isParentSurfaceVoxel(aVoxel->adjoiningVoxels[i], aComp))
+            {
+              return true;
+            }
         }
     }
   return false;
 }
 
-bool SpatiocyteStepper::isSuperEnclosedSurfaceVoxel(Voxel* aVoxel, Comp* aComp)
+bool SpatiocyteStepper::isEnclosedSurfaceVoxel(Voxel* aVoxel, Comp* aComp)
 {
-  //Return true if one of the adjoining voxels belongs to aComp and if it
-  //doesn't belong to any of aComp's peer compartments:
-  Comp* aSuperComp(system2Comp(aComp->system->getSuperSystem()));
   for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
     {
-      if(aVoxel->adjoiningVoxels[i]->id == theNullID ||
-         aVoxel->adjoiningVoxels[i] == aVoxel ||
-         !isInsideCoord(aVoxel->adjoiningVoxels[i]->coord, aSuperComp, 0))
+      if(isPeerVoxel(aVoxel->adjoiningVoxels[i], aComp))
         {
           return true;
         }
@@ -2337,14 +2430,29 @@ bool SpatiocyteStepper::isSuperEnclosedSurfaceVoxel(Voxel* aVoxel, Comp* aComp)
 
 bool SpatiocyteStepper::isPeerVoxel(Voxel* aVoxel, Comp* aComp)
 {
-  Comp* aSuperComp(system2Comp(aComp->system->getSuperSystem())); 
-  for(unsigned int i(0); i != aSuperComp->immediateSubs.size(); ++i)
+  for(std::vector<Comp*>::iterator i(aComp->intersectPeers.begin());
+      i != aComp->intersectPeers.end(); ++i)
     {
-      Comp* aPeerComp(aSuperComp->immediateSubs[i]);
-      if(aPeerComp != aComp && aPeerComp->dimension != 2 &&
-         isInsideCoord(aVoxel->coord, aPeerComp, 0))
+      if(isInsideCoord(aVoxel->coord, *i, 0))
         {
           return true;
+        }
+    }
+  //The voxel is not inside one of the intersecting peer compartments,
+  //we are now checking if the one of voxel's neighbor belongs to the
+  //peer comp, to determine if aVoxel is a surface voxel of the peer:
+  for(std::vector<Comp*>::iterator i(aComp->intersectPeers.begin());
+      i != aComp->intersectPeers.end(); ++i)
+    {
+      if((*i)->surfaceSub && (*i)->surfaceSub->isEnclosed)
+        { 
+          for(unsigned int j(0); j != theAdjoiningVoxelSize; ++j)
+            {
+              if(isInsideCoord(aVoxel->adjoiningVoxels[j]->coord, *i, 0))
+                {
+                  return true;
+                }
+            }
         }
     }
   return false;
@@ -2389,6 +2497,8 @@ bool SpatiocyteStepper::isInsideCoord(unsigned int aCoord,
 {
   Point aPoint(coord2point(aCoord));
   Point aCenterPoint(aComp->centerPoint);
+  Point aWestPoint(aComp->centerPoint);
+  Point anEastPoint(aComp->centerPoint); 
   aPoint.x = aPoint.x - aCenterPoint.x;
   aPoint.y = aPoint.y - aCenterPoint.y;
   aPoint.z = aPoint.z - aCenterPoint.z;
@@ -2398,54 +2508,72 @@ bool SpatiocyteStepper::isInsideCoord(unsigned int aCoord,
   aPoint.x = aPoint.x + aCenterPoint.x;
   aPoint.y = aPoint.y + aCenterPoint.y;
   aPoint.z = aPoint.z + aCenterPoint.z;
-  double aRadius(aComp->lengthY/2+theNormalizedVoxelRadius-delta);
+  double aRadius(0);
   switch(aComp->shape)
     {
+    case CUBOID:
+      if(sqrt(pow(aPoint.x-aCenterPoint.x, 2)) <= 
+         aComp->lengthX/2+theNormalizedVoxelRadius+delta &&
+         sqrt(pow(aPoint.y-aCenterPoint.y, 2)) <= 
+         aComp->lengthY/2+theNormalizedVoxelRadius+delta &&
+         sqrt(pow(aPoint.z-aCenterPoint.z, 2)) <= 
+         aComp->lengthZ/2+theNormalizedVoxelRadius+delta)
+        {
+          return true;
+        }
+      break;
     case ELLIPSOID:
-    case SPHERICAL:
       //If the distance between the voxel and the center point is less than 
       //or equal to radius-2, then the voxel cannot be a surface voxel:
-      if(pow(aPoint.x-aCenterPoint.x, 2)/
-         pow((aComp->lengthX-delta)/2, 2)+ 
-         pow(aPoint.y-aCenterPoint.y, 2)/
-         pow((aComp->lengthY-delta)/2, 2)+ 
-         pow(aPoint.z-aCenterPoint.z, 2)/
-         pow((aComp->lengthZ-delta)/2, 2) <= 1)
+      if(pow(aPoint.x-aCenterPoint.x, 2)/pow((aComp->lengthX+delta)/2, 2)+ 
+         pow(aPoint.y-aCenterPoint.y, 2)/pow((aComp->lengthY+delta)/2, 2)+ 
+         pow(aPoint.z-aCenterPoint.z, 2)/pow((aComp->lengthZ+delta)/2, 2) <= 1)
         {
+          return true;
+        }
+      break;
+    case CYLINDER: 
+      //The axial point of the cylindrical portion of the rod:
+      aCenterPoint.x = aPoint.x; 
+      aWestPoint.x = aComp->centerPoint.x-aComp->lengthX/2;
+      anEastPoint.x = aComp->centerPoint.x+aComp->lengthX/2;
+      aRadius = aComp->lengthY/2+theNormalizedVoxelRadius;
+      //If the distance between the voxel and the center point is less than 
+      //or equal to the radius, then the voxel must be inside the Comp:
+      if((aPoint.x >= aWestPoint.x && aPoint.x <= anEastPoint.x &&
+          getDistance(&aPoint, &aCenterPoint) <= aRadius+delta))
+        { 
           return true;
         }
       break;
     case ROD: 
       //The axial point of the cylindrical portion of the rod:
-      aCenterPoint.x = aPoint.x;
+      aCenterPoint.x = aPoint.x; 
+      aWestPoint.x = aComp->centerPoint.x-aComp->lengthX/2+aComp->lengthY/2;
+      anEastPoint.x = aComp->centerPoint.x+aComp->lengthX/2-aComp->lengthY/2;
+      aRadius = aComp->lengthY/2+theNormalizedVoxelRadius;
       //If the distance between the voxel and the center point is less than 
       //or equal to the radius, then the voxel must be inside the Comp:
-      if((aPoint.x >= aComp->westPoint.x &&
-          aPoint.x <= aComp->eastPoint.x &&
-          getDistance(&aPoint, &aCenterPoint) <= aRadius) ||
-         (aPoint.x < aComp->westPoint.x &&
-          getDistance(&aPoint, &aComp->westPoint) <= aRadius) ||
-         (aPoint.x > aComp->eastPoint.x &&
-          getDistance(&aPoint, &aComp->eastPoint) <= aRadius))
+      if((aPoint.x >= aWestPoint.x && aPoint.x <= anEastPoint.x &&
+          getDistance(&aPoint, &aCenterPoint) <= aRadius+delta) ||
+         (aPoint.x < aWestPoint.x &&
+          getDistance(&aPoint, &aWestPoint) <= aRadius+delta) ||
+         (aPoint.x > anEastPoint.x &&
+          getDistance(&aPoint, &anEastPoint) <= aRadius+delta))
         { 
           return true;
         }
       break;
-    case CUBIC:
-      if(sqrt(pow(aPoint.x-aCenterPoint.x, 2)) <= aRadius && 
-         sqrt(pow(aPoint.y-aCenterPoint.y, 2)) <= aRadius && 
-         sqrt(pow(aPoint.z-aCenterPoint.z, 2)) <= aRadius)
-        {
-          return true;
-        }
+    case TORUS: 
+      return true;
       break;
-    case CUBOID:
-      if(sqrt(pow(aPoint.x-aCenterPoint.x, 2)) <= 
-         aComp->lengthX/2+theNormalizedVoxelRadius-delta &&
-         sqrt(pow(aPoint.y-aCenterPoint.y, 2)) <= 
-         aComp->lengthY/2+theNormalizedVoxelRadius-delta &&
-         sqrt(pow(aPoint.z-aCenterPoint.z, 2)) <= 
-         aComp->lengthZ/2+theNormalizedVoxelRadius-delta)
+    case PYRAMID: 
+      aRadius = ((aCenterPoint.y+aComp->lengthY/2)-aPoint.y)/aComp->lengthY;
+      if(sqrt(pow(aPoint.y-aCenterPoint.y, 2)) <= aComp->lengthY/2+delta &&
+         sqrt(pow(aPoint.x-aCenterPoint.x, 2)) <= 
+         aComp->lengthX*aRadius/2+delta &&
+         sqrt(pow(aPoint.z-aCenterPoint.z, 2)) <=
+         aComp->lengthZ*aRadius/2+delta)
         {
           return true;
         }

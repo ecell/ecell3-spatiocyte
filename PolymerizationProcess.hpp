@@ -84,9 +84,9 @@ protected:
     {
       if(x > theMinX && x < theMaxX)
         {
-          return CYLINDRICAL;
+          return CYLINDER;
         }
-      return SPHERICAL;
+      return ELLIPSOID;
     }
   virtual void pushNewBend(Subunit*, double);
   virtual void pushJoinBend(Subunit*, Subunit*, unsigned int);

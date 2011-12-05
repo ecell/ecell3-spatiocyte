@@ -89,6 +89,9 @@ public:
   std::vector<Comp*> const& getComps() const;
 private:
   void setCompsCenterPoint();
+  void setIntersectingCompartmentList();
+  void setIntersectingParent();
+  void setIntersectingPeers();
   void printProcessParameters();
   void checkSurfaceComp();
   void shuffleAdjoiningVoxels();
@@ -143,9 +146,9 @@ private:
   bool isSurfaceVoxel(Voxel*, Comp*);
   bool isLineVoxel(Voxel*, Comp*);
   bool isEnclosedSurfaceVoxel(Voxel*, Comp*);
+  bool isEnclosedParentSurfaceVoxel(Voxel*, Comp*);
   bool isPeerVoxel(Voxel*, Comp*);
-  bool isPeerEnclosedSurfaceVoxel(Voxel*, Comp*);
-  bool isSuperEnclosedSurfaceVoxel(Voxel*, Comp*);
+  bool isParentSurfaceVoxel(Voxel*, Comp*);
   bool compartmentalizeVoxel(Voxel*, Comp*);
   double getCuboidSpecArea(Comp*);
   unsigned int coord2row(unsigned int);

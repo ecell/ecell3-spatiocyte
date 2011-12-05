@@ -11,15 +11,16 @@ System System(/)
   StepperID       SS; 
   Variable Variable(SHAPE)
     {
-      Value 1;         # { 0: Spherical (uses VOLUME) 
-                       #   1: Rod (uses VOLUME, LENGTHY=2*radius)
-                       #   2: Cubic (uses VOLUME)
-                       #   3: Cuboid (uses LENGTHX, LENGTHY, LENGTHZ)
-                       #   4: Ellipsoid (uses LENGTHX, LENGTHY, LENGTHZ) }
+      Value 3;         # { 0: Cuboid (uses LENGTHX, LENGTHY, LENGTHZ)
+                       #   1: Ellipsoid (uses LENGTHX, LENGTHY, LENGTHZ) }
+                       #   2: Cylinder (uses LENGTHX, LENGTHY=2*radius)
+                       #   3: Rod (uses LENGTHX, LENGTHY=2*radius)
+                       #   4: Torus (uses LENGTHX, LENGTHY, LENGTHZ) }
+                       #   5: Pyramid (uses LENGTHX, LENGTHY, LENGTHZ) }
     } 
-  Variable Variable(VOLUME)
+  Variable Variable(LENGTHX)
     {
-      Value	3.27e-18;  # m^3
+      Value 4.5e-6;      # m
     } 
   Variable Variable(LENGTHY)
     {
@@ -96,7 +97,7 @@ System System(/Surface)
     } 
   Variable Variable(VACANT)
     {
-      Value 0;
+      Value 1;
     } 
   Variable Variable(MinD)
     {
