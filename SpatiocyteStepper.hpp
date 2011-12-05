@@ -146,8 +146,9 @@ private:
   bool isSurfaceVoxel(Voxel*, Comp*);
   bool isLineVoxel(Voxel*, Comp*);
   bool isEnclosedSurfaceVoxel(Voxel*, Comp*);
-  bool isEnclosedParentSurfaceVoxel(Voxel*, Comp*);
+  bool isEnclosedRootSurfaceVoxel(Voxel*, Comp*, Comp*);
   bool isPeerVoxel(Voxel*, Comp*);
+  bool isRootSurfaceVoxel(Voxel*, Comp*);
   bool isParentSurfaceVoxel(Voxel*, Comp*);
   bool compartmentalizeVoxel(Voxel*, Comp*);
   double getCuboidSpecArea(Comp*);

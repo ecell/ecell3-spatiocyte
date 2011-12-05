@@ -1107,7 +1107,7 @@ bool SpatiocyteStepper::isRemovableEdgeCoord(unsigned int aCoord, Comp* aComp)
           ++removeCnt;
         }
     }
-  if(aLayer >= aComp->maxLayer)
+  if(aLayer >= aComp->maxLayer-1)
     {
       ++sharedCnt;
       if(aComp->xzPlane == REMOVE_UPPER || aComp->xzPlane == REMOVE_BOTH)
@@ -1115,7 +1115,7 @@ bool SpatiocyteStepper::isRemovableEdgeCoord(unsigned int aCoord, Comp* aComp)
           ++removeCnt;
         }
     }
-  if(aLayer <= aComp->minLayer)
+  if(aLayer <= aComp->minLayer+1)
     {
       ++sharedCnt;
       if(aComp->xzPlane == REMOVE_LOWER || aComp->xzPlane == REMOVE_BOTH)
@@ -2113,8 +2113,7 @@ void SpatiocyteStepper::setIntersectingPeers()
                          ((a.z+(*i)->lengthZ/2 > b.z-(*j)->lengthZ/2) ||
                           (a.z-(*i)->lengthZ/2 < b.z+(*j)->lengthZ/2)))
                         {
-                          if((*i)->enclosed < (*j)->enclosed ||
-                             (*i)->enclosed == (*j)->enclosed)
+                          if((*i)->enclosed <= (*j)->enclosed) 
                             {
                               (*i)->intersectPeers.push_back(*j);
                             }
@@ -2131,6 +2130,7 @@ void SpatiocyteStepper::setIntersectingParent()
   for(std::vector<Comp*>::iterator i(theComps.begin());
       i != theComps.end(); ++i)
     {
+      (*i)->isIntersectRoot = false;
       (*i)->isIntersectParent = false;
       //only proceed if the volume is not enclosed:
       if(!(*i)->system->isRootSystem() && (*i)->dimension == 3)
@@ -2145,7 +2145,14 @@ void SpatiocyteStepper::setIntersectingParent()
              (a.z+(*i)->lengthZ/2 > b.z+aParentComp->lengthZ/2) ||
              (a.z-(*i)->lengthZ/2 < b.z-aParentComp->lengthZ/2))
             {
-              (*i)->isIntersectParent = true;
+              if(aParentComp->system->isRootSystem())
+                {
+                  (*i)->isIntersectRoot = true;
+                }
+              else
+                {
+                  (*i)->isIntersectParent = true;
+                }
             }
         }
     }
@@ -2193,30 +2200,36 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel, Comp* aComp)
                     }
                 }
             }
-          if(aComp->isIntersectParent)
+          if(aComp->isIntersectRoot)
             {
-              Comp* aParentComp(system2Comp(aComp->system->getSuperSystem())); 
-              //The child could intersect with the surface voxels of only the
-              //root compartment:
-              if(aParentComp->system->isRootSystem() &&
-                 aParentComp->surfaceSub && 
-                 aParentComp->surfaceSub->enclosed && 
-                 isParentSurfaceVoxel(aVoxel, aParentComp))
+              Comp* aRootComp(system2Comp(aComp->system->getSuperSystem())); 
+              if(aRootComp->surfaceSub && 
+                 aRootComp->surfaceSub->enclosed && 
+                 isRootSurfaceVoxel(aVoxel, aRootComp))
                 {
                   return false;
                 }
-              if(aComp->surfaceSub && aComp->surfaceSub->enclosed)
+              if(aComp->surfaceSub && 
+                 isEnclosedRootSurfaceVoxel(aVoxel, aComp, aRootComp))
                 {
-                  //Check if the voxel is neighbor of a peer voxel (either
-                  //a future surface voxel)
-                  if(isEnclosedParentSurfaceVoxel(aVoxel, aParentComp))
-                    {
-                      aVoxel->id = aComp->surfaceSub->vacantID;
-                      aComp->surfaceSub->coords.push_back(
-                                               aVoxel->coord-theStartCoord);
-                      setMinMaxSurfaceDimensions(aVoxel->coord, aComp);
-                      return true;
-                    }
+                  aVoxel->id = aComp->surfaceSub->vacantID;
+                  aComp->surfaceSub->coords.push_back(
+                                                aVoxel->coord-theStartCoord);
+                  setMinMaxSurfaceDimensions(aVoxel->coord, aComp);
+                  return true;
+                }
+            }
+          else if(aComp->isIntersectParent)
+            {
+              Comp* aParentComp(system2Comp(aComp->system->getSuperSystem())); 
+              if(aComp->surfaceSub && aComp->surfaceSub->enclosed &&
+                 isParentSurfaceVoxel(aVoxel, aParentComp))
+                {
+                  aVoxel->id = aComp->surfaceSub->vacantID;
+                  aComp->surfaceSub->coords.push_back(
+                                                aVoxel->coord-theStartCoord);
+                  setMinMaxSurfaceDimensions(aVoxel->coord, aComp);
+                  return true;
                 }
             }
           for(unsigned int i(0); i != aComp->immediateSubs.size(); ++i)
@@ -2245,7 +2258,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel, Comp* aComp)
   else if(aComp->system->getSuperSystem()->isRootSystem())
     {
       Comp* aParentComp(system2Comp(aComp->system->getSuperSystem())); 
-      if(isParentSurfaceVoxel(aVoxel, aParentComp))
+      if(isRootSurfaceVoxel(aVoxel, aParentComp))
         {
           aVoxel->id = aComp->vacantID;
           aComp->coords.push_back(aVoxel->coord-theStartCoord);
@@ -2256,68 +2269,60 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel, Comp* aComp)
   return false;
 }
 
-
-void SpatiocyteStepper::setMinMaxSurfaceDimensions(unsigned int aCoord, 
-                                                   Comp* aComp)
-{
-  unsigned int aRow;
-  unsigned int aLayer;
-  unsigned int aCol;
-  coord2global(aCoord, &aRow, &aLayer, &aCol);
-  if(aRow < aComp->minRow)
-    {
-      aComp->minRow = aRow;
-      aComp->surfaceSub->minRow = aRow;
-    }
-  else if(aRow > aComp->maxRow)
-    {
-      aComp->maxRow = aRow;
-      aComp->surfaceSub->maxRow = aRow;
-    }
-  if(aCol < aComp->minCol)
-    {
-      aComp->minCol = aCol;
-      aComp->surfaceSub->minCol = aCol;
-    }
-  else if(aCol > aComp->maxCol)
-    {
-      aComp->maxCol = aCol;
-      aComp->surfaceSub->maxCol = aCol;
-    }
-  if(aLayer < aComp->minLayer)
-    {
-      aComp->minLayer = aLayer;
-      aComp->surfaceSub->minLayer = aLayer;
-    }
-  else if(aLayer > aComp->maxLayer)
-    {
-      aComp->maxLayer = aLayer;
-      aComp->surfaceSub->maxLayer = aLayer;
-    }
-}
-  
-
-bool SpatiocyteStepper::isParentSurfaceVoxel(Voxel* aVoxel, Comp* aComp)
+bool SpatiocyteStepper::isRootSurfaceVoxel(Voxel* aVoxel, Comp* aComp)
 {
   //Only check if the voxels are close to the border of the system:
   if(!isInsideCoord(aVoxel->coord, aComp, -4))
     {
-      if(aComp->system->isRootSystem())
+      for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
         {
-          for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+          if(aVoxel->adjoiningVoxels[i]->id == theNullID ||
+             aVoxel->adjoiningVoxels[i] == aVoxel)
             {
-              if(aVoxel->adjoiningVoxels[i]->id == theNullID ||
-                 aVoxel->adjoiningVoxels[i] == aVoxel)
-                {
-                  return true;
-                }
+              return true;
             }
         }
-      else
+    }
+  return false;
+}
+
+bool SpatiocyteStepper::isParentSurfaceVoxel(Voxel* aVoxel, Comp* aComp)
+{
+  if(!isInsideCoord(aVoxel->coord, aComp, -4))
+    {
+      for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
         {
+          if(!isInsideCoord(aVoxel->adjoiningVoxels[i]->coord, aComp, 0))
+            {
+              return true;
+            }
+        }
+    }
+  return false;
+}
+
+bool SpatiocyteStepper::isEnclosedRootSurfaceVoxel(Voxel* aVoxel, Comp* aComp,
+                                                   Comp* aRootComp)
+{ 
+  if(aComp->surfaceSub->enclosed || aRootComp->enclosed <= aComp->enclosed)
+    { 
+      if(!isInsideCoord(aVoxel->coord, aRootComp, -4))
+        {
+          if(aRootComp->surfaceSub && !aRootComp->surfaceSub->enclosed)
+            {
+              for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+                {
+                  if(aVoxel->adjoiningVoxels[i]->id == theNullID ||
+                     aVoxel->adjoiningVoxels[i] == aVoxel)
+                    {
+                      return true;
+                    }
+                }
+              return false;
+            }
           for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
             {
-              if(!isInsideCoord(aVoxel->adjoiningVoxels[i]->coord, aComp, 0))
+              if(isRootSurfaceVoxel(aVoxel->adjoiningVoxels[i], aComp))
                 {
                   return true;
                 }
@@ -2333,11 +2338,11 @@ bool SpatiocyteStepper::isSurfaceVoxel(Voxel* aVoxel, Comp* aComp)
     { 
       return false;
     }
-  if(aComp->isIntersectParent)
+  if(aComp->isIntersectRoot)
     {
-      Comp* aParentComp(system2Comp(aComp->system->getSuperSystem())); 
-      if(aParentComp->surfaceSub && aParentComp->surfaceSub->enclosed && 
-         isParentSurfaceVoxel(aVoxel, aParentComp))
+      Comp* aRootComp(system2Comp(aComp->system->getSuperSystem())); 
+      if(aRootComp->surfaceSub && aRootComp->surfaceSub->enclosed && 
+         isRootSurfaceVoxel(aVoxel, aRootComp))
         {
           return false;
         }
@@ -2395,33 +2400,6 @@ bool SpatiocyteStepper::isLineVoxel(Voxel* aVoxel, Comp* aComp)
     return false;
 }
 
-bool SpatiocyteStepper::isEnclosedParentSurfaceVoxel(Voxel* aVoxel, Comp* aComp)
-{ 
-  if(!isInsideCoord(aVoxel->coord, aComp, -4))
-    {
-      if(aComp->system->isRootSystem() && aComp->surfaceSub && 
-         !aComp->surfaceSub->enclosed)
-        {
-          for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
-            {
-              if(aVoxel->adjoiningVoxels[i]->id == theNullID ||
-                 aVoxel->adjoiningVoxels[i] == aVoxel)
-                {
-                  return true;
-                }
-            }
-          return false;
-        }
-      for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
-        {
-          if(isParentSurfaceVoxel(aVoxel->adjoiningVoxels[i], aComp))
-            {
-              return true;
-            }
-        }
-    }
-  return false;
-}
 
 bool SpatiocyteStepper::isEnclosedSurfaceVoxel(Voxel* aVoxel, Comp* aComp)
 {
@@ -2464,6 +2442,46 @@ bool SpatiocyteStepper::isPeerVoxel(Voxel* aVoxel, Comp* aComp)
     }
   return false;
 }
+
+void SpatiocyteStepper::setMinMaxSurfaceDimensions(unsigned int aCoord, 
+                                                   Comp* aComp)
+{
+  unsigned int aRow;
+  unsigned int aLayer;
+  unsigned int aCol;
+  coord2global(aCoord, &aRow, &aLayer, &aCol);
+  if(aRow < aComp->minRow)
+    {
+      aComp->minRow = aRow;
+      aComp->surfaceSub->minRow = aRow;
+    }
+  else if(aRow > aComp->maxRow)
+    {
+      aComp->maxRow = aRow;
+      aComp->surfaceSub->maxRow = aRow;
+    }
+  if(aCol < aComp->minCol)
+    {
+      aComp->minCol = aCol;
+      aComp->surfaceSub->minCol = aCol;
+    }
+  else if(aCol > aComp->maxCol)
+    {
+      aComp->maxCol = aCol;
+      aComp->surfaceSub->maxCol = aCol;
+    }
+  if(aLayer < aComp->minLayer)
+    {
+      aComp->minLayer = aLayer;
+      aComp->surfaceSub->minLayer = aLayer;
+    }
+  else if(aLayer > aComp->maxLayer)
+    {
+      aComp->maxLayer = aLayer;
+      aComp->surfaceSub->maxLayer = aLayer;
+    }
+}
+
 
 
 void SpatiocyteStepper::rotateX(double angle, Point* aPoint)

@@ -124,6 +124,7 @@ struct Point
 struct Comp
 {
   bool isIntersectParent;
+  bool isIntersectRoot;
   unsigned short dimension;
   unsigned short vacantID; 
   int enclosed;
