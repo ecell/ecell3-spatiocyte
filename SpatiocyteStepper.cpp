@@ -642,10 +642,6 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
         {
           aComp->yzPlane = aSystem->getVariable("YZPLANE")->getValue();
         }
-      if(getVariable(aSystem, "VOLUME"))
-        { 
-          aComp->specVolume = aSystem->getVariable("VOLUME")->getValue();
-        }
     }
   registerCompSpecies(aComp);
   //Systems contains all the subsystems of a System.
