@@ -2268,7 +2268,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel, Comp* aComp)
 bool SpatiocyteStepper::isRootSurfaceVoxel(Voxel* aVoxel, Comp* aComp)
 {
   //Only check if the voxels are close to the border of the system:
-  if(!isInsideCoord(aVoxel->coord, aComp, -4))
+  //if(!isInsideCoord(aVoxel->coord, aComp, -4))
     {
       for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
         {
@@ -2316,9 +2316,19 @@ bool SpatiocyteStepper::isEnclosedRootSurfaceVoxel(Voxel* aVoxel, Comp* aComp,
                 }
               return false;
             }
-          for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+          else if(aRootComp->surfaceSub && aRootComp->surfaceSub->enclosed)
             {
-              if(isRootSurfaceVoxel(aVoxel->adjoiningVoxels[i], aComp))
+              for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+                {
+                  if(isRootSurfaceVoxel(aVoxel->adjoiningVoxels[i], aComp))
+                    {
+                      return true;
+                    }
+                }
+            }
+          else
+            {
+              if(isRootSurfaceVoxel(aVoxel, aComp))
                 {
                   return true;
                 }
