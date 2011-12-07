@@ -160,6 +160,7 @@ struct Comp
   std::vector<Comp*> allSubs;
   std::vector<Comp*> immediateSubs;
   std::vector<Comp*> intersectPeers;
+  std::vector<Comp*> intersectLowerPeers;
   std::vector<Comp*> lineSubs;
   std::vector<Species*> species;
   std::vector<unsigned int> coords;

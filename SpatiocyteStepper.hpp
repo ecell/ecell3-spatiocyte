@@ -148,6 +148,7 @@ private:
   bool isEnclosedSurfaceVoxel(Voxel*, Comp*);
   bool isEnclosedRootSurfaceVoxel(Voxel*, Comp*, Comp*);
   bool isPeerVoxel(Voxel*, Comp*);
+  bool isLowerPeerVoxel(Voxel*, Comp*);
   bool isRootSurfaceVoxel(Voxel*, Comp*);
   bool isParentSurfaceVoxel(Voxel*, Comp*);
   bool compartmentalizeVoxel(Voxel*, Comp*);
