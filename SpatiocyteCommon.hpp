@@ -128,7 +128,7 @@ struct Comp
   unsigned short dimension;
   unsigned short vacantID; 
   int enclosed;
-  int shape;
+  int geometry;
   int xyPlane;
   int xzPlane;
   int yzPlane;

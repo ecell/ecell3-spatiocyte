@@ -579,8 +579,8 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
   aComp->system = aSystem;
   aComp->surfaceSub = NULL;
   aComp->diffusiveComp = NULL;
-  //Default Comp shape is Cuboid:
-  aComp->shape = 0;
+  //Default Comp geometry is Cuboid:
+  aComp->geometry = 0;
   //Default is volume Comp:
   aComp->dimension = 3;
   if(getVariable(aSystem, "DIMENSION"))
@@ -590,9 +590,9 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
     }
   if(aComp->dimension == 3)
     {
-      if(getVariable(aSystem, "SHAPE"))
+      if(getVariable(aSystem, "GEOMETRY"))
         { 
-          aComp->shape = aSystem->getVariable("SHAPE")->getValue();
+          aComp->geometry = aSystem->getVariable("GEOMETRY")->getValue();
         }
       if(getVariable(aSystem, "LENGTHX"))
         {
@@ -662,7 +662,7 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
       aComp->immediateSubs.push_back(aSubComp);
       if(aSubComp->dimension == 2)
       {
-          aSubComp->shape = aComp->shape;
+          aSubComp->geometry = aComp->geometry;
           aSubComp->specVolume = aComp->specVolume;
           aSubComp->lengthX = aComp->lengthX;
           aSubComp->lengthY = aComp->lengthY;
@@ -677,7 +677,7 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
           for(unsigned int i(0); i != aSubComp->lineSubs.size(); ++i)
           {
               Comp* lineComp(aSubComp->lineSubs[i]);
-              lineComp->shape = aComp->shape;
+              lineComp->geometry = aComp->geometry;
               lineComp->specVolume = aComp->specVolume;
               lineComp->lengthX = aComp->lengthX;
               lineComp->lengthY = aComp->lengthY;
@@ -776,7 +776,7 @@ void SpatiocyteStepper::setLatticeProperties()
       theAdjoiningVoxelSize = 6;
       break;
     }
-  if(aRootComp->shape == CUBOID)
+  if(aRootComp->geometry == CUBOID)
     {
       //We do not give any leeway space between the simulation boundary
       //and the cell boundary if it is CUBOID to support
@@ -820,11 +820,11 @@ void SpatiocyteStepper::setLatticeProperties()
                                       (theNormalizedVoxelRadius));
       break;
     }
-  //For the CUBOID cell shapes, we need to readjust the size of
+  //For the CUBOID cell geometrys, we need to readjust the size of
   //row, layer and column according to the boundary condition of its surfaces
   //to reflect the correct volume. This is because periodic boundary will
   //[consume a layer of the surface voxels:
-  if(aRootComp->shape == CUBOID)
+  if(aRootComp->geometry == CUBOID)
     {
       readjustSurfaceBoundarySizes(); 
     }
@@ -887,7 +887,7 @@ void SpatiocyteStepper::printSimulationParameters()
       double aSpecArea(aComp->specArea);
       double anActualVolume(aComp->actualVolume);
       double anActualArea(aComp->actualArea);
-      switch(aComp->shape)
+      switch(aComp->geometry)
         {
         case CUBOID:
           std::cout << "   Cuboid ";
@@ -950,7 +950,7 @@ void SpatiocyteStepper::readjustSurfaceBoundarySizes()
 {
   Comp* aRootComp(theComps[0]);
   //[XY, XZ, YZ]PLANE: the boundary type of the surface when 
-  //the shape of the root Comp is CUBOID.
+  //the geometry of the root Comp is CUBOID.
   //Boundary type can be either PERIODIC or REFLECTIVE.
   //Increase the size of [row,layer,col] by one voxel and make them odd sized
   //if the system uses periodic boundary conditions.
@@ -1018,7 +1018,7 @@ void SpatiocyteStepper::constructLattice()
       unsigned int aLayer((a%(theRowSize*theLayerSize))/theRowSize); 
       unsigned int aRow((a%(theRowSize*theLayerSize))%theRowSize); 
       (*i).coord = b; 
-      if(aRootComp->shape == CUBOID || aRootComp->shape == CUBOID ||
+      if(aRootComp->geometry == CUBOID || aRootComp->geometry == CUBOID ||
          isInsideCoord(b, aRootComp, 0))
         {
           //By default, the voxel is vacant and we set it to the root id:
@@ -1043,7 +1043,7 @@ void SpatiocyteStepper::constructLattice()
             }
         }
     }
-  if(aRootComp->shape == CUBOID)
+  if(aRootComp->geometry == CUBOID)
     {
       concatenatePeriodicSurfaces();
     }
@@ -1186,7 +1186,7 @@ void SpatiocyteStepper::setCompProperties(Comp* aComp)
   System* aSystem(aComp->system);
   double aRadius(0);
   double aLongRadius(0);
-  switch(aComp->shape)
+  switch(aComp->geometry)
     {
     case CUBOID:
       if(!aComp->lengthX)
@@ -2534,7 +2534,7 @@ bool SpatiocyteStepper::isInsideCoord(unsigned int aCoord,
   aPoint.y = aPoint.y + aCenterPoint.y;
   aPoint.z = aPoint.z + aCenterPoint.z;
   double aRadius(0);
-  switch(aComp->shape)
+  switch(aComp->geometry)
     {
     case CUBOID:
       if(sqrt(pow(aPoint.x-aCenterPoint.x, 2)) <= 

@@ -9,7 +9,7 @@ Stepper SpatiocyteStepper(SS) { VoxelRadius 1e-8; }   # m
 System System(/)
 {
   StepperID       SS; 
-  Variable Variable(SHAPE)
+  Variable Variable(GEOMETRY)
     {
       Value 3;         # { 0: Cuboid (uses LENGTHX, LENGTHY, LENGTHZ)
                        #   1: Ellipsoid (uses LENGTHX, LENGTHY, LENGTHZ) }
