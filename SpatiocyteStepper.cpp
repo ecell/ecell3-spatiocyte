@@ -1251,8 +1251,7 @@ void SpatiocyteStepper::setCompProperties(Comp* aComp)
       aRadius = aComp->lengthY/2;
       aComp->specVolume = (aComp->lengthX)*(M_PI*aRadius*aRadius);
       aComp->lengthZ = aComp->lengthY;
-      aComp->specArea = 2*M_PI*aRadius*(aComp->lengthX)+
-        2*(M_PI*aRadius*aRadius);
+      aComp->specArea = 2*M_PI*aRadius*(aComp->lengthX);
       break;
     case ROD:
       if(!aComp->lengthX)
