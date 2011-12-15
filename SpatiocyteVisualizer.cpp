@@ -1617,6 +1617,15 @@ void GLScene::pause()
     }
 }
 
+void GLScene::play()
+{
+  m_Run = true;
+  if (m_Run)
+    {
+      timeout_add();
+    }
+}
+
 ControlBox::ControlBox(GLScene *anArea) :
   m_table(10, 10),
   theFrameRotAdj( "Rotation" ),
@@ -2101,7 +2110,8 @@ Rulers::Rulers(const Glib::RefPtr<const Gdk::GL::Config>& config,
   m_area(config, aFileName),
   m_table(3, 2, false),
   m_hbox(),
-  m_control(&m_area)
+  m_control(&m_area),
+  isRecord(false)
 {
   m_area.setControlBox(&m_control);
   set_title("Spatiocyte Visualizer");
@@ -2171,15 +2181,6 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
     case GDK_Y:
       m_area.rotate(-1,0,1,0);
       break;
-    case GDK_z:
-      m_area.rotate(1,0,0,1);
-      break;
-    case GDK_Z:
-      m_area.rotate(-1,0,0,1);
-      break;
-    case GDK_equal:
-      m_area.resetView();
-      break;
     case GDK_Home:
       m_area.resetView();
       break;
@@ -2197,8 +2198,7 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
       m_area.step();
       break;
     case GDK_space:
-      m_area.setReverse(true);
-      m_area.step();
+      m_area.pause();
       break;
     case GDK_Page_Up:
       m_area.zoomIn();
@@ -2206,14 +2206,43 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
     case GDK_Page_Down:
       m_area.zoomOut();
       break;
+    case GDK_0:
+      if(event->state&Gdk::CONTROL_MASK)
+        {
+          m_area.resetView();
+        }
+      break;
+    case GDK_equal:
+      if(event->state&Gdk::CONTROL_MASK)
+        {
+          m_area.zoomIn();
+        }
+      break;
+    case GDK_plus:
+      if(event->state&Gdk::CONTROL_MASK)
+        {
+          m_area.zoomIn();
+        }
+      break;
+    case GDK_minus:
+      if(event->state&Gdk::CONTROL_MASK)
+        {
+          m_area.zoomOut();
+        }
+      break;
     case GDK_Down:
       if(event->state&Gdk::SHIFT_MASK)
         {
           m_area.translate(0,-1,0);
         }
-      else
+      else if (event->state&Gdk::CONTROL_MASK)
         {
           m_area.rotateMidAxis(1,1,0,0);
+        }
+      else
+        {
+          m_area.setReverse(true);
+          m_area.step();
         }
       break;
     case GDK_Up:
@@ -2221,9 +2250,14 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
         {
           m_area.translate(0,1,0);
         }
-      else
+      else if (event->state&Gdk::CONTROL_MASK)
         {
           m_area.rotateMidAxis(-1,1,0,0);
+        }
+      else
+        {
+          m_area.setReverse(false);
+          m_area.step();
         }
       break;
     case GDK_Right:
@@ -2231,9 +2265,14 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
         {
           m_area.translate(1,0,0);
         }
-      else
+      else if (event->state&Gdk::CONTROL_MASK)
         {
           m_area.rotateMidAxis(1,0,1,0);
+        }
+      else
+        {
+          m_area.setReverse(false);
+          m_area.play();
         }
       break;
     case GDK_Left:
@@ -2241,20 +2280,44 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
         {
           m_area.translate(-1,0,0);
         }
-      else
+      else if (event->state&Gdk::CONTROL_MASK)
         {
           m_area.rotateMidAxis(-1,0,1,0);
         }
+      else
+        {
+          m_area.setReverse(true);
+          m_area.play();
+        }
       break;
-    case GDK_l:
+    case GDK_z:
       m_area.rotateMidAxis(-1,0,0,1);
       break;
-    case GDK_r:
+    case GDK_Z:
       m_area.rotateMidAxis(1,0,0,1);
       break;
-    case GDK_t:
-      std::cout << "writing" << std::endl;
+    case GDK_l:
+      m_area.rotate(1,0,0,1);
+      break;
+    case GDK_r:
+      m_area.rotate(-1,0,0,1);
+      break;
+    case GDK_s:
+      std::cout << "saving frame" << std::endl;
       m_area.writePng();
+      break;
+    case GDK_S:
+      if(!isRecord)
+        {
+          isRecord = true;
+          std::cout << "Started saving frames" << std::endl; 
+        }
+      else
+        {
+          isRecord = false;
+          std::cout << "Stopped saving frames" << std::endl; 
+        }
+      m_area.setRecord(isRecord);
       break;
     default:
       return true;

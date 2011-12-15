@@ -203,6 +203,7 @@ public:
   void rotateMidAxisAbs(double, int , int , int );
   void resetBound();
   void pause();
+  void play();
   void resetView();
   void zoomIn();
   void zoomOut();
@@ -387,6 +388,7 @@ protected:
   Gtk::HRuler m_hrule;
   Gtk::VRuler m_vrule;
   static const int XSIZE = 200, YSIZE = 200;
+  bool isRecord;
 };
 
 #endif /* __SpatiocyteVisualizer_hpp */
