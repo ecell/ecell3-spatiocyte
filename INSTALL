@@ -1,69 +1,71 @@
-Packages to be installed on a fresh version of Ubuntu 11.10:
-sudo apt-get install automake libtool g++ libgsl0-dev python-numpy python-ply libboost-python-dev libgtkmm-2.4-dev libgtkglextmm-x11-1.2-dev libhdf5-serial-dev git
+On a freshly installed Ubuntu Linux, E-Cell System version 3 and Spatiocyte
+requires several additional packages: 
+$ sudo apt-get install automake libtool g++ libgsl0-dev python-numpy python-ply libboost-python-dev libgtkmm-2.4-dev libgtkglextmm-x11-1.2-dev libhdf5-serial-dev git valgrind
 
-Steps to install E-Cell System v3:
-cd
-mkdir wrk
-cd wrk
-git clone https://github.com/ecell/ecell3.git
-cd ecell3
-./autogen.sh
-./configure --prefix=$HOME/root
-make -j3
-make install (files will be installed in the $HOME/root directory)
-gedit ~/.bashrc
-  add the following at the bottom
-      export PATH=$HOME/root/bin:$PATH
-      export LD_LIBRARY_PATH=$HOME/root/lib:$LD_LIBRARY_PATH:.
-      export PYTHONPATH=$HOME/root/lib/python:$HOME/root/lib/python2.7/site-packages:$PYTHONPATH
-      export ECELL3_DM_PATH=.
-source ~/.bashrc
+The general installation procedure of the E-Cell System version 3 is as follows:
+$ cd
+$ mkdir wrk
+$ cd wrk
+$ git clone https://github.com/ecell/ecell3.git
+$ cd ecell3
+$ ./autogen.sh
+$ ./configure --prefix=$HOME/root
+$ make -j3 (or just make, if there is only one CPU core available)
+$ make install (files will be installed in the $HOME/root directory)
+$ gedit ~/.bashrc (other editors such as emacs or vim can also be used here) 
+The following lines, which specify the environment variables of the E-Cell 
+System should be appended to the .bashrc file:
+  export PATH=$HOME/root/bin:$PATH
+  export LD_LIBRARY_PATH=$HOME/root/lib:$LD_LIBRARY_PATH:.
+  export PYTHONPATH=$HOME/root/lib/python:$HOME/root/lib/python2.7/site-packages:$PYTHONPATH
+  export ECELL3_DM_PATH=.
+In the line 3 above, the Python version number '2.7' should be updated if it is
+different in the installed system. Next, we load the new environment variables:
+$ source ~/.bashrc
+$ ecell3-session-monitor (try opening it, and then close it)
 
-Try running a simple model:
-ecell3-session-monitor (try opening it, and then close it)
-cd $HOME/wrk/ecell3/doc/samples/simple/
-ecell3-em2eml simple.em
-ecell3-session-monitor
-load the model simple.eml and run
+We can now attempt to run a simple model in the E-Cell Model (EM) language,
+simple.em:
+$ cd $HOME/wrk/ecell3/doc/samples/simple/
+$ ecell3-em2eml simple.em
+$ ecell3-session-monitor
+Using ecell3-em2eml, the model file simple.em was converted into simple.eml in
+Extensible Markup Language (XML) format. The simple.eml file can now be loaded
+from the File menu of the E-Cell Session Monitor or the File open button. Try
+running the simulation by clicking on the Start button.
 
-Steps to install E-Cell3-Spatiocyte:
-cd $HOME/wrk
-git clone git://github.com/ecell/ecell3-spatiocyte.git
-cd ecell3-spatiocyte
-make (or 'make -j3' if the CPU has two or more cores)
+The steps to install E-Cell3-Spatiocyte are as follows:
+$ cd $HOME/wrk
+$ git clone git://github.com/ecell/ecell3-spatiocyte.git
+$ cd ecell3-spatiocyte
+$ make -j3 (or just make, if there is only one CPU core available)
 
-Steps to run E-Cell3-Spatiocyte MinDE model:
-cd $HOME/wrk/ecell3-spatiocyte/
-ecell3-em2eml 2010.arjunan.syst.synth.biol.wt.em
-ecell3-sessiom-monitor
-load the model 2010.arjunan.syst.synth.biol.wt.eml and run
+The E-Cell3-Spatiocyte package includes the MinDE model reported in 
+(Arjunan and Tomita, 2010). We can now attempt to run the model with the
+following steps:
+$ cd $HOME/wrk/ecell3-spatiocyte/
+$ ecell3-em2eml 2010.arjunan.syst.synth.biol.wt.em
+$ ecell3-session-monitor
+Load the model 2010.arjunan.syst.synth.biol.wt.eml and try running the
+simulation for 90 seconds. 
+We can also run Spatioctye models using command line interface of the E-Cell
+System:
+$ ecell3-session -f 2010.arjunan.syst.synth.biol.wt.em
+<2010.arjunan.syst.synth.biol.wt.eml, t=0>>> run(90)
+<2010.arjunan.syst.synth.biol.wt.eml, t=90>>> exit()
+Models that are created using the Python script can be run as,
+$ ecell3-session microtubulesExample.py
 
-Steps to view the simulation:
-The simulation data will be logged in visualLog0.dat
-To view the logged simulation, type
-./spatiocyte
-The programme spatiocyte will load the visualLog0.dat file.
-The following keyboard shortcuts are available for the visualizer:
-enter: pause/step forward once/change the simulation direction to be forward
-space bar: pause/step backward once/change the simulation direction to be reverse
-pause: play/pause the visualizer
-arrow keys: rotate the visualizer
-page up: zoom in
-page down: zoom out
-home: go to default zoom level and orientation settings
-Right click on the molecule species name to change the species color.
+When running a Spatiocyte model with the VisualizationLogProcess module enable,
+the three-dimensional positional information of a logged molecule species will
+be stored in visualLog0.dat (default file name). The molecules can be viewed in
+a separate visualizer window even while the simulation is still running. To view
+them, we can run SpatiocyteVisualizer by issuing
+$ ./spatiocyte
+The visualizer will load the visualLog0.dat file by default and display the
+molecules at every log interval. The keyboard shortcuts that are available for
+the visualizer are listed in the SpatiocyteVisualizer module section.
 
-
-Creating movies from snapshot png files
-Lossless movie:
-mencoder mf://*.png -mf w=400:h=400:fps=25:type=png -ovc copy -oac copy -o output.avi
-ffmpeg -i image%07d.png -vcodec ffv1 -sameq test.mp4
-ffmpeg -i image%07d.png -vcodec huffyuv test.mp4
-Recoding larger avi movies to smaller mp4:
-ffmpeg -i input.avi -sameq output.mp4
-Compressed high quality:
-mencoder mf://*.png -mf w=400:h=400:fps=25:type=png -ovc x264 -x264encopts crf=19 -o out.mp4
-
-Memory debugging:
-valgrind --tool=memcheck --num-callers=40 --leak-check=full python $HOME/root/bin/ecell3-session -f test.eml
-
+If the program fails and crashes when loading or running a model, we can get
+some debugging information using the Valgrind tool:
+$ valgrind --tool=memcheck --num-callers=40 --leak-check=full python $HOME/root/bin/ecell3-session -f modelFileName.eml

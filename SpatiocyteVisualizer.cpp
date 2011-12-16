@@ -2194,8 +2194,16 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
       m_area.pause();
       break;
     case GDK_Return:
-      m_area.setReverse(false);
-      m_area.step();
+      if(event->state&Gdk::SHIFT_MASK)
+        {
+          m_area.setReverse(true);
+          m_area.step();
+        }
+      else
+        {
+          m_area.setReverse(false);
+          m_area.step();
+        }
       break;
     case GDK_space:
       m_area.pause();
