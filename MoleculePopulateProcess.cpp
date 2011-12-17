@@ -89,7 +89,7 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
   if(!aSpecies->getIsPopulated())
     {
       unsigned int aSize(aSpecies->getPopulateMoleculeSize());
-      if(UniformRadius == 1 && !OriX && !OriY && !OriZ)
+      if(UniformRadius == 1 && !OriginX && !OriginY && !OriginZ)
         {
           int availableVoxelSize(aComp->coords.size());
           for(unsigned int j(0); j != aSize; ++j)
@@ -107,9 +107,9 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
         }
       else
         {
-          double diaX(UniformRadius*aComp->lengthX*(1-sqrt(OriX*OriX)));
-          double diaY(UniformRadius*aComp->lengthY*(1-sqrt(OriY*OriY)));
-          double diaZ(UniformRadius*aComp->lengthZ*(1-sqrt(OriZ*OriZ)));
+          double diaX(UniformRadius*aComp->lengthX*(1-sqrt(OriginX*OriginX)));
+          double diaY(UniformRadius*aComp->lengthY*(1-sqrt(OriginY*OriginY)));
+          double diaZ(UniformRadius*aComp->lengthZ*(1-sqrt(OriginZ*OriginZ)));
           double dia(diaX);
           if(diaY < dia)
             {
@@ -120,9 +120,9 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
               dia = diaZ;
             }
           Point aPoint;
-          aPoint.x = aComp->lengthX*OriX*0.5+aComp->centerPoint.x;
-          aPoint.y = aComp->lengthY*OriY*0.5+aComp->centerPoint.y;
-          aPoint.z = aComp->lengthZ*OriZ*0.5+aComp->centerPoint.z;
+          aPoint.x = aComp->lengthX*OriginX*0.5+aComp->centerPoint.x;
+          aPoint.y = aComp->lengthY*OriginY*0.5+aComp->centerPoint.y;
+          aPoint.z = aComp->lengthZ*OriginZ*0.5+aComp->centerPoint.z;
           std::cout << "the Comp center point:" << std::endl;
           std::cout << "x:" << aComp->centerPoint.x <<
             " y:" << aComp->centerPoint.y <<

@@ -41,24 +41,24 @@ public:
   LIBECS_DM_OBJECT(MoleculePopulateProcess, Process)
     {
       INHERIT_PROPERTIES(Process);
-      PROPERTYSLOT_SET_GET(Real, OriX);
-      PROPERTYSLOT_SET_GET(Real, OriY);
-      PROPERTYSLOT_SET_GET(Real, OriZ);
+      PROPERTYSLOT_SET_GET(Real, OriginX);
+      PROPERTYSLOT_SET_GET(Real, OriginY);
+      PROPERTYSLOT_SET_GET(Real, OriginZ);
       PROPERTYSLOT_SET_GET(Real, GaussianSigma);
       PROPERTYSLOT_SET_GET(Real, ResetTime);
       PROPERTYSLOT_SET_GET(Real, UniformRadius);
     }
   MoleculePopulateProcess():
     GaussianSigma(0),
-    OriX(0),
-    OriY(0),
-    OriZ(0),
+    OriginX(0),
+    OriginY(0),
+    OriginZ(0),
     ResetTime(libecs::INF),
     UniformRadius(1) {}
   virtual ~MoleculePopulateProcess() {}
-  SIMPLE_SET_GET_METHOD(Real, OriX);
-  SIMPLE_SET_GET_METHOD(Real, OriY);
-  SIMPLE_SET_GET_METHOD(Real, OriZ);
+  SIMPLE_SET_GET_METHOD(Real, OriginX);
+  SIMPLE_SET_GET_METHOD(Real, OriginY);
+  SIMPLE_SET_GET_METHOD(Real, OriginZ);
   SIMPLE_SET_GET_METHOD(Real, GaussianSigma);
   SIMPLE_SET_GET_METHOD(Real, ResetTime);
   SIMPLE_SET_GET_METHOD(Real, UniformRadius);
@@ -75,9 +75,9 @@ public:
     }
 protected:
   double GaussianSigma;
-  double OriX;
-  double OriY;
-  double OriZ;
+  double OriginX;
+  double OriginY;
+  double OriginZ;
   double ResetTime;
   double UniformRadius;
 };
