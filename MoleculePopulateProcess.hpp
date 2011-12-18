@@ -46,7 +46,9 @@ public:
       PROPERTYSLOT_SET_GET(Real, OriginZ);
       PROPERTYSLOT_SET_GET(Real, GaussianSigma);
       PROPERTYSLOT_SET_GET(Real, ResetTime);
-      PROPERTYSLOT_SET_GET(Real, UniformRadius);
+      PROPERTYSLOT_SET_GET(Real, UniformRadiusX);
+      PROPERTYSLOT_SET_GET(Real, UniformRadiusY);
+      PROPERTYSLOT_SET_GET(Real, UniformRadiusZ);
     }
   MoleculePopulateProcess():
     GaussianSigma(0),
@@ -54,18 +56,23 @@ public:
     OriginY(0),
     OriginZ(0),
     ResetTime(libecs::INF),
-    UniformRadius(1) {}
+    UniformRadiusX(1),
+    UniformRadiusY(1),
+    UniformRadiusZ(1) {}
   virtual ~MoleculePopulateProcess() {}
   SIMPLE_SET_GET_METHOD(Real, OriginX);
   SIMPLE_SET_GET_METHOD(Real, OriginY);
   SIMPLE_SET_GET_METHOD(Real, OriginZ);
   SIMPLE_SET_GET_METHOD(Real, GaussianSigma);
   SIMPLE_SET_GET_METHOD(Real, ResetTime);
-  SIMPLE_SET_GET_METHOD(Real, UniformRadius);
+  SIMPLE_SET_GET_METHOD(Real, UniformRadiusX);
+  SIMPLE_SET_GET_METHOD(Real, UniformRadiusY);
+  SIMPLE_SET_GET_METHOD(Real, UniformRadiusZ);
   virtual void initializeSecond();
   virtual void populateGaussian(Species*);
   virtual void populateUniformDense(Species*, unsigned int[], unsigned int*);
   virtual void populateUniformSparse(Species* aSpecies);
+  virtual void populateUniformRanged(Species* aSpecies);
   virtual void fire();
   virtual void initializeFourth()
     {
@@ -79,7 +86,9 @@ protected:
   double OriginY;
   double OriginZ;
   double ResetTime;
-  double UniformRadius;
+  double UniformRadiusX;
+  double UniformRadiusY;
+  double UniformRadiusZ;
 };
 
 #endif /* __MoleculePopulateProcess_hpp */

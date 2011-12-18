@@ -1430,6 +1430,30 @@ Voxel* SpatiocyteStepper::point2voxel(Point aPoint)
       aGlobalRow = (unsigned int)(aPoint.z/(2*theNormalizedVoxelRadius));
       break;
     }
+  if(aGlobalCol < 0)
+    {
+      aGlobalCol = 0;
+    }
+  else if(aGlobalCol >= theColSize)
+    {
+      aGlobalCol = theColSize-1;
+    }
+  if(aGlobalRow < 0)
+    {
+      aGlobalRow = 0;
+    }
+  else if(aGlobalRow >= theRowSize)
+    {
+      aGlobalRow = theRowSize-1;
+    }
+  if(aGlobalLayer < 0)
+    {
+      aGlobalLayer = 0;
+    }
+  else if(aGlobalLayer >= theLayerSize)
+    {
+      aGlobalLayer = theLayerSize-1;
+    }
   return &theLattice[aGlobalRow+
                      theRowSize*aGlobalLayer+
                      theRowSize*theLayerSize*aGlobalCol];
@@ -2645,6 +2669,7 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
   //If there are many molecules to be populated we need to
   //systematically choose the vacant voxels randomly from a list
   //of available vacant voxels of the Comp:
+  //Only populate if we have remaining unpopulated molecules:
   if(populationSize > gaussianPopulationSize)
     {
       unsigned int count(0);
