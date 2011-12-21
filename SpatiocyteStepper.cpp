@@ -2134,11 +2134,11 @@ void SpatiocyteStepper::setIntersectingPeers()
                         {
                           if((*i)->enclosed <= (*j)->enclosed) 
                             {
-                              (*i)->intersectPeers.push_back(*j);
+                              //(*i)->intersectPeers.push_back(*j);
                             }
                           else
                             {
-                              (*i)->intersectLowerPeers.push_back(*j);
+                              //(*i)->intersectLowerPeers.push_back(*j);
                             }
                         }
                     }
@@ -2170,11 +2170,11 @@ void SpatiocyteStepper::setIntersectingParent()
             {
               if(aParentComp->system->isRootSystem())
                 {
-                  (*i)->isIntersectRoot = true;
+                  //(*i)->isIntersectRoot = true;
                 }
               else
                 {
-                  (*i)->isIntersectParent = true;
+                  //(*i)->isIntersectParent = true;
                 }
             }
         }
