@@ -16,6 +16,7 @@ MicroscopyTrackingProcess\
 CoordinateLogProcess\
 MoleculePopulateProcess\
 DiffusionProcess\
+CompartmentGrowthProcess\
 PolymerizationParameterProcess\
 PolymerizationProcess\
 PeriodicBoundaryDiffusionProcess\
@@ -66,6 +67,9 @@ MoleculePopulateProcess.so: 	MoleculePopulateProcess.cpp
 
 DiffusionProcess.so: 	DiffusionProcess.cpp
 	$(ECELL3_DMC) -o DiffusionProcess.so --ldflags="SpatiocyteProcess.so DiffusionInfluencedReactionProcess.so" DiffusionProcess.cpp
+
+CompartmentGrowthProcess.so: 	CompartmentGrowthProcess.cpp
+	$(ECELL3_DMC) -o CompartmentGrowthProcess.so --ldflags="SpatiocyteProcess.so" CompartmentGrowthProcess.cpp
 
 PolymerizationParameterProcess.so: 	PolymerizationParameterProcess.cpp
 	$(ECELL3_DMC) -o PolymerizationParameterProcess.so --ldflags="SpatiocyteProcess.so" PolymerizationParameterProcess.cpp
