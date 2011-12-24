@@ -16,7 +16,6 @@ MicroscopyTrackingProcess\
 CoordinateLogProcess\
 MoleculePopulateProcess\
 DiffusionProcess\
-CompartmentGrowthProcess\
 PolymerizationParameterProcess\
 PolymerizationProcess\
 PeriodicBoundaryDiffusionProcess\
@@ -98,4 +97,3 @@ gui:	$(SPATIOCYTE)
 
 clean: 
 	rm -f *.so *.o $(SPATIOCYTE)
-
