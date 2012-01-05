@@ -16,10 +16,10 @@ MicroscopyTrackingProcess\
 CoordinateLogProcess\
 MoleculePopulateProcess\
 DiffusionProcess\
+PolymerFragmentationProcess\
 PolymerizationParameterProcess\
 PolymerizationProcess\
-PeriodicBoundaryDiffusionProcess\
-PolymerFragmentationProcess
+PeriodicBoundaryDiffusionProcess
 
 ECELL3_DMC = ecell3-dmc
 CXX = g++
@@ -74,7 +74,7 @@ PolymerizationParameterProcess.so: 	PolymerizationParameterProcess.cpp
 	$(ECELL3_DMC) -o PolymerizationParameterProcess.so --ldflags="SpatiocyteProcess.so" PolymerizationParameterProcess.cpp
 
 PolymerizationProcess.so: 	PolymerizationProcess.cpp
-	$(ECELL3_DMC) -o PolymerizationProcess.so --ldflags="SpatiocyteProcess.so DiffusionInfluencedReactionProcess.so" PolymerizationProcess.cpp
+	$(ECELL3_DMC) -o PolymerizationProcess.so --ldflags="SpatiocyteProcess.so DiffusionInfluencedReactionProcess.so PolymerFragmentationProcess.so" PolymerizationProcess.cpp
 
 PeriodicBoundaryDiffusionProcess.so: 	PeriodicBoundaryDiffusionProcess.cpp
 	$(ECELL3_DMC) -o PeriodicBoundaryDiffusionProcess.so --ldflags=DiffusionProcess.so PeriodicBoundaryDiffusionProcess.cpp
