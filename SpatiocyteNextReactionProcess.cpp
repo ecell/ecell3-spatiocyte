@@ -415,7 +415,6 @@ void SpatiocyteNextReactionProcess::fire()
           //HD + nonHD -> nonHD:
           else if(C && !D)
             {
-              std::cout << "here" << std::endl;
               Voxel* moleculeNonHD(nonHD->getRandomMolecule());
               //If the product C is not in the same Comp as nonHD,
               //we need to find a vacant adjoining voxel of nonHD that belongs
@@ -452,18 +451,50 @@ void SpatiocyteNextReactionProcess::initializeThird()
     {
       return;
     }
+  Comp* compA(NULL);
+  Comp* compB(NULL);
+  Comp* compC(NULL);
+  Comp* compD(NULL);
+  if(A)
+    {
+      compA = A->getComp();
+    }
+  else
+    {
+      compA = theSpatiocyteStepper->system2Comp(
+                         variableA->getSuperSystem());
+    }
+  if(B)
+    {
+      compB = B->getComp();
+    }
+  else if(variableB)
+    {
+      compB = theSpatiocyteStepper->system2Comp(
+                         variableB->getSuperSystem());
+    }
+  if(C)
+    {
+      compC = C->getComp();
+    }
+  else
+    {
+      compC = theSpatiocyteStepper->system2Comp(
+                         variableC->getSuperSystem());
+    }
+  if(D)
+    {
+      compD = D->getComp();
+    }
+  else if(variableD)
+    {
+      compD = theSpatiocyteStepper->system2Comp(
+                         variableD->getSuperSystem());
+    }
+  double aVolume(compA->actualVolume);
+  double anArea(compA->actualArea);
   if(theOrder == 0)
     {
-      Comp* compC(NULL);
-      if(C)
-        {
-          compC = C->getComp();
-        }
-      else
-        {
-          compC = theSpatiocyteStepper->system2Comp(
-                             variableC->getSuperSystem());
-        }
       double aSpace(0);
       if(compC->dimension == 2)
         {
@@ -477,58 +508,22 @@ void SpatiocyteNextReactionProcess::initializeThird()
     }
   else if(theOrder == 1) 
     {
+      //Convert the unit m/s to 1/s if the reaction is a surface
+      //adsorption reaction:
+      if(compA->dimension == 2 && compC->dimension == 3)
+        {
+          k = k*anArea/aVolume;
+        }
       p = k;
     }
   else if(theOrder == 2)
     {
-      Comp* compA(NULL);
-      Comp* compB(NULL);
-      Comp* compC(NULL);
-      Comp* compD(NULL);
-      if(A)
-        {
-          compA = A->getComp();
-        }
-      else
-        {
-          compA = theSpatiocyteStepper->system2Comp(
-                             variableA->getSuperSystem());
-        }
-      if(B)
-        {
-          compB = B->getComp();
-        }
-      else
-        {
-          compB = theSpatiocyteStepper->system2Comp(
-                             variableB->getSuperSystem());
-        }
-      if(C)
-        {
-          compC = C->getComp();
-        }
-      else
-        {
-          compC = theSpatiocyteStepper->system2Comp(
-                             variableC->getSuperSystem());
-        }
-      if(D)
-        {
-          compD = D->getComp();
-        }
-      else if(variableD)
-        {
-          compD = theSpatiocyteStepper->system2Comp(
-                             variableD->getSuperSystem());
-        }
       //If there are two products, both C and D must belong to the
       //same Comp:
       if(compD && compD != compC)
         {
           NEVER_GET_HERE;
         }
-      double aVolume(compA->actualVolume);
-      double anArea(compA->actualArea);
       if(compB->dimension == 2)
         {
           anArea = compB->actualArea;
