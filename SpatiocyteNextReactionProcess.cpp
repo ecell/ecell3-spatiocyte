@@ -415,6 +415,7 @@ void SpatiocyteNextReactionProcess::fire()
           //HD + nonHD -> nonHD:
           else if(C && !D)
             {
+              std::cout << "here" << std::endl;
               Voxel* moleculeNonHD(nonHD->getRandomMolecule());
               //If the product C is not in the same Comp as nonHD,
               //we need to find a vacant adjoining voxel of nonHD that belongs
