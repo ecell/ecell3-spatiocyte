@@ -76,6 +76,7 @@ protected:
   bool setExtendedTargetVoxel(Subunit*, unsigned int, double);
   int setExistingTargetVoxel(Subunit*, unsigned int);
   bool setTargetVoxels(Subunit*);
+  Voxel* getTargetVoxel(Subunit*);
   void removeUnboundTargetVoxels(Subunit*);
   Voxel* setNewTargetVoxel(Subunit*, unsigned int);
   unsigned int sortNearestTargetVoxels(Subunit*, unsigned int, std::vector<Voxel*>&,

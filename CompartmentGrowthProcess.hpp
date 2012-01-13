@@ -71,7 +71,8 @@ public:
   virtual void fire()
     {
       int col(gsl_rng_uniform_int(getStepper()->getRng(),
-                          theComp->maxCol-theComp->minCol));
+                                  theComp->maxCol-theComp->minCol-4));
+      col += theComp->minCol;
       theSpatiocyteStepper->growCompartment(theComp, Axis, col);
       theTime += theStepInterval;
       thePriorityQueue->moveTop();
