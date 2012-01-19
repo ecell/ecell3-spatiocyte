@@ -134,7 +134,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   add_events(Gdk::VISIBILITY_NOTIFY_MASK); 
   
   std::ostringstream aParentFileName;
-  aParentFileName << aBaseName << "0.dat" << std::ends;
+  aParentFileName << aBaseName << std::ends;
   std::ifstream aParentFile(aParentFileName.str().c_str(),
                             std::ios::binary );
   aParentFile.read((char *)(&theThreadSize), sizeof(unsigned int));
@@ -143,7 +143,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   for(unsigned int i(0); i!=theThreadSize; ++i)
     {
       std::ostringstream aFileName;
-      aFileName << aBaseName << i << ".dat" << std::ends;
+      aFileName << aBaseName << std::ends;
       theFile[i] = 
         new std::ifstream( aFileName.str().c_str(), std::ios::binary );
     }
@@ -2345,10 +2345,9 @@ void printUsage( const char* aProgramName )
 void printNotEndian( const char* anEndian, const char* aBaseName, 
                      const unsigned int count, const unsigned int aThreadSize )
 {
-  std::cerr << "theThreadSize from file " << aBaseName << "0.dat is:" <<
-    aThreadSize << "\nbut I can't open " << aBaseName << count <<
-    ".dat file.\n";
-  std::cerr << "Could it be that " << aBaseName << "0.dat is not";
+  std::cerr << "theThreadSize from file " << aBaseName << " is:" <<
+    aThreadSize << "\nbut I can't open " << aBaseName << " file.\n";
+  std::cerr << "Could it be that " << aBaseName << " is not";
   std::cerr << " a " << anEndian << " Endian binary file?\n";
 }
 
@@ -2357,11 +2356,11 @@ unsigned int convertFiles2LittleEndian( const char* aBaseName )
 {
   unsigned int aThreadSize;
   std::ostringstream aFileName;
-  aFileName << aBaseName << "0.dat" << std::ends;
+  aFileName << aBaseName << std::ends;
   std::ifstream aParentFile( aFileName.str().c_str(), std::ios::binary );
   if ( !aParentFile.is_open() )
     {
-      std::cerr << "Could not open file: " << aBaseName << "0.dat" << std::endl;
+      std::cerr << "Could not open file: " << aBaseName << std::endl;
       return 1;
     }
   aParentFile.read((char *)(&aThreadSize), sizeof(unsigned int)); 
@@ -2369,7 +2368,7 @@ unsigned int convertFiles2LittleEndian( const char* aBaseName )
   for( unsigned int i(1); i!=aThreadSize; ++i )
     {
       std::ostringstream aFileName;
-      aFileName << aBaseName << i << ".dat" << std::ends;
+      aFileName << aBaseName << std::ends;
       std::ifstream aFile( aFileName.str().c_str(), std::ios::binary );
       if( !aFile.is_open() )
         {
@@ -2383,7 +2382,7 @@ unsigned int convertFiles2LittleEndian( const char* aBaseName )
   for( unsigned int i(0); i!=aThreadSize; ++i )
     {
       std::ostringstream aFileName;
-      aFileName << aBaseName << i << ".dat" << std::ends;
+      aFileName << aBaseName << std::ends;
       std::ifstream anInput( aFileName.str().c_str(), std::ios::binary );
 
       std::ostringstream anOutFileName;
@@ -2412,7 +2411,7 @@ int main(int argc, char** argv)
   unsigned int aThreadSize;
   if(argc == 1)
     {
-      aBaseName = "visualLog";
+      aBaseName = "visualLog0.dat";
     }
   else if(argc == 2)
     {
@@ -2427,7 +2426,7 @@ int main(int argc, char** argv)
               printUsage( argv[0] );
               std::exit(1);
             }
-          aBaseName = "lvisualLog";
+          aBaseName = "lvisualLog0.dat";
         }
       else
         {
@@ -2442,11 +2441,11 @@ int main(int argc, char** argv)
       std::exit(1);
     }
   std::ostringstream aFileName;
-  aFileName << aBaseName << "0.dat" << std::ends;
+  aFileName << aBaseName << std::ends;
   std::ifstream aParentFile( aFileName.str().c_str(), std::ios::binary );
   if ( !aParentFile.is_open() )
     {
-      std::cerr << "Could not open file: " << aBaseName << "0.dat" << 
+      std::cerr << "Could not open file: " << aBaseName <<  
         std::endl;
       printUsage( argv[0] );
       std::exit(1);
@@ -2457,7 +2456,7 @@ int main(int argc, char** argv)
       for( unsigned int i(1); i!=aThreadSize; ++i )
         {
           std::ostringstream aFileName;
-          aFileName << aBaseName << i << ".dat" << std::ends;
+          aFileName << aBaseName << std::ends;
           std::ifstream aFile( aFileName.str().c_str(), std::ios::binary );
           if( !aFile.is_open() )
             {
