@@ -44,6 +44,9 @@ public:
   LIBECS_DM_OBJECT(SpatiocyteNextReactionProcess, Process)
     {
       INHERIT_PROPERTIES(ReactionProcess);
+      PROPERTYSLOT_SET_GET(Real, SpaceA);
+      PROPERTYSLOT_SET_GET(Real, SpaceB);
+      PROPERTYSLOT_SET_GET(Real, SpaceC);
       PROPERTYSLOT_GET_NO_LOAD_SAVE(Real, Propensity);
     }
   SpatiocyteNextReactionProcess():
@@ -51,9 +54,15 @@ public:
     initSizeB(0),
     initSizeC(0),
     initSizeD(0),
+    SpaceA(0),
+    SpaceB(0),
+    SpaceC(0),
     theGetPropensityMethodPtr(RealMethodProxy::create<
             &SpatiocyteNextReactionProcess::getPropensity_ZerothOrder>()) {}
   virtual ~SpatiocyteNextReactionProcess() {}
+  SIMPLE_SET_GET_METHOD(Real, SpaceA);
+  SIMPLE_SET_GET_METHOD(Real, SpaceB);
+  SIMPLE_SET_GET_METHOD(Real, SpaceC);
   virtual void initialize()
     {
       if(isInitialized)
@@ -187,6 +196,9 @@ protected:
   int initSizeB;
   int initSizeC;
   int initSizeD;
+  double SpaceA;
+  double SpaceB;
+  double SpaceC;
   RealMethodProxy theGetPropensityMethodPtr;  
 };
 

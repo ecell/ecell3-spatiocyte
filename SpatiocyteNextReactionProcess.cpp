@@ -493,10 +493,19 @@ void SpatiocyteNextReactionProcess::initializeThird()
     }
   double aVolume(compA->actualVolume);
   double anArea(compA->actualArea);
+  if(SpaceA > 0)
+    {
+      aVolume = SpaceA;
+      anArea = SpaceA;
+    }
   if(theOrder == 0)
     {
       double aSpace(0);
-      if(compC->dimension == 2)
+      if(SpaceC > 0)
+        {
+          aSpace = SpaceC;
+        }
+      else if(compC->dimension == 2)
         {
           aSpace = compC->actualArea;
         }
@@ -526,19 +535,47 @@ void SpatiocyteNextReactionProcess::initializeThird()
         }
       if(compB->dimension == 2)
         {
-          anArea = compB->actualArea;
+          if(SpaceB > 0)
+            {
+              anArea = SpaceB;
+            }
+          else
+            {
+              anArea = compB->actualArea;
+            }
         }
       else
         {
-          aVolume = compB->actualVolume;
+          if(SpaceB > 0)
+            {
+              aVolume = SpaceB;
+            }
+          else
+            {
+              aVolume = compB->actualVolume;
+            }
         }
       if(compC->dimension == 2)
         {
-          anArea = compC->actualArea;
+          if(SpaceC > 0)
+            {
+              anArea = SpaceC;
+            }
+          else
+            {
+              anArea = compC->actualArea;
+            }
         }
       else
         {
-          aVolume = compC->actualVolume;
+          if(SpaceC > 0)
+            {
+              aVolume = SpaceC;
+            }
+          else
+            {
+              aVolume = compC->actualVolume;
+            }
         }
       //If volume (+volume) = k(volume)(volume) or
       //   surface (+surface) = k(volume)(surface) or
