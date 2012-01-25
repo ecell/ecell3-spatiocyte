@@ -519,7 +519,7 @@ void SpatiocyteNextReactionProcess::initializeThird()
     {
       //Convert the unit m/s to 1/s if the reaction is a surface
       //adsorption reaction:
-      if(compA->dimension == 2 && compC->dimension == 3)
+      if(compA->dimension == 3 && compC->dimension == 2)
         {
           k = k*anArea/aVolume;
         }
