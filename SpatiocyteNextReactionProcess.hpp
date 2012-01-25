@@ -192,10 +192,10 @@ protected:
         }
     }
 protected:
-  int initSizeA;
-  int initSizeB;
-  int initSizeC;
-  int initSizeD;
+  double initSizeA;
+  double initSizeB;
+  double initSizeC;
+  double initSizeD;
   double SpaceA;
   double SpaceB;
   double SpaceC;
