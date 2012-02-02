@@ -92,7 +92,9 @@ void SpatiocyteStepper::initialize()
   initProcessFourth();
   std::cout << "14. initializing processes the last time..." << std::endl;
   initProcessLastOnce();
-  std::cout << "15. simulation is started..." << std::endl;
+  std::cout << "15. printing final process parameters..." << std::endl;
+  printProcessParameters();
+  std::cout << "16. simulation is started..." << std::endl;
 }
 
 unsigned int SpatiocyteStepper::getStartCoord()
@@ -399,6 +401,7 @@ void SpatiocyteStepper::printProcessParameters()
         aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
       aProcess->printParameters();
     }
+  std::cout << std::endl;
 }
 
 void SpatiocyteStepper::initProcessThird()
@@ -940,7 +943,6 @@ void SpatiocyteStepper::printSimulationParameters()
       }
     }
   std::cout << std::endl;
-  printProcessParameters();
 }
 
 void SpatiocyteStepper::readjustSurfaceBoundarySizes()
