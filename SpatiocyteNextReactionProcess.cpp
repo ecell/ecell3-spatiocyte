@@ -285,6 +285,7 @@ void SpatiocyteNextReactionProcess::fire()
           HD_p->addValue(1);
         }
     }
+  //theOrder = 2
   else
     {
       //HD + HD -> product(s)
@@ -413,7 +414,7 @@ void SpatiocyteNextReactionProcess::fire()
             }
           //nonHD + HD -> nonHD:
           //HD + nonHD -> nonHD:
-          else if(C && !D)
+          else if(C && !D && !variableD)
             {
               Voxel* moleculeNonHD(nonHD->getRandomMolecule());
               //If the product C is not in the same Comp as nonHD,
@@ -438,6 +439,45 @@ void SpatiocyteNextReactionProcess::fire()
               HD->addValue(-1);
               nonHD->removeMolecule(moleculeNonHD);
               C->addMolecule(moleculeC);
+            }
+          //HD + nonHD -> HD + nonHD:
+          //HD + nonHD -> nonHD + HD:
+          //nonHD + HD -> HD + nonHD:
+          //nonHD + HD -> nonHD + HD:
+          else if((variableC && D) || (C && variableD))
+            {
+              Variable* HD_p(variableC);
+              Species* nonHD_p(D);
+              if(variableD)
+                {
+                  HD_p = variableD;
+                  nonHD_p = C;
+                }
+              Voxel* moleculeNonHD(nonHD->getRandomMolecule());
+              //If the nonHD product is not in the same Comp as nonHD,
+              //we need to find a vacant adjoining voxel of nonHD that belongs
+              //to the Comp of nonHD product:
+              Voxel* moleculeNonHD_p;
+              if(nonHD->getComp() != nonHD_p->getComp())
+                {
+                  moleculeNonHD_p = 
+                    nonHD_p->getRandomAdjoiningVoxel(moleculeNonHD);
+                  //Only proceed if we can find an adjoining vacant voxel
+                  //of nonHD which can be occupied by C:
+                  if(moleculeNonHD_p == NULL)
+                    {
+                      requeue();
+                      return;
+                    }
+                }
+              else
+                {
+                  moleculeNonHD_p = moleculeNonHD;
+                }
+              HD->addValue(-1);
+              nonHD->removeMolecule(moleculeNonHD);
+              HD_p->addValue(1);
+              nonHD_p->addMolecule(moleculeNonHD_p);
             }
         }
     }
@@ -517,7 +557,7 @@ void SpatiocyteNextReactionProcess::initializeThird()
     }
   else if(theOrder == 1) 
     {
-      //Convert the unit m/s to 1/s if the reaction is a surface
+      //Convert the unit m/s of k to 1/s for p if the reaction is a surface
       //adsorption reaction:
       if(compA->dimension == 3 && compC->dimension == 2)
         { 
@@ -535,9 +575,9 @@ void SpatiocyteNextReactionProcess::initializeThird()
     }
   else if(theOrder == 2)
     {
-      //If there are two products, both C and D must belong to the
-      //same Comp:
-      if(compD && compD != compC)
+      //If there are two products that don't belong to the same compartment,
+      //the reactants must also belong to different compartments:
+      if((compD && compD != compC) && (compA == compB))
         {
           NEVER_GET_HERE;
         }
@@ -585,16 +625,34 @@ void SpatiocyteNextReactionProcess::initializeThird()
               aVolume = compC->actualVolume;
             }
         }
+      //If volume + surface = k(volume)(surface) or
+      //   volume + surface = k(surface)(volume) or
+      //   surface + volume = k(volume)(surface) or
+      //   surface + volume = k(surface)(volume)
+      if(compD && (
+        (compC->dimension == 3 && compD->dimension == 2 &&
+         compA->dimension == 3 && compB->dimension == 2) ||
+        (compC->dimension == 3 && compD->dimension == 2 &&
+         compA->dimension == 2 && compB->dimension == 3) ||
+        (compC->dimension == 2 && compD->dimension == 3 &&
+         compA->dimension == 3 && compB->dimension == 2) ||
+        (compC->dimension == 2 && compD->dimension == 3 &&
+         compA->dimension == 2 && compB->dimension == 3)))
+        {
+          //unit of k is in m^3/s
+          p = k/aVolume;
+        }
       //If volume (+volume) = k(volume)(volume) or
       //   surface (+surface) = k(volume)(surface) or
       //   surface (+surface) = k(surface)(volume)
-      if((compC->dimension == 3 && compA->dimension == 3
+      else if((compC->dimension == 3 && compA->dimension == 3
           && compB->dimension == 3) ||
          (compC->dimension == 2 && compA->dimension == 3 
           && compB->dimension == 2) ||
          (compC->dimension == 2 && compA->dimension == 2 
           && compB->dimension == 3))
         {
+          //unit of k is in m^3/s
           p = k/aVolume;
         }
       //If surface (+surface) = k(surface)(surface) or
@@ -607,6 +665,7 @@ void SpatiocyteNextReactionProcess::initializeThird()
               (compC->dimension == 3 && compA->dimension == 2 
                && compB->dimension == 3))
         {
+          //unit of k is in m^2/s
           p = k/anArea;
         }
       else
