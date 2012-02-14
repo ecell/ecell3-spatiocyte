@@ -80,6 +80,16 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeB, Voxel** target)
       moleculeA = moleculeB;
       moleculeB = tempA;
     }
+  //If C is a HD product molecule:
+  if(variableC)
+    {
+      //Hard remove the A molecule, in case C is in a different Comp:
+      moleculeA->id = A->getVacantID();
+      //Hard remove the B molecule since this is a single product reaction:
+      moleculeB->id = B->getVacantID();
+      variableC->addValue(1);
+      return true;
+    }
   //If the product C is not in the same Comp as A,
   //we need to find a vacant adjoining voxel of A that belongs
   //to the Comp of C:
@@ -99,8 +109,8 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeB, Voxel** target)
       moleculeC = moleculeA;
     }
   //If it has two products:
-  if(D != NULL)
-    { 
+  if(D)
+    {
       //If the product D is not in the same Comp as B,
       //we need to find a vacant adjoining voxel of C that belongs
       //to the Comp of D:

@@ -934,6 +934,13 @@ public:
         }
       return NULL;
     }
+  Voxel* getRandomAdjoiningCompVoxel(Comp* aComp)
+    {
+      int aSize(aComp->coords.size());
+      int r(gsl_rng_uniform_int(theRng, aSize)); 
+      Voxel* aVoxel(theStepper->coord2voxel(aComp->coords[r]));
+      return getRandomAdjoiningVoxel(aVoxel);
+    }
 private:
     bool isLipid;
     bool isVacant;

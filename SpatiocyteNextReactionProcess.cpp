@@ -241,7 +241,18 @@ void SpatiocyteNextReactionProcess::fire()
       //HD_A -> nonHD_C:
       else if(variableA && C && !D && !variableD)
         {
-          Voxel* moleculeC(C->getRandomCompVoxel());
+          Voxel* moleculeC;
+          Comp* compA(theSpatiocyteStepper->system2Comp(
+                         variableA->getSuperSystem()));
+          if(compA == C->getComp())
+            {
+              moleculeC = C->getRandomCompVoxel();
+            }
+          //Occupy C in a voxel of compartment C that adjoins compartment A
+          else
+            {
+              moleculeC = C->getRandomAdjoiningCompVoxel(compA);
+            }
           if(moleculeC == NULL)
             {
               requeue();
