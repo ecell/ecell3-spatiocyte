@@ -80,8 +80,50 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeB, Voxel** target)
       moleculeA = moleculeB;
       moleculeB = tempA;
     }
-  //If C is a HD product molecule:
-  if(variableC)
+  //nonHD_A + nonHD_B -> nonHD_C + HD_D:
+  //nonHD_A + nonHD_B -> HD_C + nonHD_D:
+  if((variableC && D) || (C && variableD))
+    {
+      Variable* HD_p(variableC);
+      Species* nonHD_p(D);
+      if(variableD)
+        {
+          HD_p = variableD;
+          nonHD_p = C;
+        }
+      Voxel* moleculeP;
+      if(A->getVacantID() == nonHD_p->getVacantID())
+        {
+          moleculeP = moleculeA;
+        }
+      else if(B->getVacantID() == nonHD_p->getVacantID())
+        {
+          moleculeP = moleculeB;
+        }
+      else
+        { 
+          moleculeP = nonHD_p->getRandomAdjoiningVoxel(moleculeA);
+          //Only proceed if we can find an adjoining vacant voxel
+          //of A which can be occupied by C:
+          if(moleculeP == NULL)
+            {
+              moleculeP = nonHD_p->getRandomAdjoiningVoxel(moleculeB);
+              if(moleculeP == NULL)
+                {
+                  return false;
+                }
+            }
+        }
+      //Hard remove the A molecule, in case nonHD_p is in a different Comp:
+      moleculeA->id = A->getVacantID();
+      //Hard remove the B molecule, in case nonHD_p is in a different Comp:
+      moleculeB->id = B->getVacantID();
+      HD_p->addValue(1);
+      nonHD_p->addMolecule(moleculeP);
+      return true;
+    }
+  //nonHD_A + nonHD_B -> HD_C:
+  else if(variableC && !D && !variableD)
     {
       //Hard remove the A molecule, in case C is in a different Comp:
       moleculeA->id = A->getVacantID();

@@ -394,7 +394,8 @@ void SpatiocyteNextReactionProcess::fire()
               //If the product C is not in the same Comp as nonHD,
               //we need to find a vacant adjoining voxel of nonHD that belongs
               //to the Comp of C:
-              Voxel* moleculeC;
+              Voxel* moleculeC(NULL);
+              Voxel* moleculeD(NULL);
               if(nonHD->getComp() != C->getComp())
                 {
                   moleculeC = C->getRandomAdjoiningVoxel(moleculeNonHD);
@@ -405,12 +406,19 @@ void SpatiocyteNextReactionProcess::fire()
                       requeue();
                       return;
                     }
+                  if(nonHD->getComp() == D->getComp())
+                    {
+                      moleculeD = moleculeNonHD;
+                    }
                 }
               else
                 {
                   moleculeC = moleculeNonHD;
                 }
-              Voxel* moleculeD(D->getRandomAdjoiningVoxel(moleculeC,moleculeC));
+              if(moleculeD == NULL)
+                {
+                  moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC);
+                }
               //Only proceed if we can find an adjoining vacant voxel
               //of A which can be occupied by D:
               if(moleculeD == NULL)
