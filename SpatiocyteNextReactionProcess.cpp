@@ -550,13 +550,8 @@ void SpatiocyteNextReactionProcess::initializeThird()
       compD = theSpatiocyteStepper->system2Comp(
                          variableD->getSuperSystem());
     }
-  double aVolume(compA->actualVolume);
-  double anArea(compA->actualArea);
-  if(SpaceA > 0)
-    {
-      aVolume = SpaceA;
-      anArea = SpaceA;
-    }
+  double aVolume(0);
+  double anArea(0);
   if(theOrder == 0)
     {
       double aSpace(0);
@@ -600,55 +595,11 @@ void SpatiocyteNextReactionProcess::initializeThird()
         {
           NEVER_GET_HERE;
         }
-      if(compB->dimension == 2)
-        {
-          if(SpaceB > 0)
-            {
-              anArea = SpaceB;
-            }
-          else
-            {
-              anArea = compB->actualArea;
-            }
-        }
-      else
-        {
-          if(SpaceB > 0)
-            {
-              aVolume = SpaceB;
-            }
-          else
-            {
-              aVolume = compB->actualVolume;
-            }
-        }
-      if(compC->dimension == 2)
-        {
-          if(SpaceC > 0)
-            {
-              anArea = SpaceC;
-            }
-          else
-            {
-              anArea = compC->actualArea;
-            }
-        }
-      else
-        {
-          if(SpaceC > 0)
-            {
-              aVolume = SpaceC;
-            }
-          else
-            {
-              aVolume = compC->actualVolume;
-            }
-        }
       //If volume + surface = k(volume)(surface) or
       //   volume + surface = k(surface)(volume) or
       //   surface + volume = k(volume)(surface) or
       //   surface + volume = k(surface)(volume)
-      if(compD && (
+      if((compD && (
         (compC->dimension == 3 && compD->dimension == 2 &&
          compA->dimension == 3 && compB->dimension == 2) ||
         (compC->dimension == 3 && compD->dimension == 2 &&
@@ -656,21 +607,39 @@ void SpatiocyteNextReactionProcess::initializeThird()
         (compC->dimension == 2 && compD->dimension == 3 &&
          compA->dimension == 3 && compB->dimension == 2) ||
         (compC->dimension == 2 && compD->dimension == 3 &&
-         compA->dimension == 2 && compB->dimension == 3)))
-        {
-          //unit of k is in m^3/s
-          p = k/aVolume;
-        }
+         compA->dimension == 2 && compB->dimension == 3))) ||
       //If volume (+volume) = k(volume)(volume) or
       //   surface (+surface) = k(volume)(surface) or
       //   surface (+surface) = k(surface)(volume)
-      else if((compC->dimension == 3 && compA->dimension == 3
+         ((compC->dimension == 3 && compA->dimension == 3
           && compB->dimension == 3) ||
          (compC->dimension == 2 && compA->dimension == 3 
           && compB->dimension == 2) ||
          (compC->dimension == 2 && compA->dimension == 2 
-          && compB->dimension == 3))
+          && compB->dimension == 3)))
         {
+          if(compA->dimension == 3)
+            {
+              if(SpaceA > 0)
+                {
+                  aVolume = SpaceA;
+                }
+              else
+                {
+                  aVolume = compA->actualVolume;
+                }
+            }
+          else
+            {
+              if(SpaceB > 0)
+                {
+                  aVolume = SpaceB;
+                }
+              else
+                {
+                  aVolume = compB->actualVolume;
+                }
+            }
           //unit of k is in m^3/s
           p = k/aVolume;
         }
@@ -684,6 +653,28 @@ void SpatiocyteNextReactionProcess::initializeThird()
               (compC->dimension == 3 && compA->dimension == 2 
                && compB->dimension == 3))
         {
+          if(compA->dimension == 2)
+            {
+              if(SpaceA > 0)
+                {
+                  anArea = SpaceA;
+                }
+              else
+                {
+                  anArea = compA->actualArea;
+                }
+            }
+          else
+            {
+              if(SpaceB > 0)
+                {
+                  anArea = SpaceB;
+                }
+              else
+                {
+                  anArea = compB->actualArea;
+                }
+            }
           //unit of k is in m^2/s
           p = k/anArea;
         }
