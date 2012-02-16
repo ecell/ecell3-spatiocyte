@@ -575,6 +575,14 @@ void SpatiocyteNextReactionProcess::initializeThird()
       //adsorption reaction:
       if(compA->dimension == 3 && compC->dimension == 2)
         { 
+          if(SpaceA > 0)
+            {
+              aVolume = SpaceA;
+            }
+          else
+            {
+              aVolume = compA->actualVolume;
+            }
           if(SpaceC > 0)
             {
               anArea = SpaceC;
