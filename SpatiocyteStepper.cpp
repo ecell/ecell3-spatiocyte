@@ -827,6 +827,12 @@ void SpatiocyteStepper::setLatticeProperties()
   //[consume a layer of the surface voxels:
   if(aRootComp->geometry == CUBOID)
     {
+      //We need to increase the row, layer and col size by 2 because
+      //the entire volume must be surrounded by nullID voxels to avoid
+      //self-homodimerization reaction.
+      theRowSize += 2;
+      theColSize += 2;
+      theLayerSize += 2;
       readjustSurfaceBoundarySizes(); 
     }
 
@@ -951,55 +957,94 @@ void SpatiocyteStepper::readjustSurfaceBoundarySizes()
   Comp* aRootComp(theComps[0]);
   //[XY, XZ, YZ]PLANE: the boundary type of the surface when 
   //the geometry of the root Comp is CUBOID.
-  //Boundary type can be either PERIODIC or REFLECTIVE.
-  //Increase the size of [row,layer,col] by one voxel and make them odd sized
-  //if the system uses periodic boundary conditions.
-  if(aRootComp->yzPlane == PERIODIC)
-    { 
-      if(theColSize%2 != 1)
-        {
-          theColSize += 1;
-        }
-      else
-        {
-          theColSize += 2;
-        }
-    }
-  if(aRootComp->xzPlane == PERIODIC)
+  //Where the root cuboid compartment is enclosed with a surface compartment,
+  //the boundary type can be either REFLECTIVE, REMOVE_UPPER, REMOVE_LOWER or
+  //REMOVE_BOTH. To make the actualVolume of the root compartment equivalent
+  //to the specVolume we need to increase the size of the row, col and layer
+  //according to the additional voxels required to occupy the surface voxels.
+  if(aRootComp->surfaceSub)
     {
-      if(theLayerSize%2 != 1)
-        {
-          theLayerSize +=1;
-        }
-      else
-        {
-          theLayerSize += 2;
-        }
-    }
-  if(aRootComp->xyPlane == PERIODIC)
-    {
-      if(theRowSize%2 != 1)
-        {
-          theRowSize += 1;
-        }
-      else
+      if(aRootComp->xyPlane == REFLECTIVE)
         {
           theRowSize += 2;
         }
-    }
-  if(isPeriodicEdge)
-    {
-      if(theColSize%2 == 1)
+      else if(aRootComp->xyPlane == REMOVE_UPPER ||
+              aRootComp->xyPlane == REMOVE_LOWER)
+        {
+          theRowSize += 1;
+        }
+      if(aRootComp->yzPlane == REFLECTIVE)
+        {
+          theColSize += 2;
+        }
+      else if(aRootComp->yzPlane == REMOVE_UPPER ||
+              aRootComp->yzPlane == REMOVE_LOWER)
         {
           theColSize += 1;
         }
-      if(theLayerSize%2 == 1)
+      if(aRootComp->xzPlane == REFLECTIVE)
         {
-          theLayerSize +=1;
+          theLayerSize += 2;
         }
-      if(theRowSize%2 == 1)
+      else if(aRootComp->xzPlane == REMOVE_UPPER ||
+              aRootComp->xzPlane == REMOVE_LOWER)
         {
-          theRowSize += 1;
+          theLayerSize += 1;
+        }
+    }
+  else
+    {
+  //Boundary type can also be either PERIODIC or REFLECTIVE when there is
+  //no surface compartment for the root compartment.
+  //Increase the size of [row,layer,col] by one voxel and make them odd sized
+  //if the system uses periodic boundary conditions.
+      if(aRootComp->yzPlane == PERIODIC)
+        { 
+          if(theColSize%2 != 1)
+            {
+              theColSize += 1;
+            }
+          else
+            {
+              theColSize += 2;
+            }
+        }
+      if(aRootComp->xzPlane == PERIODIC)
+        {
+          if(theLayerSize%2 != 1)
+            {
+              theLayerSize +=1;
+            }
+          else
+            {
+              theLayerSize += 2;
+            }
+        }
+      if(aRootComp->xyPlane == PERIODIC)
+        {
+          if(theRowSize%2 != 1)
+            {
+              theRowSize += 1;
+            }
+          else
+            {
+              theRowSize += 2;
+            }
+        }
+      if(isPeriodicEdge)
+        {
+          if(theColSize%2 == 1)
+            {
+              theColSize += 1;
+            }
+          if(theLayerSize%2 == 1)
+            {
+              theLayerSize +=1;
+            }
+          if(theRowSize%2 == 1)
+            {
+              theRowSize += 1;
+            }
         }
     }
 }
@@ -1018,8 +1063,7 @@ void SpatiocyteStepper::constructLattice()
       unsigned int aLayer((a%(theRowSize*theLayerSize))/theRowSize); 
       unsigned int aRow((a%(theRowSize*theLayerSize))%theRowSize); 
       (*i).coord = b; 
-      if(aRootComp->geometry == CUBOID || aRootComp->geometry == CUBOID ||
-         isInsideCoord(b, aRootComp, 0))
+      if(aRootComp->geometry == CUBOID || isInsideCoord(b, aRootComp, 0))
         {
           //By default, the voxel is vacant and we set it to the root id:
           (*i).id = rootID;
