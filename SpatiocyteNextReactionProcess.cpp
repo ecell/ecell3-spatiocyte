@@ -244,11 +244,12 @@ void SpatiocyteNextReactionProcess::fire()
           Voxel* moleculeC;
           Comp* compA(theSpatiocyteStepper->system2Comp(
                          variableA->getSuperSystem()));
-          if(compA == C->getComp())
+          if(compA == C->getComp() || compA->dimension == 3)
             {
               moleculeC = C->getRandomCompVoxel();
             }
           //Occupy C in a voxel of compartment C that adjoins compartment A
+          //if A is a surface compartment:
           else
             {
               moleculeC = C->getRandomAdjoiningCompVoxel(compA);
