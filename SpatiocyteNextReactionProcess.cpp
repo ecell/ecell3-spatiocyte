@@ -170,7 +170,7 @@ void SpatiocyteNextReactionProcess::fire()
           variableC->addValue(1);
           variableD->addValue(1);
         }
-      //nonHD_A -> nonHD_C + HD_D + HD_E:
+      //nonHD_A -> nonHD_C + HD_D:
       else if(A && C && variableD && !E && !variableE)
         {
           Voxel* moleculeA(A->getRandomMolecule());
@@ -193,7 +193,6 @@ void SpatiocyteNextReactionProcess::fire()
           A->removeMolecule(moleculeA);
           C->addMolecule(moleculeC);
           variableD->addValue(1);
-          variableE->addValue(1);
         }
       //nonHD_A -> HD_C:
       else if(A && variableC && !D && !variableD)
