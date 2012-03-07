@@ -830,6 +830,33 @@ public:
         }
       return getRandomVacantVoxel(&CompVoxels);
     } 
+  Voxel* getRandomAdjoiningVoxel(Voxel* source, Species* aVacantSpecies)
+    {
+      std::vector<Voxel*> CompVoxels;
+      if(theStepper->getSearchVacant())
+        { 
+          for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+            {
+              Voxel* aVoxel(source->adjoiningVoxels[i]);
+              if(aVoxel->id == aVacantSpecies->getID())
+                {
+                  CompVoxels.push_back(aVoxel);
+                }
+            }
+        }
+      else
+        {
+          for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+            {
+              Voxel* aVoxel(source->adjoiningVoxels[i]);
+              if(theStepper->id2Comp(aVoxel->id) == theComp)
+                {
+                  CompVoxels.push_back(aVoxel);
+                }
+            }
+        }
+      return getRandomVacantVoxel(&CompVoxels, aVacantSpecies);
+    } 
   Voxel* getRandomAdjoiningVoxel(Voxel* source, Voxel* target)
     {
       std::vector<Voxel*> CompVoxels;
@@ -895,6 +922,20 @@ public:
           const int r(gsl_rng_uniform_int(theRng, voxels->size())); 
           Voxel* aVoxel((*voxels)[r]);
           if(aVoxel->id == theComp->vacantID)
+            {
+              return aVoxel;
+            }
+        }
+      return NULL;
+    }
+  Voxel* getRandomVacantVoxel(std::vector<Voxel*>* voxels,
+                              Species* aVacantSpecies)
+    {
+      if(voxels->size())
+        {
+          const int r(gsl_rng_uniform_int(theRng, voxels->size())); 
+          Voxel* aVoxel((*voxels)[r]);
+          if(aVoxel->id == aVacantSpecies->getID())
             {
               return aVoxel;
             }

@@ -54,55 +54,8 @@ void SpatiocyteNextReactionProcess::fire()
     }
   else if(theOrder == 1)
     { 
-      //nonHD_A -> nonHD_C + nonHD_D + nonHD_E:
-      if(A && C && D && E)
-        {
-          Voxel* moleculeA(A->getRandomMolecule());
-          //If the product C is not in the same Comp as A,
-          //we need to find a vacant adjoining voxel of A that belongs
-          //to the Comp of C:
-          Voxel* moleculeC;
-          if(A->getComp() != C->getComp())
-            {
-              moleculeC = C->getRandomAdjoiningVoxel(moleculeA);
-              //Only proceed if we can find an adjoining vacant voxel
-              //of A which can be occupied by C:
-              if(moleculeC == NULL)
-                {
-                  requeue();
-                  return;
-                }
-            }
-          else
-            {
-              moleculeC = moleculeA;
-            }
-          Voxel* moleculeD(D->getRandomAdjoiningVoxel(moleculeC, moleculeC));
-          //Only proceed if we can find an adjoining vacant voxel
-          //of A which can be occupied by D:
-          if(moleculeD == NULL)
-            {
-              requeue();
-              return;
-            }
-          //we occupy the voxel with D first so that it is not selected again
-          //for E
-          D->addMolecule(moleculeD);
-          Voxel* moleculeE(E->getRandomAdjoiningVoxel(moleculeC, moleculeC));
-          //Only proceed if we can find an adjoining vacant voxel
-          //of A which can be occupied by E:
-          if(moleculeE == NULL)
-            {
-              D->removeMolecule(moleculeD);
-              requeue();
-              return;
-            }
-          E->addMolecule(moleculeE);
-          A->removeMolecule(moleculeA);
-          C->addMolecule(moleculeC);
-        }
       //nonHD_A -> nonHD_C + nonHD_D:
-      else if(A && C && D && !E && !variableE)
+      if(A && C && D)
         {
           Voxel* moleculeA(A->getRandomMolecule());
           //If the product C is not in the same Comp as A,
@@ -163,7 +116,7 @@ void SpatiocyteNextReactionProcess::fire()
           C->addMolecule(moleculeC);
         }
       //nonHD_A -> HD_C + HD_D:
-      else if(A && variableC && variableD && !E && !variableE)
+      else if(A && variableC && variableD)
         {
           Voxel* moleculeA(A->getRandomMolecule());
           A->removeMolecule(moleculeA);
@@ -171,7 +124,7 @@ void SpatiocyteNextReactionProcess::fire()
           variableD->addValue(1);
         }
       //nonHD_A -> nonHD_C + HD_D:
-      else if(A && C && variableD && !E && !variableE)
+      else if(A && C && variableD)
         {
           Voxel* moleculeA(A->getRandomMolecule());
           Voxel* moleculeC;
@@ -203,7 +156,7 @@ void SpatiocyteNextReactionProcess::fire()
         }
       //nonHD_A -> nonHD_C + HD_D:
       //nonHD_A -> HD_C + nonHD_D:
-      else if(A && ((variableC && D) || (C && variableD)) && !E && !variableE)
+      else if(A && ((variableC && D) || (C && variableD)))
         {
           Variable* HD_p(variableC);
           Species* nonHD_p(D);
@@ -386,8 +339,8 @@ void SpatiocyteNextReactionProcess::fire()
               nonHD = B;
               HD = variableA;
             }
-          //nonHD + HD -> nonHD + nonHD: 
-          //HD + nonHD -> nonHD + nonHD: 
+          //nonHD + HD (+E) -> nonHD + nonHD: 
+          //HD + nonHD (+E) -> nonHD + nonHD: 
           if(C && D)
             {
               Voxel* moleculeNonHD(nonHD->getRandomMolecule());
@@ -396,9 +349,21 @@ void SpatiocyteNextReactionProcess::fire()
               //to the Comp of C:
               Voxel* moleculeC(NULL);
               Voxel* moleculeD(NULL);
+              Voxel* moleculeE(NULL);
               if(nonHD->getComp() != C->getComp())
                 {
-                  moleculeC = C->getRandomAdjoiningVoxel(moleculeNonHD);
+                  //If the product vacant molecule type is specified:
+                  if(E)
+                    {
+                      //Get an ajoining voxel of nonHD that is occupied by
+                      //species E:
+                      moleculeE = C->getRandomAdjoiningVoxel(moleculeNonHD, E);
+                      moleculeC = moleculeE;
+                    }
+                  else
+                    { 
+                      moleculeC = C->getRandomAdjoiningVoxel(moleculeNonHD);
+                    }
                   //Only proceed if we can find an adjoining vacant voxel
                   //of nonHD which can be occupied by C:
                   if(moleculeC == NULL)
@@ -417,7 +382,18 @@ void SpatiocyteNextReactionProcess::fire()
                 }
               if(moleculeD == NULL)
                 {
-                  moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC);
+                  if(E)
+                    {
+                      //Get an ajoining voxel of nonHD that is occupied by
+                      //species E:
+                      moleculeE = D->getRandomAdjoiningVoxel(moleculeC, E);
+                      moleculeD = moleculeE;
+                    }
+                  else
+                    { 
+                      moleculeD = D->getRandomAdjoiningVoxel(moleculeC,
+                                                             moleculeC);
+                    }
                 }
               //Only proceed if we can find an adjoining vacant voxel
               //of A which can be occupied by D:
@@ -428,6 +404,10 @@ void SpatiocyteNextReactionProcess::fire()
                 }
               HD->addValue(-1);
               nonHD->removeMolecule(moleculeNonHD);
+              if(moleculeE)
+                {
+                  E->removeMolecule(moleculeE);
+                }
               D->addMolecule(moleculeD);
               C->addMolecule(moleculeC);
             }

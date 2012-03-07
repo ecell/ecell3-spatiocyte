@@ -205,20 +205,6 @@ protected:
 inline void SpatiocyteNextReactionProcess::calculateOrder()
 {
   ReactionProcess::calculateOrder();
-  for(VariableReferenceVector::iterator
-      i(theVariableReferenceVector.begin());
-      i != theVariableReferenceVector.end(); ++i)
-    {
-      VariableReference aVariableReference(*i);
-      Integer aCoefficient(aVariableReference.getCoefficient());
-      // here assume aCoefficient != 0
-      if(aCoefficient == 0)
-        {
-          THROW_EXCEPTION(InitializationFailed,
-                          "[" + getFullID().asString() + 
-                          "]: Zero stoichiometry is not allowed.");
-        }
-    }
   // set theGetPropensityMethodPtr
   if(getOrder() == 0) // no substrate
     {
@@ -251,6 +237,7 @@ inline void SpatiocyteNextReactionProcess::calculateOrder()
     }
   else
     {
+      std::cout << "theOrder:" << getOrder() << std::endl;
       NEVER_GET_HERE;
     }
 }

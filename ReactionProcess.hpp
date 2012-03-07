@@ -235,7 +235,7 @@ inline void ReactionProcess::calculateOrder()
                 }
             }
           //The second product, D:
-          else if(D == NULL && variableD == NULL)
+          else
             {
               if(aVariable->getName() == "HD")
                 {
@@ -246,17 +246,17 @@ inline void ReactionProcess::calculateOrder()
                   D = theSpatiocyteStepper->getSpecies(aVariable);
                 }
             }
-          //The third product, E:
+        }
+      //aCoefficient == 0:
+      else
+        {
+          if(aVariable->getName() == "HD")
+            {
+              variableE = aVariable;
+            }
           else
             {
-              if(aVariable->getName() == "HD")
-                {
-                  variableE = aVariable;
-                }
-              else
-                {
-                  E = theSpatiocyteStepper->getSpecies(aVariable);
-                }
+              E = theSpatiocyteStepper->getSpecies(aVariable);
             }
         }
     }
