@@ -51,7 +51,7 @@ public:
   SpatiocyteStepper():
     isInitialized(false),
     isPeriodicEdge(false),
-    SearchVacant(true),
+    SearchVacant(false),
     LatticeType(HCP_LATTICE),
     VoxelRadius(10e-9),
     theNormalizedVoxelRadius(0.5) {}
