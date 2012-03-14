@@ -70,6 +70,7 @@ public:
               thePolymerIndex.push_back(i);
             }
         }
+      thePriority = -1;
     }
 
   virtual void initializeFourth()

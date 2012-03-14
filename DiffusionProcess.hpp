@@ -132,7 +132,10 @@ public:
                   aSpecies = *i;
                   rho = (*i)->getMaxReactionProbability();
                 }
-              (*i)->setVacantSpecies(theVacantSpecies);
+              if(theVacantSpecies)
+                {
+                  (*i)->setVacantSpecies(theVacantSpecies);
+                }
             }
         }
       if(rho > P)

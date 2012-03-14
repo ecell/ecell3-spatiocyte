@@ -160,12 +160,14 @@ void PriorityQueue<Item, IDPolicy>::movePos(Index pos)
       const Index succ(2*pos+1);
       if(this->itemVector[this->heap[succ]]->getTime() < item->getTime() ||
          (this->itemVector[this->heap[succ]]->getTime() == item->getTime() &&
-          this->itemVector[this->heap[succ]]->getIsPriority()) ||
+          this->itemVector[this->heap[succ]]->getPriority() >
+          item->getPriority()) ||
          (succ+1 < size &&
           this->itemVector[this->heap[succ+1]]->getTime() < item->getTime()) ||
          (succ+1 < size &&
           this->itemVector[this->heap[succ+1]]->getTime() == item->getTime() &&
-          this->itemVector[this->heap[succ+1]]->getIsPriority()))
+          this->itemVector[this->heap[succ+1]]->getPriority() >
+          item->getPriority()))
         {
           moveDownPos(pos);
           return;
@@ -176,7 +178,8 @@ void PriorityQueue<Item, IDPolicy>::movePos(Index pos)
       const Index pred((pos-1)/2);
       if(item->getTime() < this->itemVector[this->heap[pred]]->getTime() ||
          (item->getTime() == this->itemVector[this->heap[pred]]->getTime() &&
-          item->getIsPriority()))
+          item->getPriority() >
+          this->itemVector[this->heap[pred]]->getPriority()))
         {
           moveUpPos(pos);
           return;
@@ -201,7 +204,7 @@ void PriorityQueue<Item, IDPolicy>::moveUpPos(Index position,
       const Index predIndex(this->heap[pred]);
       if(this->itemVector[predIndex]->getTime() < item->getTime() ||
          (this->itemVector[predIndex]->getTime() == item->getTime() &&
-          this->itemVector[predIndex]->getIsPriority()))
+          this->itemVector[predIndex]->getPriority() > item->getPriority()))
         {
           break;
         } 
@@ -228,7 +231,8 @@ void PriorityQueue<Item, IDPolicy>::moveDownPos(Index position)
           this->itemVector[this->heap[succ]]->getTime() ||
           (this->itemVector[this->heap[rightPos]]->getTime() ==
            this->itemVector[this->heap[succ]]->getTime() &&
-           this->itemVector[this->heap[rightPos]]->getIsPriority())))
+           this->itemVector[this->heap[rightPos]]->getPriority() >
+           this->itemVector[this->heap[succ]]->getPriority())))
         {
           succ = rightPos;
         } 

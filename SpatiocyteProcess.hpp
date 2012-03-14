@@ -46,7 +46,7 @@ public:
     }
   SpatiocyteProcess(bool aPriority=true):
     isInitialized(false),
-    isPriority(aPriority),
+    thePriority(0),
     theStepInterval(libecs::INF),
     theTime(libecs::INF) {}
   virtual ~SpatiocyteProcess() {}
@@ -114,9 +114,9 @@ public:
     {
       return theTime;
     }
-  virtual bool getIsPriority() const
+  virtual int getPriority() const
     {
-      return isPriority;
+      return thePriority;
     }
   virtual void setTime(Time aTime)
     {
@@ -138,7 +138,7 @@ protected:
   String getIDString(Variable*) const;
 protected:
   bool isInitialized;
-  bool isPriority;
+  int thePriority;
   double theStepInterval;
   Time theTime;
   ProcessID theQueueID;

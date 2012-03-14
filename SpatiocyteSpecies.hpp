@@ -728,6 +728,10 @@ public:
     {
       return theVacantID;
     }
+  Species* getVacantSpecies()
+    {
+      return theVacantSpecies;
+    }
   void setVacantSpecies(Species* aVacantSpecies)
     {
       theVacantSpecies = aVacantSpecies;
