@@ -85,8 +85,13 @@ public:
           theDiffusionInfluencedReactions[i] = NULL;
           theReactionProbabilities[i] = 0;
         }
+      if(theComp)
+        {
+          setVacantSpecies(theStepper->id2species(theComp->vacantID));
+        }
     }
-  void setDiffusionInfluencedReaction(DiffusionInfluencedReactionProcessInterface*
+  void setDiffusionInfluencedReaction(
+                                    DiffusionInfluencedReactionProcessInterface*
                                       aReaction, int anID, double aProbability)
     {
       theDiffusionInfluencedReactions[anID] = aReaction;
@@ -96,7 +101,8 @@ public:
     {
       theDiffusionInfluencedReactantPairs.push_back(aSpecies);
     }
-  void setPopulateProcess(MoleculePopulateProcessInterface* aProcess, double aDist)
+  void setPopulateProcess(MoleculePopulateProcessInterface* aProcess,
+                          double aDist)
     {
       if(aDist)
         {
@@ -357,7 +363,6 @@ public:
     }
   void surfaceWalkCollide()
     {
-      int vacantID(theComp->vacantID);
       Voxel* target;
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
@@ -368,12 +373,12 @@ public:
             {
               std::cout << "error surface" << std::endl;
             }
-          if(target->id == vacantID)
+          if(target->id == theVacantID)
             {
               if(gsl_rng_uniform(theRng) < theWalkProbability)
                 {
+                  theVacantSpecies->softReplaceMolecule(target, source);
                   target->id = theID;
-                  source->id = vacantID;
                   theMolecules[i] = target;
                 }
             }
@@ -407,7 +412,6 @@ public:
     }
   void volumeWalkCollide()
     {
-      int vacantID(theComp->vacantID);
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]); 
@@ -421,12 +425,12 @@ public:
               std::cout << "error volume" << std::endl;
             }
           //walk:
-          if(target->id == vacantID)
+          if(target->id == theVacantID)
             {
               if(gsl_rng_uniform(theRng) < theWalkProbability)
                 {
+                  theVacantSpecies->softReplaceMolecule(target, source);
                   target->id = theID;
-                  source->id = vacantID;
                   theMolecules[i] = target;
                 }
             }
@@ -461,7 +465,6 @@ public:
     }
   void surfaceWalk()
     {
-      int vacantID(theComp->vacantID);
       Voxel* target;
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
@@ -472,10 +475,10 @@ public:
             {
               std::cout << "error surface" << std::endl;
             }
-          if(target->id == vacantID)
+          if(target->id == theVacantID)
             {
+              theVacantSpecies->softReplaceMolecule(target, source);
               target->id = theID;
-              source->id = vacantID;
               theMolecules[i] = target;
             }
           else if(theDiffusionInfluencedReactions[target->id] != NULL)
@@ -508,7 +511,6 @@ public:
     }
   void volumeWalk()
     {
-      int vacantID(theComp->vacantID);
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
@@ -521,10 +523,10 @@ public:
               //correct.
               std::cout << "error volume" << std::endl;
             }
-          if(target->id == vacantID)
+          if(target->id == theVacantID)
             {
+              theVacantSpecies->softReplaceMolecule(target, source);
               target->id = theID;
-              source->id = vacantID;
               theMolecules[i] = target;
             }
           else if(theDiffusionInfluencedReactions[target->id] != NULL)
@@ -581,10 +583,10 @@ public:
     }
   void addMolecule(Voxel* aMolecule)
     {
-        if(!getIsVacant() && !getIsLipid() && !getIsSegment())
+      aMolecule->id = theID;
+      if(!getIsVacant())
         {
           ++theMoleculeSize;
-          aMolecule->id = theID;
           if(theMoleculeSize > theMolecules.size())
             {
               theMolecules.push_back(aMolecule);
@@ -601,68 +603,75 @@ public:
             }
         }
     }
-  void softRemoveMolecule(Voxel* aMolecule)
+  //it is soft replace because the id of the source molecule is not changed:
+  void softReplaceMolecule(Voxel* aSource, Voxel* aTarget)
     {
-      for(unsigned int i(0); i < theMoleculeSize; ++i)
+      aTarget->id = theID;
+      if(!getIsVacant())
         {
-          if(theMolecules[i] == aMolecule)
+          for(unsigned int i(0); i < theMoleculeSize; ++i)
             {
-              theMolecules[i] = theMolecules[--theMoleculeSize];
-              theVariable->setValue(theMoleculeSize);
-              for(unsigned int i(0); i != theInterruptedProcesses.size(); ++i)
+              if(theMolecules[i] == aSource)
                 {
-                  theInterruptedProcesses[i]->removeSubstrateInterrupt(this,
-                                                                     aMolecule);
+                  theMolecules[i] = aTarget;
+                  return;
                 }
-              return;
             }
         }
-      if(!getIsVacant() && !getIsLipid() && !getIsSegment())
+    }
+  //it is soft remove because the id of the molecule is not changed:
+  void softRemoveMolecule(Voxel* aMolecule)
+    {
+      if(!getIsVacant())
         {
-          if(aMolecule != aMolecule->subunit->voxel)
+          for(unsigned int i(0); i < theMoleculeSize; ++i)
             {
-              std::cout << "it is a shared molecule" << std::endl;
+              if(theMolecules[i] == aMolecule)
+                {
+                  theMolecules[i] = theMolecules[--theMoleculeSize];
+                  theVariable->setValue(theMoleculeSize);
+                  for(unsigned int i(0); i != theInterruptedProcesses.size(); ++i)
+                    {
+                      theInterruptedProcesses[i]->removeSubstrateInterrupt(
+                                                             this, aMolecule);
+                    }
+                  return;
+                }
             }
-          std::cout << "error in soft removing molecule, couldn't find the"
-           " specified molecule to be removed, molecule size:" << 
-            theMoleculeSize << " value:" << theVariable->getValue() <<
-            getVariable()->getFullID().asString() << std::endl;
-          std::cout << "species:" << theStepper->id2species(aMolecule->id)->getVariable()->getFullID().asString() << std::endl;
         }
     }
   void removeMolecule(Voxel* aMolecule)
     {
-      for(unsigned int i(0); i < theMoleculeSize; ++i)
+      if(!getIsVacant())
         {
-          if(theMolecules[i] == aMolecule)
+          for(unsigned int i(0); i < theMoleculeSize; ++i)
             {
-              aMolecule->id = theComp->vacantID;
-              theMolecules[i] = theMolecules[--theMoleculeSize];
-              theVariable->setValue(theMoleculeSize);
-              for(unsigned int i(0); i != theInterruptedProcesses.size(); ++i)
+              if(theMolecules[i] == aMolecule)
                 {
-                  theInterruptedProcesses[i]->removeSubstrateInterrupt(this,
-                                                                     aMolecule);
+                  theVacantSpecies->addMolecule(aMolecule);
+                  theMolecules[i] = theMolecules[--theMoleculeSize];
+                  theVariable->setValue(theMoleculeSize);
+                  for(unsigned int i(0); i != theInterruptedProcesses.size(); ++i)
+                    {
+                      theInterruptedProcesses[i]->removeSubstrateInterrupt(
+                                                             this, aMolecule);
+                    }
+                  return;
                 }
-              return;
             }
-        }
-      if(!getIsLipid() && !getIsSegment())
-        {
-          std::cout << "error in removing molecule, couldn't find the specified" <<
-            " molecule to be removed, molecule size:" << 
-            theMoleculeSize << " value:" << theVariable->getValue() <<
-            getVariable()->getFullID().asString() << std::endl;
         }
     }
   void removeMolecules()
     {
-      for(unsigned int i(0); i < theMoleculeSize; ++i)
+      if(!getIsVacant())
         {
-          theMolecules[i]->id = theComp->vacantID;
+          for(unsigned int i(0); i < theMoleculeSize; ++i)
+            {
+              theVacantSpecies->addMolecule(theMolecules[i]);
+            }
+          theMoleculeSize = 0;
+          theVariable->setValue(theMoleculeSize);
         }
-      theMoleculeSize = 0;
-      theVariable->setValue(theMoleculeSize);
     }
   int getPopulateMoleculeSize()
     {
@@ -706,9 +715,9 @@ public:
                                                 getIsVolume(),
                                                 &anOrigin));
           if(periodicVoxel != NULL && 
-             periodicVoxel->id == theComp->vacantID)
+             periodicVoxel->id == theVacantID)
             {
-              theMolecules[i]->id = theComp->vacantID;
+              theMolecules[i]->id = theVacantID;
               theMolecules[i] = periodicVoxel;
               theMolecules[i]->id = theID;
               theMoleculeOrigins[i] = anOrigin;
@@ -717,7 +726,12 @@ public:
     }
   int getVacantID() const
     {
-      return theComp->vacantID;
+      return theVacantID;
+    }
+  void setVacantSpecies(Species* aVacantSpecies)
+    {
+      theVacantSpecies = aVacantSpecies;
+      theVacantID = aVacantSpecies->getID();
     }
   const std::vector<double>& getBendAngles() const
     {
@@ -811,7 +825,7 @@ public:
           for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
-              if(aVoxel->id == theComp->vacantID)
+              if(aVoxel->id == theVacantID)
                 {
                   CompVoxels.push_back(aVoxel);
                 }
@@ -865,7 +879,7 @@ public:
           for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
-              if(aVoxel->id == theComp->vacantID &&
+              if(aVoxel->id == theVacantID &&
                  aVoxel != target)
                 {
                   CompVoxels.push_back(aVoxel);
@@ -894,7 +908,7 @@ public:
           for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
-              if(aVoxel->id == theComp->vacantID &&
+              if(aVoxel->id == theVacantID &&
                  aVoxel != targetA && aVoxel != targetB)
                 {
                   CompVoxels.push_back(aVoxel);
@@ -921,7 +935,7 @@ public:
         {
           const int r(gsl_rng_uniform_int(theRng, voxels->size())); 
           Voxel* aVoxel((*voxels)[r]);
-          if(aVoxel->id == theComp->vacantID)
+          if(aVoxel->id == theVacantID)
             {
               return aVoxel;
             }
@@ -951,7 +965,7 @@ public:
           for(int i(r); i != aSize; ++i)
             {
               Voxel* aVoxel(theStepper->coord2voxel(theComp->coords[i]));
-              if(aVoxel->id == theComp->vacantID)
+              if(aVoxel->id == theVacantID)
                 {
                   return aVoxel;
                 }
@@ -959,7 +973,7 @@ public:
           for(int i(0); i != r; ++i)
             {
               Voxel* aVoxel(theStepper->coord2voxel(theComp->coords[i]));
-              if(aVoxel->id == theComp->vacantID)
+              if(aVoxel->id == theVacantID)
                 {
                   return aVoxel;
                 }
@@ -968,7 +982,7 @@ public:
       else
         {
           Voxel* aVoxel(theStepper->coord2voxel(theComp->coords[r]));
-          if(aVoxel->id == theComp->vacantID)
+          if(aVoxel->id == theVacantID)
             {
               return aVoxel;
             }
@@ -983,11 +997,10 @@ public:
       return getRandomAdjoiningVoxel(aVoxel);
     }
 private:
-    bool isLipid;
-    bool isVacant;
-    bool isSegment;
-    bool isVolume;
-
+  bool isLipid;
+  bool isVacant;
+  bool isSegment;
+  bool isVolume;
   bool isCentered;
   bool isDiffusing;
   bool isGaussianPopulation;
@@ -1000,10 +1013,12 @@ private:
   unsigned int theMoleculeSize;
   unsigned int theAdjoiningVoxelSize;
   int thePolymerDirectionality;
+  int theVacantID;
   double D;
   double theDiffusionInterval;
   double theWalkProbability;
   const gsl_rng* theRng;
+  Species* theVacantSpecies;
   Comp* theComp;
   MoleculePopulateProcessInterface* thePopulateProcess;
   SpatiocyteStepper* theStepper;

@@ -52,6 +52,7 @@ public:
     D(0),
     P(1),
     WalkProbability(1),
+    theVacantSpecies(NULL),
     theWalkMethod(&DiffusionProcess::volumeWalk) {}
   virtual ~DiffusionProcess() {}
   SIMPLE_SET_GET_METHOD(Real, D);
@@ -64,21 +65,41 @@ public:
           return;
         }
       SpatiocyteProcess::initialize();
-      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
-          i != theProcessSpecies.end(); ++i)
+      for(VariableReferenceVector::iterator
+          i(theVariableReferenceVector.begin());
+          i != theVariableReferenceVector.end(); ++i)
         {
-          (*i)->setDiffusionCoefficient(D);
+          Species* aSpecies(theSpatiocyteStepper->variable2species(
+                                   (*i).getVariable())); 
+          if(!(*i).getCoefficient())
+            {
+              theDiffusionSpecies.push_back(aSpecies);
+              aSpecies->setDiffusionCoefficient(D);
+            }
+          else
+            {
+              theVacantSpecies = aSpecies;
+            }
+        }
+      if(!theDiffusionSpecies.size())
+        {
+          THROW_EXCEPTION(ValueError, String(
+                          getPropertyInterface().getClassName()) +
+                          "[" + getFullID().asString() + 
+                          "]: A DiffusionProcess requires at least one " +
+                          "variable reference with zero coefficient."); 
         }
     }
   virtual void initializeThird()
     {
-      Species* aSpecies(theProcessSpecies[0]);
+      Species* aSpecies(theDiffusionSpecies[0]);
       isVolume = aSpecies->getIsVolume();
       double rho(aSpecies->getMaxReactionProbability());
       if(D > 0)
         {
-          for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
-              i != theProcessSpecies.end(); ++i)
+          for(std::vector<Species*>::const_iterator
+              i(theDiffusionSpecies.begin());
+              i != theDiffusionSpecies.end(); ++i)
             {
               if((*i)->getIsVolume() != isVolume)
                 {
@@ -89,7 +110,7 @@ public:
                                   " multiple species when they are all either" +
                                   " in a volume compartment or a surface" +
                                   " compartment, not both concurrently. " +
-                                  getIDString(theProcessSpecies[0]) + " and " +
+                                  getIDString(theDiffusionSpecies[0]) + " and " +
                                   getIDString(*i) + " belong to different" +
                                   " types of compartment.");
                 }
@@ -111,14 +132,15 @@ public:
                   aSpecies = *i;
                   rho = (*i)->getMaxReactionProbability();
                 }
+              (*i)->setVacantSpecies(theVacantSpecies);
             }
         }
       if(rho > P)
         {
           WalkProbability = P/rho;
         }
-      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
-          i != theProcessSpecies.end(); ++i)
+      for(std::vector<Species*>::const_iterator i(theDiffusionSpecies.begin());
+          i != theDiffusionSpecies.end(); ++i)
         {
           (*i)->rescaleReactionProbabilities(WalkProbability);
         }
@@ -133,8 +155,8 @@ public:
             }
           theStepInterval = lambda*r_v*r_v*WalkProbability/D;
         }
-      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
-          i != theProcessSpecies.end(); ++i)
+      for(std::vector<Species*>::const_iterator i(theDiffusionSpecies.begin());
+          i != theDiffusionSpecies.end(); ++i)
         {
           (*i)->setDiffusionInterval(theStepInterval);
         }
@@ -160,20 +182,16 @@ public:
               theWalkMethod = &DiffusionProcess::surfaceWalkCollide;
             }
         }
-      //At the start of the simulation, we must make sure the CollisionProcess
-      //is fired first before the DiffusionProcess. This is to make sure
-      //the reaction probability is valid for reactants that are initially
-      //at contact:
     }
   virtual void printParameters()
     {
-      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
-          i != theProcessSpecies.end(); ++i)
+      for(std::vector<Species*>::const_iterator i(theDiffusionSpecies.begin());
+          i != theDiffusionSpecies.end(); ++i)
         {
           std::cout << getIDString(*i) << " ";
         }
-      std::cout << ":" << std::endl << "  Diffusion interval=" << theStepInterval <<
-        ", D=" << D << ", Walk probability (P/rho)=" <<
+      std::cout << ":" << std::endl << "  Diffusion interval=" <<
+        theStepInterval << ", D=" << D << ", Walk probability (P/rho)=" <<
         WalkProbability << std::endl;
     }
   virtual void fire()
@@ -184,40 +202,40 @@ public:
     }
   void volumeWalk() const
     {
-      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
-          i != theProcessSpecies.end(); ++i)
+      for(std::vector<Species*>::const_iterator i(theDiffusionSpecies.begin());
+          i != theDiffusionSpecies.end(); ++i)
         {
           (*i)->volumeWalk();
         }
     }
   void volumeWalkCollide() const
     {
-      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
-          i != theProcessSpecies.end(); ++i)
+      for(std::vector<Species*>::const_iterator i(theDiffusionSpecies.begin());
+          i != theDiffusionSpecies.end(); ++i)
         {
           (*i)->volumeWalkCollide();
         }
     }
   void surfaceWalk() const
     {
-      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
-          i != theProcessSpecies.end(); ++i)
+      for(std::vector<Species*>::const_iterator i(theDiffusionSpecies.begin());
+          i != theDiffusionSpecies.end(); ++i)
         {
           (*i)->surfaceWalk();
         }
     }
   void surfaceWalkCollide() const
     {
-      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
-          i != theProcessSpecies.end(); ++i)
+      for(std::vector<Species*>::const_iterator i(theDiffusionSpecies.begin());
+          i != theDiffusionSpecies.end(); ++i)
         {
           (*i)->surfaceWalkCollide();
         }
     }
   virtual void initializeLastOnce()
     {
-      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
-          i != theProcessSpecies.end(); ++i)
+      for(std::vector<Species*>::const_iterator i(theDiffusionSpecies.begin());
+          i != theDiffusionSpecies.end(); ++i)
         {
           (*i)->addInterruptedProcess(this);
         }
@@ -226,7 +244,7 @@ public:
     {
       if(theStepInterval == libecs::INF)
         {
-          theStepInterval = theProcessSpecies[0]->getDiffusionInterval();
+          theStepInterval = theDiffusionSpecies[0]->getDiffusionInterval();
           theTime = theSpatiocyteStepper->getCurrentTime() + theStepInterval; 
           thePriorityQueue->move(theQueueID);
         }
@@ -235,8 +253,9 @@ public:
     {
       if(theStepInterval != libecs::INF)
         {
-          for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
-              i != theProcessSpecies.end(); ++i)
+          for(std::vector<Species*>::const_iterator
+              i(theDiffusionSpecies.begin());
+              i != theDiffusionSpecies.end(); ++i)
             {
               if((*i)->size())
                 {
@@ -253,7 +272,9 @@ protected:
   double D;
   double P;
   double WalkProbability;
+  Species* theVacantSpecies;
   WalkMethod theWalkMethod;
+  std::vector<Species*> theDiffusionSpecies;
 };
 
 #endif /* __DiffusionProcess_hpp */

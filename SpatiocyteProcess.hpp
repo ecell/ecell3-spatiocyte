@@ -135,6 +135,7 @@ public:
 protected:
   String getIDString(Voxel*) const;
   String getIDString(Species*) const;
+  String getIDString(Variable*) const;
 protected:
   bool isInitialized;
   bool isPriority;

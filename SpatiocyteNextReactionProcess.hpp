@@ -33,6 +33,7 @@
 #ifndef __SpatiocyteNextReactionProcess_hpp
 #define __SpatiocyteNextReactionProcess_hpp
 
+#include <sstream>
 #include <MethodProxy.hpp>
 #include "ReactionProcess.hpp"
 
@@ -147,6 +148,7 @@ public:
   virtual GET_METHOD(Real, StepInterval);
   virtual void fire();
   virtual void initializeThird();
+  virtual void printParameters();
 protected:
   virtual void calculateOrder();
   Real getPropensity_ZerothOrder() 
@@ -199,6 +201,7 @@ protected:
   double SpaceA;
   double SpaceB;
   double SpaceC;
+  std::stringstream pFormula;
   RealMethodProxy theGetPropensityMethodPtr;  
 };
 

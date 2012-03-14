@@ -87,6 +87,7 @@ public:
   double getNormalizedVoxelRadius();
   Voxel* point2voxel(Point);
   std::vector<Comp*> const& getComps() const;
+  Species* variable2species(Variable*);
 private:
   void setCompsCenterPoint();
   void setIntersectingCompartmentList();
@@ -178,7 +179,7 @@ private:
   double theHCPl;
   Point theCenterPoint;
   ProcessPriorityQueue thePriorityQueue; 
-  std::vector<Species*>::iterator variable2species(Variable*);
+  std::vector<Species*>::iterator variable2ispecies(Variable*);
   std::vector<Species*> theSpecies;
   std::vector<Comp*> theComps;
   std::vector<Voxel> theLattice;

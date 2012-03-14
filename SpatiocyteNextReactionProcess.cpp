@@ -538,16 +538,20 @@ void SpatiocyteNextReactionProcess::initializeThird()
       if(SpaceC > 0)
         {
           aSpace = SpaceC;
+          pFormula << "[aSpace = SpaceC:" << aSpace << "]";
         }
       else if(compC->dimension == 2)
         {
           aSpace = compC->actualArea;
+          pFormula << "[aSpace = compC.Area:" << aSpace << "]";
         }
       else
         {
           aSpace = compC->actualVolume;
+          pFormula << "[aSpace = compC.Volume:" << aSpace << "]";
         }
       p = k*aSpace;
+      pFormula << "[k*aSpace = " << k << "*" << aSpace << "]";
     }
   else if(theOrder == 1) 
     {
@@ -558,22 +562,29 @@ void SpatiocyteNextReactionProcess::initializeThird()
           if(SpaceA > 0)
             {
               aVolume = SpaceA;
+              pFormula << "[aVolume = SpaceA:" << aVolume << "]";
             }
           else
             {
               aVolume = compA->actualVolume;
+              pFormula << "[aVolume = compA.Volume:" << aVolume << "]";
             }
           if(SpaceC > 0)
             {
               anArea = SpaceC;
+              pFormula << "[anArea = SpaceC:" << anArea << "]";
             }
           else
             {
               anArea = compC->actualArea;
+              pFormula << "[anArea = compC.Area:" << anArea << "]";
             }
           k = k*anArea/aVolume;
+          pFormula << "[k*anArea/aVolume = " << k << "*" << anArea << "/"
+            << aVolume << "]";
         }
       p = k;
+      pFormula << "[k = " << k << "]";
     }
   else if(theOrder == 2)
     {
@@ -611,10 +622,12 @@ void SpatiocyteNextReactionProcess::initializeThird()
               if(SpaceA > 0)
                 {
                   aVolume = SpaceA;
+                  pFormula << "[aVolume = SpaceA:" << aVolume << "]";
                 }
               else
                 {
                   aVolume = compA->actualVolume;
+                  pFormula << "[aVolume = compA.Volume:" << aVolume << "]";
                 }
             }
           else
@@ -622,14 +635,17 @@ void SpatiocyteNextReactionProcess::initializeThird()
               if(SpaceB > 0)
                 {
                   aVolume = SpaceB;
+                  pFormula << "[aVolume = SpaceB:" << aVolume << "]";
                 }
               else
                 {
                   aVolume = compB->actualVolume;
+                  pFormula << "[aVolume = compB.Volume:" << aVolume << "]";
                 }
             }
           //unit of k is in m^3/s
           p = k/aVolume;
+          pFormula << "[k/aVolume = " << k << "/" << aVolume << "]";
         }
       //If surface (+surface) = k(surface)(surface) or
       //   volume (+volume) = k(volume)(surface) or
@@ -646,10 +662,12 @@ void SpatiocyteNextReactionProcess::initializeThird()
               if(SpaceA > 0)
                 {
                   anArea = SpaceA;
+                  pFormula << "[anArea = SpaceA:" << anArea << "]";
                 }
               else
                 {
                   anArea = compA->actualArea;
+                  pFormula << "[anArea = compA.Area:" << anArea << "]";
                 }
             }
           else
@@ -657,14 +675,17 @@ void SpatiocyteNextReactionProcess::initializeThird()
               if(SpaceB > 0)
                 {
                   anArea = SpaceB;
+                  pFormula << "[anArea = SpaceB:" << anArea << "]";
                 }
               else
                 {
                   anArea = compB->actualArea;
+                  pFormula << "[anArea = compB.Area:" << anArea << "]";
                 }
             }
           //unit of k is in m^2/s
           p = k/anArea;
+          pFormula << "[k/anArea = " << k << "/" << anArea << "]";
         }
       else
         {
@@ -674,12 +695,68 @@ void SpatiocyteNextReactionProcess::initializeThird()
       if(getZeroVariableReferenceOffset() == 1)
         {
           p = k;
+          pFormula << "[k = " << k << "]";
         }
     }
   else
     {
       NEVER_GET_HERE;
     } 
+}
+
+void SpatiocyteNextReactionProcess::printParameters()
+{
+  String aProcess(String(getPropertyInterface().getClassName()) + 
+                                      "[" + getFullID().asString() + "]");
+  std::cout << aProcess << std::endl;
+  if(A)
+    {
+      std::cout << "  " << getIDString(A);
+    }
+  else if(variableA)
+    {
+      std::cout << "  " << getIDString(variableA);
+    }
+  if(B)
+    {
+      std::cout << " + " << getIDString(B);
+    }
+  else if(variableB)
+    {
+      std::cout << " + " << getIDString(variableB);
+    }
+  if(!A && !variableA)
+    {
+      if(C)
+        {
+          std::cout << "0 -> " << getIDString(C);
+        }
+      else if(variableC)
+        {
+          std::cout << "0 -> " << getIDString(variableC);
+        }
+    }
+  else
+    {
+      if(C)
+        {
+          std::cout << " -> " << getIDString(C);
+        }
+      else if(variableC)
+        {
+          std::cout << " -> " << getIDString(variableC);
+        }
+    }
+  if(D)
+    {
+      std::cout << " + " << getIDString(D);
+    }
+  else if(variableD)
+    {
+      std::cout << " + " << getIDString(variableD);
+    }
+  std::cout << " k:" << k << " p = " << pFormula.str() << " = " << p
+    << std::endl;
 }
 
 

@@ -147,7 +147,7 @@ void SpatiocyteStepper::reset(int seed)
 
 Species* SpatiocyteStepper::addSpecies(Variable* aVariable)
 {
-  std::vector<Species*>::iterator aSpeciesIter(variable2species(aVariable));
+  std::vector<Species*>::iterator aSpeciesIter(variable2ispecies(aVariable));
   if(aSpeciesIter == theSpecies.end())
     {
       Species *aSpecies(new Species(this, aVariable, theSpecies.size(),
@@ -160,7 +160,7 @@ Species* SpatiocyteStepper::addSpecies(Variable* aVariable)
 
 Species* SpatiocyteStepper::getSpecies(Variable* aVariable)
 {
-  std::vector<Species*>::iterator aSpeciesIter(variable2species(aVariable));
+  std::vector<Species*>::iterator aSpeciesIter(variable2ispecies(aVariable));
   if(aSpeciesIter == theSpecies.end())
     {
       return NULL;
@@ -308,7 +308,7 @@ Point SpatiocyteStepper::getPeriodicPoint(unsigned int aCoord,
 
 
 std::vector<Species*>::iterator
-SpatiocyteStepper::variable2species(Variable* aVariable)
+SpatiocyteStepper::variable2ispecies(Variable* aVariable)
 {
   for(std::vector<Species*>::iterator i(theSpecies.begin());
       i != theSpecies.end(); ++i)
@@ -320,6 +320,19 @@ SpatiocyteStepper::variable2species(Variable* aVariable)
     }
   return theSpecies.end();
 } 
+
+Species* SpatiocyteStepper::variable2species(Variable* aVariable)
+{
+  for(std::vector<Species*>::iterator i(theSpecies.begin());
+      i != theSpecies.end(); ++i)
+    {
+      if((*i)->getVariable() == aVariable)
+        {
+          return (*i);
+        }
+    }
+  return NULL;
+}
 
 void SpatiocyteStepper::checkLattice()
 {
@@ -747,7 +760,7 @@ void SpatiocyteStepper::registerCompSpecies(Comp* aComp)
               aSpecies->setIsVacant();
             }
         }
-      std::vector<Species*>::iterator j(variable2species(aVariable));
+      std::vector<Species*>::iterator j(variable2ispecies(aVariable));
       if(j != theSpecies.end())
         {
           aComp->species.push_back(*j);
