@@ -661,17 +661,16 @@ public:
             }
         }
     }
+  //Used by the SpatiocyteStepper when resetting an interation, so must
+  //clear the whole compartment:
   void removeMolecules()
     {
-      if(!getIsVacant())
+      for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
-          for(unsigned int i(0); i < theMoleculeSize; ++i)
-            {
-              theVacantSpecies->addMolecule(theMolecules[i]);
-            }
-          theMoleculeSize = 0;
-          theVariable->setValue(theMoleculeSize);
+          theMolecules[i]->id = theComp->vacantID;
         }
+      theMoleculeSize = 0;
+      theVariable->setValue(theMoleculeSize);
     }
   int getPopulateMoleculeSize()
     {
