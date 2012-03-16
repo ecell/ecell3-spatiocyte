@@ -107,7 +107,7 @@ struct Voxel
   unsigned short id;
   //Try to limit the adjoiningSize <= 6:
   unsigned short adjoiningSize;
-  unsigned int coord;
+  unsigned int coord; //coord = aComp->coords[x] + theStartCoord
   Voxel** adjoiningVoxels;
   Subunit* subunit;
   //Contains adjoining and extended surface voxels:
@@ -163,7 +163,7 @@ struct Comp
   std::vector<Comp*> intersectLowerPeers;
   std::vector<Comp*> lineSubs;
   std::vector<Species*> species;
-  std::vector<unsigned int> coords;
+  std::vector<unsigned int> coords; //coords[x] = aVoxel->coord - theStartCoord
 };
 
 struct Origin

@@ -32,6 +32,7 @@
 #ifndef __SpatiocyteSpecies_hpp
 #define __SpatiocyteSpecies_hpp
 
+#include <sstream>
 #include <Variable.hpp>
 #include "SpatiocyteCommon.hpp"
 #include "SpatiocyteStepper.hpp"
@@ -46,6 +47,13 @@ static double getDistance(Point* aSourcePoint, Point* aDestPoint)
   return sqrt(pow(aDestPoint->x-aSourcePoint->x, 2)+
               pow(aDestPoint->y-aSourcePoint->y, 2)+
               pow(aDestPoint->z-aSourcePoint->z, 2));
+}
+
+String int2str(int anInt)
+{
+  std::stringstream aStream;
+  aStream << anInt;
+  return aStream.str();
 }
 
 class Species
@@ -651,7 +659,8 @@ public:
                   theVacantSpecies->addMolecule(aMolecule);
                   theMolecules[i] = theMolecules[--theMoleculeSize];
                   theVariable->setValue(theMoleculeSize);
-                  for(unsigned int i(0); i != theInterruptedProcesses.size(); ++i)
+                  for(unsigned int i(0); 
+                      i != theInterruptedProcesses.size(); ++i)
                     {
                       theInterruptedProcesses[i]->removeSubstrateInterrupt(
                                                              this, aMolecule);

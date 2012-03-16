@@ -93,6 +93,7 @@ public:
             }
         }
       theLogCnt = 0;
+      thePriority = -10;
     }
   virtual void initializeFourth()
     {

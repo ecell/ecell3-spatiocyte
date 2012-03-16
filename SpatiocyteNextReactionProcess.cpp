@@ -350,66 +350,47 @@ void SpatiocyteNextReactionProcess::fire()
               Voxel* moleculeC(NULL);
               Voxel* moleculeD(NULL);
               Voxel* moleculeE(NULL);
-              if(nonHD->getComp() != C->getComp())
+              if(nonHD->getVacantID() == C->getVacantID())
                 {
-                  //If the product vacant molecule type is specified:
-                  if(E)
+                  moleculeC = moleculeNonHD;
+                  moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC);
+                  if(moleculeD == NULL)
                     {
-                      //Get an ajoining voxel of nonHD that is occupied by
-                      //species E:
-                      moleculeE = C->getRandomAdjoiningVoxel(moleculeNonHD, E);
-                      moleculeC = moleculeE;
+                      requeue();
+                      return;
                     }
-                  else
-                    { 
-                      moleculeC = C->getRandomAdjoiningVoxel(moleculeNonHD);
-                    }
-                  //Only proceed if we can find an adjoining vacant voxel
-                  //of nonHD which can be occupied by C:
+                }
+              else if(nonHD->getVacantID() == D->getVacantID())
+                {
+                  moleculeD = moleculeNonHD;
+                  moleculeC = C->getRandomAdjoiningVoxel(moleculeD, moleculeD);
                   if(moleculeC == NULL)
                     {
                       requeue();
                       return;
                     }
-                  if(nonHD->getComp() == D->getComp())
-                    {
-                      moleculeD = moleculeNonHD;
-                    }
                 }
               else
                 {
-                  moleculeC = moleculeNonHD;
-                }
-              if(moleculeD == NULL)
-                {
-                  if(E)
+                  moleculeC = C->getRandomAdjoiningVoxel(moleculeNonHD);
+                  if(moleculeC == NULL)
                     {
-                      //Get an ajoining voxel of nonHD that is occupied by
-                      //species E:
-                      moleculeE = D->getRandomAdjoiningVoxel(moleculeC, E);
-                      moleculeD = moleculeE;
+                      //Only proceed if we can find an adjoining vacant voxel
+                      //of nonND which can be occupied by C:
+                      requeue();
+                      return;
                     }
-                  else
-                    { 
-                      moleculeD = D->getRandomAdjoiningVoxel(moleculeC,
-                                                             moleculeC);
+                  moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC);
+                  if(moleculeD == NULL)
+                    {
+                      requeue();
+                      return;
                     }
-                }
-              //Only proceed if we can find an adjoining vacant voxel
-              //of A which can be occupied by D:
-              if(moleculeD == NULL)
-                {
-                  requeue();
-                  return;
                 }
               HD->addValue(-1);
               nonHD->removeMolecule(moleculeNonHD);
-              if(moleculeE)
-                {
-                  E->removeMolecule(moleculeE);
-                }
-              D->addMolecule(moleculeD);
               C->addMolecule(moleculeC);
+              D->addMolecule(moleculeD);
             }
           //nonHD + HD -> nonHD:
           //HD + nonHD -> nonHD:

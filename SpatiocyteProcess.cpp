@@ -49,3 +49,8 @@ String SpatiocyteProcess::getIDString(Variable* aVariable) const
 {
   return "["+aVariable->getSystemPath().asString()+":"+aVariable->getID()+"]";
 }
+
+String SpatiocyteProcess::getIDString(Comp* aComp) const
+{
+  return "["+aComp->system->getFullID().asString()+"]";
+}
