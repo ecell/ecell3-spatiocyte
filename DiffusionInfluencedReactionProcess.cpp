@@ -92,13 +92,15 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeB, Voxel** target)
           nonHD_p = C;
         }
       Voxel* moleculeP;
-      if(A->getVacantID() == nonHD_p->getVacantID())
+      if(A->getVacantID() == nonHD_p->getVacantID() ||
+         A->getID() == nonHD_p->getVacantID())
         {
           moleculeP = moleculeA;
           //Hard remove the B molecule, since nonHD_p is in a different Comp:
           B->getVacantSpecies()->addMolecule(moleculeB);
         }
-      else if(B->getVacantID() == nonHD_p->getVacantID())
+      else if(B->getVacantID() == nonHD_p->getVacantID() ||
+              B->getID() == nonHD_p->getVacantID())
         {
           moleculeP = moleculeB;
           //Hard remove the A molecule, since nonHD_p is in a different Comp:
@@ -142,12 +144,13 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeB, Voxel** target)
   //to the Comp of C:
   Voxel* moleculeC;
   Voxel* moleculeD;
-  if(A->getVacantID() == C->getVacantID())
+  if(A->getVacantID() == C->getVacantID() || A->getID() == C->getVacantID())
     {
       moleculeC = moleculeA;
       if(D)
         {
-          if(B->getVacantID() == D->getVacantID())
+          if(B->getVacantID() == D->getVacantID() ||
+             B->getID() == D->getVacantID())
             {
               moleculeD = moleculeB;
             }
@@ -167,12 +170,14 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeB, Voxel** target)
           B->getVacantSpecies()->addMolecule(moleculeB);
         }
     }
-  else if(B->getVacantID() == C->getVacantID())
+  else if(B->getVacantID() == C->getVacantID() ||
+          B->getID() == C->getVacantID())
     {
       moleculeC = moleculeB;
       if(D)
         {
-          if(A->getVacantID() == D->getVacantID())
+          if(A->getVacantID() == D->getVacantID() ||
+             A->getID() == D->getVacantID())
             {
               moleculeD = moleculeA;
             }

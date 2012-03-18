@@ -747,18 +747,7 @@ void SpatiocyteStepper::registerCompSpecies(Comp* aComp)
           aVariable->setValue(0);
           Species* aSpecies(addSpecies(aVariable));
           aComp->vacantID = aSpecies->getID();
-          if(aComp->dimension == 2)
-            {
-              aSpecies->setIsLipid();
-            }
-          else if (aComp->dimension == 1)
-            {
-              aSpecies->setIsSegment();
-            }
-          else
-            {
-              aSpecies->setIsVacant();
-            }
+          aSpecies->setIsVacant();
         }
       std::vector<Species*>::iterator j(variable2ispecies(aVariable));
       if(j != theSpecies.end())

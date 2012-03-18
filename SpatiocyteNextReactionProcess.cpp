@@ -123,30 +123,6 @@ void SpatiocyteNextReactionProcess::fire()
           variableC->addValue(1);
           variableD->addValue(1);
         }
-      //nonHD_A -> nonHD_C + HD_D:
-      else if(A && C && variableD)
-        {
-          Voxel* moleculeA(A->getRandomMolecule());
-          Voxel* moleculeC;
-          if(A->getComp() != C->getComp())
-            {
-              moleculeC = C->getRandomAdjoiningVoxel(moleculeA);
-              //Only proceed if we can find an adjoining vacant voxel
-              //of A which can be occupied by C:
-              if(moleculeC == NULL)
-                {
-                  requeue();
-                  return;
-                }
-            }
-          else
-            {
-              moleculeC = moleculeA;
-            }
-          A->removeMolecule(moleculeA);
-          C->addMolecule(moleculeC);
-          variableD->addValue(1);
-        }
       //nonHD_A -> HD_C:
       else if(A && variableC && !D && !variableD)
         {
@@ -166,24 +142,25 @@ void SpatiocyteNextReactionProcess::fire()
               nonHD_p = C;
             }
           Voxel* moleculeA(A->getRandomMolecule());
-          Voxel* molecule;
-          if(A->getComp() != nonHD_p->getComp())
+          Voxel* moleculeP;
+          if(A->getVacantID() == nonHD_p->getVacantID() ||
+             A->getID() == nonHD_p->getVacantID())
             {
-              molecule = nonHD_p->getRandomAdjoiningVoxel(moleculeA);
+              moleculeP = moleculeA;
+            }
+          else
+            {
+              moleculeP = nonHD_p->getRandomAdjoiningVoxel(moleculeA);
               //Only proceed if we can find an adjoining vacant voxel
               //of A which can be occupied by nonHD:
-              if(molecule == NULL)
+              if(moleculeP == NULL)
                 {
                   requeue();
                   return;
                 }
             }
-          else
-            {
-              molecule = moleculeA;
-            }
           A->removeMolecule(moleculeA);
-          nonHD_p->addMolecule(molecule);
+          nonHD_p->addMolecule(moleculeP);
           HD_p->addValue(1);
         }
       //HD_A -> nonHD_C + nonHD_D:
@@ -339,8 +316,8 @@ void SpatiocyteNextReactionProcess::fire()
               nonHD = B;
               HD = variableA;
             }
-          //nonHD + HD (+E) -> nonHD + nonHD: 
-          //HD + nonHD (+E) -> nonHD + nonHD: 
+          //nonHD + HD -> nonHD + nonHD: 
+          //HD + nonHD -> nonHD + nonHD: 
           if(C && D)
             {
               Voxel* moleculeNonHD(nonHD->getRandomMolecule());
@@ -349,8 +326,8 @@ void SpatiocyteNextReactionProcess::fire()
               //to the Comp of C:
               Voxel* moleculeC(NULL);
               Voxel* moleculeD(NULL);
-              Voxel* moleculeE(NULL);
-              if(nonHD->getVacantID() == C->getVacantID())
+              if(nonHD->getVacantID() == C->getVacantID() ||
+                 nonHD->getID() == C->getVacantID())
                 {
                   moleculeC = moleculeNonHD;
                   moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC);
@@ -360,7 +337,8 @@ void SpatiocyteNextReactionProcess::fire()
                       return;
                     }
                 }
-              else if(nonHD->getVacantID() == D->getVacantID())
+              else if(nonHD->getVacantID() == D->getVacantID() ||
+                      nonHD->getID() == D->getVacantID())
                 {
                   moleculeD = moleculeNonHD;
                   moleculeC = C->getRandomAdjoiningVoxel(moleculeD, moleculeD);
@@ -394,6 +372,7 @@ void SpatiocyteNextReactionProcess::fire()
             }
           //nonHD + HD -> nonHD:
           //HD + nonHD -> nonHD:
+          //MinD + cl -> MinDcl
           else if(C && !D && !variableD)
             {
               Voxel* moleculeNonHD(nonHD->getRandomMolecule());
@@ -401,20 +380,21 @@ void SpatiocyteNextReactionProcess::fire()
               //we need to find a vacant adjoining voxel of nonHD that belongs
               //to the Comp of C:
               Voxel* moleculeC;
-              if(nonHD->getComp() != C->getComp())
+              if(nonHD->getVacantID() == C->getVacantID() ||
+                 nonHD->getID() == C->getVacantID())
                 {
-                  moleculeC = C->getRandomAdjoiningVoxel(moleculeNonHD);
-                  //Only proceed if we can find an adjoining vacant voxel
-                  //of nonHD which can be occupied by C:
-                  if(moleculeC == NULL)
-                    {
-                      requeue();
-                      return;
-                    }
+                  moleculeC = moleculeNonHD;
                 }
               else
                 {
-                  moleculeC = moleculeNonHD;
+                  moleculeC = C->getRandomAdjoiningVoxel(moleculeNonHD);
+                  if(moleculeC == NULL)
+                    {
+                      //Only proceed if we can find an adjoining vacant voxel
+                      //of nonND which can be occupied by C:
+                      requeue();
+                      return;
+                    }
                 }
               HD->addValue(-1);
               nonHD->removeMolecule(moleculeNonHD);
@@ -519,20 +499,20 @@ void SpatiocyteNextReactionProcess::initializeThird()
       if(SpaceC > 0)
         {
           aSpace = SpaceC;
-          pFormula << "[aSpace = SpaceC:" << aSpace << "]";
+          pFormula << "[aSpace:SpaceC:" << aSpace << "]";
         }
       else if(compC->dimension == 2)
         {
           aSpace = compC->actualArea;
-          pFormula << "[aSpace = compC.Area:" << aSpace << "]";
+          pFormula << "[aSpace:compC.Area:" << aSpace << "]";
         }
       else
         {
           aSpace = compC->actualVolume;
-          pFormula << "[aSpace = compC.Volume:" << aSpace << "]";
+          pFormula << "[aSpace:compC.Volume:" << aSpace << "]";
         }
       p = k*aSpace;
-      pFormula << "[k*aSpace = " << k << "*" << aSpace << "]";
+      pFormula << "[k*aSpace:" << k << "*" << aSpace << "]";
     }
   else if(theOrder == 1) 
     {
@@ -540,32 +520,52 @@ void SpatiocyteNextReactionProcess::initializeThird()
       //adsorption reaction:
       if(compA->dimension == 3 && compC->dimension == 2)
         { 
+          std::cout << "in" << std::endl;
           if(SpaceA > 0)
             {
               aVolume = SpaceA;
-              pFormula << "[aVolume = SpaceA:" << aVolume << "]";
+              pFormula << "[aVolume:SpaceA:" << aVolume << "]";
             }
           else
             {
               aVolume = compA->actualVolume;
-              pFormula << "[aVolume = compA.Volume:" << aVolume << "]";
+              pFormula << "[aVolume:compA.Volume:" << aVolume << "]";
             }
           if(SpaceC > 0)
             {
               anArea = SpaceC;
-              pFormula << "[anArea = SpaceC:" << anArea << "]";
+              pFormula << "[anArea:SpaceC:" << anArea << "]";
             }
           else
             {
-              anArea = compC->actualArea;
-              pFormula << "[anArea = compC.Area:" << anArea << "]";
+              if(C && !C->getVacantSpecies()->getIsVacant())
+                {
+                  Species* aVacantSpecies(C->getVacantSpecies());
+                  double aVoxelRadius(theSpatiocyteStepper->getVoxelRadius());
+                  pFormula << "[rv:" << aVoxelRadius << "]";
+                  int aMoleculeNumber(aVacantSpecies->size());
+                  pFormula << "[" <<
+                    aVacantSpecies->getVariable()->getFullID().asString();
+                  pFormula << ":N:" << aMoleculeNumber << "]";
+                  anArea = (72*pow(aVoxelRadius,2))*aMoleculeNumber/
+                    (6*pow(2,0.5)+4*pow(3,0.5)+3*pow(6, 0.5));
+                  pFormula << "[anArea:(72*pow(rv,2))*" 
+                    << "N/(6*pow(2,0.5)+4*pow(3,0.5)+3*"
+                    << "pow(6, 0.5)):" << anArea << "]";
+                }
+              else
+                { 
+                  anArea = compC->actualArea;
+                  pFormula << "[anArea:compC.Area:" << anArea << "]";
+                }
             }
-          k = k*anArea/aVolume;
-          pFormula << "[k*anArea/aVolume = " << k << "*" << anArea << "/"
+          p = k*anArea/aVolume;
+          pFormula << "[k*anArea/aVolume:" << k << "*" << anArea << "/"
             << aVolume << "]";
+          return;
         }
       p = k;
-      pFormula << "[k = " << k << "]";
+      pFormula << "[k:" << k << "]";
     }
   else if(theOrder == 2)
     {
@@ -603,12 +603,12 @@ void SpatiocyteNextReactionProcess::initializeThird()
               if(SpaceA > 0)
                 {
                   aVolume = SpaceA;
-                  pFormula << "[aVolume = SpaceA:" << aVolume << "]";
+                  pFormula << "[aVolume:SpaceA:" << aVolume << "]";
                 }
               else
                 {
                   aVolume = compA->actualVolume;
-                  pFormula << "[aVolume = compA.Volume:" << aVolume << "]";
+                  pFormula << "[aVolume:compA.Volume:" << aVolume << "]";
                 }
             }
           else
@@ -616,17 +616,17 @@ void SpatiocyteNextReactionProcess::initializeThird()
               if(SpaceB > 0)
                 {
                   aVolume = SpaceB;
-                  pFormula << "[aVolume = SpaceB:" << aVolume << "]";
+                  pFormula << "[aVolume:SpaceB:" << aVolume << "]";
                 }
               else
                 {
                   aVolume = compB->actualVolume;
-                  pFormula << "[aVolume = compB.Volume:" << aVolume << "]";
+                  pFormula << "[aVolume:compB.Volume:" << aVolume << "]";
                 }
             }
           //unit of k is in m^3/s
           p = k/aVolume;
-          pFormula << "[k/aVolume = " << k << "/" << aVolume << "]";
+          pFormula << "[k/aVolume:" << k << "/" << aVolume << "]";
         }
       //If surface (+surface) = k(surface)(surface) or
       //   volume (+volume) = k(volume)(surface) or
@@ -643,12 +643,12 @@ void SpatiocyteNextReactionProcess::initializeThird()
               if(SpaceA > 0)
                 {
                   anArea = SpaceA;
-                  pFormula << "[anArea = SpaceA:" << anArea << "]";
+                  pFormula << "[anArea:SpaceA:" << anArea << "]";
                 }
               else
                 {
                   anArea = compA->actualArea;
-                  pFormula << "[anArea = compA.Area:" << anArea << "]";
+                  pFormula << "[anArea:compA.Area:" << anArea << "]";
                 }
             }
           else
@@ -656,17 +656,17 @@ void SpatiocyteNextReactionProcess::initializeThird()
               if(SpaceB > 0)
                 {
                   anArea = SpaceB;
-                  pFormula << "[anArea = SpaceB:" << anArea << "]";
+                  pFormula << "[anArea:SpaceB:" << anArea << "]";
                 }
               else
                 {
                   anArea = compB->actualArea;
-                  pFormula << "[anArea = compB.Area:" << anArea << "]";
+                  pFormula << "[anArea:compB.Area:" << anArea << "]";
                 }
             }
           //unit of k is in m^2/s
           p = k/anArea;
-          pFormula << "[k/anArea = " << k << "/" << anArea << "]";
+          pFormula << "[k/anArea:" << k << "/" << anArea << "]";
         }
       else
         {
@@ -676,7 +676,7 @@ void SpatiocyteNextReactionProcess::initializeThird()
       if(getZeroVariableReferenceOffset() == 1)
         {
           p = k;
-          pFormula << "[k = " << k << "]";
+          pFormula << "[k:" << k << "]";
         }
     }
   else

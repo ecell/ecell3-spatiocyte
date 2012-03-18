@@ -90,6 +90,18 @@ public:
                           "variable reference with zero coefficient."); 
         }
     }
+  virtual void initializeSecond()
+    {
+      for(std::vector<Species*>::const_iterator
+          i(theDiffusionSpecies.begin());
+          i != theDiffusionSpecies.end(); ++i)
+        {
+          if(theVacantSpecies)
+            {
+              (*i)->setVacantSpecies(theVacantSpecies);
+            }
+        }
+    }
   virtual void initializeThird()
     {
       Species* aSpecies(theDiffusionSpecies[0]);
@@ -131,10 +143,6 @@ public:
                     }
                   aSpecies = *i;
                   rho = (*i)->getMaxReactionProbability();
-                }
-              if(theVacantSpecies)
-                {
-                  (*i)->setVacantSpecies(theVacantSpecies);
                 }
             }
         }

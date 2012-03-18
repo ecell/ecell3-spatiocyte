@@ -61,9 +61,7 @@ class Species
 public:
   Species(SpatiocyteStepper* aStepper, Variable* aVariable, int anID, 
           int anInitMoleculeSize, const gsl_rng* aRng):
-      isLipid(false),
       isVacant(false),
-      isSegment(false),
       isVolume(false),
     isCentered(false),
     isDiffusing(false),
@@ -254,28 +252,18 @@ public:
       return
         aDisplacement*pow(theStepper->getVoxelRadius()*2, 2)/theMoleculeSize;
     }
-  void setIsLipid()
-    {
-        isLipid = true;
-      isStatic = false;
-    }
   void setIsSubunitInitialized()
     {
       isSubunitInitialized = true;
     }
-  void setIsSegment()
-    {
-        isSegment = true;
-      isStatic = false;
-    }
   void setIsVacant()
     {
-        isVacant = true;
+      isVacant = true;
       isStatic = false;
     }
   void setIsVolume()
     {
-        isVolume = true;
+      isVolume = true;
     }
   void setIsInContact()
     {
@@ -341,17 +329,13 @@ public:
     {
       return isDiffusing;
     }
-  bool getIsLipid() const
-    {
-        return isLipid;
-    }
-  bool getIsSegment() const
-    {
-        return isSegment;
-    }
   bool getIsVacant() const
     {
-        return isVacant;
+      return isVacant;
+    }
+  bool getIsLipid() const
+    {
+      return (isVacant && theComp->dimension == 2);
     }
   bool getIsInContact() const
     {
@@ -591,9 +575,11 @@ public:
     }
   void addMolecule(Voxel* aMolecule)
     {
+      Species* aSpecies(theStepper->id2species(aMolecule->id));
       aMolecule->id = theID;
       if(!getIsVacant())
         {
+          aSpecies->softRemoveMolecule(aMolecule);
           ++theMoleculeSize;
           if(theMoleculeSize > theMolecules.size())
             {
@@ -1009,9 +995,7 @@ public:
       return getRandomAdjoiningVoxel(aVoxel);
     }
 private:
-  bool isLipid;
   bool isVacant;
-  bool isSegment;
   bool isVolume;
   bool isCentered;
   bool isDiffusing;
