@@ -39,7 +39,7 @@ void SpatiocyteNextReactionProcess::fire()
     {
       if(C)
         { 
-          Voxel* moleculeC(C->getRandomCompVoxel());
+          Voxel* moleculeC(C->getRandomDiffuseVacantVoxel());
           if(moleculeC == NULL)
             {
               requeue();
@@ -175,7 +175,7 @@ void SpatiocyteNextReactionProcess::fire()
                          variableA->getSuperSystem()));
           if(compA == C->getComp() || compA->dimension == 3)
             {
-              moleculeC = C->getRandomCompVoxel();
+              moleculeC = C->getRandomDiffuseVacantVoxel();
             }
           //Occupy C in a voxel of compartment C that adjoins compartment A
           //if A is a surface compartment:
@@ -215,7 +215,7 @@ void SpatiocyteNextReactionProcess::fire()
               HD_p = variableD;
               nonHD_p = C;
             }
-          Voxel* molecule(nonHD_p->getRandomCompVoxel());
+          Voxel* molecule(nonHD_p->getRandomDiffuseVacantVoxel());
           if(molecule == NULL)
             {
               requeue();
@@ -242,7 +242,7 @@ void SpatiocyteNextReactionProcess::fire()
           //HD + HD -> nonHD: 
           else if(C && !variableD && !D)
             { 
-              Voxel* molecule(C->getRandomCompVoxel());
+              Voxel* molecule(C->getRandomDiffuseVacantVoxel());
               if(molecule == NULL)
                 {
                   requeue();
@@ -271,7 +271,7 @@ void SpatiocyteNextReactionProcess::fire()
                   HD_p = variableD;
                   nonHD_p = C;
                 }
-              Voxel* molecule(nonHD_p->getRandomCompVoxel());
+              Voxel* molecule(nonHD_p->getRandomDiffuseVacantVoxel());
               if(molecule == NULL)
                 {
                   requeue();
@@ -285,7 +285,7 @@ void SpatiocyteNextReactionProcess::fire()
           //HD + HD -> nonHD + nonHD: 
           else if(C && D)
             {
-              Voxel* moleculeC(C->getRandomCompVoxel());
+              Voxel* moleculeC(C->getRandomDiffuseVacantVoxel());
               if(moleculeC == NULL)
                 {
                   requeue();

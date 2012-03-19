@@ -954,6 +954,36 @@ public:
         }
       return NULL;
     }
+  Voxel* getRandomDiffuseVacantVoxel()
+    {
+      if(theVacantSpecies->getIsVacant())
+        {
+          return getRandomCompVoxel();
+        }
+      if(theStepper->getSearchVacant())
+        {
+          int aSize(theVacantSpecies->size());
+          if(aSize)
+            {
+              return theVacantSpecies->getRandomMolecule();
+            }
+          return NULL;
+        }
+      else
+        {
+          int anInitSize(theVacantSpecies->getInitMoleculeSize());
+          int aSize(theVacantSpecies->size());
+          if(anInitSize)
+            {
+              int r(gsl_rng_uniform_int(theRng, anInitSize));
+              if(r < aSize)
+                {
+                  return theVacantSpecies->getRandomMolecule();
+                }
+            }
+        }
+      return NULL;
+    }
   Voxel* getRandomCompVoxel()
     {
       int aSize(theComp->coords.size());
