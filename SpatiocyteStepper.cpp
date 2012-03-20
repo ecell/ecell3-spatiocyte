@@ -2702,68 +2702,77 @@ bool SpatiocyteStepper::isInsideCoord(unsigned int aCoord,
 void SpatiocyteStepper::populateComp(Comp* aComp)
 {
   unsigned int populationSize(0);
-  unsigned int gaussianPopulationSize(0);
-  //First, populate gaussian distributed molecules, if any:
+  std::vector<Species*> diffuseVacantSpecies;
+  std::vector<Species*> diffuseSpecies;
+  std::vector<Species*> normalSpecies;
   for(std::vector<Species*>::const_iterator i(aComp->species.begin());
       i != aComp->species.end(); ++i)
     {
-      populationSize += (unsigned int)(*i)->getPopulateMoleculeSize();
-      if((*i)->getIsGaussianPopulation())
+      if((*i)->getIsDiffuseVacant())
         {
-          gaussianPopulationSize +=
-            (unsigned int)(*i)->getPopulateMoleculeSize();
-          (*i)->populateCompGaussian();
+          populationSize += (unsigned int)(*i)->getPopulateMoleculeSize();
+          diffuseVacantSpecies.push_back(*i);
         }
-    }
-  //Second, populate remaining vacant voxels uniformly:
-  //If there are many molecules to be populated we need to
-  //systematically choose the vacant voxels randomly from a list
-  //of available vacant voxels of the Comp:
-  //Only populate if we have remaining unpopulated molecules:
-  if(populationSize > gaussianPopulationSize)
-    {
-      unsigned int count(0);
-      if(double(populationSize)/aComp->coords.size() > 0.2)
+      else if((*i)->getVacantSpecies()->getIsDiffuseVacant())
         {
-          unsigned int* populateVoxels(new unsigned int[populationSize]);
-          unsigned int availableVoxelSize(aComp->coords.size());
-          unsigned int* availableVoxels(new unsigned int [availableVoxelSize]); 
-          for(unsigned int i(0); i != availableVoxelSize; ++i)
-            {
-              availableVoxels[i] = i;
-            }
-          gsl_ran_choose(getRng(), populateVoxels, populationSize,
-                     availableVoxels, availableVoxelSize, sizeof(unsigned int));
-          //gsl_ran_choose arranges the position ascending, so we need
-          //to shuffle the order of voxel positions:
-          gsl_ran_shuffle(getRng(), populateVoxels, populationSize,
-                          sizeof(unsigned int)); 
-          for(std::vector<Species*>::const_iterator i(aComp->species.begin());
-              i != aComp->species.end(); ++i)
-            {
-              if(!(*i)->getIsGaussianPopulation())
-                {
-                  (*i)->populateCompUniform(populateVoxels, &count);
-                }
-            }
-          delete[] populateVoxels;
-          delete[] availableVoxels;
+          diffuseSpecies.push_back(*i);
         }
-      //Otherwise, we select a random voxel from the list of Comp
-      //voxels and check if it is vacant before occupying it with a 
-      //molecule, iteratively. This makes it much faster to populate
-      //large Comps with small number of molecules.
       else
         {
-          for(std::vector<Species*>::const_iterator i(aComp->species.begin());
-              i != aComp->species.end(); ++i)
-            {
-              if(!(*i)->getIsGaussianPopulation())
-                {
-                  (*i)->populateCompUniformSparse();
-                }
-            }
+          populationSize += (unsigned int)(*i)->getPopulateMoleculeSize();
+          normalSpecies.push_back(*i);
         }
+    }
+  if(double(populationSize)/aComp->coords.size() > 0.2)
+    { 
+      populateSpeciesDense(diffuseVacantSpecies, populationSize,
+                           aComp->coords.size());
+      populateSpeciesDense(normalSpecies, populationSize, aComp->coords.size());
+    }
+  else
+    {
+      populateSpeciesSparse(diffuseVacantSpecies);
+      populateSpeciesSparse(normalSpecies);
+    }
+  for(std::vector<Species*>::const_iterator i(diffuseSpecies.begin());
+      i != diffuseSpecies.end(); ++i)
+    {
+      (*i)->populateUniformDiffuseVacant();
+    }
+}
+
+void SpatiocyteStepper::populateSpeciesDense(std::vector<Species*>&
+                                             aSpeciesList, unsigned int aSize,
+                                             unsigned int availableVoxelSize)
+{
+  unsigned int count(0);
+  unsigned int* populateVoxels(new unsigned int[aSize]);
+  unsigned int* availableVoxels(new unsigned int [availableVoxelSize]); 
+  for(unsigned int i(0); i != availableVoxelSize; ++i)
+    {
+      availableVoxels[i] = i;
+    }
+  gsl_ran_choose(getRng(), populateVoxels, aSize, availableVoxels,
+                 availableVoxelSize, sizeof(unsigned int));
+  //gsl_ran_choose arranges the position ascending, so we need
+  //to shuffle the order of voxel positions:
+  gsl_ran_shuffle(getRng(), populateVoxels, aSize, sizeof(unsigned int)); 
+  for(std::vector<Species*>::const_iterator i(aSpeciesList.begin());
+      i != aSpeciesList.end(); ++i)
+    {
+      (*i)->populateCompUniform(populateVoxels, &count);
+    }
+  delete[] populateVoxels;
+  delete[] availableVoxels;
+}
+
+void SpatiocyteStepper::populateSpeciesSparse(std::vector<Species*>&
+                                              aSpeciesList)
+{
+  for(std::vector<Species*>::const_iterator i(aSpeciesList.begin());
+      i != aSpeciesList.end(); ++i)
+    {
+      (*i)->populateCompUniformSparse();
     }
 }
 
@@ -2780,6 +2789,6 @@ void SpatiocyteStepper::clearComp(Comp* aComp)
 
 std::vector<Comp*> const& SpatiocyteStepper::getComps() const
 {
-    return theComps;
+  return theComps;
 }
 

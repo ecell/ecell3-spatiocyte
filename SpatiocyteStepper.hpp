@@ -117,7 +117,8 @@ private:
   void clearComps();
   void clearComp(Comp*);
   void populateComp(Comp*);
-  void populateCompUniformly(Comp*);
+  void populateSpeciesDense(std::vector<Species*>&, unsigned int, unsigned int);
+  void populateSpeciesSparse(std::vector<Species*>&);
   void registerCompSpecies(Comp*);
   void setCompProperties(Comp*);
   void removePeriodicEdgeVoxels(Comp*);
@@ -129,7 +130,6 @@ private:
   void setSurfaceVoxelProperties(Comp*);
   void setSurfaceCompProperties(Comp*);
   void setVolumeCompProperties(Comp*);
-  void populateCompUniformly(Comp*, unsigned int);
   void rotateX(double, Point*);
   void rotateY(double, Point*);
   void rotateZ(double, Point*);

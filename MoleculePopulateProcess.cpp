@@ -63,6 +63,29 @@ void MoleculePopulateProcess::populateGaussian(Species* aSpecies)
 {
 }
 
+void MoleculePopulateProcess::populateUniformDiffuseVacant(Species* aSpecies)
+{
+  if(!aSpecies->getIsPopulated())
+    {
+      if(UniformRadiusX == 1 && UniformRadiusY == 1 && UniformRadiusZ == 1 &&
+         !OriginX && !OriginY && !OriginZ)
+        {
+          Species* aVacantSpecies(aSpecies->getVacantSpecies());
+          unsigned int aSize(aSpecies->getPopulateMoleculeSize());
+          for(unsigned int i(0); i != aSize; ++i)
+            {
+              Voxel* aMolecule(aVacantSpecies->getRandomMolecule());
+              aSpecies->addMolecule(aMolecule);
+            }
+        }
+      else
+        {
+          populateUniformRanged(aSpecies);
+        }
+      aSpecies->setIsPopulated();
+    }
+}
+
 void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
                                               unsigned int aList[], 
                                               unsigned int* aCount)
@@ -153,7 +176,7 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
     {
       Voxel* aVoxel(theSpatiocyteStepper->coord2voxel(*i));
       Point aPoint(theSpatiocyteStepper->coord2point(aVoxel->coord));
-      if(aVoxel->id == aComp->vacantID &&
+      if(aVoxel->id == aSpecies->getVacantID() &&
          aPoint.x < maxX && aPoint.x > minX &&
          aPoint.y < maxY && aPoint.y > minY &&
          aPoint.z < maxZ && aPoint.z > minZ)

@@ -73,6 +73,7 @@ public:
   virtual void populateUniformDense(Species*, unsigned int[], unsigned int*);
   virtual void populateUniformSparse(Species* aSpecies);
   virtual void populateUniformRanged(Species* aSpecies);
+  virtual void populateUniformDiffuseVacant(Species* aSpecies);
   virtual void fire();
   virtual void initializeFourth()
     {

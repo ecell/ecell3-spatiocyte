@@ -42,6 +42,7 @@ public:
   virtual void populateGaussian(Species*) = 0;
   virtual void populateUniformDense(Species*, unsigned int[], unsigned int*) = 0;
   virtual void populateUniformSparse(Species* aSpecies) = 0;
+  virtual void populateUniformDiffuseVacant(Species* aSpecies) = 0;
 };
 
 #endif /* __MOLECULEPOPULATEPROCESSINTERFACE_HPP */

@@ -61,8 +61,9 @@ class Species
 public:
   Species(SpatiocyteStepper* aStepper, Variable* aVariable, int anID, 
           int anInitMoleculeSize, const gsl_rng* aRng):
-      isVacant(false),
-      isVolume(false),
+    isDiffuseVacant(false),
+    isVacant(false),
+    isVolume(false),
     isCentered(false),
     isDiffusing(false),
     isGaussianPopulation(false),
@@ -128,8 +129,9 @@ public:
         }
       else if(theMoleculeSize)
         {
-          std::cout << "Species:" << theVariable->getFullID().asString() <<
-            " not MoleculePopulated." << std::endl;
+          std::cout << "Warning: Species " <<
+            theVariable->getFullID().asString() <<
+            " not populated." << std::endl;
         }
     }
   void populateCompUniform(unsigned int voxelIDs[], unsigned int* aCount)
@@ -149,6 +151,18 @@ public:
       if(thePopulateProcess)
         {
           thePopulateProcess->populateUniformSparse(this);
+        }
+      else if(theMoleculeSize)
+        {
+          std::cout << "Species:" << theVariable->getFullID().asString() <<
+            " not MoleculePopulated." << std::endl;
+        }
+    }
+  void populateUniformDiffuseVacant()
+    {
+      if(thePopulateProcess)
+        {
+          thePopulateProcess->populateUniformDiffuseVacant(this);
         }
       else if(theMoleculeSize)
         {
@@ -277,6 +291,10 @@ public:
     {
       getVariable()->setValue(theMoleculeSize);
     }
+  void setIsDiffuseVacant()
+    {
+      isDiffuseVacant = true;
+    }
   void setIsPolymer(std::vector<double> bendAngles, int aDirectionality)
     {
       theBendAngles.resize(0);
@@ -332,6 +350,10 @@ public:
   bool getIsVacant() const
     {
       return isVacant;
+    }
+  bool getIsDiffuseVacant()
+    {
+      return isDiffuseVacant;
     }
   bool getIsLipid() const
     {
@@ -597,6 +619,28 @@ public:
             }
         }
     }
+  void addDiffuseVacantMolecule(Voxel* aMolecule)
+    {
+      aMolecule->id = theID;
+      if(!getIsVacant())
+        {
+          ++theMoleculeSize;
+          if(theMoleculeSize > theMolecules.size())
+            {
+              theMolecules.push_back(aMolecule);
+            }
+          else
+            {
+              theMolecules[theMoleculeSize-1] = aMolecule;
+            }
+          theVariable->setValue(theMoleculeSize);
+          for(unsigned int i(0); i != theInterruptedProcesses.size(); ++i)
+            {
+              theInterruptedProcesses[i]->addSubstrateInterrupt(this,
+                                                                aMolecule);
+            }
+        }
+    }
   //it is soft replace because the id of the source molecule is not changed:
   void softReplaceMolecule(Voxel* aSource, Voxel* aTarget)
     {
@@ -642,7 +686,7 @@ public:
             {
               if(theMolecules[i] == aMolecule)
                 {
-                  theVacantSpecies->addMolecule(aMolecule);
+                  theVacantSpecies->addDiffuseVacantMolecule(aMolecule);
                   theMolecules[i] = theMolecules[--theMoleculeSize];
                   theVariable->setValue(theMoleculeSize);
                   for(unsigned int i(0); 
@@ -731,7 +775,7 @@ public:
       theVacantSpecies = aVacantSpecies;
       theVacantID = aVacantSpecies->getID();
     }
-  const std::vector<double>& getBendAngles() const
+   const std::vector<double>& getBendAngles() const
     {
       return theBendAngles;
     }
@@ -1025,6 +1069,7 @@ public:
       return getRandomAdjoiningVoxel(aVoxel);
     }
 private:
+  bool isDiffuseVacant;
   bool isVacant;
   bool isVolume;
   bool isCentered;
