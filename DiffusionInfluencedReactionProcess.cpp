@@ -360,34 +360,25 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
 
 void DiffusionInfluencedReactionProcess::printParameters()
 {
-  std::cout << "[" <<
-    A->getVariable()->getSystemPath().asString() << ":" <<
-    A->getVariable()->getID() << "] + [" << 
-    B->getVariable()->getSystemPath().asString() << ":" <<
-    B->getVariable()->getID() << "] -> [";
+  String aProcess(String(getPropertyInterface().getClassName()) + 
+                                      "[" + getFullID().asString() + "]");
+  std::cout << aProcess << std::endl;
+  std::cout << "  " << getIDString(A) << " + " <<  getIDString(B) << " -> ";
   if(C)
     {
-      std::cout << 
-        C->getVariable()->getSystemPath().asString() << ":" <<
-        C->getVariable()->getID() << "]";
+      std::cout << getIDString(C);
     }
   else
     {
-      std::cout << 
-        variableC->getSystemPath().asString() << ":" <<
-        variableC->getID() << "]";
+      std::cout << getIDString(variableC);
     }
   if(D)
     {
-      std::cout << " + [" <<
-        D->getVariable()->getSystemPath().asString() << ":" <<
-        D->getVariable()->getID() << "]";
+      std::cout << " + " << getIDString(D);
     }
   else if(variableD)
     {
-      std::cout << " + [" <<
-        variableD->getSystemPath().asString() << ":" <<
-        variableD->getID() << "]";
+      std::cout << " + " << getIDString(variableD);
     }
   std::cout << ": k=" << k << ", p=" << p << 
     ", p_A=" << A->getReactionProbability(B->getID()) <<

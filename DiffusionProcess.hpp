@@ -92,15 +92,12 @@ public:
     }
   virtual void initializeSecond()
     {
-      if(!theVacantSpecies->getIsVacant())
+      if(theVacantSpecies)
         {
           theVacantSpecies->setIsDiffuseVacant();
-        }
-      for(std::vector<Species*>::const_iterator
-          i(theDiffusionSpecies.begin());
-          i != theDiffusionSpecies.end(); ++i)
-        {
-          if(theVacantSpecies)
+          for(std::vector<Species*>::const_iterator
+              i(theDiffusionSpecies.begin());
+              i != theDiffusionSpecies.end(); ++i)
             {
               (*i)->setVacantSpecies(theVacantSpecies);
             }

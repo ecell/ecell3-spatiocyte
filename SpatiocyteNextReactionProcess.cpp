@@ -35,6 +35,14 @@ LIBECS_DM_INIT(SpatiocyteNextReactionProcess, Process);
 
 void SpatiocyteNextReactionProcess::fire()
 {
+  /*
+  std::cout << std::endl << "before:" << getFullID().asString() << std::endl;
+  Real aValue1(theVariableReferenceVector[0].getVariable()->getValue());
+  Real aValue2(theVariableReferenceVector[1].getVariable()->getValue());
+  std::cout << "aValue1:" << aValue1 << " " << variableA->getValue();
+  std::cout << " aValue2:" << aValue2 << " " << B->size() << std::endl;
+  */
+
   if(theOrder == 0)
     {
       if(C)
@@ -335,6 +343,13 @@ void SpatiocyteNextReactionProcess::fire()
             }
         }
     }
+  /*
+  std::cout << "after" << std::endl;
+  aValue1=theVariableReferenceVector[0].getVariable()->getValue();
+  aValue2=theVariableReferenceVector[1].getVariable()->getValue();
+  std::cout << "aValue1:" << aValue1 << " " << variableA->getValue();
+  std::cout << " aValue2:" << aValue2 << " " << B->size() << std::endl;
+  */
   ReactionProcess::fire();
 }
 
@@ -767,7 +782,10 @@ void SpatiocyteNextReactionProcess::printParameters()
 
 GET_METHOD_DEF(Real, StepInterval, SpatiocyteNextReactionProcess)
 {
-  return getPropensity_R()*
-    (-log(gsl_rng_uniform_pos(getStepper()->getRng())));
+  double step(getPropensity_R()*(-log(gsl_rng_uniform_pos(getStepper()->getRng()))));
+  /*
+  std::cout << getFullID().asString() << " " << theTime <<  " next:" << theTime+step << " interval:" << step << std::endl; 
+  */
+  return step;
 }
 
