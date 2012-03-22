@@ -139,94 +139,61 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeB, Voxel** target)
       variableC->addValue(1);
       return true;
     }
+
   //If the product C is not in the same Comp as A,
-  //we need to find a vacant adjoining voxel of A or B that belongs
+  //we need to find a vacant adjoining voxel of A that belongs
   //to the Comp of C:
   Voxel* moleculeC;
-  Voxel* moleculeD;
   if(A->getVacantID() == C->getVacantID() || A->getID() == C->getVacantID())
     {
       moleculeC = moleculeA;
-      if(D)
-        {
-          if(B->getVacantID() == D->getVacantID() ||
-             B->getID() == D->getVacantID())
-            {
-              moleculeD = moleculeB;
-            }
-          else
-            {
-              moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC);
-              if(moleculeD == NULL)
-                {
-                  return false;
-                }
-            }
-          D->addMolecule(moleculeD);
-        }
-      else
-        {
-          //Hard remove the B molecule since it is not used:
-          B->getVacantSpecies()->addMolecule(moleculeB);
-        }
-    }
-  else if(B->getVacantID() == C->getVacantID() ||
-          B->getID() == C->getVacantID())
-    {
-      moleculeC = moleculeB;
-      if(D)
-        {
-          if(A->getVacantID() == D->getVacantID() ||
-             A->getID() == D->getVacantID())
-            {
-              moleculeD = moleculeA;
-            }
-          else
-            {
-              moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC);
-              if(moleculeD == NULL)
-                {
-                  return false;
-                }
-            }
-          D->addMolecule(moleculeD);
-        }
-      else
-        {
-          //Hard remove the A molecule since it is not used:
-          A->getVacantSpecies()->addMolecule(moleculeA);
-        }
     }
   else
     {
       moleculeC = C->getRandomAdjoiningVoxel(moleculeA);
+      //Only proceed if we can find an adjoining vacant voxel
+      //of A which can be occupied by C:
       if(moleculeC == NULL)
         {
-          moleculeC = C->getRandomAdjoiningVoxel(moleculeB);
-          if(moleculeC == NULL)
-            {
-              //Only proceed if we can find an adjoining vacant voxel
-              //of A or B which can be occupied by C:
-              return false;
-            }
+          return false;
         }
-      if(D)
+    }
+  //If it has two products:
+  if(D != NULL)
+    { 
+      //If the product D is not in the same Comp as B,
+      //we need to find a vacant adjoining voxel of C that belongs
+      //to the Comp of D:
+      Voxel* moleculeD;
+      if(B->getVacantID() == D->getVacantID() || B->getID() == D->getVacantID())
+        {
+          moleculeD = moleculeB;
+        }
+      else
         {
           moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC);
+          //Only proceed if we can find an adjoining vacant voxel
+          //of A which can be occupied by C:
           if(moleculeD == NULL)
             {
               return false;
             }
-          D->addMolecule(moleculeD);
+          B->getVacantSpecies()->addMolecule(moleculeB);
         }
-      //Hard remove the A molecule since it is not used:
-      A->getVacantSpecies()->addMolecule(moleculeA);
-      //Hard remove the B molecule since it is not used:
+      D->addMolecule(moleculeD);
+    }
+  else
+    {
+      //Hard remove the B molecule since this is a single product reaction:
       B->getVacantSpecies()->addMolecule(moleculeB);
     }
+  //Hard remove the A molecule, in case C is in a different Comp:
+  A->getVacantSpecies()->addMolecule(moleculeA);
   C->addMolecule(moleculeC);
-  return true;
 }
+
+
+  
 
 void DiffusionInfluencedReactionProcess::finalizeReaction()
 {
