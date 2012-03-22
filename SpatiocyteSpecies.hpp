@@ -121,6 +121,10 @@ public:
     {
       return isGaussianPopulation;
     }
+  int getPopulatePriority()
+    {
+      return thePopulateProcess->getPriority();
+    }
   void populateCompGaussian()
     {
       if(thePopulateProcess)
@@ -133,6 +137,10 @@ public:
             theVariable->getFullID().asString() <<
             " not populated." << std::endl;
         }
+    }
+  bool getIsPopulateSpecies()
+    {
+      return (thePopulateProcess != NULL);
     }
   void populateCompUniform(unsigned int voxelIDs[], unsigned int* aCount)
     {

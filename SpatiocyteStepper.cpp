@@ -92,7 +92,8 @@ void SpatiocyteStepper::initialize()
   initProcessFourth();
   std::cout << "14. initializing processes the last time..." << std::endl;
   initProcessLastOnce();
-  std::cout << "15. printing final process parameters..." << std::endl;
+  std::cout << "15. printing final process parameters..." << std::endl <<
+    std::endl;
   printProcessParameters();
   std::cout << "16. simulation is started..." << std::endl;
 }
@@ -2702,37 +2703,58 @@ bool SpatiocyteStepper::isInsideCoord(unsigned int aCoord,
 void SpatiocyteStepper::populateComp(Comp* aComp)
 {
   unsigned int populationSize(0);
-  std::vector<Species*> diffuseVacantSpecies;
+  std::vector<Species*> prioritySpecies;
   std::vector<Species*> diffuseSpecies;
   std::vector<Species*> normalSpecies;
   for(std::vector<Species*>::const_iterator i(aComp->species.begin());
       i != aComp->species.end(); ++i)
     {
-      if((*i)->getIsDiffuseVacant())
-        {
-          populationSize += (unsigned int)(*i)->getPopulateMoleculeSize();
-          diffuseVacantSpecies.push_back(*i);
-        }
-      else if((*i)->getVacantSpecies()->getIsDiffuseVacant())
+      if((*i)->getVacantSpecies()->getIsDiffuseVacant())
         {
           diffuseSpecies.push_back(*i);
         }
-      else
+      else if((*i)->getIsPopulateSpecies())
         {
           populationSize += (unsigned int)(*i)->getPopulateMoleculeSize();
-          normalSpecies.push_back(*i);
+          bool isPushed(false);
+          std::vector<Species*> temp;
+          std::vector<Species*>::const_iterator j(prioritySpecies.begin());
+          while(j != prioritySpecies.end())
+            {
+              if((*j)->getPopulatePriority() > (*i)->getPopulatePriority() ||
+                 ((*j)->getPopulatePriority() == (*i)->getPopulatePriority() &&
+                  (*j)->getIsDiffuseVacant()))
+                {
+                  temp.push_back(*j);
+                }
+              else
+                {
+                  temp.push_back(*i); 
+                  while(j != prioritySpecies.end())
+                    {
+                      temp.push_back(*j);
+                      ++j;
+                    }
+                  isPushed = true;
+                  break;
+                }
+              ++j;
+            }
+          if(!isPushed)
+            {
+              temp.push_back(*i);
+            }
+          prioritySpecies = temp;
         }
     }
   if(double(populationSize)/aComp->coords.size() > 0.2)
     { 
-      populateSpeciesDense(diffuseVacantSpecies, populationSize,
+      populateSpeciesDense(prioritySpecies, populationSize,
                            aComp->coords.size());
-      populateSpeciesDense(normalSpecies, populationSize, aComp->coords.size());
     }
   else
     {
-      populateSpeciesSparse(diffuseVacantSpecies);
-      populateSpeciesSparse(normalSpecies);
+      populateSpeciesSparse(prioritySpecies);
     }
   for(std::vector<Species*>::const_iterator i(diffuseSpecies.begin());
       i != diffuseSpecies.end(); ++i)

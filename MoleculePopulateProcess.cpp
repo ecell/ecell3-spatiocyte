@@ -65,6 +65,7 @@ void MoleculePopulateProcess::populateGaussian(Species* aSpecies)
 
 void MoleculePopulateProcess::populateUniformDiffuseVacant(Species* aSpecies)
 {
+  std::cout << "   Populating:" << getIDString(aSpecies) << std::endl;
   if(!aSpecies->getIsPopulated())
     {
       if(UniformRadiusX == 1 && UniformRadiusY == 1 && UniformRadiusZ == 1 &&
@@ -90,6 +91,7 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
                                               unsigned int aList[], 
                                               unsigned int* aCount)
 {
+  std::cout << "   Populating:" << getIDString(aSpecies) << std::endl;
   Comp* aComp(aSpecies->getComp());
   if(!aSpecies->getIsPopulated())
     {

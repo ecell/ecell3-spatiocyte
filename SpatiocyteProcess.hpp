@@ -114,7 +114,7 @@ public:
     {
       return theTime;
     }
-  virtual int getPriority() const
+  virtual int getQueuePriority() const
     {
       return thePriority;
     }
