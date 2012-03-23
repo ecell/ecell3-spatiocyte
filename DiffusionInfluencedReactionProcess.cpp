@@ -65,13 +65,9 @@ void DiffusionInfluencedReactionProcess::initializeThird()
 //Similarly, if B and D belong to the same Comp, B <- D.
 //Otherwise, find a vacant adjoining voxel of C, Y which is the same Comp
 //as D and Y <- D.
-bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeB, Voxel** target)
+bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
+                                               Voxel* moleculeB)
 {
-  Voxel* moleculeA(*target);
-  //moleculeA is the source molecule. It will be soft-removed (id kept intact)
-  //by the calling Species if this method returns true.
-  //moleculeB is the target molecule,  it will also be soft-removed by the
-  //calling Species.
   //First let us make sure moleculeA and moleculeB belong to the
   //correct species.
   if(moleculeA->id != A->getID())
@@ -97,14 +93,14 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeB, Voxel** target)
         {
           moleculeP = moleculeA;
           //Hard remove the B molecule, since nonHD_p is in a different Comp:
-          B->getVacantSpecies()->addMolecule(moleculeB);
+          B->getVacantSpecies()->softAddMolecule(moleculeB);
         }
       else if(B->getVacantID() == nonHD_p->getVacantID() ||
               B->getID() == nonHD_p->getVacantID())
         {
           moleculeP = moleculeB;
           //Hard remove the A molecule, since nonHD_p is in a different Comp:
-          A->getVacantSpecies()->addMolecule(moleculeA);
+          A->getVacantSpecies()->softAddMolecule(moleculeA);
         }
       else
         { 
@@ -120,9 +116,9 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeB, Voxel** target)
                 }
             }
           //Hard remove the A molecule, since nonHD_p is in a different Comp:
-          A->getVacantSpecies()->addMolecule(moleculeA);
+          A->getVacantSpecies()->softAddMolecule(moleculeA);
           //Hard remove the B molecule, since nonHD_p is in a different Comp:
-          B->getVacantSpecies()->addMolecule(moleculeB);
+          B->getVacantSpecies()->softAddMolecule(moleculeB);
         }
       HD_p->addValue(1);
       nonHD_p->addMolecule(moleculeP);
@@ -133,63 +129,99 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeB, Voxel** target)
     {
 
       //Hard remove the A molecule, since nonHD_p is in a different Comp:
-      A->getVacantSpecies()->addMolecule(moleculeA);
+      A->getVacantSpecies()->softAddMolecule(moleculeA);
       //Hard remove the B molecule, since nonHD_p is in a different Comp:
-      B->getVacantSpecies()->addMolecule(moleculeB);
+      B->getVacantSpecies()->softAddMolecule(moleculeB);
       variableC->addValue(1);
       return true;
     }
 
-  //If the product C is not in the same Comp as A,
-  //we need to find a vacant adjoining voxel of A that belongs
-  //to the Comp of C:
   Voxel* moleculeC;
+  Voxel* moleculeD;
   if(A->getVacantID() == C->getVacantID() || A->getID() == C->getVacantID())
     {
       moleculeC = moleculeA;
+      if(D)
+        {
+          if(B->getVacantID() == D->getVacantID() ||
+             B->getID() == D->getVacantID())
+            {
+              moleculeD = moleculeB;
+            }
+          else
+            {
+              moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC);
+              if(moleculeD == NULL)
+                {
+                  return false;
+                }
+              B->getVacantSpecies()->softAddMolecule(moleculeB);
+            }
+          D->addMolecule(moleculeD);
+        }
+      else
+        {
+          //Hard remove the B molecule since it is not used:
+          B->getVacantSpecies()->softAddMolecule(moleculeB);
+        }
+    }
+  else if(B->getVacantID() == C->getVacantID() ||
+          B->getID() == C->getVacantID())
+    {
+      moleculeC = moleculeB;
+      if(D)
+        {
+          if(A->getVacantID() == D->getVacantID() ||
+             A->getID() == D->getVacantID())
+            {
+              moleculeD = moleculeA;
+            }
+          else
+            {
+              moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC);
+              if(moleculeD == NULL)
+                {
+                  return false;
+                }
+              A->getVacantSpecies()->softAddMolecule(moleculeA);
+            }
+          D->addMolecule(moleculeD);
+        }
+      else
+        {
+          //Hard remove the A molecule since it is not used:
+          A->getVacantSpecies()->softAddMolecule(moleculeA);
+        }
     }
   else
     {
       moleculeC = C->getRandomAdjoiningVoxel(moleculeA);
-      //Only proceed if we can find an adjoining vacant voxel
-      //of A which can be occupied by C:
       if(moleculeC == NULL)
         {
-          return false;
+          moleculeC = C->getRandomAdjoiningVoxel(moleculeB);
+          if(moleculeC == NULL)
+            {
+              //Only proceed if we can find an adjoining vacant voxel
+              //of A or B which can be occupied by C:
+              return false;
+            }
         }
-    }
-  //If it has two products:
-  if(D != NULL)
-    { 
-      //If the product D is not in the same Comp as B,
-      //we need to find a vacant adjoining voxel of C that belongs
-      //to the Comp of D:
-      Voxel* moleculeD;
-      if(B->getVacantID() == D->getVacantID() || B->getID() == D->getVacantID())
-        {
-          moleculeD = moleculeB;
-        }
-      else
+      if(D)
         {
           moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC);
-          //Only proceed if we can find an adjoining vacant voxel
-          //of A which can be occupied by C:
           if(moleculeD == NULL)
             {
               return false;
             }
-          B->getVacantSpecies()->addMolecule(moleculeB);
+          D->addMolecule(moleculeD);
         }
-      D->addMolecule(moleculeD);
+      //Hard remove the A molecule since it is not used:
+      A->getVacantSpecies()->softAddMolecule(moleculeA);
+      //Hard remove the B molecule since it is not used:
+      B->getVacantSpecies()->softAddMolecule(moleculeB);
     }
-  else
-    {
-      //Hard remove the B molecule since this is a single product reaction:
-      B->getVacantSpecies()->addMolecule(moleculeB);
-    }
-  //Hard remove the A molecule, in case C is in a different Comp:
-  A->getVacantSpecies()->addMolecule(moleculeA);
   C->addMolecule(moleculeC);
+  return true;
 }
 
 

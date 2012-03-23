@@ -412,7 +412,7 @@ public:
                   Species* targetSpecies(theStepper->id2species(target->id));
                   DiffusionInfluencedReactionProcessInterface* aReaction(
                              theDiffusionInfluencedReactions[target->id]);
-                  if(aReaction->react(source, &target))
+                  if(aReaction->react(source, target))
                     {
                       //Soft remove the source molecule, i.e.,
                       //keep the id intact:
@@ -465,7 +465,7 @@ public:
                   Species* targetSpecies(theStepper->id2species(target->id));
                   DiffusionInfluencedReactionProcessInterface* aReaction(
                              theDiffusionInfluencedReactions[target->id]);
-                  if(aReaction->react(source, &target))
+                  if(aReaction->react(source, target))
                     {
                       //Soft remove the source molecule, i.e.,
                       //keep the id intact:
@@ -511,7 +511,7 @@ public:
                   Species* targetSpecies(theStepper->id2species(target->id));
                   DiffusionInfluencedReactionProcessInterface* aReaction(
                              theDiffusionInfluencedReactions[target->id]);
-                  if(aReaction->react(source, &target))
+                  if(aReaction->react(source, target))
                     {
                       //Soft remove the source molecule, i.e.,
                       //keep the id intact:
@@ -559,7 +559,7 @@ public:
                   Species* targetSpecies(theStepper->id2species(target->id));
                   DiffusionInfluencedReactionProcessInterface* aReaction(
                              theDiffusionInfluencedReactions[target->id]);
-                  if(aReaction->react(source, &target))
+                  if(aReaction->react(source, target))
                     {
                       //Soft remove the source molecule, i.e.,
                       //keep the id intact:
@@ -610,6 +610,28 @@ public:
       if(!getIsVacant())
         {
           aSpecies->softRemoveMolecule(aMolecule);
+          ++theMoleculeSize;
+          if(theMoleculeSize > theMolecules.size())
+            {
+              theMolecules.push_back(aMolecule);
+            }
+          else
+            {
+              theMolecules[theMoleculeSize-1] = aMolecule;
+            }
+          theVariable->setValue(theMoleculeSize);
+          for(unsigned int i(0); i != theInterruptedProcesses.size(); ++i)
+            {
+              theInterruptedProcesses[i]->addSubstrateInterrupt(this,
+                                                                aMolecule);
+            }
+        }
+    }
+  void softAddMolecule(Voxel* aMolecule)
+    {
+      aMolecule->id = theID;
+      if(!getIsVacant())
+        {
           ++theMoleculeSize;
           if(theMoleculeSize > theMolecules.size())
             {
