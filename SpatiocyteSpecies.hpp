@@ -87,10 +87,12 @@ public:
       theAdjoiningVoxelSize = anAdjoiningVoxelSize;
       theReactionProbabilities.resize(speciesSize);
       theDiffusionInfluencedReactions.resize(speciesSize);
+      theFinalizeReactions.resize(speciesSize);
       for(int i(0); i != speciesSize; ++ i)
         {
           theDiffusionInfluencedReactions[i] = NULL;
           theReactionProbabilities[i] = 0;
+          theFinalizeReactions[i] = false;
         }
       if(theComp)
         {
@@ -383,8 +385,26 @@ public:
     {
       return theDiffusionInterval;
     }
+  void resetFinalizeReactions()
+    {
+      for(unsigned int i(0); i != theFinalizeReactions.size(); ++i)
+        {
+          theFinalizeReactions[i] = false;
+        }
+    }
+  void finalizeReactions()
+    {
+      for(unsigned int i(0); i != theFinalizeReactions.size(); ++i)
+        {
+          if(theFinalizeReactions[i])
+            {
+              theDiffusionInfluencedReactions[i]->finalizeReaction();
+            }
+        }
+    }
   void surfaceWalkCollide()
     {
+      resetFinalizeReactions();
       Voxel* target;
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
@@ -418,22 +438,18 @@ public:
                       //keep the id intact:
                       theMolecules[i--] = theMolecules[--theMoleculeSize];
                       theVariable->setValue(theMoleculeSize);
-                      for(unsigned int j(0);
-                          j != theInterruptedProcesses.size(); ++j)
-                        {
-                          theInterruptedProcesses[j
-                            ]->removeSubstrateInterrupt(this, source);
-                        }
                       //Soft remove the target molecule:
                       targetSpecies->softRemoveMolecule(target);
-                      aReaction->finalizeReaction();
+                      theFinalizeReactions[target->id] = true;
                     }
                 }
             }
         }
+      finalizeReactions();
     }
   void volumeWalkCollide()
     {
+      resetFinalizeReactions();
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]); 
@@ -471,22 +487,18 @@ public:
                       //keep the id intact:
                       theMolecules[i--] = theMolecules[--theMoleculeSize];
                       theVariable->setValue(theMoleculeSize);
-                      for(unsigned int j(0);
-                          j != theInterruptedProcesses.size(); ++j)
-                        {
-                          theInterruptedProcesses[j
-                            ]->removeSubstrateInterrupt(this, source);
-                        }
                       //Soft remove the target molecule:
                       targetSpecies->softRemoveMolecule(target);
-                      aReaction->finalizeReaction();
+                      theFinalizeReactions[target->id] = true;
                     }
                 }
             }
         }
+      finalizeReactions();
     }
   void surfaceWalk()
     {
+      resetFinalizeReactions();
       Voxel* target;
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
@@ -517,22 +529,18 @@ public:
                       //keep the id intact:
                       theMolecules[i--] = theMolecules[--theMoleculeSize];
                       theVariable->setValue(theMoleculeSize);
-                      for(unsigned int j(0);
-                          j != theInterruptedProcesses.size(); ++j)
-                        {
-                          theInterruptedProcesses[j
-                            ]->removeSubstrateInterrupt(this, source);
-                        }
                       //Soft remove the target molecule:
                       targetSpecies->softRemoveMolecule(target);
-                      aReaction->finalizeReaction();
+                      theFinalizeReactions[target->id] = true;
                     }
                 }
             }
         }
+      finalizeReactions();
     }
   void volumeWalk()
     {
+      resetFinalizeReactions();
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
@@ -565,18 +573,14 @@ public:
                       //keep the id intact:
                       theMolecules[i--] = theMolecules[--theMoleculeSize];
                       theVariable->setValue(theMoleculeSize);
-                      for(unsigned int j(0);
-                          j != theInterruptedProcesses.size(); ++j)
-                        {
-                          theInterruptedProcesses[j]->removeSubstrateInterrupt(this, source);
-                        }
                       //Soft remove the target molecule:
                       targetSpecies->softRemoveMolecule(target);
-                      aReaction->finalizeReaction();
+                      theFinalizeReactions[target->id] = true;
                     }
                 }
             }
         }
+      finalizeReactions();
     }
   void setComp(Comp* aComp)
     {
@@ -620,11 +624,6 @@ public:
               theMolecules[theMoleculeSize-1] = aMolecule;
             }
           theVariable->setValue(theMoleculeSize);
-          for(unsigned int i(0); i != theInterruptedProcesses.size(); ++i)
-            {
-              theInterruptedProcesses[i]->addSubstrateInterrupt(this,
-                                                                aMolecule);
-            }
         }
     }
   void softAddMolecule(Voxel* aMolecule)
@@ -642,11 +641,6 @@ public:
               theMolecules[theMoleculeSize-1] = aMolecule;
             }
           theVariable->setValue(theMoleculeSize);
-          for(unsigned int i(0); i != theInterruptedProcesses.size(); ++i)
-            {
-              theInterruptedProcesses[i]->addSubstrateInterrupt(this,
-                                                                aMolecule);
-            }
         }
     }
   void addDiffuseVacantMolecule(Voxel* aMolecule)
@@ -664,11 +658,6 @@ public:
               theMolecules[theMoleculeSize-1] = aMolecule;
             }
           theVariable->setValue(theMoleculeSize);
-          for(unsigned int i(0); i != theInterruptedProcesses.size(); ++i)
-            {
-              theInterruptedProcesses[i]->addSubstrateInterrupt(this,
-                                                                aMolecule);
-            }
         }
     }
   //it is soft replace because the id of the source molecule is not changed:
@@ -698,12 +687,6 @@ public:
                 {
                   theMolecules[i] = theMolecules[--theMoleculeSize];
                   theVariable->setValue(theMoleculeSize);
-                  for(unsigned int i(0); i != theInterruptedProcesses.size(); ++i)
-                    {
-                      theInterruptedProcesses[i]->removeSubstrateInterrupt(
-                                                             this, aMolecule);
-                    }
-                  return;
                 }
             }
         }
@@ -719,13 +702,6 @@ public:
                   theVacantSpecies->addDiffuseVacantMolecule(aMolecule);
                   theMolecules[i] = theMolecules[--theMoleculeSize];
                   theVariable->setValue(theMoleculeSize);
-                  for(unsigned int i(0); 
-                      i != theInterruptedProcesses.size(); ++i)
-                    {
-                      theInterruptedProcesses[i]->removeSubstrateInterrupt(
-                                                             this, aMolecule);
-                    }
-                  return;
                 }
             }
         }
@@ -1124,11 +1100,13 @@ private:
   MoleculePopulateProcessInterface* thePopulateProcess;
   SpatiocyteStepper* theStepper;
   Variable* theVariable;
+  std::vector<bool> theFinalizeReactions;
   std::vector<double> theBendAngles;
   std::vector<double> theReactionProbabilities;
   std::vector<Voxel*> theMolecules;
   std::vector<Species*> theDiffusionInfluencedReactantPairs;
-  std::vector<DiffusionInfluencedReactionProcessInterface*> theDiffusionInfluencedReactions;
+  std::vector<DiffusionInfluencedReactionProcessInterface*> 
+    theDiffusionInfluencedReactions;
   std::vector<SpatiocyteProcessInterface*> theInterruptedProcesses;
   std::vector<Origin> theMoleculeOrigins;
 };
