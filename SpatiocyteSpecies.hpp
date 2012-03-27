@@ -440,7 +440,7 @@ public:
                       theVariable->setValue(theMoleculeSize);
                       //Soft remove the target molecule:
                       targetSpecies->softRemoveMolecule(target);
-                      theFinalizeReactions[target->id] = true;
+                      theFinalizeReactions[targetSpecies->getID()] = true;
                     }
                 }
             }
@@ -489,7 +489,7 @@ public:
                       theVariable->setValue(theMoleculeSize);
                       //Soft remove the target molecule:
                       targetSpecies->softRemoveMolecule(target);
-                      theFinalizeReactions[target->id] = true;
+                      theFinalizeReactions[targetSpecies->getID()] = true;
                     }
                 }
             }
@@ -531,7 +531,7 @@ public:
                       theVariable->setValue(theMoleculeSize);
                       //Soft remove the target molecule:
                       targetSpecies->softRemoveMolecule(target);
-                      theFinalizeReactions[target->id] = true;
+                      theFinalizeReactions[targetSpecies->getID()] = true;
                     }
                 }
             }
@@ -575,7 +575,7 @@ public:
                       theVariable->setValue(theMoleculeSize);
                       //Soft remove the target molecule:
                       targetSpecies->softRemoveMolecule(target);
-                      theFinalizeReactions[target->id] = true;
+                      theFinalizeReactions[targetSpecies->getID()] = true;
                     }
                 }
             }
