@@ -419,7 +419,7 @@ public:
             {
               if(gsl_rng_uniform(theRng) < theWalkProbability)
                 {
-                  theVacantSpecies->softReplaceMolecule(target, source);
+                  theVacantSpecies->softAddMolecule(source);
                   target->id = theID;
                   theMolecules[i] = target;
                 }
@@ -445,6 +445,7 @@ public:
                 }
             }
         }
+      theVacantSpecies->updateMolecules();
       finalizeReactions();
     }
   void volumeWalkCollide()
@@ -467,7 +468,7 @@ public:
             {
               if(gsl_rng_uniform(theRng) < theWalkProbability)
                 {
-                  theVacantSpecies->softReplaceMolecule(target, source);
+                  theVacantSpecies->softAddMolecule(source);
                   target->id = theID;
                   theMolecules[i] = target;
                 }
@@ -494,6 +495,7 @@ public:
                 }
             }
         }
+      theVacantSpecies->updateMolecules();
       finalizeReactions();
     }
   void surfaceWalk()
@@ -511,9 +513,9 @@ public:
             }
           if(target->id == theVacantID)
             {
-              theVacantSpecies->softReplaceMolecule(target, source);
               target->id = theID;
               theMolecules[i] = target;
+              theVacantSpecies->softAddMolecule(source);
             }
           else if(theDiffusionInfluencedReactions[target->id] != NULL)
             {
@@ -536,6 +538,7 @@ public:
                 }
             }
         }
+      theVacantSpecies->updateMolecules();
       finalizeReactions();
     }
   void volumeWalk()
@@ -555,7 +558,7 @@ public:
             }
           if(target->id == theVacantID)
             {
-              theVacantSpecies->softReplaceMolecule(target, source);
+              theVacantSpecies->softAddMolecule(source);
               target->id = theID;
               theMolecules[i] = target;
             }
@@ -580,6 +583,7 @@ public:
                 }
             }
         }
+      theVacantSpecies->updateMolecules();
       finalizeReactions();
     }
   void setComp(Comp* aComp)
@@ -593,6 +597,25 @@ public:
   void setVariable(Variable* aVariable)
     {
       theVariable = aVariable;
+    }
+  //update the molecule list by removing molecules that do not have the species
+  //ID
+  void updateMolecules()
+    {
+      if(getIsDiffuseVacant())
+        {
+          unsigned int newMoleculeSize(0);
+          for(unsigned int i(0); i < theMoleculeSize; ++i)
+            {
+              if(theMolecules[i]->id == theID)
+                {
+                  theMolecules[newMoleculeSize] = theMolecules[i];
+                  ++newMoleculeSize;
+                }
+            }
+          theMoleculeSize = newMoleculeSize;
+          theVariable->setValue(theMoleculeSize);
+        }
     }
   void addSimpleMolecule(Voxel* aMolecule)
     {

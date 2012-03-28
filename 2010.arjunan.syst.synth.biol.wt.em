@@ -4,7 +4,7 @@
 # E. coli MinE to E-ring formation. Syst. Synth. Biol. 4(1):35-53.
 # written by Satya Arjunan <satya.arjunan(a)gmail.com>
 
-Stepper SpatiocyteStepper(SS) { VoxelRadius 1e-8; }   # m
+Stepper SpatiocyteStepper(SS) { VoxelRadius 1e-8; SearchVacant 1;}   # m
 
 System System(/)
 {
@@ -172,8 +172,8 @@ System System(/Surface)
     }
   Process DiffusionInfluencedReactionProcess(reaction6)
     {
-      VariableReferenceList   [_ Variable:/Surface:MinDEE -1]
-                              [_ Variable:/Surface:MinD -1]
+      VariableReferenceList   [_ Variable:/Surface:MinD -1]
+                              [_ Variable:/Surface:MinDEE -1]
                               [_ Variable:/Surface:MinDEED 1];
       k 5e-15;         # m^3/s
     }
