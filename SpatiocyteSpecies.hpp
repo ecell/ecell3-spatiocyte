@@ -1027,6 +1027,7 @@ public:
         }
       return NULL;
     }
+  /*
   Voxel* getRandomDiffuseVacantVoxel()
     {
       if(theVacantSpecies->getIsVacant())
@@ -1057,6 +1058,7 @@ public:
         }
       return NULL;
     }
+    */
   Voxel* getRandomCompVoxel()
     {
       int aSize(theComp->coords.size());

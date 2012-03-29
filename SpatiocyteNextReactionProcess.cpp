@@ -47,7 +47,7 @@ void SpatiocyteNextReactionProcess::fire()
     {
       if(C)
         { 
-          Voxel* moleculeC(C->getRandomDiffuseVacantVoxel());
+          Voxel* moleculeC(C->getRandomCompVoxel());
           if(moleculeC == NULL)
             {
               requeue();
@@ -155,7 +155,7 @@ void SpatiocyteNextReactionProcess::fire()
             }
           else
             {
-              moleculeC = C->getRandomDiffuseVacantVoxel();
+              moleculeC = C->getRandomCompVoxel();
               if(moleculeC)
                 {
                   moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC);
@@ -441,7 +441,7 @@ Voxel* SpatiocyteNextReactionProcess::reactvAC(Variable* vA, Species* c)
     }
   else
     {
-      moleculeC = c->getRandomDiffuseVacantVoxel();
+      moleculeC = c->getRandomCompVoxel();
     }
   return moleculeC;
 }
@@ -478,7 +478,7 @@ Voxel* SpatiocyteNextReactionProcess::reactvAvBC(Species* c)
     }
   else
     {
-      moleculeC = C->getRandomDiffuseVacantVoxel();
+      moleculeC = C->getRandomCompVoxel();
     }
   return moleculeC;
 }
