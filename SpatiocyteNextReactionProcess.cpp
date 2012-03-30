@@ -577,26 +577,8 @@ void SpatiocyteNextReactionProcess::initializeThird()
             }
           else
             {
-              if(C && !C->getVacantSpecies()->getIsVacant())
-                {
-                  Species* aVacantSpecies(C->getVacantSpecies());
-                  double aVoxelRadius(theSpatiocyteStepper->getVoxelRadius());
-                  pFormula << "[rv:" << aVoxelRadius << "]";
-                  int aMoleculeNumber(aVacantSpecies->size());
-                  pFormula << "[" <<
-                    aVacantSpecies->getVariable()->getFullID().asString();
-                  pFormula << ":N:" << aMoleculeNumber << "]";
-                  anArea = (72*pow(aVoxelRadius,2))*aMoleculeNumber/
-                    (6*pow(2,0.5)+4*pow(3,0.5)+3*pow(6, 0.5));
-                  pFormula << "[anArea:(72*pow(rv,2))*" 
-                    << "N/(6*pow(2,0.5)+4*pow(3,0.5)+3*"
-                    << "pow(6, 0.5)):" << anArea << "]";
-                }
-              else
-                { 
-                  anArea = compC->actualArea;
-                  pFormula << "[anArea:compC.Area:" << anArea << "]";
-                }
+              anArea = compC->actualArea;
+              pFormula << "[anArea:compC.Area:" << anArea << "]";
             }
           p = k*anArea/aVolume;
           pFormula << "[k*anArea/aVolume:" << k << "*" << anArea << "/"
