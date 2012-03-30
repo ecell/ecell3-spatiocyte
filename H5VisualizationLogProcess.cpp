@@ -143,16 +143,28 @@ struct CompPacker
         arc << field<boost::array<double, 3> >("lengths", &Comp_lengths, data);
         arc << field<Comp, double, double>("voxelRadius", voxelRadius);
         arc << field<Comp, double, double>("normalizedVoxelRadius", normalizedVoxelRadius);
+        arc << field<Comp, double, double>("startCoord", startCoord);
+        arc << field<Comp, double, double>("layerSize", layerSize);
+        arc << field<Comp, double, double>("rowSize", rowSize);
+        arc << field<Comp, double, double>("colSize", colSize);
     }
 
-    CompPacker(double voxelRadius, double normalizedVoxelRadius)
-        : voxelRadius(voxelRadius), normalizedVoxelRadius(normalizedVoxelRadius) {}
+    CompPacker(double voxelRadius, double normalizedVoxelRadius,
+               unsigned int startCoord, unsigned int layerSize,
+               unsigned int rowSize, unsigned int colSize)
+        : voxelRadius(voxelRadius), normalizedVoxelRadius(normalizedVoxelRadius),
+          startCoord(startCoord), layerSize(layerSize), rowSize(rowSize), colSize(colSize) {}
 
-    CompPacker(): voxelRadius(0.), normalizedVoxelRadius(0.) {}
+    CompPacker(): voxelRadius(0.), normalizedVoxelRadius(0.),
+                  startCoord(0), layerSize(0), rowSize(0), colSize(0) {}
 
 private:
     const double voxelRadius;
     const double normalizedVoxelRadius;
+    unsigned int startCoord;
+    unsigned int layerSize;
+    unsigned int rowSize;
+    unsigned int colSize;
 };
 
 template<template<typename> class TTserialize_>
@@ -308,7 +320,11 @@ void H5VisualizationLogProcess::initializeLog()
         field_packer<h5_le_traits> packer(buf.get());
         CompPacker<field_packer<h5_le_traits> > serializer(
             theSpatiocyteStepper->getVoxelRadius(),
-            theSpatiocyteStepper->getNormalizedVoxelRadius());
+            theSpatiocyteStepper->getNormalizedVoxelRadius(),
+            theSpatiocyteStepper->getStartCoord(),
+            theSpatiocyteStepper->getLayerSize(),
+            theSpatiocyteStepper->getRowSize(),
+            theSpatiocyteStepper->getColSize());
         H5::Group latticeInfoGroup(theLogFile.createGroup("lattice_info"));
         H5::DataSpace space(H5::DataSpace(1, dims, dims));
         H5::DataSet latticeInfoDataSet(latticeInfoGroup.createDataSet("HCP_group", CompDataType, space));
