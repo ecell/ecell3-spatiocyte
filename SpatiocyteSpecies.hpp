@@ -1,11 +1,3 @@
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-//
-//        This file is part of E-Cell Simulation Environment package
-//
-//                Copyright (C) 2006-2009 Keio University
-//
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-//
 //
 // E-Cell is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public
@@ -168,11 +160,11 @@ public:
             " not MoleculePopulated." << std::endl;
         }
     }
-  void populateUniformDiffuseVacant()
+  void populateUniformNormalPriority()
     {
       if(thePopulateProcess)
         {
-          thePopulateProcess->populateUniformDiffuseVacant(this);
+          thePopulateProcess->populateUniformNormalPriority(this);
         }
       else if(theMoleculeSize)
         {
@@ -402,25 +394,33 @@ public:
             }
         }
     }
-  void surfaceWalkCollide()
+  void walk()
     {
-      resetFinalizeReactions();
-      Voxel* target;
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
-          const unsigned short size(source->adjoiningSize);
-          target = source->adjoiningVoxels[gsl_rng_uniform_int(theRng, size)];
+          int size;
+          if(isVolume)
+            {
+              size = theAdjoiningVoxelSize;
+            }
+          else
+            {
+              size = source->adjoiningSize;
+            }
+          Voxel* target(source->adjoiningVoxels[
+                        gsl_rng_uniform_int(theRng, size)]);
           if(source == target)
             {
-              std::cout << "error surface" << std::endl;
+              std::cout << "SpatiocyteSpecies source=target error" << std::endl;
             }
           if(target->id == theVacantID)
             {
-              if(gsl_rng_uniform(theRng) < theWalkProbability)
+              if(theWalkProbability == 1 ||
+                 gsl_rng_uniform(theRng) < theWalkProbability)
                 {
-                  theVacantSpecies->softAddMolecule(source);
                   target->id = theID;
+                  source->id = theVacantID;
                   theMolecules[i] = target;
                 }
             }
@@ -445,146 +445,59 @@ public:
                 }
             }
         }
-      theVacantSpecies->updateMolecules();
-      finalizeReactions();
     }
-  void volumeWalkCollide()
+  void walkVacant()
     {
-      resetFinalizeReactions();
-      for(unsigned int i(0); i < theMoleculeSize; ++i)
-        {
-          Voxel* source(theMolecules[i]); 
-          const int r(gsl_rng_uniform_int(theRng, theAdjoiningVoxelSize));
-          Voxel* target(source->adjoiningVoxels[r]);
-          if(source == target)
+      int size(theComp->coords.size());
+      for(int i(0); i != size; ++i)
+        { 
+          Voxel* source(theStepper->coord2voxel(theComp->coords[i]));
+          if(source->id == theID)
             {
-              //We cannot have a volume/surface molecule colliding with itself
-              //because we need to ensure homodimerization reaction is
-              //correct.
-              std::cout << "error volume" << std::endl;
-            }
-          //walk:
-          if(target->id == theVacantID)
-            {
-              if(gsl_rng_uniform(theRng) < theWalkProbability)
+              int size;
+              if(isVolume)
                 {
-                  theVacantSpecies->softAddMolecule(source);
-                  target->id = theID;
-                  theMolecules[i] = target;
+                  size = theAdjoiningVoxelSize;
                 }
-            }
-          //collide;
-          else if(theDiffusionInfluencedReactions[target->id] != NULL)
-            {
-              //If it meets the reaction probability:
-              if(gsl_rng_uniform(theRng) < theReactionProbabilities[target->id])
-                { 
-                  Species* targetSpecies(theStepper->id2species(target->id));
-                  DiffusionInfluencedReactionProcessInterface* aReaction(
-                             theDiffusionInfluencedReactions[target->id]);
-                  if(aReaction->react(source, target))
+              else
+                {
+                  size = source->adjoiningSize;
+                }
+              Voxel* target(source->adjoiningVoxels[
+                            gsl_rng_uniform_int(theRng, size)]);
+              if(source == target)
+                {
+                  std::cout << "SpatiocyteSpecies source=target error" <<
+                    std::endl;
+                }
+              if(target->id == theVacantID)
+                {
+                  if(theWalkProbability == 1 ||
+                     gsl_rng_uniform(theRng) < theWalkProbability)
                     {
-                      //Soft remove the source molecule, i.e.,
-                      //keep the id intact:
-                      theMolecules[i--] = theMolecules[--theMoleculeSize];
-                      theVariable->setValue(theMoleculeSize);
-                      //Soft remove the target molecule:
-                      targetSpecies->softRemoveMolecule(target);
-                      theFinalizeReactions[targetSpecies->getID()] = true;
+                      target->id = theID;
+                      source->id = theVacantID;
+                    }
+                }
+              else if(theDiffusionInfluencedReactions[target->id] != NULL)
+                {
+                  //If it meets the reaction probability:
+                  if(gsl_rng_uniform(theRng) <
+                     theReactionProbabilities[target->id])
+                    { 
+                      Species* targetSpecies(theStepper->id2species(target->id));
+                      DiffusionInfluencedReactionProcessInterface* aReaction(
+                                 theDiffusionInfluencedReactions[target->id]);
+                      if(aReaction->react(source, target))
+                        {
+                          //Soft remove the target molecule:
+                          targetSpecies->softRemoveMolecule(target);
+                          theFinalizeReactions[targetSpecies->getID()] = true;
+                        }
                     }
                 }
             }
         }
-      theVacantSpecies->updateMolecules();
-      finalizeReactions();
-    }
-  void surfaceWalk()
-    {
-      resetFinalizeReactions();
-      Voxel* target;
-      for(unsigned int i(0); i < theMoleculeSize; ++i)
-        {
-          Voxel* source(theMolecules[i]);
-          const unsigned short size(source->adjoiningSize); 
-          target = source->adjoiningVoxels[gsl_rng_uniform_int(theRng, size)];
-          if(source == target)
-            {
-              std::cout << "error surface" << std::endl;
-            }
-          if(target->id == theVacantID)
-            {
-              target->id = theID;
-              theMolecules[i] = target;
-              theVacantSpecies->softAddMolecule(source);
-            }
-          else if(theDiffusionInfluencedReactions[target->id] != NULL)
-            {
-              //If it meets the reaction probability:
-              if(gsl_rng_uniform(theRng) < theReactionProbabilities[target->id])
-                { 
-                  Species* targetSpecies(theStepper->id2species(target->id));
-                  DiffusionInfluencedReactionProcessInterface* aReaction(
-                             theDiffusionInfluencedReactions[target->id]);
-                  if(aReaction->react(source, target))
-                    {
-                      //Soft remove the source molecule, i.e.,
-                      //keep the id intact:
-                      theMolecules[i--] = theMolecules[--theMoleculeSize];
-                      theVariable->setValue(theMoleculeSize);
-                      //Soft remove the target molecule:
-                      targetSpecies->softRemoveMolecule(target);
-                      theFinalizeReactions[targetSpecies->getID()] = true;
-                    }
-                }
-            }
-        }
-      theVacantSpecies->updateMolecules();
-      finalizeReactions();
-    }
-  void volumeWalk()
-    {
-      resetFinalizeReactions();
-      for(unsigned int i(0); i < theMoleculeSize; ++i)
-        {
-          Voxel* source(theMolecules[i]);
-          const int r(gsl_rng_uniform_int(theRng, theAdjoiningVoxelSize));
-          Voxel* target(source->adjoiningVoxels[r]);
-          if(source == target)
-            {
-              //We cannot have a volume/surface molecule colliding with itself
-              //because we need to ensure homodimerization reaction is
-              //correct.
-              std::cout << "error volume" << std::endl;
-            }
-          if(target->id == theVacantID)
-            {
-              theVacantSpecies->softAddMolecule(source);
-              target->id = theID;
-              theMolecules[i] = target;
-            }
-          else if(theDiffusionInfluencedReactions[target->id] != NULL)
-            {
-              //If it meets the reaction probability:
-              if(gsl_rng_uniform(theRng) < theReactionProbabilities[target->id])
-                { 
-                  Species* targetSpecies(theStepper->id2species(target->id));
-                  DiffusionInfluencedReactionProcessInterface* aReaction(
-                             theDiffusionInfluencedReactions[target->id]);
-                  if(aReaction->react(source, target))
-                    {
-                      //Soft remove the source molecule, i.e.,
-                      //keep the id intact:
-                      theMolecules[i--] = theMolecules[--theMoleculeSize];
-                      theVariable->setValue(theMoleculeSize);
-                      //Soft remove the target molecule:
-                      targetSpecies->softRemoveMolecule(target);
-                      theFinalizeReactions[targetSpecies->getID()] = true;
-                    }
-                }
-            }
-        }
-      theVacantSpecies->updateMolecules();
-      finalizeReactions();
     }
   void setComp(Comp* aComp)
     {
@@ -598,24 +511,27 @@ public:
     {
       theVariable = aVariable;
     }
-  //update the molecule list by removing molecules that do not have the species
-  //ID
-  void updateMolecules()
+  void updateDiffuseVacantMolecules()
     {
-      if(getIsDiffuseVacant())
-        {
-          unsigned int newMoleculeSize(0);
-          for(unsigned int i(0); i < theMoleculeSize; ++i)
+      theMoleculeSize = 0;
+      int aSize(theComp->coords.size());
+      for(int i(0); i != aSize; ++i)
+        { 
+          Voxel* aMolecule(theStepper->coord2voxel(theComp->coords[i]));
+          if(aMolecule->id == theID)
             {
-              if(theMolecules[i]->id == theID)
+              ++theMoleculeSize;
+              if(theMoleculeSize > theMolecules.size())
                 {
-                  theMolecules[newMoleculeSize] = theMolecules[i];
-                  ++newMoleculeSize;
+                  theMolecules.push_back(aMolecule);
+                }
+              else
+                {
+                  theMolecules[theMoleculeSize-1] = aMolecule;
                 }
             }
-          theMoleculeSize = newMoleculeSize;
-          theVariable->setValue(theMoleculeSize);
         }
+      theVariable->setValue(theMoleculeSize);
     }
   void addSimpleMolecule(Voxel* aMolecule)
     {
@@ -632,11 +548,9 @@ public:
     }
   void addMolecule(Voxel* aMolecule)
     {
-      Species* aSpecies(theStepper->id2species(aMolecule->id));
       aMolecule->id = theID;
       if(!getIsVacant())
         {
-          aSpecies->softRemoveMolecule(aMolecule);
           ++theMoleculeSize;
           if(theMoleculeSize > theMolecules.size())
             {
@@ -652,19 +566,6 @@ public:
   void softAddMolecule(Voxel* aMolecule)
     {
       aMolecule->id = theID;
-      if(!getIsVacant())
-        {
-          ++theMoleculeSize;
-          if(theMoleculeSize > theMolecules.size())
-            {
-              theMolecules.push_back(aMolecule);
-            }
-          else
-            {
-              theMolecules[theMoleculeSize-1] = aMolecule;
-            }
-          theVariable->setValue(theMoleculeSize);
-        }
     }
   void addDiffuseVacantMolecule(Voxel* aMolecule)
     {
@@ -681,22 +582,6 @@ public:
               theMolecules[theMoleculeSize-1] = aMolecule;
             }
           theVariable->setValue(theMoleculeSize);
-        }
-    }
-  //it is soft replace because the id of the source molecule is not changed:
-  void softReplaceMolecule(Voxel* aSource, Voxel* aTarget)
-    {
-      aTarget->id = theID;
-      if(!getIsVacant())
-        {
-          for(unsigned int i(0); i < theMoleculeSize; ++i)
-            {
-              if(theMolecules[i] == aSource)
-                {
-                  theMolecules[i] = aTarget;
-                  return;
-                }
-            }
         }
     }
   //it is soft remove because the id of the molecule is not changed:
@@ -869,7 +754,8 @@ public:
       if(theMoleculeSize == 0)
         {
           std::cout << theVariable->getFullID().asString() << std::endl;
-          std::cout << "size:" << theVariable->getValue() << std::endl;
+          std::cout << "Species size error:" <<
+            theVariable->getValue() << std::endl;
         }
       return theMolecules[gsl_rng_uniform_int(theRng, theMoleculeSize)];
     }
@@ -1137,8 +1023,5 @@ private:
 };
 
 
-
-
-
-
 #endif /* __SpatiocyteSpecies_hpp */
+

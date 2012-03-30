@@ -2721,6 +2721,8 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
           std::vector<Species*>::const_iterator j(prioritySpecies.begin());
           while(j != prioritySpecies.end())
             {
+              //Put high priority species and diffuse vacant species
+              //in the high priority populate list
               if((*j)->getPopulatePriority() > (*i)->getPopulatePriority() ||
                  ((*j)->getPopulatePriority() == (*i)->getPopulatePriority() &&
                   (*j)->getIsDiffuseVacant()))
@@ -2759,7 +2761,7 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
   for(std::vector<Species*>::const_iterator i(diffuseSpecies.begin());
       i != diffuseSpecies.end(); ++i)
     {
-      (*i)->populateUniformDiffuseVacant();
+      (*i)->populateUniform();
     }
 }
 

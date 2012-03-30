@@ -52,8 +52,9 @@ public:
     D(0),
     P(1),
     WalkProbability(1),
+    theDiffusionSpecies(NULL),
     theVacantSpecies(NULL),
-    theWalkMethod(&DiffusionProcess::volumeWalk) {}
+    theWalkMethod(&DiffusionProcess::walk) {}
   virtual ~DiffusionProcess() {}
   SIMPLE_SET_GET_METHOD(Real, D);
   SIMPLE_SET_GET_METHOD(Real, P);
@@ -73,21 +74,46 @@ public:
                                    (*i).getVariable())); 
           if(!(*i).getCoefficient())
             {
-              theDiffusionSpecies.push_back(aSpecies);
-              aSpecies->setDiffusionCoefficient(D);
+              if(theDiffusionSpecies)
+                {
+                  THROW_EXCEPTION(ValueError, String(
+                                  getPropertyInterface().getClassName()) +
+                                  "[" + getFullID().asString() + 
+                                  "]: A DiffusionProcess requires only one " +
+                                  "nonHD variable reference with zero " +
+                                  "coefficient as the species to be " +
+                                  "diffused, but " + 
+                                  getIDString(theDiffusionSpecies) + " and " +
+                                  getIDString(aSpecies) + " are given."); 
+                }
+              theDiffusionSpecies = aSpecies;
+              theDiffusionSpecies->setDiffusionCoefficient(D);
             }
           else
             {
+              if(theVacantSpecies)
+                {
+                  THROW_EXCEPTION(ValueError, String(
+                                  getPropertyInterface().getClassName()) +
+                                  "[" + getFullID().asString() + 
+                                  "]: A DiffusionProcess requires only one " +
+                                  "nonHD variable reference with negative " +
+                                  "coefficient as the vacant species to be " +
+                                  "diffused on, but " +
+                                  getIDString(theVacantSpecies) + " and " +
+                                  getIDString(aSpecies) + " are given."); 
+                }
               theVacantSpecies = aSpecies;
             }
         }
-      if(!theDiffusionSpecies.size())
+      if(!theDiffusionSpecies)
         {
           THROW_EXCEPTION(ValueError, String(
                           getPropertyInterface().getClassName()) +
                           "[" + getFullID().asString() + 
-                          "]: A DiffusionProcess requires at least one " +
-                          "variable reference with zero coefficient."); 
+                          "]: A DiffusionProcess requires only one " +
+                          "nonHD variable reference with zero coefficient " +
+                          "as the species to be diffused, but none is given."); 
         }
     }
   virtual void initializeSecond()
@@ -95,168 +121,73 @@ public:
       if(theVacantSpecies)
         {
           theVacantSpecies->setIsDiffuseVacant();
-          for(std::vector<Species*>::const_iterator
-              i(theDiffusionSpecies.begin());
-              i != theDiffusionSpecies.end(); ++i)
-            {
-              (*i)->setVacantSpecies(theVacantSpecies);
-            }
+          theDiffusionSpecies->setVacantSpecies(theVacantSpecies);
         }
     }
   virtual void initializeThird()
     {
-      Species* aSpecies(theDiffusionSpecies[0]);
-      isVolume = aSpecies->getIsVolume();
-      double rho(aSpecies->getMaxReactionProbability());
-      if(D > 0)
-        {
-          for(std::vector<Species*>::const_iterator
-              i(theDiffusionSpecies.begin());
-              i != theDiffusionSpecies.end(); ++i)
-            {
-              if((*i)->getIsVolume() != isVolume)
-                {
-                  THROW_EXCEPTION(ValueError, String(
-                                   getPropertyInterface().getClassName()) +
-                                  "[" + getFullID().asString() + 
-                                  "]: A DiffusionProcess can only execute" +
-                                  " multiple species when they are all either" +
-                                  " in a volume compartment or a surface" +
-                                  " compartment, not both concurrently. " +
-                                  getIDString(theDiffusionSpecies[0]) + " and " +
-                                  getIDString(*i) + " belong to different" +
-                                  " types of compartment.");
-                }
-              if(rho < (*i)->getMaxReactionProbability())
-                {
-                  if(rho > P)
-                    {
-                      THROW_EXCEPTION(ValueError, String(
-                                       getPropertyInterface().getClassName()) + 
-                                      "[" + getFullID().asString() + 
-                                      "]: Create separate" +
-                                      " DiffusionProcesses for " +
-                                      getIDString(aSpecies) + " and " +
-                                      getIDString(*i) + " since their" +
-                                      " reaction probabilities are not the" +
-                                      " same and the latter's reaction" +
-                                      " probability is higher than P.");
-                    }
-                  aSpecies = *i;
-                  rho = (*i)->getMaxReactionProbability();
-                }
-            }
-        }
+      double rho(theDiffusionSpecies->getMaxReactionProbability());
       if(rho > P)
         {
           WalkProbability = P/rho;
         }
-      for(std::vector<Species*>::const_iterator i(theDiffusionSpecies.begin());
-          i != theDiffusionSpecies.end(); ++i)
-        {
-          (*i)->rescaleReactionProbabilities(WalkProbability);
-        }
+      theDiffusionSpecies->rescaleReactionProbabilities(WalkProbability);
       if(D > 0)
         {
           double r_v(theSpatiocyteStepper->getVoxelRadius());
           double lambda(2.0/3);
-          if(!isVolume)
+          if(!theDiffusionSpecies->getIsVolume())
             {
               lambda = pow((2*sqrt(2)+4*sqrt(3)+3*sqrt(6)+sqrt(22))/
                            (6*sqrt(2)+4*sqrt(3)+3*sqrt(6)), 2);
             }
           theStepInterval = lambda*r_v*r_v*WalkProbability/D;
         }
-      for(std::vector<Species*>::const_iterator i(theDiffusionSpecies.begin());
-          i != theDiffusionSpecies.end(); ++i)
+      theDiffusionSpecies->setDiffusionInterval(theStepInterval);
+      if(theDiffusionSpecies->getIsDiffuseVacant())
         {
-          (*i)->setDiffusionInterval(theStepInterval);
-        }
-      if(isVolume)
-        {
-          if(WalkProbability == 1)
-            {
-              theWalkMethod = &DiffusionProcess::volumeWalk;
-            }
-          else
-            {
-              theWalkMethod = &DiffusionProcess::volumeWalkCollide;
-            }
+          theWalkMethod = &DiffusionProcess::walkVacant;
         }
       else
         {
-          if(WalkProbability == 1)
-            {
-              theWalkMethod = &DiffusionProcess::surfaceWalk;
-            }
-          else
-            {
-              theWalkMethod = &DiffusionProcess::surfaceWalkCollide;
-            }
+          theWalkMethod = &DiffusionProcess::walk;
         }
     }
   virtual void printParameters()
     {
-      for(std::vector<Species*>::const_iterator i(theDiffusionSpecies.begin());
-          i != theDiffusionSpecies.end(); ++i)
-        {
-          std::cout << getIDString(*i) << " ";
-        }
+      String aProcess(String(getPropertyInterface().getClassName()) + 
+                      "[" + getFullID().asString() + "]");
+      std::cout << aProcess << std::endl;
+      std::cout << "  " << getIDString(theDiffusionSpecies) << " ";
       std::cout << ":" << std::endl << "  Diffusion interval=" <<
         theStepInterval << ", D=" << D << ", Walk probability (P/rho)=" <<
         WalkProbability << std::endl;
     }
   virtual void fire()
     {
+      theDiffusionSpecies->resetFinalizeReactions();
       (this->*theWalkMethod)();
+      theDiffusionSpecies->finalizeReactions();
       theTime += theStepInterval;
       thePriorityQueue->moveTop();
     }
-  void volumeWalk() const
+  void walk() const
     {
-      for(std::vector<Species*>::const_iterator i(theDiffusionSpecies.begin());
-          i != theDiffusionSpecies.end(); ++i)
-        {
-          (*i)->volumeWalk();
-        }
+      theDiffusionSpecies->walk();
     }
-  void volumeWalkCollide() const
+  void walkVacant() const
     {
-      for(std::vector<Species*>::const_iterator i(theDiffusionSpecies.begin());
-          i != theDiffusionSpecies.end(); ++i)
-        {
-          (*i)->volumeWalkCollide();
-        }
-    }
-  void surfaceWalk() const
-    {
-      for(std::vector<Species*>::const_iterator i(theDiffusionSpecies.begin());
-          i != theDiffusionSpecies.end(); ++i)
-        {
-          (*i)->surfaceWalk();
-        }
-    }
-  void surfaceWalkCollide() const
-    {
-      for(std::vector<Species*>::const_iterator i(theDiffusionSpecies.begin());
-          i != theDiffusionSpecies.end(); ++i)
-        {
-          (*i)->surfaceWalkCollide();
-        }
+      theDiffusionSpecies->walkVacant();
     }
   virtual void initializeLastOnce()
     {
-      for(std::vector<Species*>::const_iterator i(theDiffusionSpecies.begin());
-          i != theDiffusionSpecies.end(); ++i)
-        {
-          (*i)->addInterruptedProcess(this);
-        }
+      theDiffusionSpecies->addInterruptedProcess(this);
     }
   virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule)
     {
       if(theStepInterval == libecs::INF)
         {
-          theStepInterval = theDiffusionSpecies[0]->getDiffusionInterval();
+          theStepInterval = theDiffusionSpecies->getDiffusionInterval();
           theTime = theSpatiocyteStepper->getCurrentTime() + theStepInterval; 
           thePriorityQueue->move(theQueueID);
         }
@@ -265,14 +196,9 @@ public:
     {
       if(theStepInterval != libecs::INF)
         {
-          for(std::vector<Species*>::const_iterator
-              i(theDiffusionSpecies.begin());
-              i != theDiffusionSpecies.end(); ++i)
+          if(theDiffusionSpecies->size())
             {
-              if((*i)->size())
-                {
-                  return;
-                }
+              return;
             }
           theStepInterval = libecs::INF;
           theTime = theStepInterval; 
@@ -280,13 +206,13 @@ public:
         }
     }
 protected:
-  bool isVolume;
   double D;
   double P;
   double WalkProbability;
+  Species* theDiffusionSpecies;
   Species* theVacantSpecies;
   WalkMethod theWalkMethod;
-  std::vector<Species*> theDiffusionSpecies;
 };
 
 #endif /* __DiffusionProcess_hpp */
+

@@ -63,19 +63,35 @@ void MoleculePopulateProcess::populateGaussian(Species* aSpecies)
 {
 }
 
-void MoleculePopulateProcess::populateUniformDiffuseVacant(Species* aSpecies)
+void MoleculePopulateProcess::populateUniformNormalPriority(Species* aSpecies)
 {
-  std::cout << "   Populating:" << getIDString(aSpecies) << std::endl;
+  std::cout << "    Populating:" << getIDString(aSpecies) << std::endl;
   if(!aSpecies->getIsPopulated())
     {
       if(UniformRadiusX == 1 && UniformRadiusY == 1 && UniformRadiusZ == 1 &&
          !OriginX && !OriginY && !OriginZ)
         {
           Species* aVacantSpecies(aSpecies->getVacantSpecies());
+          if(aVacantSpecies->getIsDiffuseVacant())
+            {
+              aVacantSpecies->updateDiffuseVacantMolecules();
+            }
           unsigned int aSize(aSpecies->getPopulateMoleculeSize());
+          if(aVacantSpecies->size() < aSize)
+            {
+              THROW_EXCEPTION(ValueError, String(
+                                   getPropertyInterface().getClassName()) +
+                                  "[" + getFullID().asString() + 
+                                  "]: There are not enough diffuse vacant " +
+                                  "species " + 
+                                  getIDString(aVacantSpecies) + " molecules " +
+                                  "to be occupied by " +  
+                                  getIDString(aSpecies)); 
+            }
           for(unsigned int i(0); i != aSize; ++i)
             {
               Voxel* aMolecule(aVacantSpecies->getRandomMolecule());
+              aVacantSpecies->softRemoveMolecule(aMolecule);
               aSpecies->addMolecule(aMolecule);
             }
         }
@@ -91,7 +107,7 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
                                               unsigned int aList[], 
                                               unsigned int* aCount)
 {
-  std::cout << "   Populating:" << getIDString(aSpecies) << std::endl;
+  std::cout << "    Populating:" << getIDString(aSpecies) << std::endl;
   Comp* aComp(aSpecies->getComp());
   if(!aSpecies->getIsPopulated())
     {

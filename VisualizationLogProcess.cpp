@@ -99,6 +99,10 @@ void VisualizationLogProcess::logMolecules(int anIndex)
     {
       return;
     }
+  else if(aSpecies->getIsDiffuseVacant())
+    {
+      aSpecies->updateDiffuseVacantMolecules();
+    }
   theLogFile.write((char*)(&anIndex), sizeof(anIndex));
   //The species molecule size:
   int aSize(aSpecies->size());
