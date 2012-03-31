@@ -160,11 +160,11 @@ public:
             " not MoleculePopulated." << std::endl;
         }
     }
-  void populateUniformNormalPriority()
+  void populateUniformOnDiffuseVacant()
     {
       if(thePopulateProcess)
         {
-          thePopulateProcess->populateUniformNormalPriority(this);
+          thePopulateProcess->populateUniformOnDiffuseVacant(this);
         }
       else if(theMoleculeSize)
         {
@@ -412,7 +412,8 @@ public:
                         gsl_rng_uniform_int(theRng, size)]);
           if(source == target)
             {
-              std::cout << "SpatiocyteSpecies source=target error" << std::endl;
+              std::cout << "SpatiocyteSpecies source == target error" <<
+                std::endl;
             }
           if(target->id == theVacantID)
             {
@@ -448,52 +449,49 @@ public:
     }
   void walkVacant()
     {
-      int size(theComp->coords.size());
-      for(int i(0); i != size; ++i)
-        { 
-          Voxel* source(theStepper->coord2voxel(theComp->coords[i]));
-          if(source->id == theID)
+      updateDiffuseVacantMolecules();
+      for(unsigned int i(0); i < theMoleculeSize; ++i)
+        {
+          Voxel* source(theMolecules[i]);
+          int size;
+          if(isVolume)
             {
-              int size;
-              if(isVolume)
+              size = theAdjoiningVoxelSize;
+            }
+          else
+            {
+              size = source->adjoiningSize;
+            }
+          Voxel* target(source->adjoiningVoxels[
+                        gsl_rng_uniform_int(theRng, size)]);
+          if(source == target)
+            {
+              std::cout << "SpatiocyteSpecies source == target error" <<
+                std::endl;
+            }
+          if(target->id == theVacantID)
+            {
+              if(theWalkProbability == 1 ||
+                 gsl_rng_uniform(theRng) < theWalkProbability)
                 {
-                  size = theAdjoiningVoxelSize;
+                  target->id = theID;
+                  source->id = theVacantID;
                 }
-              else
-                {
-                  size = source->adjoiningSize;
-                }
-              Voxel* target(source->adjoiningVoxels[
-                            gsl_rng_uniform_int(theRng, size)]);
-              if(source == target)
-                {
-                  std::cout << "SpatiocyteSpecies source=target error" <<
-                    std::endl;
-                }
-              if(target->id == theVacantID)
-                {
-                  if(theWalkProbability == 1 ||
-                     gsl_rng_uniform(theRng) < theWalkProbability)
+            }
+          else if(theDiffusionInfluencedReactions[target->id] != NULL)
+            {
+              //If it meets the reaction probability:
+              if(gsl_rng_uniform(theRng) <
+                 theReactionProbabilities[target->id])
+                { 
+                  Species* targetSpecies(theStepper->id2species(target->id));
+                  DiffusionInfluencedReactionProcessInterface* aReaction(
+                             theDiffusionInfluencedReactions[target->id]);
+                  if(aReaction->react(source, target))
                     {
-                      target->id = theID;
-                      source->id = theVacantID;
-                    }
-                }
-              else if(theDiffusionInfluencedReactions[target->id] != NULL)
-                {
-                  //If it meets the reaction probability:
-                  if(gsl_rng_uniform(theRng) <
-                     theReactionProbabilities[target->id])
-                    { 
-                      Species* targetSpecies(theStepper->id2species(target->id));
-                      DiffusionInfluencedReactionProcessInterface* aReaction(
-                                 theDiffusionInfluencedReactions[target->id]);
-                      if(aReaction->react(source, target))
-                        {
-                          //Soft remove the target molecule:
-                          targetSpecies->softRemoveMolecule(target);
-                          theFinalizeReactions[targetSpecies->getID()] = true;
-                        }
+                      //Soft remove the target molecule:
+                      targetSpecies->softRemoveMolecule(target);
+                      theFinalizeReactions[targetSpecies->getID()] = true;
                     }
                 }
             }

@@ -2749,6 +2749,18 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
           prioritySpecies = temp;
         }
     }
+  if(aComp->coords.size() < populationSize)
+    {
+      THROW_EXCEPTION(ValueError, String(
+                          getPropertyInterface().getClassName()) +
+                          "There are " + int2str(populationSize) + 
+                          " total molecules that must be uniformly " +
+                          "populated,\nbut there are only "
+                          + int2str(aComp->coords.size()) + 
+                          " vacant voxels of [" + 
+                          aComp->system->getFullID().asString() +
+                          "] that can be populated on.");
+    }
   if(double(populationSize)/aComp->coords.size() > 0.2)
     { 
       populateSpeciesDense(prioritySpecies, populationSize,
@@ -2761,7 +2773,7 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
   for(std::vector<Species*>::const_iterator i(diffuseSpecies.begin());
       i != diffuseSpecies.end(); ++i)
     {
-      (*i)->populateUniform();
+      (*i)->populateUniformOnDiffuseVacant();
     }
 }
 
