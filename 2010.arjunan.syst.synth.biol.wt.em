@@ -42,10 +42,14 @@ System System(/)
     {
       Value 0;         # molecule number 
     } 
-  Process DiffusionProcess(diffuseMinD)
+  Process DiffusionProcess(diffuseMinDatp)
     {
-      VariableReferenceList [_ Variable:/:MinDatp]
-                            [_ Variable:/:MinDadp];
+      VariableReferenceList [_ Variable:/:MinDatp];
+      D 16e-12;        # m^2/s
+    }
+  Process DiffusionProcess(diffuseMinDadp)
+    {
+      VariableReferenceList [_ Variable:/:MinDatp];
       D 16e-12;        # m^2/s
     }
   Process DiffusionProcess(diffuseMinE)

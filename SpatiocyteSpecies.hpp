@@ -464,11 +464,6 @@ public:
             }
           Voxel* target(source->adjoiningVoxels[
                         gsl_rng_uniform_int(theRng, size)]);
-          if(source == target)
-            {
-              std::cout << "SpatiocyteSpecies source == target error" <<
-                std::endl;
-            }
           if(target->id == theVacantID)
             {
               if(theWalkProbability == 1 ||
