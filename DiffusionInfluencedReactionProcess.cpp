@@ -93,14 +93,14 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
         {
           moleculeP = moleculeA;
           //Hard remove the B molecule, since nonHD_p is in a different Comp:
-          B->getVacantSpecies()->softAddMolecule(moleculeB);
+          moleculeB->id = B->getVacantID();
         }
       else if(B->getVacantID() == nonHD_p->getVacantID() ||
               B->getID() == nonHD_p->getVacantID())
         {
           moleculeP = moleculeB;
           //Hard remove the A molecule, since nonHD_p is in a different Comp:
-          A->getVacantSpecies()->softAddMolecule(moleculeA);
+          moleculeA->id = A->getVacantID();
         }
       else
         { 
@@ -116,9 +116,9 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
                 }
             }
           //Hard remove the A molecule, since nonHD_p is in a different Comp:
-          A->getVacantSpecies()->softAddMolecule(moleculeA);
+          moleculeA->id = A->getVacantID();
           //Hard remove the B molecule, since nonHD_p is in a different Comp:
-          B->getVacantSpecies()->softAddMolecule(moleculeB);
+          moleculeB->id = B->getVacantID();
         }
       HD_p->addValue(1);
       nonHD_p->addMolecule(moleculeP);
@@ -129,9 +129,9 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
     {
 
       //Hard remove the A molecule, since nonHD_p is in a different Comp:
-      A->getVacantSpecies()->softAddMolecule(moleculeA);
+      moleculeA->id = A->getVacantID();
       //Hard remove the B molecule, since nonHD_p is in a different Comp:
-      B->getVacantSpecies()->softAddMolecule(moleculeB);
+      moleculeB->id = B->getVacantID();
       variableC->addValue(1);
       return true;
     }
@@ -155,14 +155,14 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
                 {
                   return false;
                 }
-              B->getVacantSpecies()->softAddMolecule(moleculeB);
+              moleculeB->id = B->getVacantID();
             }
           D->addMolecule(moleculeD);
         }
       else
         {
           //Hard remove the B molecule since it is not used:
-          B->getVacantSpecies()->softAddMolecule(moleculeB);
+          moleculeB->id = B->getVacantID();
         }
     }
   else if(B->getVacantID() == C->getVacantID() ||
@@ -183,14 +183,14 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
                 {
                   return false;
                 }
-              A->getVacantSpecies()->softAddMolecule(moleculeA);
+              moleculeA->id = A->getVacantID();
             }
           D->addMolecule(moleculeD);
         }
       else
         {
           //Hard remove the A molecule since it is not used:
-          A->getVacantSpecies()->softAddMolecule(moleculeA);
+          moleculeA->id = A->getVacantID();
         }
     }
   else
@@ -216,9 +216,9 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
           D->addMolecule(moleculeD);
         }
       //Hard remove the A molecule since it is not used:
-      A->getVacantSpecies()->softAddMolecule(moleculeA);
+      moleculeA->id = A->getVacantID();
       //Hard remove the B molecule since it is not used:
-      B->getVacantSpecies()->softAddMolecule(moleculeB);
+      moleculeB->id = B->getVacantID();
     }
   C->addMolecule(moleculeC);
   return true;

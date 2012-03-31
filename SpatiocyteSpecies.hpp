@@ -542,28 +542,7 @@ public:
   void addMolecule(Voxel* aMolecule)
     {
       aMolecule->id = theID;
-      if(!getIsVacant())
-        {
-          ++theMoleculeSize;
-          if(theMoleculeSize > theMolecules.size())
-            {
-              theMolecules.push_back(aMolecule);
-            }
-          else
-            {
-              theMolecules[theMoleculeSize-1] = aMolecule;
-            }
-          theVariable->setValue(theMoleculeSize);
-        }
-    }
-  void softAddMolecule(Voxel* aMolecule)
-    {
-      aMolecule->id = theID;
-    }
-  void addDiffuseVacantMolecule(Voxel* aMolecule)
-    {
-      aMolecule->id = theID;
-      if(!getIsVacant())
+      if(!getIsVacant() && !getIsDiffuseVacant())
         {
           ++theMoleculeSize;
           if(theMoleculeSize > theMolecules.size())
@@ -580,7 +559,7 @@ public:
   //it is soft remove because the id of the molecule is not changed:
   void softRemoveMolecule(Voxel* aMolecule)
     {
-      if(!getIsVacant())
+      if(!getIsVacant() && !getIsDiffuseVacant())
         {
           for(unsigned int i(0); i < theMoleculeSize; ++i)
             {
@@ -594,13 +573,13 @@ public:
     }
   void removeMolecule(Voxel* aMolecule)
     {
-      if(!getIsVacant())
+      if(!getIsVacant() && !getIsDiffuseVacant())
         {
           for(unsigned int i(0); i < theMoleculeSize; ++i)
             {
               if(theMolecules[i] == aMolecule)
                 {
-                  theVacantSpecies->addDiffuseVacantMolecule(aMolecule);
+                  aMolecule->id = theVacantID;
                   theMolecules[i] = theMolecules[--theMoleculeSize];
                   theVariable->setValue(theMoleculeSize);
                 }
@@ -608,7 +587,7 @@ public:
         }
     }
   //Used by the SpatiocyteStepper when resetting an interation, so must
-  //clear the whole compartment:
+  //clear the whole compartment using theComp->vacantID:
   void removeMolecules()
     {
       for(unsigned int i(0); i < theMoleculeSize; ++i)
@@ -906,38 +885,6 @@ public:
         }
       return NULL;
     }
-  /*
-  Voxel* getRandomDiffuseVacantVoxel()
-    {
-      if(theVacantSpecies->getIsVacant())
-        {
-          return getRandomCompVoxel();
-        }
-      if(theStepper->getSearchVacant())
-        {
-          int aSize(theVacantSpecies->size());
-          if(aSize)
-            {
-              return theVacantSpecies->getRandomMolecule();
-            }
-          return NULL;
-        }
-      else
-        {
-          int anInitSize(theVacantSpecies->getInitMoleculeSize());
-          int aSize(theVacantSpecies->size());
-          if(anInitSize)
-            {
-              int r(gsl_rng_uniform_int(theRng, anInitSize));
-              if(r < aSize)
-                {
-                  return theVacantSpecies->getRandomMolecule();
-                }
-            }
-        }
-      return NULL;
-    }
-    */
   Voxel* getRandomCompVoxel()
     {
       int aSize(theComp->coords.size());

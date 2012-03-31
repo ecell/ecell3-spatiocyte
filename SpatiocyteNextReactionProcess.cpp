@@ -396,8 +396,8 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
           requeue();
           return false;
         }
-      a->removeMolecule(moleculeA);
     }
+  a->removeMolecule(moleculeA);
   c->addMolecule(moleculeC);
   d->addMolecule(moleculeD);
   return true;
