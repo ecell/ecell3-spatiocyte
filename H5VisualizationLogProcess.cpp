@@ -143,10 +143,10 @@ struct CompPacker
         arc << field<boost::array<double, 3> >("lengths", &Comp_lengths, data);
         arc << field<Comp, double, double>("voxelRadius", voxelRadius);
         arc << field<Comp, double, double>("normalizedVoxelRadius", normalizedVoxelRadius);
-        arc << field<Comp, double, double>("startCoord", startCoord);
-        arc << field<Comp, double, double>("layerSize", layerSize);
-        arc << field<Comp, double, double>("rowSize", rowSize);
-        arc << field<Comp, double, double>("colSize", colSize);
+        arc << field<Comp, unsigned int, unsigned int>("startCoord", startCoord);
+        arc << field<Comp, unsigned int, unsigned int>("layerSize", layerSize);
+        arc << field<Comp, unsigned int, unsigned int>("rowSize", rowSize);
+        arc << field<Comp, unsigned int, unsigned int>("colSize", colSize);
     }
 
     CompPacker(double voxelRadius, double normalizedVoxelRadius,
