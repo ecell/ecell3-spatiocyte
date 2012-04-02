@@ -370,22 +370,6 @@ void SpatiocyteStepper::checkLattice()
   std::cout << "total volume+surface:" << surfaceCnt+volumeCnt << std::endl;
 }
 
-void SpatiocyteStepper::checkSurfaceComp()
-{
-  for(unsigned int i(0); i!=theLattice.size(); ++i)
-    {
-      Voxel* aVoxel(&theLattice[i]);
-      for(unsigned int k(0); k != theAdjoiningVoxelSize; ++k)
-        {
-          if(aVoxel == aVoxel->adjoiningVoxels[k])
-            {
-              theSpecies[1]->addSimpleMolecule(aVoxel);
-              break;
-            }
-        }
-    }
-}
-
 void SpatiocyteStepper::initSpecies()
 {
   for(std::vector<Species*>::iterator i(theSpecies.begin());

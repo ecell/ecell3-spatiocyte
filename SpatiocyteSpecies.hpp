@@ -526,19 +526,6 @@ public:
         }
       theVariable->setValue(theMoleculeSize);
     }
-  void addSimpleMolecule(Voxel* aMolecule)
-    {
-      ++theMoleculeSize;
-      if(theMoleculeSize > theMolecules.size())
-        {
-          theMolecules.push_back(aMolecule);
-        }
-      else
-        {
-          theMolecules[theMoleculeSize-1] = aMolecule;
-        }
-      theVariable->setValue(theMoleculeSize);
-    }
   void addMolecule(Voxel* aMolecule)
     {
       aMolecule->id = theID;
@@ -567,6 +554,7 @@ public:
                 {
                   theMolecules[i] = theMolecules[--theMoleculeSize];
                   theVariable->setValue(theMoleculeSize);
+                  return;
                 }
             }
         }
@@ -582,6 +570,7 @@ public:
                   aMolecule->id = theVacantID;
                   theMolecules[i] = theMolecules[--theMoleculeSize];
                   theVariable->setValue(theMoleculeSize);
+                  return;
                 }
             }
         }
