@@ -49,7 +49,7 @@ System System(/)
     }
   Process DiffusionProcess(diffuseMinDadp)
     {
-      VariableReferenceList [_ Variable:/:MinDatp];
+      VariableReferenceList [_ Variable:/:MinDadp];
       D 16e-12;        # m^2/s
     }
   Process DiffusionProcess(diffuseMinE)
