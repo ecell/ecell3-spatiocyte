@@ -579,6 +579,10 @@ public:
   //clear the whole compartment using theComp->vacantID:
   void removeMolecules()
     {
+      if(getIsDiffuseVacant())
+        {
+          updateDiffuseVacantMolecules();
+        }
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
           theMolecules[i]->id = theComp->vacantID;
