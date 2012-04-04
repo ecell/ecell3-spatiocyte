@@ -186,7 +186,7 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
   maxY = aComp->centerPoint.y + maxY*aComp->lengthY/2*(1+delta);
   minY = aComp->centerPoint.y + minY*aComp->lengthY/2*(1+delta);
   maxZ = aComp->centerPoint.z + maxZ*aComp->lengthZ/2*(1+delta);
-  minZ = aComp->centerPoint.z + minZ*aComp->lengthY/2*(1+delta);
+  minZ = aComp->centerPoint.z + minZ*aComp->lengthZ/2*(1+delta);
   std::vector<unsigned int> aCoords;
   for(std::vector<unsigned int>::iterator i(aComp->coords.begin());
       i != aComp->coords.end(); ++i)
