@@ -473,6 +473,7 @@ public:
                   source->id = theVacantID;
                 }
             }
+          /*
           else if(theDiffusionInfluencedReactions[target->id] != NULL)
             {
               //If it meets the reaction probability:
@@ -490,6 +491,7 @@ public:
                     }
                 }
             }
+            */
         }
     }
   void setComp(Comp* aComp)
