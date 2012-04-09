@@ -73,7 +73,7 @@ public:
       thePriority = -1;
     }
 
-  virtual void initializeFourth()
+  virtual void initializeFifth()
     {
       if(LogInterval > 0)
         {

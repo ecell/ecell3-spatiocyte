@@ -59,7 +59,7 @@ public:
     {
       DiffusionInfluencedReactionProcess::initialize();
     }
-  virtual void initializeThird();
+  virtual void initializeFourth();
   virtual bool react(Voxel*, Voxel**);
   virtual bool isInterrupting(Process*);
   virtual void finalizeReaction();

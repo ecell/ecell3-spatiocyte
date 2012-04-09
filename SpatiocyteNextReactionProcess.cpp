@@ -483,9 +483,9 @@ Voxel* SpatiocyteNextReactionProcess::reactvAvBC(Species* c)
   return moleculeC;
 }
 
-void SpatiocyteNextReactionProcess::initializeThird()
+void SpatiocyteNextReactionProcess::initializeFourth()
 {
-  ReactionProcess::initializeThird();
+  ReactionProcess::initializeFourth();
   if(p != -1)
     {
       return;

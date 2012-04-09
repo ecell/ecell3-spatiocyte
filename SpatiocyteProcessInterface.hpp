@@ -41,6 +41,7 @@ public:
   virtual void initializeSecond() = 0;
   virtual void initializeThird() = 0;
   virtual void initializeFourth() = 0;
+  virtual void initializeFifth() = 0;
   virtual void initializeLastOnce() = 0;
   virtual void printParameters() = 0;
   virtual void substrateValueChanged(Time) = 0;

@@ -51,7 +51,7 @@ public:
   virtual ~MicroscopyTrackingProcess() {}
   SIMPLE_SET_GET_METHOD(Integer, MeanCount);
   SIMPLE_SET_GET_METHOD(Real, ExposureTime);
-  virtual void initializeFourth()
+  virtual void initializeFifth()
     {
       theLatticeSize = theSpatiocyteStepper->getLatticeSize();
       theStartCoord = theSpatiocyteStepper->getStartCoord();

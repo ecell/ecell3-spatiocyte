@@ -207,7 +207,7 @@ public:
     SIMPLE_SET_GET_METHOD(Real, LogInterval);
     SIMPLE_SET_GET_METHOD(String, FileName);
 
-    virtual void initializeFourth()
+    virtual void initializeFifth()
     {
         if(LogInterval > 0)
         {

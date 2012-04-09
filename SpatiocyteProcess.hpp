@@ -57,6 +57,7 @@ public:
     }
   virtual void initializeThird() {}
   virtual void initializeFourth() {}
+  virtual void initializeFifth() {}
   virtual void initializeLastOnce() {}
   virtual void printParameters() {}
   virtual void substrateValueChanged(Time) {}

@@ -147,7 +147,7 @@ public:
     }
   virtual GET_METHOD(Real, StepInterval);
   virtual void fire();
-  virtual void initializeThird();
+  virtual void initializeFourth();
   virtual void printParameters();
 protected:
   virtual void calculateOrder();

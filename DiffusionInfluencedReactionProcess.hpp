@@ -62,7 +62,6 @@ public:
                           "diffusion influenced reactions.");
         }
     }
-  virtual void initializeSecond();
   virtual void initializeThird();
   virtual bool react(Voxel*, Voxel*);
   virtual void printParameters();

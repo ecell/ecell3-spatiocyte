@@ -98,9 +98,9 @@ public:
       SpatiocyteProcess::initializeSecond();
       theInterruptingProcesses.resize(0);
     }
-  virtual void initializeThird()
+  virtual void initializeFourth()
     {
-      SpatiocyteProcess::initializeThird();
+      SpatiocyteProcess::initializeFourth();
     }
   //This method is called whenever the substrate (-1 and 0 coefficients)
   //value of the process listed in isInterrupting method has changed:

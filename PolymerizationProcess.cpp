@@ -259,7 +259,7 @@ void PolymerizationProcess::pinStep(double* currX, double *fixedDcm,
   ypr2dcm(ypr, resDcm);
 }
 
-void PolymerizationProcess::initializeThird()
+void PolymerizationProcess::initializeFourth()
 {
   theMinX = C->getWestPoint().x;
   theMaxX = C->getEastPoint().x;

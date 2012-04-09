@@ -78,7 +78,7 @@ public:
   virtual void populateUniformRanged(Species* aSpecies);
   virtual void populateUniformOnDiffuseVacant(Species* aSpecies);
   virtual void fire();
-  virtual void initializeFourth()
+  virtual void initializeFifth()
     {
       theStepInterval = ResetTime;
       theTime = theStepInterval; 

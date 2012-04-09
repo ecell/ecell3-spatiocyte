@@ -124,7 +124,7 @@ public:
           theDiffusionSpecies->setVacantSpecies(theVacantSpecies);
         }
     }
-  virtual void initializeThird()
+  virtual void initializeFourth()
     {
       double rho(theDiffusionSpecies->getMaxReactionProbability());
       if(rho > P)

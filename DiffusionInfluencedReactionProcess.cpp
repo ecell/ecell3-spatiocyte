@@ -34,7 +34,7 @@
 LIBECS_DM_INIT(DiffusionInfluencedReactionProcess, Process);
 
 
-void DiffusionInfluencedReactionProcess::initializeSecond()
+void DiffusionInfluencedReactionProcess::initializeThird()
 {
   ReactionProcess::initializeSecond();
   A->setDiffusionInfluencedReactantPair(B); 
@@ -51,10 +51,6 @@ void DiffusionInfluencedReactionProcess::initializeSecond()
     {
       B->setDiffusionInfluencedReaction(this, A->getID(), p); 
     }
-}
-
-void DiffusionInfluencedReactionProcess::initializeThird()
-{
 }
 
 //Do the reaction A + B -> C + D. So that A <- C and B <- D.
@@ -242,6 +238,14 @@ void DiffusionInfluencedReactionProcess::finalizeReaction()
 
 void DiffusionInfluencedReactionProcess::calculateReactionProbability()
 {
+  /*
+  std::cout << "theSizes:" << getIDString(A->getComp()) << std::endl;
+  for(unsigned int i(0);
+      i != theSpatiocyteStepper->getAdjoiningVoxelSize(); ++i)
+    {
+      std::cout << A->getComp()->adjoinCount[i] << std::endl;
+    }
+    */
   //Refer to the paper for the description of the variables used in this
   //method.
   if(A->getIsVolume() && B->getIsVolume())

@@ -164,6 +164,7 @@ struct Comp
   std::vector<Comp*> lineSubs;
   std::vector<Species*> species;
   std::vector<unsigned int> coords; //coords[x] = aVoxel->coord - theStartCoord
+  std::vector<unsigned int> adjoinCount;
 };
 
 struct Origin

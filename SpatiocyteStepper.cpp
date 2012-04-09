@@ -79,17 +79,18 @@ void SpatiocyteStepper::initialize()
   compartmentalizeLattice();
   std::cout << "8. setting up compartment voxels properties..." << std::endl;
   setCompVoxelProperties();
+  initProcessThird();
   std::cout << "9. printing simulation parameters..." << std::endl;
   storeSimulationParameters();
   printSimulationParameters();
   std::cout << "10. populating compartments with molecules..." << std::endl;
   populateComps();
   std::cout << "11. initializing processes the third time..." << std::endl;
-  initProcessThird();
+  initProcessFourth();
   std::cout << "12. initializing the priority queue..." << std::endl;
   initPriorityQueue();
   std::cout << "13. initializing processes the fourth time..." << std::endl;
-  initProcessFourth();
+  initProcessFifth();
   std::cout << "14. initializing processes the last time..." << std::endl;
   initProcessLastOnce();
   std::cout << "15. printing final process parameters..." << std::endl <<
@@ -422,6 +423,17 @@ void SpatiocyteStepper::initProcessFourth()
         aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
       aProcess->initializeFourth();
     }
+}
+
+void SpatiocyteStepper::initProcessFifth()
+{
+  for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
+      i != theProcessVector.end(); ++i)
+    {      
+      SpatiocyteProcessInterface*
+        aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
+      aProcess->initializeFifth();
+    }
   setStepInterval(thePriorityQueue.getTop()->getTime()-getCurrentTime());
 }
 
@@ -747,6 +759,11 @@ void SpatiocyteStepper::registerCompSpecies(Comp* aComp)
             }
         }
     }
+}
+
+unsigned int SpatiocyteStepper::getAdjoiningVoxelSize()
+{
+  return theAdjoiningVoxelSize;
 }
 
 void SpatiocyteStepper::setLatticeProperties()
@@ -1866,7 +1883,7 @@ void SpatiocyteStepper::setCompVoxelProperties()
           break;
         case 3:
         default:
-            setVolumeCompProperties(*i);
+          setVolumeCompProperties(*i);
         }
     }
 }
@@ -1982,6 +1999,7 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(Voxel* aVoxel,
                                              Comp* aComp)
 {
   unsigned short surfaceID(aComp->vacantID);
+  aComp->adjoinCount.resize(theAdjoiningVoxelSize);
   aVoxel->surfaceVoxels = new std::vector<std::vector<Voxel*> >;
   aVoxel->surfaceVoxels->resize(4);
   std::vector<Voxel*>& immediateSurface((*aVoxel->surfaceVoxels)[IMMEDIATE]);
@@ -2005,6 +2023,7 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(Voxel* aVoxel,
       if((*l) != aVoxel && (*l)->id != theNullID 
          && id2Comp((*l)->id)->dimension <= aComp->dimension)
         {
+          ++aComp->adjoinCount[l-adjoiningCopy.begin()];
           (*forward) = (*l);
           ++forward;
           //immediateSurface contains all adjoining surface voxels except the 

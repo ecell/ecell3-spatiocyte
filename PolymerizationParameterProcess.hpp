@@ -71,7 +71,7 @@ public:
           theBendAngles.push_back(aValueVector[i].as<double>());
         }
     }
-  virtual void initializeThird()
+  virtual void initializeFourth()
     {
       for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)

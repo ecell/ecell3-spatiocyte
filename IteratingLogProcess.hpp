@@ -95,7 +95,7 @@ public:
       theLogCnt = 0;
       thePriority = -10;
     }
-  virtual void initializeFourth()
+  virtual void initializeFifth()
     {
       for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)

@@ -58,7 +58,7 @@ public:
         }
       SpatiocyteProcess::initialize();
     }
-  virtual void initializeThird()
+  virtual void initializeFifth()
     {
       theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
       theStepInterval = 1;  

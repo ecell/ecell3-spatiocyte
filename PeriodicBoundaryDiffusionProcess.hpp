@@ -52,9 +52,9 @@ public:
       DiffusionProcess::initialize();
       theSpatiocyteStepper->setPeriodicEdge();
     }
-  void initializeThird()
+  void initializeFourth()
     {
-      DiffusionProcess::initializeThird();
+      DiffusionProcess::initializeFourth();
       for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
         {

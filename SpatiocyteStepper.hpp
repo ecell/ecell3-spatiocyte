@@ -83,6 +83,7 @@ public:
   unsigned int getLayerSize();
   unsigned int getColSize();
   unsigned int getLatticeSize();
+  unsigned int getAdjoiningVoxelSize();
   Point getCenterPoint();
   double getNormalizedVoxelRadius();
   Voxel* point2voxel(Point);
@@ -101,6 +102,7 @@ private:
   void initProcessSecond();
   void initProcessThird();
   void initProcessFourth();
+  void initProcessFifth();
   void initProcessLastOnce();
   void storeSimulationParameters();
   void printSimulationParameters();
