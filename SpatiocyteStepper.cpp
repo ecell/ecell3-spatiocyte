@@ -968,7 +968,6 @@ void SpatiocyteStepper::readjustSurfaceBoundarySizes()
   //according to the additional voxels required to occupy the surface voxels.
   if(aRootComp->surfaceSub)
     {
-      std::cout << "---------------------" << std::endl;
       if(aRootComp->xyPlane == REFLECTIVE)
         {
           theRowSize += 2;
@@ -999,7 +998,6 @@ void SpatiocyteStepper::readjustSurfaceBoundarySizes()
     }
   else
     {
-      std::cout << "in---------------------" << std::endl;
       //Boundary type can also be either PERIODIC or REFLECTIVE when there is
       //no surface compartment for the root compartment.
       //Increase the size of [row,layer,col] by one voxel and make them odd
