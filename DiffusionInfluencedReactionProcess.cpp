@@ -238,14 +238,6 @@ void DiffusionInfluencedReactionProcess::finalizeReaction()
 
 void DiffusionInfluencedReactionProcess::calculateReactionProbability()
 {
-  /*
-  std::cout << "theSizes:" << getIDString(A->getComp()) << std::endl;
-  for(unsigned int i(0);
-      i != theSpatiocyteStepper->getAdjoiningVoxelSize(); ++i)
-    {
-      std::cout << A->getComp()->adjoinCount[i] << std::endl;
-    }
-    */
   //Refer to the paper for the description of the variables used in this
   //method.
   if(A->getIsVolume() && B->getIsVolume())

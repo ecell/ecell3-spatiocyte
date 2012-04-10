@@ -825,10 +825,10 @@ void SpatiocyteStepper::setLatticeProperties()
                                       (theNormalizedVoxelRadius));
       break;
     }
-  //For the CUBOID cell geometrys, we need to readjust the size of
+  //For the CUBOID cell geometry, we need to readjust the size of
   //row, layer and column according to the boundary condition of its surfaces
   //to reflect the correct volume. This is because periodic boundary will
-  //[consume a layer of the surface voxels:
+  //consume a layer of the surface voxels:
   if(aRootComp->geometry == CUBOID)
     {
       //We need to increase the row, layer and col size by 2 because
@@ -968,6 +968,7 @@ void SpatiocyteStepper::readjustSurfaceBoundarySizes()
   //according to the additional voxels required to occupy the surface voxels.
   if(aRootComp->surfaceSub)
     {
+      std::cout << "---------------------" << std::endl;
       if(aRootComp->xyPlane == REFLECTIVE)
         {
           theRowSize += 2;
@@ -998,10 +999,11 @@ void SpatiocyteStepper::readjustSurfaceBoundarySizes()
     }
   else
     {
-  //Boundary type can also be either PERIODIC or REFLECTIVE when there is
-  //no surface compartment for the root compartment.
-  //Increase the size of [row,layer,col] by one voxel and make them odd sized
-  //if the system uses periodic boundary conditions.
+      std::cout << "in---------------------" << std::endl;
+      //Boundary type can also be either PERIODIC or REFLECTIVE when there is
+      //no surface compartment for the root compartment.
+      //Increase the size of [row,layer,col] by one voxel and make them odd
+      //sized if the system uses periodic boundary conditions.
       if(aRootComp->yzPlane == PERIODIC)
         { 
           if(theColSize%2 != 1)
@@ -1035,20 +1037,20 @@ void SpatiocyteStepper::readjustSurfaceBoundarySizes()
               theRowSize += 2;
             }
         }
-      if(isPeriodicEdge)
+    }
+  if(isPeriodicEdge)
+    {
+      if(theColSize%2 == 1)
         {
-          if(theColSize%2 == 1)
-            {
-              theColSize += 1;
-            }
-          if(theLayerSize%2 == 1)
-            {
-              theLayerSize +=1;
-            }
-          if(theRowSize%2 == 1)
-            {
-              theRowSize += 1;
-            }
+          theColSize += 1;
+        }
+      if(theLayerSize%2 == 1)
+        {
+          theLayerSize +=1;
+        }
+      if(theRowSize%2 == 1)
+        {
+          theRowSize += 1;
         }
     }
 }
