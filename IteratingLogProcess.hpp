@@ -186,7 +186,7 @@ public:
               aFile.open(aFileName.c_str(), std::ios::trunc);
               double aTime(LogInterval);
               int completedIterations(theTotalIterations-Iterations);
-              unsigned int aSize(theLogValues[0].size());
+              unsigned int aSize(theLogValues[0].size()-1);
               if(RebindTime)
                 {
                   aSize = completedIterations; 
@@ -194,20 +194,38 @@ public:
               for(unsigned int i(0); i != aSize; ++i)
                 {
                   aFile << std::setprecision(15) << aTime;
+                  if(i == aSize-1)
+                    {
+                      std::cout << std::setprecision(15) << aTime;
+                    }
                   for(unsigned int j(0); j != theProcessSpecies.size(); ++j)
                     {
                       if(RebindTime)
                         {
                           aFile << "," << std::setprecision(15) <<
                             theLogValues[j][i];
+                          if(i == aSize-1)
+                            {
+                              std::cout << "," << std::setprecision(15) <<
+                                theLogValues[j][i];
+                            }
                         }
                       else
                         {
                           aFile << "," << std::setprecision(15) <<
                             theLogValues[j][i]/completedIterations;
+                          if(i == aSize-1)
+                            {
+                              std::cout  << "," << std::setprecision(15) <<
+                            theLogValues[j][i]/completedIterations;
+                            }
                         }
                     }
                   aFile << std::endl;
+                  if(i == aSize-1)
+                    {
+                      std::cout << std::endl;
+                    }
                   aTime += theStepInterval;
                 }
               aFile.close();
