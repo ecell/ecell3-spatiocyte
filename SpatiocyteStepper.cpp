@@ -142,8 +142,9 @@ void SpatiocyteStepper::reset(int seed)
   clearComps();
   populateComps();
   initProcessThird();
-  initPriorityQueue();
   initProcessFourth();
+  initPriorityQueue();
+  initProcessFifth();
   //checkLattice();
 }
 
