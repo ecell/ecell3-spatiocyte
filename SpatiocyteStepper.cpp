@@ -685,6 +685,9 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
           aSubComp->xyPlane = aComp->xyPlane;
           aSubComp->xzPlane = aComp->xzPlane;
           aSubComp->yzPlane = aComp->yzPlane;
+          aSubComp->rotateX = aComp->rotateX;
+          aSubComp->rotateY = aComp->rotateY;
+          aSubComp->rotateZ = aComp->rotateZ;
 
           for(unsigned int i(0); i != aSubComp->lineSubs.size(); ++i)
           {
@@ -700,6 +703,9 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
               lineComp->xyPlane = aComp->xyPlane;
               lineComp->xzPlane = aComp->xzPlane;
               lineComp->yzPlane = aComp->yzPlane;
+              lineComp->rotateX = aComp->rotateX;
+              lineComp->rotateY = aComp->rotateY;
+              lineComp->rotateZ = aComp->rotateZ;
           }
 
           aComp->surfaceSub = aSubComp;
@@ -2621,15 +2627,15 @@ bool SpatiocyteStepper::isInsideCoord(unsigned int aCoord,
   Point aCenterPoint(aComp->centerPoint);
   Point aWestPoint(aComp->centerPoint);
   Point anEastPoint(aComp->centerPoint); 
-  aPoint.x = aPoint.x - aCenterPoint.x;
-  aPoint.y = aPoint.y - aCenterPoint.y;
-  aPoint.z = aPoint.z - aCenterPoint.z;
+  aPoint.x -= aCenterPoint.x;
+  aPoint.y -= aCenterPoint.y;
+  aPoint.z -= aCenterPoint.z;
   rotateX(aComp->rotateX, &aPoint);
   rotateY(aComp->rotateY, &aPoint);
   rotateZ(aComp->rotateZ, &aPoint);
-  aPoint.x = aPoint.x + aCenterPoint.x;
-  aPoint.y = aPoint.y + aCenterPoint.y;
-  aPoint.z = aPoint.z + aCenterPoint.z;
+  aPoint.x += aCenterPoint.x;
+  aPoint.y += aCenterPoint.y;
+  aPoint.z += aCenterPoint.z;
   double aRadius(0);
   switch(aComp->geometry)
     {

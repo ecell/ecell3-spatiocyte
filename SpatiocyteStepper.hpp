@@ -71,6 +71,7 @@ public:
   Species* id2species(unsigned short);
   Comp* id2Comp(unsigned short);
   Voxel* coord2voxel(unsigned int);
+  void coord2global(unsigned int, unsigned int*, unsigned int*, unsigned int*);
   Comp* system2Comp(System*);
   bool isBoundaryCoord(unsigned int, bool);
   Voxel* getPeriodicVoxel(unsigned int, bool, Origin*);
@@ -89,6 +90,9 @@ public:
   Voxel* point2voxel(Point);
   std::vector<Comp*> const& getComps() const;
   Species* variable2species(Variable*);
+  void rotateX(double, Point*);
+  void rotateY(double, Point*);
+  void rotateZ(double, Point*);
 private:
   void setCompsCenterPoint();
   void setIntersectingCompartmentList();
@@ -132,14 +136,10 @@ private:
   void setSurfaceVoxelProperties(Comp*);
   void setSurfaceCompProperties(Comp*);
   void setVolumeCompProperties(Comp*);
-  void rotateX(double, Point*);
-  void rotateY(double, Point*);
-  void rotateZ(double, Point*);
   void concatenateVoxel(Voxel*, unsigned int, unsigned int, unsigned int);
   void concatenateLayers(Voxel*, unsigned int, unsigned int, unsigned int);
   void concatenateRows(Voxel*, unsigned int, unsigned int, unsigned int);
   void concatenateCols(Voxel*, unsigned int, unsigned int, unsigned int);
-  void coord2global(unsigned int, unsigned int*, unsigned int*, unsigned int*);
   void replaceVoxel(Voxel*, Voxel*);
   void replaceUniVoxel(Voxel*, Voxel*);
   void setMinMaxSurfaceDimensions(unsigned int, Comp*);

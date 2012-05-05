@@ -29,31 +29,38 @@
 //
 
 
-#ifndef __MicrotubuleProcess_hpp
-#define __MicrotubuleProcess_hpp
+#ifndef __OneDCompartmentProcess_hpp
+#define __OneDCompartmentProcess_hpp
 
 #include <sstream>
 #include <MethodProxy.hpp>
 #include "SpatiocyteProcess.hpp"
 #include "SpatiocyteSpecies.hpp"
 
-LIBECS_DM_CLASS(MicrotubuleProcess, SpatiocyteProcess)
+LIBECS_DM_CLASS(OneDCompartmentProcess, SpatiocyteProcess)
 { 
-  typedef void (MicrotubuleProcess::*WalkMethod)(void) const;
 public:
-  LIBECS_DM_OBJECT(MicrotubuleProcess, Process)
+  LIBECS_DM_OBJECT(OneDCompartmentProcess, Process)
     {
       INHERIT_PROPERTIES(Process);
       PROPERTYSLOT_SET_GET(Integer, Quantity);
     }
-  MicrotubuleProcess():
+  OneDCompartmentProcess():
     Quantity(1) {}
-  virtual ~MicrotubuleProcess() {}
+  virtual ~OneDCompartmentProcess() {}
+  SIMPLE_SET_GET_METHOD(Integer, Quantity);
   virtual void initializeThird();
+  virtual void initializeFourth();
+  Voxel* getBeginVoxel();
+  Voxel* getNeighbor(Voxel*, Point&);
 protected:
   Comp* theComp;
   int Quantity;
+  Point D; //direction vector from west to east
+  Point W; //west point
+  Point E; //east point
+  std::vector<std::vector<Voxel*> > VacantVoxels;
 };
 
-#endif /* __MicrotubuleProcess_hpp */
+#endif /* __OneDCompartmentProcess_hpp */
 

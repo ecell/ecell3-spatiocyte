@@ -7,6 +7,7 @@ SpatiocyteProcess\
 MassActionProcess\
 ReactionProcess\
 VisualizationLogProcess\
+OneDCompartmentProcess\
 H5VisualizationLogProcess\
 IteratingLogProcess\
 DiffusionInfluencedReactionProcess\
@@ -54,6 +55,9 @@ CoordinateLogProcess.so: 	CoordinateLogProcess.cpp
 
 DiffusionInfluencedReactionProcess.so: 	DiffusionInfluencedReactionProcess.cpp
 	$(ECELL3_DMC) -o DiffusionInfluencedReactionProcess.so --ldflags=ReactionProcess.so DiffusionInfluencedReactionProcess.cpp
+
+OneDCompartmentProcess.so: 	OneDCompartmentProcess.cpp
+	$(ECELL3_DMC) -o OneDCompartmentProcess.so --ldflags="SpatiocyteProcess.so" OneDCompartmentProcess.cpp
 
 OscillationAnalysisProcess.so: 	OscillationAnalysisProcess.cpp
 	$(ECELL3_DMC) -o OscillationAnalysisProcess.so --ldflags="SpatiocyteProcess.so" OscillationAnalysisProcess.cpp
