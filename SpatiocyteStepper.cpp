@@ -2587,10 +2587,11 @@ void SpatiocyteStepper::setMinMaxSurfaceDimensions(unsigned int aCoord,
 
 
 
-void SpatiocyteStepper::rotateX(double angle, Point* aPoint)
+void SpatiocyteStepper::rotateX(double angle, Point* aPoint, int sign)
 { 
   if(angle)
     {
+      angle *= sign;
       double y(aPoint->y);
       double z(aPoint->z);
       aPoint->y = y*cos(angle)-z*sin(angle);
@@ -2598,10 +2599,11 @@ void SpatiocyteStepper::rotateX(double angle, Point* aPoint)
     }
 }
 
-void SpatiocyteStepper::rotateY(double angle, Point* aPoint)
+void SpatiocyteStepper::rotateY(double angle, Point* aPoint, int sign)
 { 
   if(angle)
     {
+      angle *= sign;
       double x(aPoint->x);
       double z(aPoint->z);
       aPoint->x = x*cos(angle)+z*sin(angle);
@@ -2609,10 +2611,11 @@ void SpatiocyteStepper::rotateY(double angle, Point* aPoint)
     }
 }
 
-void SpatiocyteStepper::rotateZ(double angle, Point* aPoint)
+void SpatiocyteStepper::rotateZ(double angle, Point* aPoint, int sign)
 { 
   if(angle)
     {
+      angle *= sign;
       double x(aPoint->x);
       double y(aPoint->y);
       aPoint->x = x*cos(angle)-y*sin(angle);

@@ -90,9 +90,9 @@ public:
   Voxel* point2voxel(Point);
   std::vector<Comp*> const& getComps() const;
   Species* variable2species(Variable*);
-  void rotateX(double, Point*);
-  void rotateY(double, Point*);
-  void rotateZ(double, Point*);
+  void rotateX(double, Point*, int sign=1);
+  void rotateY(double, Point*, int sign=1);
+  void rotateZ(double, Point*, int sign=1);
 private:
   void setCompsCenterPoint();
   void setIntersectingCompartmentList();

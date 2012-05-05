@@ -41,19 +41,23 @@ void OneDCompartmentProcess::initializeThird()
 
 void OneDCompartmentProcess::initializeFourth()
 {
-  for(int i(0); i != 9; ++i)
+  for(int i(0); i != 6; ++i)
     {
+      Voxel* aParent(NULL);
       Voxel* aVoxel(getBeginVoxel());
       theProcessSpecies[i]->addMolecule(aVoxel);
       Point S(theSpatiocyteStepper->coord2point(aVoxel->coord));
       std::cout << "S.x:" << S.x << " y:" << S.y << " z:" << S.z << std::endl;
       Voxel* aNeighbor(NULL);
+      int count(8);
       do {
-        aNeighbor = getNeighbor(aVoxel, S); 
+        --count;
+        aNeighbor = getNeighbor(aVoxel, S, aParent); 
         if(aNeighbor)
           {
             std::cout << "S.x:" << S.x << " y:" << S.y << " z:" << S.z << std::endl;
             theProcessSpecies[i]->addMolecule(aNeighbor);
+            aParent = aVoxel;
             aVoxel = aNeighbor;
           }
       } while(aNeighbor);
@@ -61,16 +65,16 @@ void OneDCompartmentProcess::initializeFourth()
   theProcessSpecies[0]->setIsPopulated();
 }
 
-Voxel* OneDCompartmentProcess::getNeighbor(Voxel* aVoxel, Point& S)
+Voxel* OneDCompartmentProcess::getNeighbor(Voxel* aVoxel, Point& S, Voxel* aParent)
 {
   double shortestDist(1e+10);
   Voxel* aNeighbor(NULL);
   Point currS(S);
   for(int j(0); j != aVoxel->adjoiningSize; ++j)
     {
-      Point N(theSpatiocyteStepper->coord2point(
-                                aVoxel->adjoiningVoxels[j]->coord));
-      if(aVoxel->adjoiningVoxels[j]->id == theComp->vacantID)
+      Voxel* anAdjoin(aVoxel->adjoiningVoxels[j]);
+      Point N(theSpatiocyteStepper->coord2point(anAdjoin->coord));
+      if(anAdjoin->id == theComp->vacantID && notNeighbor(aParent, anAdjoin))
         {
           //std::cout << "N.x:" << N.x << " y:" << N.y << " z:" << N.z << std::endl;
           double t((-E.x*N.x-E.y*N.y-E.z*N.z+E.x*S.x+E.y*S.y+E.z*S.z+N.x*W.x-S.x*W.x+N.y*W.y-S.y*W.y+N.z*W.z-S.z*W.z)/(E.x*E.x+E.y*E.y+E.z*E.z-2*E.x*W.x+W.x*W.x-2*E.y*W.y+W.y*W.y-2*E.z*W.z+W.z*W.z));
@@ -78,10 +82,10 @@ Voxel* OneDCompartmentProcess::getNeighbor(Voxel* aVoxel, Point& S)
           if(t<0)
             {
               double dist(sqrt(pow(-N.x+S.x+t*(-E.x+W.x),2)+pow(-N.y+S.y+t*(-E.y+W.y),2)+pow(-N.z+S.z+t*(-E.z+W.z),2)));
-              if(dist < shortestDist && dist < 0.75)
+              if(dist < shortestDist)
                 {
                   std::cout << "dist:" << dist << std::endl;
-                  aNeighbor = aVoxel->adjoiningVoxels[j];
+                  aNeighbor = anAdjoin;
                   shortestDist = dist;
                   currS.x = S.x+t*(-E.x+W.x);
                   currS.y = S.y+t*(-E.y+W.y);
@@ -92,6 +96,22 @@ Voxel* OneDCompartmentProcess::getNeighbor(Voxel* aVoxel, Point& S)
     } 
   S = currS;
   return aNeighbor;
+}
+
+bool OneDCompartmentProcess::notNeighbor(Voxel* aSource, Voxel* aTarget)
+{
+  if(!aSource)
+    {
+      return true;
+    }
+  for(int i(0); i != aSource->adjoiningSize; ++i)
+    {
+      if(aSource->adjoiningVoxels[i] == aTarget)
+        {
+          return false;
+        }
+    }
+  return true;
 }
 
 Voxel* OneDCompartmentProcess::getBeginVoxel()
@@ -107,12 +127,12 @@ Voxel* OneDCompartmentProcess::getBeginVoxel()
   W.y = 0;
   W.z = 0;
   //std::cout << "W.x:" << W.x << " y:" << W.y << " z:" << W.z << std::endl;
-  theSpatiocyteStepper->rotateX(theComp->rotateX, &E);
-  theSpatiocyteStepper->rotateY(theComp->rotateY, &E);
-  theSpatiocyteStepper->rotateZ(theComp->rotateZ, &E);
-  theSpatiocyteStepper->rotateX(theComp->rotateX, &W);
-  theSpatiocyteStepper->rotateY(theComp->rotateY, &W);
-  theSpatiocyteStepper->rotateZ(theComp->rotateZ, &W);
+  theSpatiocyteStepper->rotateX(theComp->rotateX, &E, -1);
+  theSpatiocyteStepper->rotateY(theComp->rotateY, &E, -1);
+  theSpatiocyteStepper->rotateZ(theComp->rotateZ, &E, -1);
+  theSpatiocyteStepper->rotateX(theComp->rotateX, &W, -1);
+  theSpatiocyteStepper->rotateY(theComp->rotateY, &W, -1);
+  theSpatiocyteStepper->rotateZ(theComp->rotateZ, &W, -1);
   //std::cout << "E.x:" << E.x << " y:" << E.y << " z:" << E.z << std::endl;
   //std::cout << "W.x:" << W.x << " y:" << W.y << " z:" << W.z << std::endl;
   //std::cout << "C.x:" << C.x << " y:" << C.y << " z:" << C.z << std::endl;

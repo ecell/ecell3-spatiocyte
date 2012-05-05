@@ -52,7 +52,8 @@ public:
   virtual void initializeThird();
   virtual void initializeFourth();
   Voxel* getBeginVoxel();
-  Voxel* getNeighbor(Voxel*, Point&);
+  Voxel* getNeighbor(Voxel*, Point&, Voxel*);
+  bool notNeighbor(Voxel*, Voxel*);
 protected:
   Comp* theComp;
   int Quantity;
