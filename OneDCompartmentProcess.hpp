@@ -55,6 +55,8 @@ public:
   Voxel* getNeighbor(Voxel*, Point&, Voxel*);
   bool notNeighbor(Voxel*, Voxel*);
   bool notShared(Voxel*, Point, Voxel*);
+  bool isInsidePlane(Voxel*, Point&);
+  bool isLine(Voxel*, Point&);
 protected:
   Comp* theComp;
   int Quantity;
