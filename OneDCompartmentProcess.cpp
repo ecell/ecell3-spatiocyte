@@ -41,7 +41,7 @@ void OneDCompartmentProcess::initializeThird()
 
 void OneDCompartmentProcess::initializeFourth()
 {
-  for(int i(0); i != 6; ++i)
+  for(int i(0); i != 1; ++i)
     {
       Voxel* aParent(NULL);
       Voxel* aVoxel(getBeginVoxel());
@@ -78,7 +78,7 @@ Voxel* OneDCompartmentProcess::getNeighbor(Voxel* aVoxel, Point& S, Voxel* aPare
           if(t < 0)
             {
               double dist(sqrt(pow(-N.x+S.x+t*(-E.x+W.x),2)+pow(-N.y+S.y+t*(-E.y+W.y),2)+pow(-N.z+S.z+t*(-E.z+W.z),2)));
-              if(dist < shortestDist && dist < 1)
+              if(dist < shortestDist)
                 {
                   Point tempS;
                   tempS.x = S.x+t*(-E.x+W.x);
@@ -114,7 +114,7 @@ bool OneDCompartmentProcess::notShared(Voxel* aVoxel, Point S, Voxel* aParent)
             {
               ++count;
               double dist(sqrt(pow(-N.x+S.x+t*(-E.x+W.x),2)+pow(-N.y+S.y+t*(-E.y+W.y),2)+pow(-N.z+S.z+t*(-E.z+W.z),2)));
-              if(dist < shortestDist && dist < 1)
+              if(dist < shortestDist)
                 {
                   aNeighbor = anAdjoin;
                   shortestDist = dist;
@@ -151,6 +151,16 @@ bool OneDCompartmentProcess::notNeighbor(Voxel* aSource, Voxel* aTarget)
 
 Voxel* OneDCompartmentProcess::getBeginVoxel()
 {
+  /* Mathematica code:
+   * East = {Ex, Ey, Ez};
+   * West = {Wx, Wy, Wz};
+   * Direct = West - East;
+   * Start = {Sx, Sy, Sz};
+   * LineIntersect = Start + t*Direct
+   * NeighborPoint = {Nx, Ny, Nz};
+   * Solve[(LineIntersect - NeighborPoint).Direct == 0, t]
+   * Distance = Norm[LineIntersect - NeighborPoint]
+   */
   Point C(theComp->centerPoint);
   //East point
   E.x = theComp->lengthX/2;
