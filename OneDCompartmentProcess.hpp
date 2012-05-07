@@ -54,6 +54,7 @@ public:
   Voxel* getBeginVoxel();
   Voxel* getNeighbor(Voxel*, Point&, Voxel*);
   bool notNeighbor(Voxel*, Voxel*);
+  bool notShared(Voxel*, Point, Voxel*);
 protected:
   Comp* theComp;
   int Quantity;

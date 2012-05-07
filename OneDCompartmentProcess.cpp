@@ -47,7 +47,6 @@ void OneDCompartmentProcess::initializeFourth()
       Voxel* aVoxel(getBeginVoxel());
       theProcessSpecies[i]->addMolecule(aVoxel);
       Point S(theSpatiocyteStepper->coord2point(aVoxel->coord));
-      std::cout << "S.x:" << S.x << " y:" << S.y << " z:" << S.z << std::endl;
       Voxel* aNeighbor(NULL);
       int count(8);
       do {
@@ -55,7 +54,6 @@ void OneDCompartmentProcess::initializeFourth()
         aNeighbor = getNeighbor(aVoxel, S, aParent); 
         if(aNeighbor)
           {
-            std::cout << "S.x:" << S.x << " y:" << S.y << " z:" << S.z << std::endl;
             theProcessSpecies[i]->addMolecule(aNeighbor);
             aParent = aVoxel;
             aVoxel = aNeighbor;
@@ -76,26 +74,63 @@ Voxel* OneDCompartmentProcess::getNeighbor(Voxel* aVoxel, Point& S, Voxel* aPare
       Point N(theSpatiocyteStepper->coord2point(anAdjoin->coord));
       if(anAdjoin->id == theComp->vacantID && notNeighbor(aParent, anAdjoin))
         {
-          //std::cout << "N.x:" << N.x << " y:" << N.y << " z:" << N.z << std::endl;
           double t((-E.x*N.x-E.y*N.y-E.z*N.z+E.x*S.x+E.y*S.y+E.z*S.z+N.x*W.x-S.x*W.x+N.y*W.y-S.y*W.y+N.z*W.z-S.z*W.z)/(E.x*E.x+E.y*E.y+E.z*E.z-2*E.x*W.x+W.x*W.x-2*E.y*W.y+W.y*W.y-2*E.z*W.z+W.z*W.z));
-          //std::cout << "t:" << t << std::endl;
-          if(t<0)
+          if(t < 0)
             {
               double dist(sqrt(pow(-N.x+S.x+t*(-E.x+W.x),2)+pow(-N.y+S.y+t*(-E.y+W.y),2)+pow(-N.z+S.z+t*(-E.z+W.z),2)));
-              if(dist < shortestDist)
+              if(dist < shortestDist && dist < 1)
                 {
-                  std::cout << "dist:" << dist << std::endl;
-                  aNeighbor = anAdjoin;
-                  shortestDist = dist;
-                  currS.x = S.x+t*(-E.x+W.x);
-                  currS.y = S.y+t*(-E.y+W.y);
-                  currS.z = S.z+t*(-E.z+W.z);
+                  Point tempS;
+                  tempS.x = S.x+t*(-E.x+W.x);
+                  tempS.y = S.y+t*(-E.y+W.y);
+                  tempS.z = S.z+t*(-E.z+W.z);
+                  if(notShared(anAdjoin, tempS, aVoxel))
+                    { 
+                      aNeighbor = anAdjoin;
+                      shortestDist = dist;
+                      currS = tempS;
+                    }
                 }
             }
         }
     } 
   S = currS;
   return aNeighbor;
+}
+
+bool OneDCompartmentProcess::notShared(Voxel* aVoxel, Point S, Voxel* aParent)
+{
+  double shortestDist(1e+10);
+  Voxel* aNeighbor(NULL);
+  int count(0);
+  for(int j(0); j != aVoxel->adjoiningSize; ++j)
+    {
+      Voxel* anAdjoin(aVoxel->adjoiningVoxels[j]);
+      Point N(theSpatiocyteStepper->coord2point(anAdjoin->coord));
+      if(anAdjoin->id == theComp->vacantID)
+        {
+          double t((-E.x*N.x-E.y*N.y-E.z*N.z+E.x*S.x+E.y*S.y+E.z*S.z+N.x*W.x-S.x*W.x+N.y*W.y-S.y*W.y+N.z*W.z-S.z*W.z)/(E.x*E.x+E.y*E.y+E.z*E.z-2*E.x*W.x+W.x*W.x-2*E.y*W.y+W.y*W.y-2*E.z*W.z+W.z*W.z));
+          if(t < 0)
+            {
+              ++count;
+              double dist(sqrt(pow(-N.x+S.x+t*(-E.x+W.x),2)+pow(-N.y+S.y+t*(-E.y+W.y),2)+pow(-N.z+S.z+t*(-E.z+W.z),2)));
+              if(dist < shortestDist && dist < 1)
+                {
+                  aNeighbor = anAdjoin;
+                  shortestDist = dist;
+                }
+            }
+        }
+    } 
+  if(!aNeighbor)
+    {
+      return true;
+    }
+  else if(notNeighbor(aParent, aNeighbor) || count > 1)
+    {
+      return true;
+    }
+  return false;
 }
 
 bool OneDCompartmentProcess::notNeighbor(Voxel* aSource, Voxel* aTarget)
@@ -121,29 +156,22 @@ Voxel* OneDCompartmentProcess::getBeginVoxel()
   E.x = theComp->lengthX/2;
   E.y = 0;
   E.z = 0;
-  //std::cout << "E.x:" << E.x << " y:" << E.y << " z:" << E.z << std::endl;
   //West point
   W.x = -theComp->lengthX/2;
   W.y = 0;
   W.z = 0;
-  //std::cout << "W.x:" << W.x << " y:" << W.y << " z:" << W.z << std::endl;
   theSpatiocyteStepper->rotateX(theComp->rotateX, &E, -1);
   theSpatiocyteStepper->rotateY(theComp->rotateY, &E, -1);
   theSpatiocyteStepper->rotateZ(theComp->rotateZ, &E, -1);
   theSpatiocyteStepper->rotateX(theComp->rotateX, &W, -1);
   theSpatiocyteStepper->rotateY(theComp->rotateY, &W, -1);
   theSpatiocyteStepper->rotateZ(theComp->rotateZ, &W, -1);
-  //std::cout << "E.x:" << E.x << " y:" << E.y << " z:" << E.z << std::endl;
-  //std::cout << "W.x:" << W.x << " y:" << W.y << " z:" << W.z << std::endl;
-  //std::cout << "C.x:" << C.x << " y:" << C.y << " z:" << C.z << std::endl;
   E.x += C.x;
   E.y += C.y;
   E.z += C.z;
   W.x += C.x;
   W.y += C.y;
   W.z += C.z;
-  std::cout << "E.x:" << E.x << " y:" << E.y << " z:" << E.z << std::endl;
-  std::cout << "W.x:" << W.x << " y:" << W.y << " z:" << W.z << std::endl;
   //Direction vector from west to east
   D.x = E.x - W.x;
   D.y = E.y - W.y;
