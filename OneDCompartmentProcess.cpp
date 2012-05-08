@@ -34,112 +34,33 @@ LIBECS_DM_INIT(OneDCompartmentProcess, Process);
 
 void OneDCompartmentProcess::initializeThird()
 {
-  VacantVoxels.resize(Quantity);
   theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
   //VacantVoxels[0].push_back(getBeginVoxel());
 }
 
 void OneDCompartmentProcess::initializeFourth()
 {
-  for(int j(0); j != 3; ++j)
+  queueStartVoxels();
+  unsigned int i(0);
+  for(unsigned int j(0); i != Quantity && j != Quantity*3; ++j)
     {
-      Voxel* currVoxel(getBeginVoxel());
-      if(currVoxel)
+      Voxel* aVoxel(startVoxels[j]);
+      std::cout << std::endl << "checking j:" << j << std::endl;
+      if(!checkStartVoxel(aVoxel))
         {
-          theProcessSpecies[j]->addMolecule(currVoxel);
-          Point S(theSpatiocyteStepper->coord2point(currVoxel->coord)); 
-          for(std::vector<unsigned int>::iterator i(theComp->coords.begin());
-              i != theComp->coords.end(); ++i)
-            { 
-              Voxel* aVoxel(theSpatiocyteStepper->coord2voxel(*i));
-              if(aVoxel->id == theComp->vacantID && isInsidePlane(aVoxel, S))
-                { 
-                  if(isLine(aVoxel, S))
-                    {
-                      theProcessSpecies[j]->addMolecule(aVoxel);
-                    }
-                }
-            }
+          continue;
         }
-    }
-}
-
-
-/*
-
-  for(int i(0); i != 1; ++i)
-    {
-      Voxel* currVoxel(getBeginVoxel());
-      Voxel* prevVoxel;
-      do
-        { 
-          theProcessSpecies[i]->addMolecule(currVoxel);
-          Point S(theSpatiocyteStepper->coord2point(currVoxel->coord)); 
-          prevVoxel = currVoxel;
-          for(int j(0); j != currVoxel->adjoiningSize; ++j)
-            {
-              Voxel* anAdjoin(currVoxel->adjoiningVoxels[j]); 
-              if(anAdjoin->id == theComp->vacantID && isInsidePlane(anAdjoin, S))
-                {
-                  if(isLine(anAdjoin, S))
-                    {
-                      theProcessSpecies[i]->addMolecule(anAdjoin);
-                      currVoxel = anAdjoin;
-                      break;
-                    }
-                }
-            }
-        } while(currVoxel != prevVoxel);
-    }
-}
-*/
-
-bool OneDCompartmentProcess::isInsidePlane(Voxel* aVoxel, Point& S)
-{ 
-  Point N(theSpatiocyteStepper->coord2point(aVoxel->coord));
-  double distance((-N.z+S.z)*(E.y*S.x-E.x*S.y-E.y*W.x+S.y*W.x+E.x*W.y-S.x*W.y)+
-                  (-N.y+S.y)*(-E.z*S.x+E.x*S.z+E.z*W.x-S.z*W.x-E.x*W.z+S.x*W.z)+
-                  (-N.z+S.x)*(E.z*S.y-E.y*S.z-E.z*W.y+S.z*W.y+E.y*W.z-S.y*W.z));
-  std::cout << "distPlane:" << distance << std::endl;
-  if(distance <= 0)
-    {
-      return true;
-    }
-  return false;
-}
-
-bool OneDCompartmentProcess::isLine(Voxel* aVoxel, Point& S)
-{
-  for(int i(0); i != aVoxel->adjoiningSize; ++i)
-    { 
-      Voxel* anAdjoin(aVoxel->adjoiningVoxels[i]);
-      Point N(theSpatiocyteStepper->coord2point(anAdjoin->coord));
-      double distance((-N.z+S.z)*(E.y*S.x-E.x*S.y-E.y*W.x+S.y*W.x+E.x*W.y-S.x*W.y)+
-                      (-N.y+S.y)*(-E.z*S.x+E.x*S.z+E.z*W.x-S.z*W.x-E.x*W.z+S.x*W.z)+
-                      (-N.z+S.x)*(E.z*S.y-E.y*S.z-E.z*W.y+S.z*W.y+E.y*W.z-S.y*W.z));
-      std::cout << "distLine:" << distance << std::endl;
-      if(distance > 0)
-        {
-          return true;
-        }
-    }
-  return false;
-}
-
-/*
-void OneDCompartmentProcess::initializeFourth()
-{
-  for(int i(0); i != 6; ++i)
-    {
+      std::cout << "done checking j:" << j << std::endl;
       Voxel* aParent(NULL);
-      Voxel* aVoxel(getBeginVoxel());
       theProcessSpecies[i]->addMolecule(aVoxel);
       Point S(theSpatiocyteStepper->coord2point(aVoxel->coord));
       Voxel* aNeighbor(NULL);
-      int count(8);
+      int count(5);
       do {
+        std::cout << "count:" << count << std::endl;
         --count;
-        aNeighbor = getNeighbor(aVoxel, S, aParent); 
+        double aDist;
+        aNeighbor = getNeighbor(aVoxel, S, aParent, aDist); 
         if(aNeighbor)
           {
             theProcessSpecies[i]->addMolecule(aNeighbor);
@@ -147,14 +68,41 @@ void OneDCompartmentProcess::initializeFourth()
             aVoxel = aNeighbor;
           }
       } while(aNeighbor);
+      ++i;
     }
   theProcessSpecies[0]->setIsPopulated();
 }
-*/
 
-Voxel* OneDCompartmentProcess::getNeighbor(Voxel* aVoxel, Point& S, Voxel* aParent)
+bool OneDCompartmentProcess::checkStartVoxel(Voxel* aVoxel)
 {
-  double shortestDist(1e+10);
+  aVoxel->id = theProcessSpecies[0]->getID();
+  Point S(theSpatiocyteStepper->coord2point(aVoxel->coord));
+  double aDist;
+  Voxel* firstNeighbor(getNeighbor(aVoxel, S, NULL, aDist)); 
+  std::cout << "firstDist:" << aDist << std::endl;
+  if(!firstNeighbor || aDist > 0.7)
+    {
+      return false;
+    }
+  else
+    {
+      firstNeighbor->id = theProcessSpecies[0]->getID();
+    }
+  Voxel* secondNeighbor(getNeighbor(firstNeighbor, S, aVoxel, aDist)); 
+  std::cout << "secondDist:" << aDist << std::endl;
+  if(!secondNeighbor || aDist > 0.7)
+    {
+      return false;
+    }
+  aVoxel->id = theComp->vacantID;
+  firstNeighbor->id = theComp->vacantID;
+  return true;
+}
+
+Voxel* OneDCompartmentProcess::getNeighbor(Voxel* aVoxel, Point& S, Voxel* aParent,
+                                           double& shortestDist)
+{
+  shortestDist = 1e+10;
   Voxel* aNeighbor(NULL);
   Point currS(S);
   for(int j(0); j != aVoxel->adjoiningSize; ++j)
@@ -175,6 +123,7 @@ Voxel* OneDCompartmentProcess::getNeighbor(Voxel* aVoxel, Point& S, Voxel* aPare
                   tempS.z = S.z+t*(-E.z+W.z);
                   if(notShared(anAdjoin, tempS, aVoxel))
                     { 
+                      std::cout << "dist:" << dist << std::endl;
                       aNeighbor = anAdjoin;
                       shortestDist = dist;
                       currS = tempS;
@@ -238,7 +187,7 @@ bool OneDCompartmentProcess::notNeighbor(Voxel* aSource, Voxel* aTarget)
   return true;
 }
 
-Voxel* OneDCompartmentProcess::getBeginVoxel()
+void OneDCompartmentProcess::initializeDirectionVector()
 {
   /* Mathematica code:
    * East = {Ex, Ey, Ez};
@@ -275,27 +224,55 @@ Voxel* OneDCompartmentProcess::getBeginVoxel()
   D.x = E.x - W.x;
   D.y = E.y - W.y;
   D.z = E.z - W.z;
-  double shortestDist(1e+10);
-  Voxel* aBeginVoxel(NULL);
+}
+
+double OneDCompartmentProcess::getWestPlaneDist(Voxel* aVoxel)
+{
+  Point T(theSpatiocyteStepper->coord2point(aVoxel->coord));
+  double dist(((W.x-T.x)*D.x+(W.y-T.y)*D.y+(W.y-T.y)*D.y)/sqrt(D.x*D.x+D.y*D.y+D.z*D.z));
+  return sqrt(dist*dist);
+}
+
+void OneDCompartmentProcess::queueStartVoxels()
+{
+  if(Quantity*3 > theComp->coords.size())
+    {
+      THROW_EXCEPTION(ValueError, String(getPropertyInterface().getClassName()) +
+                                  "[" + getFullID().asString() + 
+                                  "]: Quantity is larger than available compartment " +
+                                  "voxels.");
+    }
+  initializeDirectionVector();
+  std::vector<double> voxelDists;
   for(std::vector<unsigned int>::iterator i(theComp->coords.begin());
       i != theComp->coords.end(); ++i)
     { 
       Voxel* aVoxel(theSpatiocyteStepper->coord2voxel(*i));
-      if(aVoxel->id == theComp->vacantID)
+      double aDist(getWestPlaneDist(aVoxel));
+      if(startVoxels.size() != Quantity*3)
         {
-          Point T(theSpatiocyteStepper->coord2point(*i +
-                                      theSpatiocyteStepper->getStartCoord()));
-          double dist(((W.x-T.x)*D.x+(W.y-T.y)*D.y+(W.y-T.y)*D.y)/
-                      sqrt(D.x*D.x+D.y*D.y+D.z*D.z));
-          dist = sqrt(dist*dist);
-          if(dist < shortestDist)
+          startVoxels.push_back(aVoxel);
+          voxelDists.push_back(aDist);
+        }
+      unsigned int j(voxelDists.size()-1);
+      for(; j != 0; --j)
+        {
+          if(voxelDists[j-1] > aDist)
             {
-              aBeginVoxel = aVoxel;
-              shortestDist = dist;
+              voxelDists[j] = voxelDists[j-1];
+              startVoxels[j] = startVoxels[j-1];
+            }
+          else
+            {
+              break;
             }
         }
+      if(j != voxelDists.size()-1)
+        {
+          voxelDists[j] = aDist;
+          startVoxels[j] = aVoxel;
+        }
     }
-  return aBeginVoxel;
 }
 
 

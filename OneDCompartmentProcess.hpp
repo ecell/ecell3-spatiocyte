@@ -51,19 +51,22 @@ public:
   SIMPLE_SET_GET_METHOD(Integer, Quantity);
   virtual void initializeThird();
   virtual void initializeFourth();
-  Voxel* getBeginVoxel();
-  Voxel* getNeighbor(Voxel*, Point&, Voxel*);
+  void queueStartVoxels();
+  double getWestPlaneDist(Voxel*);
+  void initializeDirectionVector();
+  Voxel* getNeighbor(Voxel*, Point&, Voxel*, double&);
   bool notNeighbor(Voxel*, Voxel*);
   bool notShared(Voxel*, Point, Voxel*);
   bool isInsidePlane(Voxel*, Point&);
   bool isLine(Voxel*, Point&);
+  bool checkStartVoxel(Voxel*);
 protected:
   Comp* theComp;
-  int Quantity;
+  unsigned int Quantity;
   Point D; //direction vector from west to east
   Point W; //west point
   Point E; //east point
-  std::vector<std::vector<Voxel*> > VacantVoxels;
+  std::vector<Voxel*> startVoxels;
 };
 
 #endif /* __OneDCompartmentProcess_hpp */
