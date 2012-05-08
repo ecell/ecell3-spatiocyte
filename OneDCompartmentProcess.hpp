@@ -60,6 +60,8 @@ public:
   bool isInsidePlane(Voxel*, Point&);
   bool isLine(Voxel*, Point&);
   bool checkStartVoxel(Voxel*);
+  void addVacantVoxel(unsigned int, Voxel*);
+  void removeVacantVoxels(unsigned int);
 protected:
   Comp* theComp;
   unsigned int Quantity;
@@ -67,6 +69,8 @@ protected:
   Point W; //west point
   Point E; //east point
   std::vector<Voxel*> startVoxels;
+  std::vector<std::vector<Voxel*> > vacantVoxels;
+  double maxLength;
 };
 
 #endif /* __OneDCompartmentProcess_hpp */
