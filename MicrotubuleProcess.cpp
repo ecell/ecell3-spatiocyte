@@ -28,18 +28,18 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
-#include "OneDCompartmentProcess.hpp"
+#include "MicrotubuleProcess.hpp"
 
-LIBECS_DM_INIT(OneDCompartmentProcess, Process); 
+LIBECS_DM_INIT(MicrotubuleProcess, Process); 
 
-void OneDCompartmentProcess::initializeThird()
+void MicrotubuleProcess::initializeThird()
 {
   theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
   vacantVoxels.resize(Quantity);
   theProcessSpecies[9]->setIsOffLattice();
 }
 
-void OneDCompartmentProcess::initializeFourth()
+void MicrotubuleProcess::initializeFourth()
 {
   queueStartVoxels();
   unsigned int i(0);
@@ -91,13 +91,13 @@ void OneDCompartmentProcess::initializeFourth()
     }
 }
 
-void OneDCompartmentProcess::addVacantVoxel(unsigned int anIndex, Voxel* aVoxel)
+void MicrotubuleProcess::addVacantVoxel(unsigned int anIndex, Voxel* aVoxel)
 {
   vacantVoxels[anIndex].push_back(aVoxel);
   aVoxel->id = theProcessSpecies[anIndex]->getID();
 }
 
-void OneDCompartmentProcess::removeVacantVoxels(unsigned int anIndex)
+void MicrotubuleProcess::removeVacantVoxels(unsigned int anIndex)
 {
   for(std::vector<Voxel*>::iterator i(vacantVoxels[anIndex].begin());
       i != vacantVoxels[anIndex].end(); ++i)
@@ -107,7 +107,7 @@ void OneDCompartmentProcess::removeVacantVoxels(unsigned int anIndex)
   vacantVoxels[anIndex].resize(0);
 }
 
-bool OneDCompartmentProcess::checkStartVoxel(Voxel* aVoxel)
+bool MicrotubuleProcess::checkStartVoxel(Voxel* aVoxel)
 {
   aVoxel->id = theProcessSpecies[0]->getID();
   Point S(theSpatiocyteStepper->coord2point(aVoxel->coord));
@@ -133,7 +133,7 @@ bool OneDCompartmentProcess::checkStartVoxel(Voxel* aVoxel)
   return true;
 }
 
-Voxel* OneDCompartmentProcess::getNeighbor(Voxel* aVoxel, Point& S, Voxel* aParent,
+Voxel* MicrotubuleProcess::getNeighbor(Voxel* aVoxel, Point& S, Voxel* aParent,
                                            double& shortestDist)
 {
   shortestDist = 1e+10;
@@ -172,7 +172,7 @@ Voxel* OneDCompartmentProcess::getNeighbor(Voxel* aVoxel, Point& S, Voxel* aPare
   return aNeighbor;
 }
 
-bool OneDCompartmentProcess::notShared(Voxel* aVoxel, Point S, Voxel* aParent)
+bool MicrotubuleProcess::notShared(Voxel* aVoxel, Point S, Voxel* aParent)
 {
   double shortestDist(1e+10);
   Voxel* aNeighbor(NULL);
@@ -207,7 +207,7 @@ bool OneDCompartmentProcess::notShared(Voxel* aVoxel, Point S, Voxel* aParent)
   return false;
 }
 
-bool OneDCompartmentProcess::notNeighbor(Voxel* aSource, Voxel* aTarget)
+bool MicrotubuleProcess::notNeighbor(Voxel* aSource, Voxel* aTarget)
 {
   if(!aSource)
     {
@@ -223,7 +223,7 @@ bool OneDCompartmentProcess::notNeighbor(Voxel* aSource, Voxel* aTarget)
   return true;
 }
 
-void OneDCompartmentProcess::initializeDirectionVector()
+void MicrotubuleProcess::initializeDirectionVector()
 {
   /* Mathematica code:
    * East = {Ex, Ey, Ez};
@@ -268,23 +268,22 @@ void OneDCompartmentProcess::initializeDirectionVector()
   theProcessSpecies[9]->addMolecule(bVoxel);
 }
 
-double OneDCompartmentProcess::getWestPlaneDist(Voxel* aVoxel)
+double MicrotubuleProcess::getWestPlaneDist(Voxel* aVoxel)
 {
   Point T(theSpatiocyteStepper->coord2point(aVoxel->coord));
   double dist(((W.x-T.x)*D.x+(W.y-T.y)*D.y+(W.y-T.y)*D.y)/sqrt(D.x*D.x+D.y*D.y+D.z*D.z));
   return sqrt(dist*dist);
 }
 
-void OneDCompartmentProcess::queueStartVoxels()
+void MicrotubuleProcess::queueStartVoxels()
 {
-  if(Quantity*30 > theComp->coords.size())
-    {
-      THROW_EXCEPTION(ValueError, String(getPropertyInterface().getClassName()) +
-                                  "[" + getFullID().asString() + 
-                                  "]: Quantity is larger than available compartment " +
-                                  "voxels.");
-    }
   initializeDirectionVector();
+
+
+
+
+
+
   std::vector<double> voxelDists;
   double maxDist(-1);
   Voxel* maxVoxel(NULL);
