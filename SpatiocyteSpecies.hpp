@@ -61,6 +61,7 @@ public:
     isGaussianPopulation(false),
     isInContact(false),
     isPolymer(false),
+    isOffLattice(false),
     isStatic(true),
     isSubunitInitialized(false),
     theID(anID),
@@ -238,6 +239,10 @@ public:
     }
   Point getPoint(int anIndex)
     {
+      if(isOffLattice)
+        {
+          return *theMolecules[anIndex]->point;
+        }
       return theMolecules[anIndex]->subunit->subunitPoint;
     }
   Voxel* getMolecule(int anIndex)
@@ -297,6 +302,10 @@ public:
     {
       isDiffuseVacant = true;
     }
+  void setIsOffLattice()
+    {
+      isOffLattice = true;
+    }
   void setIsPolymer(std::vector<double> bendAngles, int aDirectionality)
     {
       theBendAngles.resize(0);
@@ -340,6 +349,10 @@ public:
   bool getIsPolymer() const
     {
       return isPolymer;
+    }
+  bool getIsOffLattice()
+    {
+      return isOffLattice;
     }
   bool getIsSubunitInitialized() const
     {
@@ -929,6 +942,7 @@ private:
   bool isGaussianPopulation;
   bool isInContact;
   bool isPolymer;
+  bool isOffLattice;
   bool isStatic;
   bool isSubunitInitialized;
   const unsigned short theID;

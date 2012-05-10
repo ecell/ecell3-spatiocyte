@@ -58,17 +58,26 @@ public:
   SIMPLE_SET_GET_METHOD(Integer, Polymer);
   SIMPLE_SET_GET_METHOD(Real, LogInterval);
   SIMPLE_SET_GET_METHOD(String, FileName);
-  virtual void initializeSecond()
+  virtual void initializeFourth()
     {
       SpatiocyteProcess::initializeSecond();
       for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
         {
           Species* aSpecies(theProcessSpecies[i]);
-          if(aSpecies->getIsPolymer() && Polymer)
+          if(aSpecies->getIsOffLattice())
             {
-              thePolymerSpecies.push_back(aSpecies);
-              thePolymerIndex.push_back(i);
+              theOffLatticeSpecies.push_back(aSpecies);
             }
+          else
+            {
+              theLatticeSpecies.push_back(aSpecies);
+              if(aSpecies->getIsPolymer() && Polymer)
+                {
+                  thePolymerSpecies.push_back(aSpecies);
+                  thePolymerIndex.push_back(theLatticeSpecies.size()-1);
+                }
+            }
+
         }
       thePriority = -1;
     }
@@ -131,6 +140,7 @@ protected:
   void logTargetMolecules(int);
   void logSharedMolecules(int);
   void logPolymers(int);
+  void logOffLattice(int);
 protected:
   unsigned int Polymer;
   unsigned int theLogMarker;
@@ -141,6 +151,8 @@ protected:
   std::streampos theStepStartPos;  
   std::vector<unsigned int> thePolymerIndex;
   std::vector<Species*> thePolymerSpecies;
+  std::vector<Species*> theLatticeSpecies;
+  std::vector<Species*> theOffLatticeSpecies;
 };
 
 #endif /* __VisualizationLogProcess_hpp */

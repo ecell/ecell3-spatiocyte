@@ -157,19 +157,31 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   theFile[0]->read((char*) (&theRealRowSize), sizeof(theRealRowSize));
   theFile[0]->read((char*) (&theRealLayerSize), sizeof(theRealLayerSize));
   theFile[0]->read((char*) (&theRealColSize), sizeof(theRealColSize));
-  theFile[0]->read((char*) (&theSpeciesSize), sizeof(theSpeciesSize));
+  theFile[0]->read((char*) (&theLatticeSpSize), sizeof(theLatticeSpSize));
   theFile[0]->read((char*) (&thePolymerSize), sizeof(thePolymerSize));
   theFile[0]->read((char*) (&theReservedSize), sizeof(theReservedSize));
+  theFile[0]->read((char*) (&theOffLatticeSpSize), sizeof(theOffLatticeSpSize));
   theFile[0]->read((char*) (&theLogMarker), sizeof(theLogMarker));
   theFile[0]->read((char*) (&theResolution), sizeof(theResolution));
   unsigned int aSourceSize(thePolymerSize);
   unsigned int aTargetSize(thePolymerSize);
   unsigned int aSharedSize(thePolymerSize);
-  theTotalCoordSpeciesSize = theSpeciesSize+aSourceSize+aTargetSize+aSharedSize+
+  /*The following is the order of the logged species:
+   * theLatticeSpSize : coords
+   * aSourceSize : coords
+   * aTargetSize : coords
+   * aSharedSize : coords
+   * theReservedSize : coords
+   * thePolymerSize : points
+   * theOffLatticeSpSize : points
+   */
+  theTotalLatticeSpSize = theLatticeSpSize+aSourceSize+aTargetSize+aSharedSize+
     theReservedSize;
-  theTotalSpeciesSize = theTotalCoordSpeciesSize+thePolymerSize;
+  theTotalOffLatticeSpSize = thePolymerSize+theOffLatticeSpSize; 
+  theTotalSpeciesSize = theTotalLatticeSpSize+theTotalOffLatticeSpSize;
   theSpeciesNameList = new char*[theTotalSpeciesSize];
-  for(unsigned int i(0); i!=theSpeciesSize; ++i)
+  //Set up the names of normal lattice species:
+  for(unsigned int i(0); i!=theLatticeSpSize; ++i)
     {
       unsigned int aStringSize;
       theFile[0]->read((char*) (&aStringSize), sizeof(aStringSize));
@@ -181,27 +193,47 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
       sscanf(buffer, "Variable:%s", theSpeciesNameList[i]);
       std::cout << theSpeciesNameList[i] << std::endl;
     }
-  for(unsigned int i(0); i!=thePolymerSize; ++i)
+  //Set up the names of polymer species:
+  //source : coord
+  //target : coord
+  //shared : coord
+  //.... <- skip space for reserved species : coord
+  //poly : points
+  for(unsigned int i(theLatticeSpSize); i!=theLatticeSpSize+thePolymerSize; ++i)
     {
       unsigned int aPolySpeciesIndex;
       theFile[0]->read((char*) (&aPolySpeciesIndex), sizeof(aPolySpeciesIndex));
       thePolySpeciesList.push_back(aPolySpeciesIndex);
-      theSpeciesNameList[theSpeciesSize+i] = new char[20];
-      sprintf(theSpeciesNameList[theSpeciesSize+i], "source");
-      theSpeciesNameList[theSpeciesSize+thePolymerSize+i] = new char[20];
-      sprintf(theSpeciesNameList[theSpeciesSize+thePolymerSize+i], "target");
-      theSpeciesNameList[theSpeciesSize+thePolymerSize*2+i] = new char[20];
-      sprintf(theSpeciesNameList[theSpeciesSize+thePolymerSize*2+i], "shared");
-      theSpeciesNameList[theSpeciesSize+thePolymerSize*3+
-        theReservedSize+i] = new char[20];
-      sprintf(theSpeciesNameList[theSpeciesSize+thePolymerSize*3+
-              theReservedSize+i], "poly");
+      theSpeciesNameList[i] = new char[20];
+      sprintf(theSpeciesNameList[i], "source");
+      theSpeciesNameList[thePolymerSize+i] = new char[20];
+      sprintf(theSpeciesNameList[thePolymerSize+i], "target");
+      theSpeciesNameList[thePolymerSize*2+i] = new char[20];
+      sprintf(theSpeciesNameList[thePolymerSize*2+i], "shared");
+      theSpeciesNameList[thePolymerSize*3+theReservedSize+i] = new char[20];
+      sprintf(theSpeciesNameList[thePolymerSize*3+theReservedSize+i], "poly");
     }
-  for(unsigned int i(0); i!=theReservedSize; ++i)
+  //Set up the tmp names of reserved species:
+  for(unsigned int i(theLatticeSpSize+thePolymerSize*3);
+      i!=theLatticeSpSize+thePolymerSize*3+theReservedSize; ++i)
     {
-      theSpeciesNameList[theSpeciesSize+thePolymerSize*3+i] = new char[20];
-      sprintf(theSpeciesNameList[theSpeciesSize+thePolymerSize*3+i],
-              "tmp %d", i);
+      theSpeciesNameList[i] = new char[20];
+      sprintf(theSpeciesNameList[i], "tmp %d", i);
+    }
+  //Set up the names of off lattice species:
+  for(unsigned int i(theLatticeSpSize+thePolymerSize*4+theReservedSize);
+      i!=theLatticeSpSize+thePolymerSize*4+theReservedSize+theOffLatticeSpSize;
+      ++i)
+    {
+      unsigned int aStringSize;
+      theFile[0]->read((char*) (&aStringSize), sizeof(aStringSize));
+      theSpeciesNameList[i] = new char[aStringSize];
+      char* buffer;
+      buffer = new char[aStringSize+1];
+      theFile[0]->read(buffer, aStringSize);
+      buffer[aStringSize] = '\0';
+      sscanf(buffer, "Variable:%s", theSpeciesNameList[i]);
+      std::cout << theSpeciesNameList[i] << std::endl;
     }
   theOriCol = theStartCoord/(theRowSize*theLayerSize);
   theRegionSep = new unsigned int[theThreadSize*3*2];
@@ -221,18 +253,18 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   theZUpBound = new unsigned int[theTotalSpeciesSize];
   theZLowBound = new unsigned int[theTotalSpeciesSize];
   theMoleculeSize = new unsigned int*[theThreadSize];
-  thePolymerMoleculeSize = new unsigned int*[theThreadSize];
+  theOffLatticeMoleculeSize = new unsigned int*[theThreadSize];
   theCoords = new unsigned int**[theThreadSize];
   theMeanCoords = new unsigned int*[theThreadSize];
   theFrequency = new unsigned int**[theThreadSize];
   thePoints = new Point**[theThreadSize];
   for(unsigned int i(0); i!=theThreadSize; ++i)
     {
-      theCoords[i] = new unsigned int*[theTotalCoordSpeciesSize];
+      theCoords[i] = new unsigned int*[theTotalLatticeSpSize];
       theMeanCoords[i] = new unsigned int[1];
-      theFrequency[i] = new unsigned int*[theSpeciesSize];
-      theMoleculeSize[i] = new unsigned int[theTotalCoordSpeciesSize];
-      for(unsigned int j(0); j!=theTotalCoordSpeciesSize; ++j)
+      theFrequency[i] = new unsigned int*[theLatticeSpSize];
+      theMoleculeSize[i] = new unsigned int[theTotalLatticeSpSize];
+      for(unsigned int j(0); j!=theTotalLatticeSpSize; ++j)
         {
           theSpeciesVisibility[j] = true; 
           theXUpBound[j] = 0;
@@ -244,21 +276,21 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
           theMoleculeSize[i][j] = 0;
           theCoords[i][j] = new unsigned int[1];
         }
-      for(unsigned int j(0); j!=theSpeciesSize; ++j )
+      for(unsigned int j(0); j!=theLatticeSpSize; ++j )
         {
           theFrequency[i][j] = new unsigned int[1];
         }
-      thePoints[i] = new Point*[thePolymerSize];
-      thePolymerMoleculeSize[i] = new unsigned int[thePolymerSize];
-      for(unsigned int j(0); j!=thePolymerSize; ++j )
+      thePoints[i] = new Point*[theTotalOffLatticeSpSize];
+      theOffLatticeMoleculeSize[i] = new unsigned int[theTotalOffLatticeSpSize];
+      for(unsigned int j(0); j!=theTotalOffLatticeSpSize; ++j )
         {
-          theSpeciesVisibility[j+theTotalCoordSpeciesSize] = false;
-          thePolymerMoleculeSize[i][j] = 0;
+          theSpeciesVisibility[theTotalLatticeSpSize+j] = true;
+          theOffLatticeMoleculeSize[i][j] = 0;
           thePoints[i][j] = new Point[1];
         }
     }
   /*
-  for( unsigned int i(0); i!=theSpeciesSize; ++i )
+  for( unsigned int i(0); i!=theLatticeSpSize; ++i )
     {
       if(std::find(thePolySpeciesList.begin(),
                    thePolySpeciesList.end(), i) == 
@@ -268,7 +300,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
         }
     }
     */
-  double hueInterval(1.0/double(theSpeciesSize));
+  double hueInterval(1.0/double(theLatticeSpSize+theOffLatticeSpSize));
   double speciesLuminosity(0.4);
   double sourceLuminosity(0.6);
   double targetLuminosity(0.75);
@@ -277,7 +309,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   theSpeciesColor[0].r = 0.9;
   theSpeciesColor[0].g = 0.9;
   theSpeciesColor[0].b = 0.9;
-  for(unsigned int i(1); i!=theSpeciesSize; ++i)
+  for(unsigned int i(1); i!=theLatticeSpSize; ++i)
     {
       hsl2rgb(hueInterval*i, speciesLuminosity,
               &theSpeciesColor[i].r,
@@ -288,31 +320,38 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
     {
       hsl2rgb(hueInterval*thePolySpeciesList[i],
               sourceLuminosity,
-              &theSpeciesColor[theSpeciesSize+i].r,
-              &theSpeciesColor[theSpeciesSize+i].g,
-              &theSpeciesColor[theSpeciesSize+i].b);
+              &theSpeciesColor[theLatticeSpSize+i].r,
+              &theSpeciesColor[theLatticeSpSize+i].g,
+              &theSpeciesColor[theLatticeSpSize+i].b);
       hsl2rgb(hueInterval*thePolySpeciesList[i],
               targetLuminosity,
-              &theSpeciesColor[theSpeciesSize+thePolymerSize+i].r,
-              &theSpeciesColor[theSpeciesSize+thePolymerSize+i].g,
-              &theSpeciesColor[theSpeciesSize+thePolymerSize+i].b);
+              &theSpeciesColor[theLatticeSpSize+thePolymerSize+i].r,
+              &theSpeciesColor[theLatticeSpSize+thePolymerSize+i].g,
+              &theSpeciesColor[theLatticeSpSize+thePolymerSize+i].b);
       hsl2rgb(hueInterval*thePolySpeciesList[i],
               sharedLuminosity,
-              &theSpeciesColor[theSpeciesSize+thePolymerSize*2+i].r,
-              &theSpeciesColor[theSpeciesSize+thePolymerSize*2+i].g,
-              &theSpeciesColor[theSpeciesSize+thePolymerSize*2+i].b);
+              &theSpeciesColor[theLatticeSpSize+thePolymerSize*2+i].r,
+              &theSpeciesColor[theLatticeSpSize+thePolymerSize*2+i].g,
+              &theSpeciesColor[theLatticeSpSize+thePolymerSize*2+i].b);
       hsl2rgb(hueInterval*thePolySpeciesList[i],
               polyLuminosity,
-              &theSpeciesColor[theTotalCoordSpeciesSize+i].r,
-              &theSpeciesColor[theTotalCoordSpeciesSize+i].g,
-              &theSpeciesColor[theTotalCoordSpeciesSize+i].b);
+              &theSpeciesColor[theTotalLatticeSpSize+i].r,
+              &theSpeciesColor[theTotalLatticeSpSize+i].g,
+              &theSpeciesColor[theTotalLatticeSpSize+i].b);
+    }
+  for(unsigned int i(0); i!=theOffLatticeSpSize; ++i)
+    {
+      hsl2rgb(hueInterval*(theLatticeSpSize+i), speciesLuminosity,
+              &theSpeciesColor[theTotalLatticeSpSize+thePolymerSize+i].r,
+              &theSpeciesColor[theTotalLatticeSpSize+thePolymerSize+i].g,
+              &theSpeciesColor[theTotalLatticeSpSize+thePolymerSize+i].b);
     }
   hueInterval = 1.0/double(theReservedSize);
   speciesLuminosity = 0.6;
-  for( unsigned int i(theTotalCoordSpeciesSize-theReservedSize);
-       i!=theTotalCoordSpeciesSize; ++i )
+  for(unsigned int i(theTotalLatticeSpSize-theReservedSize);
+      i!=theTotalLatticeSpSize; ++i )
     {
-      hsl2rgb(hueInterval*(i-(theTotalCoordSpeciesSize-theReservedSize)),
+      hsl2rgb(hueInterval*(i-(theTotalLatticeSpSize-theReservedSize)),
               speciesLuminosity,
               &theSpeciesColor[i].r,
               &theSpeciesColor[i].g,
@@ -391,7 +430,7 @@ GLScene::~GLScene()
 
 void GLScene::setXUpBound(unsigned int aBound )
 {
-  for(unsigned int i(0); i!=theTotalCoordSpeciesSize; ++i )
+  for(unsigned int i(0); i!=theTotalLatticeSpSize; ++i )
     {
       if(theSpeciesVisibility[i])
         {
@@ -403,7 +442,7 @@ void GLScene::setXUpBound(unsigned int aBound )
 
 void GLScene::setXLowBound(unsigned int aBound )
 {
-  for(unsigned int i(0); i!=theTotalCoordSpeciesSize; ++i )
+  for(unsigned int i(0); i!=theTotalLatticeSpSize; ++i )
     {
       if(theSpeciesVisibility[i])
         {
@@ -415,7 +454,7 @@ void GLScene::setXLowBound(unsigned int aBound )
 
 void GLScene::setYUpBound(unsigned int aBound )
 {
-  for(unsigned int i(0); i!=theTotalCoordSpeciesSize; ++i )
+  for(unsigned int i(0); i!=theTotalLatticeSpSize; ++i )
     {
       if(theSpeciesVisibility[i])
         {
@@ -427,7 +466,7 @@ void GLScene::setYUpBound(unsigned int aBound )
 
 void GLScene::setYLowBound(unsigned int aBound )
 {
-  for(unsigned int i(0); i!=theTotalCoordSpeciesSize; ++i )
+  for(unsigned int i(0); i!=theTotalLatticeSpSize; ++i )
     {
       if(theSpeciesVisibility[i])
         {
@@ -439,7 +478,7 @@ void GLScene::setYLowBound(unsigned int aBound )
 
 void GLScene::setZUpBound(unsigned int aBound )
 {
-  for(unsigned int i(0); i!=theTotalCoordSpeciesSize; ++i )
+  for(unsigned int i(0); i!=theTotalLatticeSpSize; ++i )
     {
       if(theSpeciesVisibility[i])
         {
@@ -451,7 +490,7 @@ void GLScene::setZUpBound(unsigned int aBound )
 
 void GLScene::setZLowBound(unsigned int aBound )
 {
-  for(unsigned int i(0); i!=theTotalCoordSpeciesSize; ++i )
+  for(unsigned int i(0); i!=theTotalLatticeSpSize; ++i )
     {
       if(theSpeciesVisibility[i])
         {
@@ -825,18 +864,18 @@ void GLScene::loadCoords()
           while( anIndex != theLogMarker && theFile[i]->eof() != true )
             { 
               // Get the number of molecules for the species
-              if( thePolymerMoleculeSize[i][anIndex] != 0 )
+              if(theOffLatticeMoleculeSize[i][anIndex] != 0 )
                 {
                   delete []thePoints[i][anIndex];
                 }
-              theFile[i]->read((char*) (&thePolymerMoleculeSize[i][anIndex]),
+              theFile[i]->read((char*) (&theOffLatticeMoleculeSize[i][anIndex]),
                                sizeof(unsigned int));
-              if( thePolymerMoleculeSize[i][anIndex] != 0 )
+              if( theOffLatticeMoleculeSize[i][anIndex] != 0 )
                 {
                   thePoints[i][anIndex] = 
-                    new Point[thePolymerMoleculeSize[i][anIndex]];
+                    new Point[theOffLatticeMoleculeSize[i][anIndex]];
                   theFile[i]->read((char*) (thePoints[i][anIndex]), 
-                       sizeof(Point)*thePolymerMoleculeSize[i][anIndex]);
+                       sizeof(Point)*theOffLatticeMoleculeSize[i][anIndex]);
                 }
               theFile[i]->read((char*) (&anIndex), sizeof(anIndex));
             }
@@ -859,7 +898,7 @@ void GLScene::loadMeanCoords()
           theMeanCoords[i] = new unsigned int[theMeanCoordSize];
           theFile[i]->read((char*) (theMeanCoords[i]), 
                            sizeof(unsigned int)*theMeanCoordSize);
-          for(unsigned int j(0); j != theSpeciesSize; ++j)
+          for(unsigned int j(0); j != theLatticeSpSize; ++j)
             {
               delete []theFrequency[i][j];
               theFrequency[i][j] = new unsigned int[theMeanCoordSize];
@@ -886,7 +925,7 @@ void GLScene::plotMean3DHCPMolecules()
           y = (col%2)*theHCPk + theHCPl*layer + theRadius;
           z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
           x = col*theHCPh + theRadius; 
-          for(unsigned int j(0); j!=theSpeciesSize; ++j)
+          for(unsigned int j(0); j!=theLatticeSpSize; ++j)
             {
               if(theSpeciesVisibility[j])
                 {
@@ -909,8 +948,8 @@ void GLScene::plotMean3DHCPMolecules()
                 }
             }
         }
-      for( unsigned int j(theSpeciesSize);
-           j!=theTotalCoordSpeciesSize; ++j )
+      for( unsigned int j(theLatticeSpSize);
+           j!=theTotalLatticeSpSize; ++j )
         {
           if(theSpeciesVisibility[j])
             {
@@ -955,7 +994,7 @@ void GLScene::plotMean3DCubicMolecules()
           y = layer*2*theRadius + theRadius;
           z = row*2*theRadius + theRadius;
           x = col*2*theRadius + theRadius; 
-          for(unsigned int j(0); j!=theSpeciesSize; ++j)
+          for(unsigned int j(0); j!=theLatticeSpSize; ++j)
             {
               if(theSpeciesVisibility[j])
                 {
@@ -978,8 +1017,8 @@ void GLScene::plotMean3DCubicMolecules()
                 }
             }
         }
-      for( unsigned int j(theSpeciesSize);
-           j!=theTotalCoordSpeciesSize; ++j )
+      for( unsigned int j(theLatticeSpSize);
+           j!=theTotalLatticeSpSize; ++j )
         {
           if(theSpeciesVisibility[j])
             {
@@ -1016,7 +1055,7 @@ void GLScene::plot3DHCPMolecules()
   double x,y,z;
   for( unsigned int i(0); i!=theThreadSize; ++i )
     {
-      for( unsigned int j(0); j!=theTotalCoordSpeciesSize; ++j )
+      for( unsigned int j(0); j!=theTotalLatticeSpSize; ++j )
         {
           if( theSpeciesVisibility[j] )
             {
@@ -1044,13 +1083,13 @@ void GLScene::plot3DHCPMolecules()
                 }
             }
         }
-      for(int j(thePolymerSize-1); j!=-1; --j )
+      for(int j(theTotalOffLatticeSpSize-1); j!=-1; --j )
         {
-          if( theSpeciesVisibility[j+theTotalCoordSpeciesSize] )
+          if(theSpeciesVisibility[j+theTotalLatticeSpSize])
             {
-              Color clr(theSpeciesColor[j+theTotalCoordSpeciesSize]);
+              Color clr(theSpeciesColor[j+theTotalLatticeSpSize]);
               glColor3f(clr.r, clr.g, clr.b); 
-              for( unsigned int k(0); k!=thePolymerMoleculeSize[i][j]; ++k )
+              for( unsigned int k(0); k!=theOffLatticeMoleculeSize[i][j]; ++k )
                 {
                   x = (thePoints[i][j][k].x/theResolution)*theRadius+theRadius;
                   y = (thePoints[i][j][k].y/theResolution)*theRadius+theRadius;
@@ -1076,7 +1115,7 @@ void GLScene::plot3DCubicMolecules()
   double x,y,z;
   for( unsigned int i(0); i!=theThreadSize; ++i )
     {
-      for( unsigned int j(0); j!=theTotalCoordSpeciesSize; ++j )
+      for( unsigned int j(0); j!=theTotalLatticeSpSize; ++j )
         {
           if( theSpeciesVisibility[j] )
             {
@@ -1104,13 +1143,13 @@ void GLScene::plot3DCubicMolecules()
                 }
             }
         }
-      for(int j(thePolymerSize-1); j!=-1; --j )
+      for(int j(theTotalOffLatticeSpSize-1); j!=-1; --j )
         {
-          if( theSpeciesVisibility[j+theTotalCoordSpeciesSize] )
+          if( theSpeciesVisibility[j+theTotalLatticeSpSize] )
             {
-              Color clr(theSpeciesColor[j+theTotalCoordSpeciesSize]);
+              Color clr(theSpeciesColor[j+theTotalLatticeSpSize]);
               glColor3f(clr.r, clr.g, clr.b); 
-              for( unsigned int k(0); k!=thePolymerMoleculeSize[i][j]; ++k )
+              for( unsigned int k(0); k!=theOffLatticeMoleculeSize[i][j]; ++k )
                 {
                   x = (thePoints[i][j][k].x/theResolution)*theRadius+theRadius;
                   y = (thePoints[i][j][k].y/theResolution)*theRadius+theRadius;
@@ -1137,7 +1176,7 @@ void GLScene::plotHCPPoints()
   double x,y,z;
   for( unsigned int i(0); i!=theThreadSize; ++i )
     {
-      for( unsigned int j(0); j!=theTotalCoordSpeciesSize; ++j )
+      for( unsigned int j(0); j!=theTotalLatticeSpSize; ++j )
         {
           if( theSpeciesVisibility[j] )
             {
@@ -1162,13 +1201,13 @@ void GLScene::plotHCPPoints()
                 }
             }
         }
-      for(int j(thePolymerSize-1); j!=-1; --j )
+      for(int j(theTotalOffLatticeSpSize-1); j!=-1; --j )
         {
-          if( theSpeciesVisibility[j+theTotalCoordSpeciesSize] )
+          if( theSpeciesVisibility[j+theTotalLatticeSpSize] )
             {
-              Color clr(theSpeciesColor[j+theTotalCoordSpeciesSize]);
+              Color clr(theSpeciesColor[j+theTotalLatticeSpSize]);
               glColor3f(clr.r, clr.g, clr.b); 
-              for( unsigned int k(0); k!=thePolymerMoleculeSize[i][j]; ++k )
+              for( unsigned int k(0); k!=theOffLatticeMoleculeSize[i][j]; ++k )
                 {
                   x = (thePoints[i][j][k].x/theResolution)*theRadius+theRadius;
                   y = (thePoints[i][j][k].y/theResolution)*theRadius+theRadius;
@@ -1193,7 +1232,7 @@ void GLScene::plotCubicPoints()
   double x,y,z;
   for( unsigned int i(0); i!=theThreadSize; ++i )
     {
-      for( unsigned int j(0); j!=theTotalCoordSpeciesSize; ++j )
+      for( unsigned int j(0); j!=theTotalLatticeSpSize; ++j )
         {
           if( theSpeciesVisibility[j] )
             {
@@ -1218,13 +1257,13 @@ void GLScene::plotCubicPoints()
                 }
             }
         }
-      for(int j(thePolymerSize-1); j!=-1; --j )
+      for(int j(theTotalOffLatticeSpSize-1); j!=-1; --j )
         {
-          if( theSpeciesVisibility[j+theTotalCoordSpeciesSize] )
+          if( theSpeciesVisibility[j+theTotalLatticeSpSize] )
             {
-              Color clr(theSpeciesColor[j+theTotalCoordSpeciesSize]);
+              Color clr(theSpeciesColor[j+theTotalLatticeSpSize]);
               glColor3f(clr.r, clr.g, clr.b); 
-              for( unsigned int k(0); k!=thePolymerMoleculeSize[i][j]; ++k )
+              for( unsigned int k(0); k!=theOffLatticeMoleculeSize[i][j]; ++k )
                 {
                   x = (thePoints[i][j][k].x/theResolution)*theRadius+theRadius;
                   y = (thePoints[i][j][k].y/theResolution)*theRadius+theRadius;

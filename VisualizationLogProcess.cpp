@@ -54,29 +54,40 @@ void VisualizationLogProcess::initializeLog()
   theLogFile.write((char*)(&aRealLayerSize), sizeof(aRealLayerSize));
   double aRealColSize(aCenterPoint.x*2);
   theLogFile.write((char*)(&aRealColSize), sizeof(aRealColSize));
-  unsigned int aSpeciesSize(theProcessSpecies.size());
-  theLogFile.write((char*)(&aSpeciesSize), sizeof(aSpeciesSize));
+  unsigned int aLatticeSpSize(theLatticeSpecies.size());
+  theLogFile.write((char*)(&aLatticeSpSize), sizeof(aLatticeSpSize));
   unsigned int aPolymerSize(thePolymerSpecies.size());
   theLogFile.write((char*)(&aPolymerSize), sizeof(aPolymerSize));
   unsigned int aReservedSize(0);
   theLogFile.write((char*)(&aReservedSize), sizeof(aReservedSize));
+  unsigned int anOffLatticeSpSize(theOffLatticeSpecies.size());
+  theLogFile.write((char*)(&anOffLatticeSpSize), sizeof(anOffLatticeSpSize));
   //theLogMarker is a constant throughout the simulation:
   theLogFile.write((char*)(&theLogMarker), sizeof(theLogMarker));
   double aVoxelRadius(theSpatiocyteStepper->getNormalizedVoxelRadius());
   theLogFile.write((char*)(&aVoxelRadius), sizeof(aVoxelRadius));
-  for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
+  for(unsigned int i(0); i != theLatticeSpecies.size(); ++i)
     {
       unsigned int aStringSize(
-       theProcessSpecies[i]->getVariable()->getFullID().asString().size());
+       theLatticeSpecies[i]->getVariable()->getFullID().asString().size());
       theLogFile.write((char*)(&aStringSize), sizeof(aStringSize));
       theLogFile.write(
-       theProcessSpecies[i]->getVariable()->getFullID().asString().c_str(),
+       theLatticeSpecies[i]->getVariable()->getFullID().asString().c_str(),
        aStringSize);
     }
   for(unsigned int i(0); i!=thePolymerSpecies.size(); ++i)
     {
       unsigned int aPolymerIndex(thePolymerIndex[i]);
       theLogFile.write((char*) (&aPolymerIndex), sizeof(aPolymerIndex));
+    }
+  for(unsigned int i(0); i != theOffLatticeSpecies.size(); ++i)
+    {
+      unsigned int aStringSize(
+       theOffLatticeSpecies[i]->getVariable()->getFullID().asString().size());
+      theLogFile.write((char*)(&aStringSize), sizeof(aStringSize));
+      theLogFile.write(
+       theOffLatticeSpecies[i]->getVariable()->getFullID().asString().c_str(),
+       aStringSize);
     }
   //a, b, c are used for multithreaded simulation which is
   //not implemented yet.
@@ -93,7 +104,7 @@ void VisualizationLogProcess::initializeLog()
 
 void VisualizationLogProcess::logMolecules(int anIndex)
 {
-  Species* aSpecies(theProcessSpecies[anIndex]);
+  Species* aSpecies(theLatticeSpecies[anIndex]);
   //No need to log lipid or vacant molecules since the size is 0:
   if(aSpecies->getIsVacant())
     {
@@ -114,6 +125,20 @@ void VisualizationLogProcess::logMolecules(int anIndex)
     }
 }  
 
+void VisualizationLogProcess::logOffLattice(int anIndex)
+{
+  Species* aSpecies(theOffLatticeSpecies[anIndex]);
+  theLogFile.write((char*)(&anIndex), sizeof(anIndex));
+  //The species molecule size:
+  int aSize(aSpecies->size());
+  theLogFile.write((char*)(&aSize), sizeof(aSize)); 
+  for(int i(0); i != aSize; ++i)
+    {
+      Point aPoint(aSpecies->getPoint(i));
+      theLogFile.write((char*)(&aPoint), sizeof(aPoint));
+    }
+}  
+
 void VisualizationLogProcess::logPolymers(int anIndex)
 {
   Species* aSpecies(thePolymerSpecies[anIndex]);
@@ -131,7 +156,7 @@ void VisualizationLogProcess::logPolymers(int anIndex)
 void VisualizationLogProcess::logSourceMolecules(int anIndex)
 {
   Species* aSpecies(thePolymerSpecies[anIndex]);
-  int aSourceIndex(theProcessSpecies.size()+anIndex);
+  int aSourceIndex(theLatticeSpecies.size()+anIndex);
   theLogFile.write((char*)(&aSourceIndex), sizeof(aSourceIndex));
   const std::vector<unsigned int> aCoords(aSpecies->getSourceCoords());
   int aSize(aCoords.size());
@@ -146,7 +171,7 @@ void VisualizationLogProcess::logSourceMolecules(int anIndex)
 void VisualizationLogProcess::logTargetMolecules(int anIndex)
 {
   Species* aSpecies(thePolymerSpecies[anIndex]);
-  int aTargetIndex(theProcessSpecies.size()+thePolymerSpecies.size()+anIndex);
+  int aTargetIndex(theLatticeSpecies.size()+thePolymerSpecies.size()+anIndex);
   theLogFile.write((char*)(&aTargetIndex), sizeof(aTargetIndex));
   const std::vector<unsigned int> aCoords(aSpecies->getTargetCoords());
   int aSize(aCoords.size());
@@ -161,7 +186,7 @@ void VisualizationLogProcess::logTargetMolecules(int anIndex)
 void VisualizationLogProcess::logSharedMolecules(int anIndex)
 {
   Species* aSpecies(thePolymerSpecies[anIndex]);
-  int aSharedIndex(theProcessSpecies.size()+thePolymerSpecies.size()*2+anIndex);
+  int aSharedIndex(theLatticeSpecies.size()+thePolymerSpecies.size()*2+anIndex);
   theLogFile.write((char*)(&aSharedIndex), sizeof(aSharedIndex));
   const std::vector<unsigned int> aCoords(aSpecies->getSharedCoords());
   int aSize(aCoords.size());
@@ -181,7 +206,7 @@ void VisualizationLogProcess::logSpecies()
   theLogFile.write((char*)(&aDataSize), sizeof(aDataSize));
   double aCurrentTime(theSpatiocyteStepper->getCurrentTime());
   theLogFile.write((char*)(&aCurrentTime), sizeof(aCurrentTime));
-  for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
+  for(unsigned int i(0); i != theLatticeSpecies.size(); ++i)
     {
       logMolecules(i);
     }
@@ -209,6 +234,10 @@ void VisualizationLogProcess::logSpecies()
     {
       logPolymers(i);
     }
+  for(unsigned int i(0); i != theOffLatticeSpecies.size(); ++i)
+    {
+      logOffLattice(i);
+    }
   //theLogMarker is a constant throughout the simulation:
   theLogFile.write((char*)(&theLogMarker), sizeof(theLogMarker));
   aDataSize = (theLogFile.tellp()-aStartPos)-static_cast<std::streampos>(sizeof(aDataSize));
@@ -234,12 +263,12 @@ void VisualizationLogProcess::logSurfaceVoxels()
   // write the next size (create a temporary space for it) 
   theLogFile.write((char*)(&aDataSize), sizeof(aDataSize));
   theLogFile.write((char*)(&aCurrentTime), sizeof(aCurrentTime));
-  for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
+  for(unsigned int i(0); i != theLatticeSpecies.size(); ++i)
     {
-        if(theProcessSpecies[i]->getIsVacant() && 
-           !theProcessSpecies[i]->getIsVolume())
+        if(theLatticeSpecies[i]->getIsVacant() && 
+           !theLatticeSpecies[i]->getIsVolume())
         {
-          Species* aLipid(theProcessSpecies[i]);
+          Species* aLipid(theLatticeSpecies[i]);
           //The species index in the process:
           theLogFile.write((char*)(&i), sizeof(i));
           const Comp* aSurface(aLipid->getComp());

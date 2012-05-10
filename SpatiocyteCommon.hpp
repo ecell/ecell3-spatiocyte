@@ -100,6 +100,13 @@ typedef ProcessPriorityQueue::ID ProcessID;
 #define MAX_IMMEDIATE_DISTANCE 0.2 
 #define BIG_NUMBER 1e+20
 
+struct Point 
+{
+  double x;
+  double y;
+  double z;
+};
+
 struct Voxel
 {
   //We use short here to maintain the size of Voxel as 128 bytes which helps
@@ -110,15 +117,9 @@ struct Voxel
   unsigned int coord; //coord = aComp->coords[x] + theStartCoord
   Voxel** adjoiningVoxels;
   Subunit* subunit;
+  Point* point;
   //Contains adjoining and extended surface voxels:
   std::vector<std::vector<Voxel*> >* surfaceVoxels;
-};
-
-struct Point 
-{
-  double x;
-  double y;
-  double z;
 };
 
 struct Comp

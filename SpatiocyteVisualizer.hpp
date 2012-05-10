@@ -297,11 +297,13 @@ protected:
   unsigned int theColSize;
   unsigned int theRowSize;
   unsigned int theLayerSize;
-  unsigned int theSpeciesSize;
+  unsigned int theLatticeSpSize;
+  unsigned int theOffLatticeSpSize;
   unsigned int thePolymerSize;
   unsigned int theReservedSize;
   unsigned int theTotalSpeciesSize;
-  unsigned int theTotalCoordSpeciesSize;
+  unsigned int theTotalLatticeSpSize;
+  unsigned int theTotalOffLatticeSpSize;
   std::vector<unsigned int> thePolySpeciesList;
   char** theSpeciesNameList;
   double theRealColSize;
@@ -316,7 +318,7 @@ protected:
   unsigned int ***theFrequency;
   Point        ***thePoints;
   unsigned int **theMoleculeSize;
-  unsigned int **thePolymerMoleculeSize;
+  unsigned int **theOffLatticeMoleculeSize;
   unsigned int **theMeanCoords;
   unsigned int theStartCoord;
   unsigned int theCutCol;

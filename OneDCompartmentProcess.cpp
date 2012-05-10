@@ -36,13 +36,14 @@ void OneDCompartmentProcess::initializeThird()
 {
   theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
   vacantVoxels.resize(Quantity);
+  theProcessSpecies[9]->setIsOffLattice();
 }
 
 void OneDCompartmentProcess::initializeFourth()
 {
   queueStartVoxels();
   unsigned int i(0);
-  for(unsigned int j(0); i != Quantity && j != Quantity*3; ++j)
+  for(unsigned int j(0); i != Quantity && j != Quantity*30; ++j)
     {
       Voxel* aVoxel(startVoxels[j]);
       if(!checkStartVoxel(aVoxel))
@@ -259,6 +260,12 @@ void OneDCompartmentProcess::initializeDirectionVector()
   D.x = E.x - W.x;
   D.y = E.y - W.y;
   D.z = E.z - W.z;
+  Voxel* aVoxel(new Voxel);
+  aVoxel->point = &E;
+  Voxel* bVoxel(new Voxel);
+  bVoxel->point = &W;
+  theProcessSpecies[9]->addMolecule(aVoxel);
+  theProcessSpecies[9]->addMolecule(bVoxel);
 }
 
 double OneDCompartmentProcess::getWestPlaneDist(Voxel* aVoxel)
@@ -270,7 +277,7 @@ double OneDCompartmentProcess::getWestPlaneDist(Voxel* aVoxel)
 
 void OneDCompartmentProcess::queueStartVoxels()
 {
-  if(Quantity*3 > theComp->coords.size())
+  if(Quantity*30 > theComp->coords.size())
     {
       THROW_EXCEPTION(ValueError, String(getPropertyInterface().getClassName()) +
                                   "[" + getFullID().asString() + 
@@ -291,7 +298,7 @@ void OneDCompartmentProcess::queueStartVoxels()
           maxDist = aDist;
           maxVoxel = aVoxel;
         }
-      if(startVoxels.size() != Quantity*3)
+      if(startVoxels.size() != Quantity*30)
         {
           startVoxels.push_back(aVoxel);
           voxelDists.push_back(aDist);
