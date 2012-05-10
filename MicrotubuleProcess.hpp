@@ -62,10 +62,11 @@ public:
   bool checkStartVoxel(Voxel*);
   void addVacantVoxel(unsigned int, Voxel*);
   void removeVacantVoxels(unsigned int);
+  void rotatePointAlongVector(Point&, double);
 protected:
   Comp* theComp;
   unsigned int Quantity;
-  Point D; //Direction vector along the MT axis
+  Point T; //Direction vector along the MT axis from Minus to Plus end
   Point M; //Minus end
   Point P; //Plus end
   std::vector<Voxel*> startVoxels;
