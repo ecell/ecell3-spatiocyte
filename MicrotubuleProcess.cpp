@@ -35,7 +35,7 @@ LIBECS_DM_INIT(MicrotubuleProcess, Process);
 void MicrotubuleProcess::initializeThird()
 {
   theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
-  vacantVoxels.resize(Quantity);
+  vacantVoxels.resize(Protofilaments);
   theProcessSpecies[9]->setIsOffLattice();
   theProcessSpecies[10]->setIsOffLattice();
   theProcessSpecies[11]->setIsOffLattice();
@@ -155,7 +155,7 @@ void MicrotubuleProcess::queueStartVoxels()
   aVoxel->point = new Point;
   (*aVoxel->point) = S;
   theProcessSpecies[11]->addMolecule(aVoxel);
-  for(int i(1); i != 13; ++i)
+  for(int i(1); i != 3000; ++i)
     {
       double rad(2*M_PI/13);
       rotatePointAlongVector(S, rad);

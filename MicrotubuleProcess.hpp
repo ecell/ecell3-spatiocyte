@@ -43,12 +43,24 @@ public:
   LIBECS_DM_OBJECT(MicrotubuleProcess, Process)
     {
       INHERIT_PROPERTIES(Process);
-      PROPERTYSLOT_SET_GET(Integer, Quantity);
+      PROPERTYSLOT_SET_GET(Real, DimerPitch);
+      PROPERTYSLOT_SET_GET(Real, Length);
+      PROPERTYSLOT_SET_GET(Real, MonomerPitch);
+      PROPERTYSLOT_SET_GET(Real, Protofilaments);
+      PROPERTYSLOT_SET_GET(Real, Radius);
     }
   MicrotubuleProcess():
-    Quantity(1) {}
+    DimerPitch(8e-9),
+    Length(100e-9),
+    MonomerPitch(4e-9),
+    Protofilaments(13),
+    Radius(12.5e-9) {}
   virtual ~MicrotubuleProcess() {}
-  SIMPLE_SET_GET_METHOD(Integer, Quantity);
+  SIMPLE_SET_GET_METHOD(Real, DimerPitch);
+  SIMPLE_SET_GET_METHOD(Real, Length);
+  SIMPLE_SET_GET_METHOD(Real, MonomerPitch);
+  SIMPLE_SET_GET_METHOD(Real, Protofilaments);
+  SIMPLE_SET_GET_METHOD(Real, Radius);
   virtual void initializeThird();
   virtual void initializeFourth();
   void queueStartVoxels();
@@ -64,15 +76,19 @@ public:
   void removeVacantVoxels(unsigned int);
   void rotatePointAlongVector(Point&, double);
 protected:
+  double DimerPitch;
+  double Length;
+  double MonomerPitch;
+  double Protofilaments;
+  double Radius;
   Comp* theComp;
-  unsigned int Quantity;
   Point T; //Direction vector along the MT axis from Minus to Plus end
   Point M; //Minus end
   Point P; //Plus end
   std::vector<Voxel*> startVoxels;
   std::vector<std::vector<Voxel*> > vacantVoxels;
-  double maxLength;
 };
 
 #endif /* __MicrotubuleProcess_hpp */
+
 
