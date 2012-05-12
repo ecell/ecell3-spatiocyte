@@ -35,6 +35,11 @@ LIBECS_DM_INIT(MicrotubuleProcess, Process);
 void MicrotubuleProcess::initializeThird()
 {
   theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
+  theVacantSpecies = theProcessSpecies[0];
+  C = theComp->centerPoint;
+  C.x += OriginX*theComp->lengthX/2;
+  C.y += OriginY*theComp->lengthY/2;
+  C.z += OriginZ*theComp->lengthZ/2;
   VoxelDiameter = theSpatiocyteStepper->getVoxelRadius()*2;
   DimerPitch /= VoxelDiameter;
   Length /= VoxelDiameter;
@@ -57,7 +62,7 @@ void MicrotubuleProcess::addVacantVoxel(unsigned int anIndex, Voxel* aVoxel)
 {
 
   vacantVoxels[anIndex].push_back(aVoxel);
-  theProcessSpecies[anIndex]->addMolecule(aVoxel);
+  theProcessSpecies[anIndex+1]->addMolecule(aVoxel);
   //aVoxel->id = theProcessSpecies[anIndex]->getID();
 
 }
@@ -67,7 +72,7 @@ void MicrotubuleProcess::removeVacantVoxels(unsigned int anIndex)
   for(std::vector<Voxel*>::iterator i(vacantVoxels[anIndex].begin());
       i != vacantVoxels[anIndex].end(); ++i)
     { 
-      (*i)->id = theComp->vacantID;
+      (*i)->id = theVacantSpecies->getID();
     }
   vacantVoxels[anIndex].resize(0);
 }
@@ -80,21 +85,20 @@ void MicrotubuleProcess::initializeDirectionVector()
    * MTAxis = (PEnd - MEnd)/Norm[PEnd - MEnd] (*direction vector along the MT
    * long axis*)
    */
-  Point C(theComp->centerPoint);
   //Plus end
-  P.x = theComp->lengthX/2;
+  P.x = Length/2;
   P.y = 0;
   P.z = 0;
   //Minus end
-  M.x = -theComp->lengthX/2;
+  M.x = -Length/2;
   M.y = 0;
   M.z = 0;
-  theSpatiocyteStepper->rotateX(theComp->rotateX, &M, -1);
-  theSpatiocyteStepper->rotateY(theComp->rotateY, &M, -1);
-  theSpatiocyteStepper->rotateZ(theComp->rotateZ, &M, -1);
-  theSpatiocyteStepper->rotateX(theComp->rotateX, &P, -1);
-  theSpatiocyteStepper->rotateY(theComp->rotateY, &P, -1);
-  theSpatiocyteStepper->rotateZ(theComp->rotateZ, &P, -1);
+  theSpatiocyteStepper->rotateX(RotateX, &M, -1);
+  theSpatiocyteStepper->rotateY(RotateY, &M, -1);
+  theSpatiocyteStepper->rotateZ(RotateZ, &M, -1);
+  theSpatiocyteStepper->rotateX(RotateX, &P, -1);
+  theSpatiocyteStepper->rotateY(RotateY, &P, -1);
+  theSpatiocyteStepper->rotateZ(RotateZ, &P, -1);
   P.x += C.x;
   P.y += C.y;
   P.z += C.z;

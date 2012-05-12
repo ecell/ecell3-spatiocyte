@@ -48,19 +48,37 @@ public:
       PROPERTYSLOT_SET_GET(Real, MonomerPitch);
       PROPERTYSLOT_SET_GET(Real, Protofilaments);
       PROPERTYSLOT_SET_GET(Real, Radius);
+      PROPERTYSLOT_SET_GET(Real, OriginX);
+      PROPERTYSLOT_SET_GET(Real, OriginY);
+      PROPERTYSLOT_SET_GET(Real, OriginZ);
+      PROPERTYSLOT_SET_GET(Real, RotateX);
+      PROPERTYSLOT_SET_GET(Real, RotateY);
+      PROPERTYSLOT_SET_GET(Real, RotateZ);
     }
   MicrotubuleProcess():
     DimerPitch(8e-9),
     Length(100e-9),
     MonomerPitch(4e-9),
     Protofilaments(13),
-    Radius(12.5e-9) {}
+    Radius(12.5e-9),
+    OriginX(0),
+    OriginY(0),
+    OriginZ(0),
+    RotateX(0),
+    RotateY(0),
+    RotateZ(0) {}
   virtual ~MicrotubuleProcess() {}
   SIMPLE_SET_GET_METHOD(Real, DimerPitch);
   SIMPLE_SET_GET_METHOD(Real, Length);
   SIMPLE_SET_GET_METHOD(Real, MonomerPitch);
   SIMPLE_SET_GET_METHOD(Real, Protofilaments);
   SIMPLE_SET_GET_METHOD(Real, Radius);
+  SIMPLE_SET_GET_METHOD(Real, OriginX);
+  SIMPLE_SET_GET_METHOD(Real, OriginY);
+  SIMPLE_SET_GET_METHOD(Real, OriginZ);
+  SIMPLE_SET_GET_METHOD(Real, RotateX);
+  SIMPLE_SET_GET_METHOD(Real, RotateY);
+  SIMPLE_SET_GET_METHOD(Real, RotateZ);
   virtual void initializeThird();
   virtual void initializeFourth();
   void initProtofilaments();
@@ -83,12 +101,20 @@ protected:
   double Protofilaments;
   double Radius;
   double VoxelDiameter;
+  double OriginX;
+  double OriginY;
+  double OriginZ;
+  double RotateX;
+  double RotateY;
+  double RotateZ;
   Comp* theComp;
   Point T; //Direction vector along the MT axis from Minus to Plus end
   Point M; //Minus end
   Point P; //Plus end
+  Point C; //Center point
   std::vector<Voxel*> startVoxels;
   std::vector<std::vector<Voxel*> > vacantVoxels;
+  Species* theVacantSpecies;
 };
 
 #endif /* __MicrotubuleProcess_hpp */
