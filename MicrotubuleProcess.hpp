@@ -91,7 +91,7 @@ public:
   bool isInsidePlane(Voxel*, Point&);
   bool isLine(Voxel*, Point&);
   bool checkStartVoxel(Voxel*);
-  void addVacantVoxel(unsigned int, Voxel*);
+  void addVacantVoxel(unsigned int, unsigned int, Point&);
   void removeVacantVoxels(unsigned int);
   void rotatePointAlongVector(Point&, double);
 protected:
@@ -107,6 +107,7 @@ protected:
   double RotateX;
   double RotateY;
   double RotateZ;
+  unsigned int theDimerSize;
   Comp* theComp;
   Point T; //Direction vector along the MT axis from Minus to Plus end
   Point M; //Minus end
@@ -115,8 +116,12 @@ protected:
   std::vector<Voxel*> startVoxels;
   std::vector<std::vector<Voxel*> > vacantVoxels;
   Species* theVacantSpecies;
+  std::vector<Voxel> theLattice;
+  std::vector<Point> thePoints;
 };
 
 #endif /* __MicrotubuleProcess_hpp */
+
+
 
 

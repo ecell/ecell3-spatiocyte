@@ -45,7 +45,9 @@ void MicrotubuleProcess::initializeThird()
   Length /= VoxelDiameter;
   MonomerPitch /= VoxelDiameter;
   Radius /= VoxelDiameter;
-  vacantVoxels.resize(Protofilaments);
+  theDimerSize = (unsigned int)rint(Length/DimerPitch);
+  theLattice.resize(Protofilaments*theDimerSize);
+  thePoints.resize(Protofilaments*theDimerSize);
   for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
     {
       theProcessSpecies[i]->setIsOffLattice();
@@ -56,25 +58,16 @@ void MicrotubuleProcess::initializeFourth()
 {
   initProtofilaments();
   elongateProtofilaments();
+  theVacantSpecies->setIsPopulated();
 }
 
-void MicrotubuleProcess::addVacantVoxel(unsigned int anIndex, Voxel* aVoxel)
+void MicrotubuleProcess::addVacantVoxel(unsigned int protoIndex,
+                                        unsigned int dimerIndex, Point& aPoint)
 {
-
-  vacantVoxels[anIndex].push_back(aVoxel);
-  theProcessSpecies[anIndex+1]->addMolecule(aVoxel);
-  //aVoxel->id = theProcessSpecies[anIndex]->getID();
-
-}
-
-void MicrotubuleProcess::removeVacantVoxels(unsigned int anIndex)
-{
-  for(std::vector<Voxel*>::iterator i(vacantVoxels[anIndex].begin());
-      i != vacantVoxels[anIndex].end(); ++i)
-    { 
-      (*i)->id = theVacantSpecies->getID();
-    }
-  vacantVoxels[anIndex].resize(0);
+  Voxel& aVoxel(theLattice[protoIndex*theDimerSize+dimerIndex]);
+  aVoxel.point = &thePoints[protoIndex*theDimerSize+dimerIndex];
+  *aVoxel.point = aPoint;
+  theVacantSpecies->addMolecule(&aVoxel);
 }
 
 void MicrotubuleProcess::initializeDirectionVector()
@@ -85,43 +78,40 @@ void MicrotubuleProcess::initializeDirectionVector()
    * MTAxis = (PEnd - MEnd)/Norm[PEnd - MEnd] (*direction vector along the MT
    * long axis*)
    */
-  //Plus end
-  P.x = Length/2;
-  P.y = 0;
-  P.z = 0;
   //Minus end
   M.x = -Length/2;
   M.y = 0;
   M.z = 0;
+  //Rotated Minus end
   theSpatiocyteStepper->rotateX(RotateX, &M, -1);
   theSpatiocyteStepper->rotateY(RotateY, &M, -1);
   theSpatiocyteStepper->rotateZ(RotateZ, &M, -1);
-  theSpatiocyteStepper->rotateX(RotateX, &P, -1);
-  theSpatiocyteStepper->rotateY(RotateY, &P, -1);
-  theSpatiocyteStepper->rotateZ(RotateZ, &P, -1);
-  P.x += C.x;
-  P.y += C.y;
-  P.z += C.z;
   M.x += C.x;
   M.y += C.y;
   M.z += C.z;
-  //Direction vector from Minus to Plus end
-  T.x = P.x-M.x;
-  T.y = P.y-M.y;
-  T.z = P.z-M.z;
+  //Direction vector from the Minus end to center
+  T.x = C.x-M.x;
+  T.y = C.y-M.y;
+  T.z = C.z-M.z;
   //Make T a unit vector
   double NormT(sqrt(T.x*T.x+T.y*T.y+T.z*T.z));
   T.x /= NormT;
   T.y /= NormT;
   T.z /= NormT;
+  //Rotated Plus end
+  P.x = M.x+Length*T.x;
+  P.y = M.y+Length*T.y;
+  P.z = M.z+Length*T.z;
+  /*
   Voxel* aVoxel(new Voxel);
   aVoxel->point = &M;
   Voxel* bVoxel(new Voxel);
   bVoxel->point = &P;
   std::cout << "M.x:" << M.x << " y:" << M.y << " z:" << M.z << std::endl;
   std::cout << "P.x:" << P.x << " y:" << P.y << " z:" << P.z << std::endl;
-  theProcessSpecies[9]->addMolecule(aVoxel);
-  theProcessSpecies[9]->addMolecule(bVoxel);
+  theVacantSpecies->addMolecule(aVoxel);
+  theVacantSpecies->addMolecule(bVoxel);
+  */
 }
 
 void MicrotubuleProcess::initProtofilaments()
@@ -161,21 +151,15 @@ void MicrotubuleProcess::initProtofilaments()
   S.y = M.y+Radius*D.y;
   S.z = M.z+Radius*D.z;
   std::cout << "S.x:" << S.x << " y:" << S.y << " z:" << S.z << std::endl;
-  Voxel* aVoxel(new Voxel);
-  aVoxel->point = new Point;
-  *aVoxel->point = S;
-  addVacantVoxel(0, aVoxel);
+  addVacantVoxel(0, 0, S);
   for(int i(1); i != Protofilaments; ++i)
     {
       double angle(2*M_PI/Protofilaments);
       rotatePointAlongVector(S, angle);
-      S.x = S.x+MonomerPitch/(Protofilaments-1)*T.x;
-      S.y = S.y+MonomerPitch/(Protofilaments-1)*T.y;
-      S.z = S.z+MonomerPitch/(Protofilaments-1)*T.z;
-      Voxel* bVoxel(new Voxel);
-      bVoxel->point = new Point;
-      *bVoxel->point = S;
-      addVacantVoxel(i, bVoxel);
+      S.x += MonomerPitch/(Protofilaments-1)*T.x;
+      S.y += MonomerPitch/(Protofilaments-1)*T.y;
+      S.z += MonomerPitch/(Protofilaments-1)*T.z;
+      addVacantVoxel(i, 0, S);
     }
 }
 
@@ -183,21 +167,17 @@ void MicrotubuleProcess::elongateProtofilaments()
 {
   for(unsigned int i(0); i != Protofilaments; ++i)
     {
-      Voxel* startVoxel(vacantVoxels[i][0]);
-      Point A(*startVoxel->point);
-      for(unsigned int j(0); j != (unsigned int)rint(Length/DimerPitch); ++j)
+      Voxel& startVoxel(theLattice[i*theDimerSize]);
+      Point A(*startVoxel.point);
+      for(unsigned int j(1); j != theDimerSize; ++j)
         {
-          A.x = A.x+DimerPitch*T.x;
-          A.y = A.y+DimerPitch*T.y;
-          A.z = A.z+DimerPitch*T.z;
-          Voxel* aVoxel(new Voxel);
-          aVoxel->point = new Point;
-          *aVoxel->point = A;
-          addVacantVoxel(i, aVoxel);
+          A.x += DimerPitch*T.x;
+          A.y += DimerPitch*T.y;
+          A.z += DimerPitch*T.z;
+          addVacantVoxel(i, j, A);
         }
     }
 }
-
 
 /*
  * The function returns the result when the point (x,y,z) is rotated about the line through (a,b,c) with unit direction vector ⟨u,v,w⟩ by the angle θ.
@@ -228,5 +208,6 @@ void MicrotubuleProcess::rotatePointAlongVector(Point& S, double angle)
   S.x = xx;
   S.y = yy;
   S.z = zz;
-  std::cout << "S.x:" << S.x << " y:" << S.y << " z:" << S.z << std::endl;
 }
+
+
