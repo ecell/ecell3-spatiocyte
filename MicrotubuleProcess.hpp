@@ -63,7 +63,8 @@ public:
   SIMPLE_SET_GET_METHOD(Real, Radius);
   virtual void initializeThird();
   virtual void initializeFourth();
-  void queueStartVoxels();
+  void initProtofilaments();
+  void elongateProtofilaments();
   double getWestPlaneDist(Voxel*);
   void initializeDirectionVector();
   Voxel* getNeighbor(Voxel*, Point&, Voxel*, double&);
@@ -81,6 +82,7 @@ protected:
   double MonomerPitch;
   double Protofilaments;
   double Radius;
+  double VoxelDiameter;
   Comp* theComp;
   Point T; //Direction vector along the MT axis from Minus to Plus end
   Point M; //Minus end

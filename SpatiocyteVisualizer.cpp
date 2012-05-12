@@ -306,10 +306,12 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   double targetLuminosity(0.75);
   double sharedLuminosity(0.8);
   double polyLuminosity(0.3);
+  /*
   theSpeciesColor[0].r = 0.9;
   theSpeciesColor[0].g = 0.9;
   theSpeciesColor[0].b = 0.9;
-  for(unsigned int i(1); i!=theLatticeSpSize; ++i)
+  */
+  for(unsigned int i(0); i!=theLatticeSpSize; ++i)
     {
       hsl2rgb(hueInterval*i, speciesLuminosity,
               &theSpeciesColor[i].r,

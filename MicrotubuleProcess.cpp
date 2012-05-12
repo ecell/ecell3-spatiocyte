@@ -35,21 +35,31 @@ LIBECS_DM_INIT(MicrotubuleProcess, Process);
 void MicrotubuleProcess::initializeThird()
 {
   theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
+  VoxelDiameter = theSpatiocyteStepper->getVoxelRadius()*2;
+  DimerPitch /= VoxelDiameter;
+  Length /= VoxelDiameter;
+  MonomerPitch /= VoxelDiameter;
+  Radius /= VoxelDiameter;
   vacantVoxels.resize(Protofilaments);
-  theProcessSpecies[9]->setIsOffLattice();
-  theProcessSpecies[10]->setIsOffLattice();
-  theProcessSpecies[11]->setIsOffLattice();
+  for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
+    {
+      theProcessSpecies[i]->setIsOffLattice();
+    }
 }
 
 void MicrotubuleProcess::initializeFourth()
 {
-  queueStartVoxels();
+  initProtofilaments();
+  elongateProtofilaments();
 }
 
 void MicrotubuleProcess::addVacantVoxel(unsigned int anIndex, Voxel* aVoxel)
 {
+
   vacantVoxels[anIndex].push_back(aVoxel);
-  aVoxel->id = theProcessSpecies[anIndex]->getID();
+  theProcessSpecies[anIndex]->addMolecule(aVoxel);
+  //aVoxel->id = theProcessSpecies[anIndex]->getID();
+
 }
 
 void MicrotubuleProcess::removeVacantVoxels(unsigned int anIndex)
@@ -110,12 +120,8 @@ void MicrotubuleProcess::initializeDirectionVector()
   theProcessSpecies[9]->addMolecule(bVoxel);
 }
 
-void MicrotubuleProcess::queueStartVoxels()
+void MicrotubuleProcess::initProtofilaments()
 {
-  double voxelDiameter(theSpatiocyteStepper->getVoxelRadius()*2);
-  double Radius(25e-9/2/voxelDiameter);
-  std::cout << "Radius:" << Radius << std::endl;
-  double ca(cos(2*M_PI/13));
   initializeDirectionVector();
   Point R; //Initialize a random point on the plane attached at the minus end
   if(M.x != P.x)
@@ -153,25 +159,46 @@ void MicrotubuleProcess::queueStartVoxels()
   std::cout << "S.x:" << S.x << " y:" << S.y << " z:" << S.z << std::endl;
   Voxel* aVoxel(new Voxel);
   aVoxel->point = new Point;
-  (*aVoxel->point) = S;
-  theProcessSpecies[11]->addMolecule(aVoxel);
-  for(int i(1); i != 3000; ++i)
+  *aVoxel->point = S;
+  addVacantVoxel(0, aVoxel);
+  for(int i(1); i != Protofilaments; ++i)
     {
-      double rad(2*M_PI/13);
-      rotatePointAlongVector(S, rad);
-      S.x = S.x+1e-9/3/voxelDiameter*T.x;
-      S.y = S.y+1e-9/3/voxelDiameter*T.y;
-      S.z = S.z+1e-9/3/voxelDiameter*T.z;
+      double angle(2*M_PI/Protofilaments);
+      rotatePointAlongVector(S, angle);
+      S.x = S.x+MonomerPitch/(Protofilaments-1)*T.x;
+      S.y = S.y+MonomerPitch/(Protofilaments-1)*T.y;
+      S.z = S.z+MonomerPitch/(Protofilaments-1)*T.z;
       Voxel* bVoxel(new Voxel);
       bVoxel->point = new Point;
-      (*bVoxel->point) = S;
-      theProcessSpecies[11]->addMolecule(bVoxel);
+      *bVoxel->point = S;
+      addVacantVoxel(i, bVoxel);
     }
 }
+
+void MicrotubuleProcess::elongateProtofilaments()
+{
+  for(unsigned int i(0); i != Protofilaments; ++i)
+    {
+      Voxel* startVoxel(vacantVoxels[i][0]);
+      Point A(*startVoxel->point);
+      for(unsigned int j(0); j != (unsigned int)rint(Length/DimerPitch); ++j)
+        {
+          A.x = A.x+DimerPitch*T.x;
+          A.y = A.y+DimerPitch*T.y;
+          A.z = A.z+DimerPitch*T.z;
+          Voxel* aVoxel(new Voxel);
+          aVoxel->point = new Point;
+          *aVoxel->point = A;
+          addVacantVoxel(i, aVoxel);
+        }
+    }
+}
+
+
 /*
- * If we multiply this times ⟨x,y,z⟩ we can obtain a function of of ten variables that yields the result of rotating the point (x,y,z) about the line through (a,b,c) with direction vector ⟨u,v,w⟩ (where u2 + v2 + w2 = 1) by the angle θ.
+ * The function returns the result when the point (x,y,z) is rotated about the line through (a,b,c) with unit direction vector ⟨u,v,w⟩ by the angle θ.
  * */
-void MicrotubuleProcess::rotatePointAlongVector(Point& S, double rad)
+void MicrotubuleProcess::rotatePointAlongVector(Point& S, double angle)
 {
   double x(S.x);
   double y(S.y);
@@ -185,9 +212,9 @@ void MicrotubuleProcess::rotatePointAlongVector(Point& S, double rad)
   double u2(u*u);
   double v2(v*v);
   double w2(w*w);
-  double cosT(cos(rad));
+  double cosT(cos(angle));
   double oneMinusCosT(1-cosT);
-  double sinT(sin(rad));
+  double sinT(sin(angle));
   double xx((a*(v2 + w2) - u*(b*v + c*w - u*x - v*y - w*z)) * oneMinusCosT
                 + x*cosT + (-c*v + b*w - w*y + v*z)*sinT);
   double yy((b*(u2 + w2) - v*(a*u + c*w - u*x - v*y - w*z)) * oneMinusCosT
