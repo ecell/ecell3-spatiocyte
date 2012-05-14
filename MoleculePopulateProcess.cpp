@@ -65,7 +65,8 @@ void MoleculePopulateProcess::populateGaussian(Species* aSpecies)
 
 void MoleculePopulateProcess::populateUniformOnDiffuseVacant(Species* aSpecies)
 {
-  std::cout << "    Populating:" << getIDString(aSpecies) << std::endl;
+  std::cout << "    Populating uniformly on diffuse vacant:" <<
+    getIDString(aSpecies) << std::endl;
   if(!aSpecies->getIsPopulated())
     {
       if(UniformRadiusX == 1 && UniformRadiusY == 1 && UniformRadiusZ == 1 &&
@@ -106,7 +107,8 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
                                               unsigned int aList[], 
                                               unsigned int* aCount)
 {
-  std::cout << "    Populating:" << getIDString(aSpecies) << std::endl;
+  std::cout << "    Populating densely:" <<
+    getIDString(aSpecies) << std::endl;
   Species* aVacantSpecies(aSpecies->getVacantSpecies());
   if(!aSpecies->getIsPopulated())
     {
@@ -135,6 +137,8 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
 
 void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
 {
+  std::cout << "    Populating sparsely:" <<
+    getIDString(aSpecies) << std::endl;
   Species* aVacantSpecies(aSpecies->getVacantSpecies());
   if(!aSpecies->getIsPopulated())
     {
@@ -165,6 +169,8 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
 
 void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
 {
+  std::cout << "    Populating uniformly ranged:" <<
+    getIDString(aSpecies) << std::endl;
   Comp* aComp(aSpecies->getComp());
   Species* aVacantSpecies(aComp->vacantSpecies);
   double delta(0);
