@@ -35,8 +35,7 @@ LIBECS_DM_INIT(MicrotubuleProcess, Process);
 void MicrotubuleProcess::initializeThird()
 {
   theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
-  theVacantSpecies = theProcessSpecies[0];
-  theVacantSpecies->setIsVacant();
+  theVacantSpecies->setIsOffLattice();
   C = theComp->centerPoint;
   C.x += OriginX*theComp->lengthX/2;
   C.y += OriginY*theComp->lengthY/2;
@@ -49,13 +48,10 @@ void MicrotubuleProcess::initializeThird()
   theDimerSize = (unsigned int)rint(Length/DimerPitch);
   theLattice.resize(Protofilaments*theDimerSize);
   thePoints.resize(Protofilaments*theDimerSize);
-  for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
+  for(unsigned int i(0); i != theKinesinSpecies.size(); ++i)
     {
-      theProcessSpecies[i]->setIsOffLattice();
-      if(i)
-        {
-          theProcessSpecies[i]->setVacantSpecies(theVacantSpecies);
-        }
+      theKinesinSpecies[i]->setIsOffLattice();
+      theKinesinSpecies[i]->setVacantSpecies(theVacantSpecies);
     }
   initProtofilaments();
   elongateProtofilaments();

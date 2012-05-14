@@ -66,7 +66,8 @@ public:
     OriginZ(0),
     RotateX(0),
     RotateY(0),
-    RotateZ(0) {}
+    RotateZ(0),
+    theVacantSpecies(NULL) {}
   virtual ~MicrotubuleProcess() {}
   SIMPLE_SET_GET_METHOD(Real, DimerPitch);
   SIMPLE_SET_GET_METHOD(Real, Length);
@@ -79,6 +80,62 @@ public:
   SIMPLE_SET_GET_METHOD(Real, RotateX);
   SIMPLE_SET_GET_METHOD(Real, RotateY);
   SIMPLE_SET_GET_METHOD(Real, RotateZ);
+  virtual void initialize()
+    {
+      if(isInitialized)
+        {
+          return;
+        }
+      SpatiocyteProcess::initialize();
+      for(VariableReferenceVector::iterator
+          i(theVariableReferenceVector.begin());
+          i != theVariableReferenceVector.end(); ++i)
+        {
+          Species* aSpecies(theSpatiocyteStepper->variable2species(
+                                   (*i).getVariable())); 
+          if((*i).getCoefficient())
+            {
+              if(theVacantSpecies)
+                {
+                  THROW_EXCEPTION(ValueError, String(
+                                  getPropertyInterface().getClassName()) +
+                                  "[" + getFullID().asString() + 
+                                  "]: A MicrotubuleProcess requires only one " +
+                                  "vacant variable reference with negative " +
+                                  "coefficient as the vacant species of the " +
+                                  "microtubule compartment, but " +
+                                  getIDString(theVacantSpecies) + " and " +
+                                  getIDString(aSpecies) + " are given."); 
+                }
+              theVacantSpecies = aSpecies;
+              theVacantSpecies->setIsVacant();
+            }
+          else
+            {
+              theKinesinSpecies.push_back(aSpecies);
+            }
+        }
+      if(!theKinesinSpecies.size())
+        {
+          THROW_EXCEPTION(ValueError, String(
+                          getPropertyInterface().getClassName()) +
+                          "[" + getFullID().asString() + 
+                          "]: A MicrotubuleProcess requires at least one " +
+                          "nonHD variable reference with zero coefficient " +
+                          "as the kinesin species, but none is given."); 
+        }
+      if(!theVacantSpecies)
+        {
+          THROW_EXCEPTION(ValueError, String(
+                          getPropertyInterface().getClassName()) +
+                          "[" + getFullID().asString() + 
+                          "]: A MicrotubuleProcess requires one " +
+                          "nonHD variable reference with negative " +
+                          "coefficient as the vacant species, " +
+                          "but none is given."); 
+        }
+    }
+
   virtual void initializeThird();
   void initProtofilaments();
   void elongateProtofilaments();
@@ -120,6 +177,7 @@ protected:
   Species* theVacantSpecies;
   std::vector<Voxel> theLattice;
   std::vector<Point> thePoints;
+  std::vector<Species*> theKinesinSpecies;
 };
 
 #endif /* __MicrotubuleProcess_hpp */
