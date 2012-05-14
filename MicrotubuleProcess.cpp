@@ -51,13 +51,14 @@ void MicrotubuleProcess::initializeThird()
   for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
     {
       theProcessSpecies[i]->setIsOffLattice();
+      if(i)
+        {
+          theProcessSpecies[i]->setVacantSpecies(theVacantSpecies);
+        }
     }
-}
-
-void MicrotubuleProcess::initializeFourth()
-{
   initProtofilaments();
   elongateProtofilaments();
+  connectProtofilaments();
   theVacantSpecies->setIsPopulated();
 }
 
@@ -67,7 +68,13 @@ void MicrotubuleProcess::addVacantVoxel(unsigned int protoIndex,
   Voxel& aVoxel(theLattice[protoIndex*theDimerSize+dimerIndex]);
   aVoxel.point = &thePoints[protoIndex*theDimerSize+dimerIndex];
   *aVoxel.point = aPoint;
-  theVacantSpecies->addMolecule(&aVoxel);
+  aVoxel.adjoiningVoxels = new Voxel*[theAdjoiningVoxelSize];
+  aVoxel.adjoiningSize = 2;
+  for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+    {
+      aVoxel.adjoiningVoxels[i] = theNullVoxel;
+    }
+  theVacantSpecies->hardAddMolecule(&aVoxel);
 }
 
 void MicrotubuleProcess::initializeDirectionVector()
@@ -109,13 +116,16 @@ void MicrotubuleProcess::initializeDirectionVector()
   bVoxel->point = &P;
   std::cout << "M.x:" << M.x << " y:" << M.y << " z:" << M.z << std::endl;
   std::cout << "P.x:" << P.x << " y:" << P.y << " z:" << P.z << std::endl;
-  theVacantSpecies->addMolecule(aVoxel);
-  theVacantSpecies->addMolecule(bVoxel);
+  theVacantSpecies->hardAddMolecule(aVoxel);
+  theVacantSpecies->hardAddMolecule(bVoxel);
   */
 }
 
 void MicrotubuleProcess::initProtofilaments()
 {
+  theAdjoiningVoxelSize = theSpatiocyteStepper->getAdjoiningVoxelSize();
+  theNullVoxel = new Voxel;
+  theNullVoxel->id = theSpatiocyteStepper->getNullID();
   initializeDirectionVector();
   Point R; //Initialize a random point on the plane attached at the minus end
   if(M.x != P.x)
@@ -175,6 +185,20 @@ void MicrotubuleProcess::elongateProtofilaments()
           A.y += DimerPitch*T.y;
           A.z += DimerPitch*T.z;
           addVacantVoxel(i, j, A);
+        }
+    }
+}
+
+void MicrotubuleProcess::connectProtofilaments()
+{
+  for(unsigned int i(0); i != Protofilaments; ++i)
+    {
+      for(unsigned int j(0); j != theDimerSize-1; ++j)
+        { 
+          Voxel& firstVoxel(theLattice[i*theDimerSize+j]);
+          Voxel& secondVoxel(theLattice[i*theDimerSize+j+1]);
+          firstVoxel.adjoiningVoxels[NORTH] = &secondVoxel;
+          secondVoxel.adjoiningVoxels[SOUTH] = &firstVoxel;
         }
     }
 }

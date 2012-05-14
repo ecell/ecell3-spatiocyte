@@ -2100,6 +2100,11 @@ Species* SpatiocyteStepper::id2species(unsigned short id)
   return theSpecies[id];
 }
 
+unsigned short SpatiocyteStepper::getNullID()
+{
+  return theNullID;
+}
+
 Comp* SpatiocyteStepper::id2Comp(unsigned short id)
 {
   return theSpecies[id]->getComp();

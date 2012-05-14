@@ -64,6 +64,7 @@ public:
     isOffLattice(false),
     isStatic(true),
     isSubunitInitialized(false),
+    isFixedAdjoins(false),
     theID(anID),
     theInitMoleculeSize(anInitMoleculeSize),
     theMoleculeSize(0),
@@ -285,6 +286,7 @@ public:
   void setIsVolume()
     {
       isVolume = true;
+      isFixedAdjoins = true;
     }
   void setIsInContact()
     {
@@ -305,6 +307,7 @@ public:
   void setIsOffLattice()
     {
       isOffLattice = true;
+      isFixedAdjoins = false;
     }
   void setIsPolymer(std::vector<double> bendAngles, int aDirectionality)
     {
@@ -413,7 +416,7 @@ public:
         {
           Voxel* source(theMolecules[i]);
           int size;
-          if(isVolume)
+          if(isFixedAdjoins)
             {
               size = theAdjoiningVoxelSize;
             }
@@ -467,7 +470,7 @@ public:
         {
           Voxel* source(theMolecules[i]);
           int size;
-          if(isVolume)
+          if(isFixedAdjoins)
             {
               size = theAdjoiningVoxelSize;
             }
@@ -557,6 +560,20 @@ public:
             }
           theVariable->setValue(theMoleculeSize);
         }
+    }
+  void hardAddMolecule(Voxel* aMolecule)
+    {
+      aMolecule->id = theID;
+      ++theMoleculeSize;
+      if(theMoleculeSize > theMolecules.size())
+        {
+          theMolecules.push_back(aMolecule);
+        }
+      else
+        {
+          theMolecules[theMoleculeSize-1] = aMolecule;
+        }
+      theVariable->setValue(theMoleculeSize);
     }
   //it is soft remove because the id of the molecule is not changed:
   void softRemoveMolecule(Voxel* aMolecule)
@@ -945,6 +962,7 @@ private:
   bool isOffLattice;
   bool isStatic;
   bool isSubunitInitialized;
+  bool isFixedAdjoins;
   const unsigned short theID;
   const unsigned int theInitMoleculeSize;
   unsigned int theMoleculeSize;

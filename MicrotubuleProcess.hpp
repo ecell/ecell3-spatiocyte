@@ -80,9 +80,9 @@ public:
   SIMPLE_SET_GET_METHOD(Real, RotateY);
   SIMPLE_SET_GET_METHOD(Real, RotateZ);
   virtual void initializeThird();
-  virtual void initializeFourth();
   void initProtofilaments();
   void elongateProtofilaments();
+  void connectProtofilaments();
   double getWestPlaneDist(Voxel*);
   void initializeDirectionVector();
   Voxel* getNeighbor(Voxel*, Point&, Voxel*, double&);
@@ -108,7 +108,9 @@ protected:
   double RotateY;
   double RotateZ;
   unsigned int theDimerSize;
+  unsigned int theAdjoiningVoxelSize;
   Comp* theComp;
+  Voxel* theNullVoxel;
   Point T; //Direction vector along the MT axis from Minus to Plus end
   Point M; //Minus end
   Point P; //Plus end

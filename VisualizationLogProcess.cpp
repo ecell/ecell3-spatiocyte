@@ -128,6 +128,14 @@ void VisualizationLogProcess::logMolecules(int anIndex)
 void VisualizationLogProcess::logOffLattice(int anIndex)
 {
   Species* aSpecies(theOffLatticeSpecies[anIndex]);
+  if(aSpecies->getIsVacant())
+    {
+      return;
+    }
+  else if(aSpecies->getIsDiffuseVacant())
+    {
+      aSpecies->updateDiffuseVacantMolecules();
+    }
   theLogFile.write((char*)(&anIndex), sizeof(anIndex));
   //The species molecule size:
   int aSize(aSpecies->size());

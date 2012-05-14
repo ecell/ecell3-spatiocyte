@@ -85,6 +85,7 @@ public:
   unsigned int getColSize();
   unsigned int getLatticeSize();
   unsigned int getAdjoiningVoxelSize();
+  unsigned short getNullID();
   Point getCenterPoint();
   double getNormalizedVoxelRadius();
   Voxel* point2voxel(Point);
