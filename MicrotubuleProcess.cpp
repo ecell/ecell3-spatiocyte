@@ -36,6 +36,7 @@ void MicrotubuleProcess::initializeThird()
 {
   theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
   theVacantSpecies = theProcessSpecies[0];
+  theVacantSpecies->setIsVacant();
   C = theComp->centerPoint;
   C.x += OriginX*theComp->lengthX/2;
   C.y += OriginY*theComp->lengthY/2;

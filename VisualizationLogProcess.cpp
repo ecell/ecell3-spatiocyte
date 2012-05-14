@@ -291,6 +291,19 @@ void VisualizationLogProcess::logSurfaceVoxels()
     }
   //theLogMarker is a constant throughout the simulation:
   theLogFile.write((char*)(&theLogMarker), sizeof(theLogMarker));
+  for(unsigned int i(0); i != theOffLatticeSpecies.size(); ++i)
+    {
+      Species* aSpecies(theOffLatticeSpecies[i]);
+      theLogFile.write((char*)(&i), sizeof(i));
+      //The species molecule size:
+      int aSize(aSpecies->size());
+      theLogFile.write((char*)(&aSize), sizeof(aSize)); 
+      for(int i(0); i != aSize; ++i)
+        {
+          Point aPoint(aSpecies->getPoint(i));
+          theLogFile.write((char*)(&aPoint), sizeof(aPoint));
+        }
+    }
   theLogFile.write((char*)(&theLogMarker), sizeof(theLogMarker));
   aDataSize = (theLogFile.tellp()-aStartPos)-static_cast<std::streampos>(sizeof(aDataSize)); 
   int aPrevDataSize(theLogFile.tellp()-theStepStartPos+static_cast<std::streampos>(sizeof(int))*2);
