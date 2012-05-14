@@ -114,7 +114,7 @@ struct Voxel
   unsigned short id;
   //Try to limit the adjoiningSize <= 6:
   unsigned short adjoiningSize;
-  unsigned int coord; //coord = aComp->coords[x] + theStartCoord
+  unsigned int coord; //coord = theLattice[x] + theStartCoord
   Voxel** adjoiningVoxels;
   Subunit* subunit;
   Point* point;
@@ -127,7 +127,7 @@ struct Comp
   bool isIntersectParent;
   bool isIntersectRoot;
   unsigned short dimension;
-  unsigned short vacantID; 
+  unsigned short vacantID; //remove this
   int enclosed;
   int geometry;
   int xyPlane;
@@ -158,13 +158,13 @@ struct Comp
   //common id. So There is only one common diffusive Comp:
   Comp* diffusiveComp;
   Point centerPoint;
+  Species* vacantSpecies;
   std::vector<Comp*> allSubs;
   std::vector<Comp*> immediateSubs;
   std::vector<Comp*> intersectPeers;
   std::vector<Comp*> intersectLowerPeers;
   std::vector<Comp*> lineSubs;
   std::vector<Species*> species;
-  std::vector<unsigned int> coords; //coords[x] = aVoxel->coord - theStartCoord
   std::vector<unsigned int> adjoinCount;
 };
 

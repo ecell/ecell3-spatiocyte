@@ -90,7 +90,7 @@ public:
         }
       if(theComp)
         {
-          setVacantSpecies(theStepper->id2species(theComp->vacantID));
+          setVacantSpecies(theComp->vacantSpecies);
         }
     }
   void setDiffusionInfluencedReaction(
@@ -183,7 +183,8 @@ public:
       std::vector<unsigned int> aCoords;
       for(unsigned int i(0); i != theMoleculeSize; ++i)
         {
-          std::vector<Voxel*>& aSourceVoxels(theMolecules[i]->subunit->sourceVoxels);
+          std::vector<Voxel*>& 
+            aSourceVoxels(theMolecules[i]->subunit->sourceVoxels);
           for(unsigned int j(0); j != aSourceVoxels.size(); ++j)
             {
               if(aSourceVoxels[j])
@@ -199,7 +200,8 @@ public:
       std::vector<unsigned int> aCoords;
       for(unsigned int i(0); i != theMoleculeSize; ++i)
         {
-          std::vector<Voxel*>& aTargetVoxels(theMolecules[i]->subunit->targetVoxels);
+          std::vector<Voxel*>& 
+            aTargetVoxels(theMolecules[i]->subunit->targetVoxels);
           for(unsigned int j(0); j != aTargetVoxels.size(); ++j)
             {
               if(aTargetVoxels[j])
@@ -215,7 +217,8 @@ public:
       std::vector<unsigned int> aCoords;
       for(unsigned int i(0); i != theMoleculeSize; ++i)
         {
-          std::vector<Voxel*>& aSharedLipids(theMolecules[i]->subunit->sharedLipids);
+          std::vector<Voxel*>& 
+            aSharedLipids(theMolecules[i]->subunit->sharedLipids);
           for(unsigned int j(0); j != aSharedLipids.size(); ++j)
             {
               if(aSharedLipids[j])
@@ -244,7 +247,11 @@ public:
         {
           return *theMolecules[anIndex]->point;
         }
-      return theMolecules[anIndex]->subunit->subunitPoint;
+      else if(isPolymer)
+        {
+          return theMolecules[anIndex]->subunit->subunitPoint;
+        }
+      return theStepper->coord2point(theMolecules[anIndex]->coord);
     }
   Voxel* getMolecule(int anIndex)
     {
@@ -522,13 +529,53 @@ public:
     {
       theVariable = aVariable;
     }
+  void removeSurfaces()
+    {
+      int newMoleculeSize(0);
+      for(unsigned int i(0); i < theMoleculeSize; ++i) 
+        {
+          Voxel* aVoxel(theMolecules[i]);
+          if(theStepper->isRemovableEdgeCoord(aVoxel->coord, theComp))
+            {
+              Comp* aSuperComp(
+                 theStepper->system2Comp(theComp->system->getSuperSystem())); 
+              aSuperComp->vacantSpecies->hardAddMolecule(aVoxel);
+            }
+          else 
+            { 
+              theMolecules[newMoleculeSize] = aVoxel; 
+              ++newMoleculeSize; 
+            }
+        }
+      theMoleculeSize = newMoleculeSize;
+      theVariable->setValue(theMoleculeSize);
+    }
+  void removePeriodicEdgeVoxels()
+    {
+      int newMoleculeSize(0);
+      for(unsigned int i(0); i < theMoleculeSize; ++i) 
+        {
+          Voxel* aVoxel(theMolecules[i]);
+          if(theStepper->isPeriodicEdgeCoord(aVoxel->coord, theComp))
+            {
+              aVoxel->id = theStepper->getNullID();
+            }
+          else 
+            { 
+              theMolecules[newMoleculeSize] = aVoxel; 
+              ++newMoleculeSize; 
+            }
+        }
+      theMoleculeSize = newMoleculeSize;
+      theVariable->setValue(theMoleculeSize);
+    }
   void updateDiffuseVacantMolecules()
     {
       theMoleculeSize = 0;
-      int aSize(theComp->coords.size());
+      int aSize(theVacantSpecies->size());
       for(int i(0); i != aSize; ++i)
         { 
-          Voxel* aMolecule(theStepper->coord2voxel(theComp->coords[i]));
+          Voxel* aMolecule(theVacantSpecies->getMolecule(i));
           if(aMolecule->id == theID)
             {
               ++theMoleculeSize;
@@ -607,8 +654,15 @@ public:
             }
         }
     }
+  //Used to remove all molecules and free memory used to store the molecules
+  void clearMolecules()
+    {
+      theMolecules.resize(0);
+      theMoleculeSize = 0;
+      theVariable->setValue(0);
+    }
   //Used by the SpatiocyteStepper when resetting an interation, so must
-  //clear the whole compartment using theComp->vacantID:
+  //clear the whole compartment using theComp->vacantSpecies->getVacantID():
   void removeMolecules()
     {
       if(getIsDiffuseVacant())
@@ -617,7 +671,7 @@ public:
         }
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
-          theMolecules[i]->id = theComp->vacantID;
+          theMolecules[i]->id = theComp->vacantSpecies->getID();
         }
       theMoleculeSize = 0;
       theVariable->setValue(theMoleculeSize);
@@ -912,13 +966,13 @@ public:
     }
   Voxel* getRandomCompVoxel()
     {
-      int aSize(theComp->coords.size());
+      int aSize(theVacantSpecies->size());
       int r(gsl_rng_uniform_int(theRng, aSize));
       if(theStepper->getSearchVacant())
         {
           for(int i(r); i != aSize; ++i)
             {
-              Voxel* aVoxel(theStepper->coord2voxel(theComp->coords[i]));
+              Voxel* aVoxel(theVacantSpecies->getMolecule(i));
               if(aVoxel->id == theVacantID)
                 {
                   return aVoxel;
@@ -926,7 +980,7 @@ public:
             }
           for(int i(0); i != r; ++i)
             {
-              Voxel* aVoxel(theStepper->coord2voxel(theComp->coords[i]));
+              Voxel* aVoxel(theVacantSpecies->getMolecule(i));
               if(aVoxel->id == theVacantID)
                 {
                   return aVoxel;
@@ -935,7 +989,7 @@ public:
         }
       else
         {
-          Voxel* aVoxel(theStepper->coord2voxel(theComp->coords[r]));
+          Voxel* aVoxel(theVacantSpecies->getMolecule(r));
           if(aVoxel->id == theVacantID)
             {
               return aVoxel;
@@ -945,9 +999,9 @@ public:
     }
   Voxel* getRandomAdjoiningCompVoxel(Comp* aComp)
     {
-      int aSize(aComp->coords.size());
+      int aSize(theVacantSpecies->size());
       int r(gsl_rng_uniform_int(theRng, aSize)); 
-      Voxel* aVoxel(theStepper->coord2voxel(aComp->coords[r]));
+      Voxel* aVoxel(theVacantSpecies->getMolecule(r));
       return getRandomAdjoiningVoxel(aVoxel);
     }
 private:

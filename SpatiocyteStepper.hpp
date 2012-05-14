@@ -94,6 +94,8 @@ public:
   void rotateX(double, Point*, int sign=1);
   void rotateY(double, Point*, int sign=1);
   void rotateZ(double, Point*, int sign=1);
+  bool isPeriodicEdgeCoord(unsigned int, Comp*);
+  bool isRemovableEdgeCoord(unsigned int, Comp*);
 private:
   void setCompsCenterPoint();
   void setIntersectingCompartmentList();
@@ -128,8 +130,6 @@ private:
   void populateSpeciesSparse(std::vector<Species*>&);
   void registerCompSpecies(Comp*);
   void setCompProperties(Comp*);
-  void removePeriodicEdgeVoxels(Comp*);
-  void removeSurfaces(Comp*);
   void setDiffusiveComp(Comp*);
   void setCompCenterPoint(Comp*);
   void setLineVoxelProperties(Comp*);
@@ -144,9 +144,7 @@ private:
   void replaceVoxel(Voxel*, Voxel*);
   void replaceUniVoxel(Voxel*, Voxel*);
   void setMinMaxSurfaceDimensions(unsigned int, Comp*);
-  bool isRemovableEdgeCoord(unsigned int, Comp*);
   bool isInsideCoord(unsigned int, Comp*, double);
-  bool isPeriodicEdgeCoord(unsigned int, Comp*);
   bool isSurfaceVoxel(Voxel*, Comp*);
   bool isLineVoxel(Voxel*, Comp*);
   bool isEnclosedSurfaceVoxel(Voxel*, Comp*);

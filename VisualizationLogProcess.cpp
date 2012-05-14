@@ -276,18 +276,15 @@ void VisualizationLogProcess::logSurfaceVoxels()
         if(theLatticeSpecies[i]->getIsVacant() && 
            !theLatticeSpecies[i]->getIsVolume())
         {
-          Species* aLipid(theLatticeSpecies[i]);
+          Species* aVacantSpecies(theLatticeSpecies[i]);
           //The species index in the process:
           theLogFile.write((char*)(&i), sizeof(i));
-          const Comp* aSurface(aLipid->getComp());
           //The species molecule size:
-          unsigned int aSize(aSurface->coords.size());
+          unsigned int aSize(aVacantSpecies->size());
           theLogFile.write((char*)(&aSize), sizeof(aSize)); 
-          unsigned int aStartCoord(theSpatiocyteStepper->getStartCoord());
-          for(std::vector<unsigned int>::const_iterator j(
-               aSurface->coords.begin()); j != aSurface->coords.end(); ++j)
+          for(unsigned int j(0); j != aSize; ++j)
             {
-              unsigned int aCoord((*j)+aStartCoord);
+              unsigned int aCoord(aVacantSpecies->getMolecule(i)->coord);
               theLogFile.write((char*)(&aCoord), sizeof(aCoord));
             }  
         }

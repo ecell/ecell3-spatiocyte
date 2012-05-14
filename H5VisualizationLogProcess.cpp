@@ -378,7 +378,7 @@ void H5VisualizationLogProcess::logMolecules(H5::DataSpace const& space, H5::Dat
     {
         Voxel* const voxel(aSpecies->getMolecule(i));
         BOOST_ASSERT(voxel->id == aSpecies->getID());
-        p = pack<ParticleDataPacker>(p, ParticleData(voxel->coord, aSpecies->getID(), aSpecies->getComp()->vacantID));
+        p = pack<ParticleDataPacker>(p, ParticleData(voxel->coord, aSpecies->getID(), aSpecies->getComp()->vacantSpecies->getID()));
     }
     dataSet.write(buf.get(), particleDataType, mem, slab);
 }
