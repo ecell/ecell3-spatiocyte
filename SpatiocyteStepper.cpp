@@ -1474,6 +1474,9 @@ Point SpatiocyteStepper::coord2point(unsigned int aCoord)
 
 Voxel* SpatiocyteStepper::point2voxel(Point aPoint)
 {
+  aPoint.x += theNormalizedVoxelRadius;
+  aPoint.y += theNormalizedVoxelRadius;
+  aPoint.z += theNormalizedVoxelRadius;
   unsigned int aGlobalCol(0);
   unsigned int aGlobalLayer(0);
   unsigned int aGlobalRow(0);
@@ -2723,7 +2726,7 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
                           "populated,\nbut there are only "
                           + int2str(aComp->vacantSpecies->size()) + 
                           " vacant voxels of [" + 
-                          aComp->system->getFullID().asString() +
+                  aComp->vacantSpecies->getVariable()->getFullID().asString() +
                           "] that can be populated on.");
     }
   if(double(populationSize)/aComp->vacantSpecies->size() > 0.2)

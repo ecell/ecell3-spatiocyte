@@ -36,6 +36,7 @@ void MicrotubuleProcess::initializeThird()
 {
   theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
   theVacantSpecies->setIsOffLattice();
+  tempID = theSpecies.size();
   C = theComp->centerPoint;
   C.x += OriginX*theComp->lengthX/2;
   C.y += OriginY*theComp->lengthY/2;
@@ -57,6 +58,7 @@ void MicrotubuleProcess::initializeThird()
   elongateProtofilaments();
   connectProtofilaments();
   theVacantSpecies->setIsPopulated();
+  connectLatticeVoxels();
 }
 
 void MicrotubuleProcess::addVacantVoxel(unsigned int protoIndex,
@@ -198,6 +200,50 @@ void MicrotubuleProcess::connectProtofilaments()
           secondVoxel.adjoiningVoxels[SOUTH] = &firstVoxel;
         }
     }
+}
+
+void MicrotubuleProcess::connectLatticeVoxels()
+{
+  enlistLatticeVoxels();
+  theSpecies[2]->setIsPopulated();
+}
+
+void MicrotubuleProcess::enlistLatticeVoxels()
+{
+  for(std::vector<Voxel>::const_iterator i(theLattice.begin()); 
+      i != theLattice.end(); ++i)
+    {
+      Voxel* aVoxel(theSpatiocyteStepper->point2voxel(*(*i).point));
+      if(addLatticeVoxel(aVoxel))
+        {
+          for(unsigned int j(0); j != theAdjoiningVoxelSize; ++j)
+            {
+              if(addLatticeVoxel(aVoxel->adjoiningVoxels[j]))
+                {
+                  for(unsigned int k(0); k != theAdjoiningVoxelSize; ++k)
+                    {
+                      addLatticeVoxel(
+                              aVoxel->adjoiningVoxels[j]->adjoiningVoxels[k]);
+                    }
+                }
+            }
+        }
+    }
+}
+
+bool MicrotubuleProcess::addLatticeVoxel(Voxel* aVoxel)
+{
+  if(aVoxel->id != theComp->vacantSpecies->getID() && 
+     aVoxel->id != theSpecies[2]->getID())
+    {
+      return false;
+    }
+  if(aVoxel->id == theComp->vacantSpecies->getID())
+    {
+      theSpecies[2]->addMolecule(aVoxel);
+      latticeVoxels.push_back(aVoxel);
+    }
+  return true;
 }
 
 /*

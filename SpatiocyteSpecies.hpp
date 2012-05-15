@@ -305,6 +305,7 @@ public:
     }
   void setIsPopulated()
     {
+      theInitMoleculeSize = theMoleculeSize;
       getVariable()->setValue(theMoleculeSize);
     }
   void setIsDiffuseVacant()
@@ -1018,7 +1019,7 @@ private:
   bool isSubunitInitialized;
   bool isFixedAdjoins;
   const unsigned short theID;
-  const unsigned int theInitMoleculeSize;
+  unsigned int theInitMoleculeSize;
   unsigned int theMoleculeSize;
   unsigned int theAdjoiningVoxelSize;
   int thePolymerDirectionality;

@@ -151,6 +151,9 @@ public:
   void addVacantVoxel(unsigned int, unsigned int, Point&);
   void removeVacantVoxels(unsigned int);
   void rotatePointAlongVector(Point&, double);
+  void connectLatticeVoxels();
+  void enlistLatticeVoxels();
+  bool addLatticeVoxel(Voxel*);
 protected:
   double DimerPitch;
   double Length;
@@ -166,6 +169,7 @@ protected:
   double RotateZ;
   unsigned int theDimerSize;
   unsigned int theAdjoiningVoxelSize;
+  int tempID;
   Comp* theComp;
   Voxel* theNullVoxel;
   Point T; //Direction vector along the MT axis from Minus to Plus end
@@ -178,6 +182,7 @@ protected:
   std::vector<Voxel> theLattice;
   std::vector<Point> thePoints;
   std::vector<Species*> theKinesinSpecies;
+  std::vector<Voxel*> latticeVoxels;
 };
 
 #endif /* __MicrotubuleProcess_hpp */
