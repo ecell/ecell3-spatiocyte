@@ -209,6 +209,7 @@ void MicrotubuleProcess::connectLatticeVoxels()
 {
   enlistLatticeVoxels();
   theSpecies[2]->setIsPopulated();
+  theSpecies[3]->setIsPopulated();
 }
 
 void MicrotubuleProcess::enlistLatticeVoxels()
@@ -236,20 +237,27 @@ void MicrotubuleProcess::enlistLatticeVoxels()
 
 bool MicrotubuleProcess::addLatticeVoxel(Voxel* aVoxel, Voxel* offVoxel)
 {
+  /*
+    if(aVoxel->id != theComp->vacantSpecies->getID() && 
+     aVoxel->id != theSpecies[2]->getID())
+    {
+      return false;
+    }
+  std::cout << "true:" << std::endl;
+  if(aVoxel->id == theComp->vacantSpecies->getID())
+    {
+      theSpecies[2]->addMolecule(aVoxel);
+      latticeVoxels.push_back(aVoxel);
+    }
+  return true;
+  */
   if(!isValidVoxel(aVoxel))
     {
       return false;
     }
   Point targetPoint(theSpatiocyteStepper->coord2point(aVoxel->coord));
   double dist(getDistance(&targetPoint, offVoxel->point));
-  std::cout << "dist:" << dist << " off:" << offLatticeRadius <<  " lat:" << latticeRadius << " sum:" << offLatticeRadius+latticeRadius << std::endl;
-  if(dist == offLatticeRadius+latticeRadius)
-    {
-      std::cout << "equal" << std::endl;
-      connectLatticeVoxel(aVoxel, offVoxel);
-      return false;
-    }
-  else if(dist < offLatticeRadius+latticeRadius)
+  if(dist < offLatticeRadius)
     {
       std::cout << "less" << std::endl;
       for(unsigned int i(0); i != aVoxel->adjoiningSize; ++i) 
@@ -329,9 +337,7 @@ bool MicrotubuleProcess::isInsideVoxel(Voxel* aVoxel)
   Point W(P);
   Point S(M);
   double t((-E.x*N.x-E.y*N.y-E.z*N.z+E.x*S.x+E.y*S.y+E.z*S.z+N.x*W.x-S.x*W.x+N.y*W.y-S.y*W.y+N.z*W.z-S.z*W.z)/(E.x*E.x+E.y*E.y+E.z*E.z-2*E.x*W.x+W.x*W.x-2*E.y*W.y+W.y*W.y-2*E.z*W.z+W.z*W.z));
-  std::cout << "t:" << t << std::endl;
   double dist(sqrt(pow(-N.x+S.x+t*(-E.x+W.x),2)+pow(-N.y+S.y+t*(-E.y+W.y),2)+pow(-N.z+S.z+t*(-E.z+W.z),2)));
-  std::cout << "dist:" << dist << " rad:" << Radius << std::endl;
   if(dist < Radius)
     {
       return true;
