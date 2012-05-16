@@ -1072,6 +1072,8 @@ void SpatiocyteStepper::constructLattice()
   for(std::vector<Voxel>::iterator i(theLattice.begin()); a != aSize; ++i, ++a, ++b)
     { 
       (*i).adjoiningVoxels = new Voxel*[theAdjoiningVoxelSize];
+      (*i).diffuseSize = theAdjoiningVoxelSize;
+      (*i).adjoiningSize = theAdjoiningVoxelSize;
       unsigned int aCol(a/(theRowSize*theLayerSize)); 
       unsigned int aLayer((a%(theRowSize*theLayerSize))/theRowSize); 
       unsigned int aRow((a%(theRowSize*theLayerSize))%theRowSize); 

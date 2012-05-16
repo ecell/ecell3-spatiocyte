@@ -113,6 +113,7 @@ struct Voxel
   //prefetching. Species ID:
   unsigned short id;
   //Try to limit the adjoiningSize <= 6:
+  unsigned short diffuseSize;
   unsigned short adjoiningSize;
   unsigned int coord; //coord = theLattice[x] + theStartCoord
   Voxel** adjoiningVoxels;

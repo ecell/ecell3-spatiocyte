@@ -153,7 +153,11 @@ public:
   void rotatePointAlongVector(Point&, double);
   void connectLatticeVoxels();
   void enlistLatticeVoxels();
-  bool addLatticeVoxel(Voxel*);
+  bool addLatticeVoxel(Voxel*, Voxel*);
+  bool isValidVoxel(Voxel*);
+  bool isInsideVoxel(Voxel*);
+  void removeInsideAdjoins(Voxel*);
+  void connectLatticeVoxel(Voxel*, Voxel*);
 protected:
   double DimerPitch;
   double Length;
@@ -167,6 +171,8 @@ protected:
   double RotateX;
   double RotateY;
   double RotateZ;
+  double offLatticeRadius;
+  double latticeRadius;
   unsigned int theDimerSize;
   unsigned int theAdjoiningVoxelSize;
   int tempID;

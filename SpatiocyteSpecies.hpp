@@ -423,17 +423,8 @@ public:
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
-          int size;
-          if(isFixedAdjoins)
-            {
-              size = theAdjoiningVoxelSize;
-            }
-          else
-            {
-              size = source->adjoiningSize;
-            }
           Voxel* target(source->adjoiningVoxels[
-                        gsl_rng_uniform_int(theRng, size)]);
+                        gsl_rng_uniform_int(theRng, source->diffuseSize)]);
           if(source == target)
             {
               std::cout << "SpatiocyteSpecies source == target error" <<
