@@ -36,6 +36,7 @@ void MicrotubuleProcess::initializeThird()
 {
   theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
   theVacantSpecies->setIsOffLattice();
+  theVacantSpecies->setRadius(DimerPitch/2);
   tempID = theSpecies.size();
   C = theComp->centerPoint;
   C.x += OriginX*theComp->lengthX/2;
@@ -45,7 +46,7 @@ void MicrotubuleProcess::initializeThird()
     {
       theKinesinSpecies[i]->setIsOffLattice();
       theKinesinSpecies[i]->setVacantSpecies(theVacantSpecies);
-      theKinesinSpecies[i]->setRadius(DimerPitch/2);
+      //theKinesinSpecies[i]->setRadius(DimerPitch/2);
     }
   VoxelDiameter = theSpatiocyteStepper->getVoxelRadius()*2;
   DimerPitch /= VoxelDiameter;
@@ -61,7 +62,7 @@ void MicrotubuleProcess::initializeThird()
   elongateProtofilaments();
   connectProtofilaments();
   theVacantSpecies->setIsPopulated();
-  //connectLatticeVoxels();
+  connectLatticeVoxels();
 }
 
 void MicrotubuleProcess::addVacantVoxel(unsigned int protoIndex,

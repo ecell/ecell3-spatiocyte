@@ -642,11 +642,11 @@ void GLScene::on_realize()
       glNewList(i, GL_COMPILE);
       if(!theMeanCount)
         {
-          gluSphere(qobj, theRadii[i], 30, 30);
+          gluSphere(qobj, theRadii[i-theGLIndex], 30, 30);
         }
       else
         {
-          gluSphere(qobj, theRadii[i], 10, 10);
+          gluSphere(qobj, theRadii[i-theGLIndex], 10, 10);
         }
       glEndList();
     }
