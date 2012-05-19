@@ -326,11 +326,13 @@ protected:
   unsigned int theCutRow;
   unsigned int theMeanCount;
   unsigned int theMeanCoordSize;
+  int theGLIndex;
   Color *theSpeciesColor;
   bool *theSpeciesVisibility;
+  double *theRadii;
   std::ifstream** theFile;
   double theRadius;
-  double theResolution;
+  double theVoxelRadius;
   double theCurrentTime;
   int thePrevSize;
   int theNextSize;

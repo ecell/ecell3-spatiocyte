@@ -265,7 +265,7 @@ void PolymerizationProcess::initializeFourth()
   theMaxX = C->getEastPoint().x;
   theOriY = C->getWestPoint().y;
   theOriZ = C->getWestPoint().z;
-  theRadius = C->getRadius();
+  theRadius = C->getCompRadius();
   theBendIndexA = A->getBendIndex(BendAngle);
   theBendIndexB = B->getBendIndex(BendAngle);
   initSphereDcm();  

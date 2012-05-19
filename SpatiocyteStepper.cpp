@@ -154,7 +154,7 @@ Species* SpatiocyteStepper::addSpecies(Variable* aVariable)
   if(aSpeciesIter == theSpecies.end())
     {
       Species *aSpecies(new Species(this, aVariable, theSpecies.size(),
-                                    (int)aVariable->getValue(), getRng()));
+                          (int)aVariable->getValue(), getRng(), VoxelRadius));
       theSpecies.push_back(aSpecies);
       return aSpecies;
     }
@@ -541,7 +541,8 @@ void SpatiocyteStepper::registerComps()
   theBioSpeciesSize = theSpecies.size();
   //Create one last species to represent a NULL Comp. This is for
   //voxels that do not belong to any Comps:
-  Species* aSpecies(new Species(this, NULL, theSpecies.size(), 0, getRng()));
+  Species* aSpecies(new Species(this, NULL, theSpecies.size(), 0, getRng(),
+                                VoxelRadius));
   theSpecies.push_back(aSpecies);
   aSpecies->setComp(NULL);
   theNullID = aSpecies->getID(); 

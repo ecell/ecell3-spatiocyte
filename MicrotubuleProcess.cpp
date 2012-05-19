@@ -41,26 +41,27 @@ void MicrotubuleProcess::initializeThird()
   C.x += OriginX*theComp->lengthX/2;
   C.y += OriginY*theComp->lengthY/2;
   C.z += OriginZ*theComp->lengthZ/2;
-  VoxelDiameter = theSpatiocyteStepper->getVoxelRadius()*2;
-  offLatticeRadius = 0.5;
-  latticeRadius = 0.5;
-  DimerPitch /= VoxelDiameter;
-  Length /= VoxelDiameter;
-  MonomerPitch /= VoxelDiameter;
-  Radius /= VoxelDiameter;
-  theDimerSize = (unsigned int)rint(Length/DimerPitch);
-  theLattice.resize(Protofilaments*theDimerSize);
-  thePoints.resize(Protofilaments*theDimerSize);
   for(unsigned int i(0); i != theKinesinSpecies.size(); ++i)
     {
       theKinesinSpecies[i]->setIsOffLattice();
       theKinesinSpecies[i]->setVacantSpecies(theVacantSpecies);
+      theKinesinSpecies[i]->setRadius(DimerPitch/2);
     }
+  VoxelDiameter = theSpatiocyteStepper->getVoxelRadius()*2;
+  DimerPitch /= VoxelDiameter;
+  Length /= VoxelDiameter;
+  MonomerPitch /= VoxelDiameter;
+  Radius /= VoxelDiameter;
+  offLatticeRadius = DimerPitch/2;
+  latticeRadius = VoxelDiameter/2;
+  theDimerSize = (unsigned int)rint(Length/DimerPitch);
+  theLattice.resize(Protofilaments*theDimerSize);
+  thePoints.resize(Protofilaments*theDimerSize);
   initProtofilaments();
   elongateProtofilaments();
   connectProtofilaments();
   theVacantSpecies->setIsPopulated();
-  connectLatticeVoxels();
+  //connectLatticeVoxels();
 }
 
 void MicrotubuleProcess::addVacantVoxel(unsigned int protoIndex,

@@ -52,7 +52,7 @@ class Species
 {
 public:
   Species(SpatiocyteStepper* aStepper, Variable* aVariable, int anID, 
-          int anInitMoleculeSize, const gsl_rng* aRng):
+          int anInitMoleculeSize, const gsl_rng* aRng, double voxelRadius):
     isDiffuseVacant(false),
     isVacant(false),
     isVolume(false),
@@ -71,6 +71,7 @@ public:
     D(0),
     theDiffusionInterval(libecs::INF),
     theWalkProbability(1),
+    theRadius(voxelRadius),
     theRng(aRng),
     thePopulateProcess(NULL),
     theStepper(aStepper),
@@ -279,7 +280,7 @@ public:
           aDisplacement += aDistance*aDistance;
         }
       return
-        aDisplacement*pow(theStepper->getVoxelRadius()*2, 2)/theMoleculeSize;
+        aDisplacement*pow(theRadius*2, 2)/theMoleculeSize;
     }
   void setIsSubunitInitialized()
     {
@@ -750,9 +751,17 @@ public:
         theComp->lengthY/2;
       return anEastPoint;
     }
-  double getRadius() const
+  double getCompRadius() const
     {
       return theComp->lengthY/2;
+    }
+  double getRadius() const
+    {
+      return theRadius;
+    }
+  void setRadius(double aRadius)
+    {
+      theRadius = aRadius;
     }
   Species* getDiffusionInfluencedReactantPair()
     {
@@ -1018,6 +1027,7 @@ private:
   double D;
   double theDiffusionInterval;
   double theWalkProbability;
+  double theRadius;
   const gsl_rng* theRng;
   Species* theVacantSpecies;
   Comp* theComp;

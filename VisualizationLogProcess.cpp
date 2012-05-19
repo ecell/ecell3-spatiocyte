@@ -64,7 +64,7 @@ void VisualizationLogProcess::initializeLog()
   theLogFile.write((char*)(&anOffLatticeSpSize), sizeof(anOffLatticeSpSize));
   //theLogMarker is a constant throughout the simulation:
   theLogFile.write((char*)(&theLogMarker), sizeof(theLogMarker));
-  double aVoxelRadius(theSpatiocyteStepper->getNormalizedVoxelRadius());
+  double aVoxelRadius(theSpatiocyteStepper->getVoxelRadius());
   theLogFile.write((char*)(&aVoxelRadius), sizeof(aVoxelRadius));
   for(unsigned int i(0); i != theLatticeSpecies.size(); ++i)
     {
@@ -74,11 +74,15 @@ void VisualizationLogProcess::initializeLog()
       theLogFile.write(
        theLatticeSpecies[i]->getVariable()->getFullID().asString().c_str(),
        aStringSize);
+      double aRadius(theLatticeSpecies[i]->getRadius());
+      theLogFile.write((char*)(&aRadius), sizeof(aRadius));
     }
   for(unsigned int i(0); i!=thePolymerSpecies.size(); ++i)
     {
       unsigned int aPolymerIndex(thePolymerIndex[i]);
       theLogFile.write((char*) (&aPolymerIndex), sizeof(aPolymerIndex));
+      double aRadius(thePolymerSpecies[i]->getRadius());
+      theLogFile.write((char*)(&aRadius), sizeof(aRadius));
     }
   for(unsigned int i(0); i != theOffLatticeSpecies.size(); ++i)
     {
@@ -88,6 +92,8 @@ void VisualizationLogProcess::initializeLog()
       theLogFile.write(
        theOffLatticeSpecies[i]->getVariable()->getFullID().asString().c_str(),
        aStringSize);
+      double aRadius(theOffLatticeSpecies[i]->getRadius());
+      theLogFile.write((char*)(&aRadius), sizeof(aRadius));
     }
   //a, b, c are used for multithreaded simulation which is
   //not implemented yet.
