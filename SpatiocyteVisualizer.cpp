@@ -192,8 +192,9 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
       theFile[0]->read(buffer, aStringSize);
       buffer[aStringSize] = '\0';
       sscanf(buffer, "Variable:%s", theSpeciesNameList[i]);
-      std::cout << theSpeciesNameList[i] << std::endl;
       theFile[0]->read((char*) (&theRadii[i]), sizeof(theRadii[i]));
+      std::cout << theSpeciesNameList[i] << " radius:" <<
+        theRadii[i] << std::endl;
     }
   //Set up the names of polymer species:
   //source : coord
@@ -240,12 +241,13 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
       theFile[0]->read(buffer, aStringSize);
       buffer[aStringSize] = '\0';
       sscanf(buffer, "Variable:%s", theSpeciesNameList[i]);
-      std::cout << theSpeciesNameList[i] << std::endl;
       theFile[0]->read((char*) (&theRadii[i]), sizeof(theRadii[i]));
+      std::cout << theSpeciesNameList[i] << " radius:" <<
+        theRadii[i] << std::endl;
     }
   for(unsigned int i(0); i!=theTotalSpeciesSize; ++i)
     {
-      theRadii[i] /= theVoxelRadius;
+      theRadii[i] /= theVoxelRadius*2;
     }
 
   theOriCol = theStartCoord/(theRowSize*theLayerSize);
@@ -392,9 +394,9 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   switch(theLatticeType)
     {
     case HCP_LATTICE: 
-      theHCPk = theRadius/sqrt(3); 
-      theHCPl = theRadius*sqrt(3);
-      theHCPh = theRadius*sqrt(8.0/3.0); // for division require .0
+      theHCPl = theRadius/sqrt(3); 
+      theHCPy = theRadius*sqrt(3);
+      theHCPx = theRadius*sqrt(8.0/3.0); // for division require .0
       if(theMeanCount)
         {
           thePlot3DFunction = &GLScene::plotMean3DHCPMolecules;
@@ -910,9 +912,9 @@ void GLScene::plotMean3DHCPMolecules()
           col = theMeanCoords[i][k]/(theRowSize*theLayerSize)-theOriCol; 
           layer = (theMeanCoords[i][k]%(theRowSize*theLayerSize))/theRowSize;
           row = (theMeanCoords[i][k]%(theRowSize*theLayerSize))%theRowSize;
-          y = (col%2)*theHCPk + theHCPl*layer + theRadius;
+          y = (col%2)*theHCPl + theHCPy*layer + theRadius;
           z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
-          x = col*theHCPh + theRadius; 
+          x = col*theHCPx + theRadius; 
           for(unsigned int j(0); j!=theLatticeSpSize; ++j)
             {
               if(theSpeciesVisibility[j])
@@ -949,9 +951,9 @@ void GLScene::plotMean3DHCPMolecules()
                     (theCoords[i][j][k]%(theRowSize*theLayerSize))/theRowSize;
                   row =
                     (theCoords[i][j][k]%(theRowSize*theLayerSize))%theRowSize;
-                  y = (col%2)*theHCPk + theHCPl*layer + theRadius;
+                  y = (col%2)*theHCPl + theHCPy*layer + theRadius;
                   z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
-                  x = col*theHCPh + theRadius;
+                  x = col*theHCPx + theRadius;
                   if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
                       y <= theYUpBound[j] && y >= theYLowBound[j] &&
                       z <= theZUpBound[j] && z >= theZLowBound[j]))
@@ -1054,9 +1056,9 @@ void GLScene::plot3DHCPMolecules()
                     (theCoords[i][j][k]%(theRowSize*theLayerSize))/theRowSize;
                   row =
                     (theCoords[i][j][k]%(theRowSize*theLayerSize))%theRowSize;
-                  y = (col%2)*theHCPk + theHCPl*layer + theRadius;
+                  y = (col%2)*theHCPl + theHCPy*layer + theRadius;
                   z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
-                  x = col*theHCPh + theRadius;
+                  x = col*theHCPx + theRadius;
                   if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
                       y <= theYUpBound[j] && y >= theYLowBound[j] &&
                       z <= theZUpBound[j] && z >= theZLowBound[j]))
@@ -1175,9 +1177,9 @@ void GLScene::plotHCPPoints()
                     (theCoords[i][j][k]%(theRowSize*theLayerSize))/theRowSize;
                   row =
                     (theCoords[i][j][k]%(theRowSize*theLayerSize))%theRowSize;
-                  y = (col%2)*theHCPk + theHCPl*layer + theRadius;
+                  y = (col%2)*theHCPl + theHCPy*layer + theRadius;
                   z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
-                  x = col*theHCPh + theRadius;
+                  x = col*theHCPx + theRadius;
                   if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
                       y <= theYUpBound[j] && y >= theYLowBound[j] &&
                       z <= theZUpBound[j] && z >= theZLowBound[j]))

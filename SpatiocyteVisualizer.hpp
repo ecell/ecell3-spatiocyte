@@ -337,9 +337,9 @@ protected:
   int thePrevSize;
   int theNextSize;
   bool isChanged;
-  GLfloat theHCPk;
-  GLfloat theHCPh;
   GLfloat theHCPl;
+  GLfloat theHCPx;
+  GLfloat theHCPy;
   GLfloat theBCCc;
   GLfloat prevX;
   GLfloat prevY;

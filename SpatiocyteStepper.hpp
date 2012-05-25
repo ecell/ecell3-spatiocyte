@@ -71,7 +71,9 @@ public:
   Species* id2species(unsigned short);
   Comp* id2Comp(unsigned short);
   Voxel* coord2voxel(unsigned int);
-  void coord2global(unsigned int, unsigned int*, unsigned int*, unsigned int*);
+  Voxel* global2voxel(unsigned int, unsigned int, unsigned int);
+  void coord2global(unsigned int, unsigned int&, unsigned int&, unsigned int&);
+  void point2global(Point, unsigned int&, unsigned int&, unsigned int&);
   Comp* system2Comp(System*);
   bool isBoundaryCoord(unsigned int, bool);
   Voxel* getPeriodicVoxel(unsigned int, bool, Origin*);
@@ -88,7 +90,7 @@ public:
   unsigned short getNullID();
   Point getCenterPoint();
   double getNormalizedVoxelRadius();
-  Voxel* point2voxel(Point);
+  Voxel* point2voxel(Point&);
   std::vector<Comp*> const& getComps() const;
   Species* variable2species(Variable*);
   void rotateX(double, Point*, int sign=1);
@@ -96,6 +98,10 @@ public:
   void rotateZ(double, Point*, int sign=1);
   bool isPeriodicEdgeCoord(unsigned int, Comp*);
   bool isRemovableEdgeCoord(unsigned int, Comp*);
+  double getRowLength();
+  double getColLength();
+  double getLayerLength();
+  double getMinLatticeSpace();
 private:
   void setCompsCenterPoint();
   void setIntersectingCompartmentList();
@@ -175,9 +181,9 @@ private:
   unsigned int theBioSpeciesSize;
   double VoxelRadius; //r_v
   double theNormalizedVoxelRadius;
-  double theHCPk;
-  double theHCPh;
   double theHCPl;
+  double theHCPx;
+  double theHCPy;
   Point theCenterPoint;
   ProcessPriorityQueue thePriorityQueue; 
   std::vector<Species*>::iterator variable2ispecies(Variable*);

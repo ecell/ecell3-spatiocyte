@@ -182,7 +182,7 @@ bool SpatiocyteStepper::isBoundaryCoord(unsigned int aCoord, bool isVolume)
   unsigned int aRow;
   unsigned int aLayer;
   unsigned int aCol;
-  coord2global(aCoord, &aRow, &aLayer, &aCol);
+  coord2global(aCoord, aRow, aLayer, aCol);
   if(isVolume)
     {
       //If the voxel is on one of the 6 cuboid surfaces:
@@ -224,7 +224,7 @@ Voxel* SpatiocyteStepper::getPeriodicVoxel(unsigned int aCoord,
   unsigned int aRow;
   unsigned int aLayer;
   unsigned int aCol;
-  coord2global(aCoord, &aRow, &aLayer, &aCol);
+  coord2global(aCoord, aRow, aLayer, aCol);
   unsigned int nextRow(aRow);
   unsigned int nextLayer(aLayer);
   unsigned int nextCol(aCol);
@@ -287,7 +287,7 @@ Point SpatiocyteStepper::getPeriodicPoint(unsigned int aCoord,
   unsigned int aGlobalCol;
   unsigned int aGlobalLayer;
   unsigned int aGlobalRow;
-  coord2global(aCoord, &aGlobalRow, &aGlobalLayer, &aGlobalCol);
+  coord2global(aCoord, aGlobalRow, aGlobalLayer, aGlobalCol);
   int aRow(aGlobalRow+anOrigin->row*row);
   int aLayer(aGlobalLayer+anOrigin->layer*layer);
   int aCol(aGlobalCol+anOrigin->col*col);
@@ -295,10 +295,10 @@ Point SpatiocyteStepper::getPeriodicPoint(unsigned int aCoord,
   switch(LatticeType)
     {
     case HCP_LATTICE: 
-      aPoint.y = (aCol%2)*theHCPk+theHCPl*aLayer;
+      aPoint.y = (aCol%2)*theHCPl+theHCPy*aLayer;
       aPoint.z = aRow*2*theNormalizedVoxelRadius+
         ((aLayer+aCol)%2)*theNormalizedVoxelRadius;
-      aPoint.x = aCol*theHCPh;
+      aPoint.x = aCol*theHCPx;
       break;
     case CUBIC_LATTICE:
       aPoint.y = aLayer*2*theNormalizedVoxelRadius;
@@ -783,9 +783,9 @@ void SpatiocyteStepper::setLatticeProperties()
     {
     case HCP_LATTICE: 
       theAdjoiningVoxelSize = 12;
-      theHCPk = theNormalizedVoxelRadius/sqrt(3); 
-      theHCPh = theNormalizedVoxelRadius*sqrt(8.0/3);
-      theHCPl = theNormalizedVoxelRadius*sqrt(3);
+      theHCPl = theNormalizedVoxelRadius/sqrt(3); 
+      theHCPx = theNormalizedVoxelRadius*sqrt(8.0/3); //Lx
+      theHCPy = theNormalizedVoxelRadius*sqrt(3); //Ly
       break;
     case CUBIC_LATTICE:
       theAdjoiningVoxelSize = 6;
@@ -807,8 +807,8 @@ void SpatiocyteStepper::setLatticeProperties()
         case HCP_LATTICE: 
           theCenterPoint.z = aRootComp->lengthZ/2+4*
             theNormalizedVoxelRadius; //row
-          theCenterPoint.y = aRootComp->lengthY/2+2*theHCPl; //layer
-          theCenterPoint.x = aRootComp->lengthX/2+2*theHCPh; //column
+          theCenterPoint.y = aRootComp->lengthY/2+2*theHCPy; //layer
+          theCenterPoint.x = aRootComp->lengthX/2+2*theHCPx; //column
           break;
         case CUBIC_LATTICE:
           theCenterPoint.z = aRootComp->lengthZ/2+8*theNormalizedVoxelRadius;
@@ -823,8 +823,8 @@ void SpatiocyteStepper::setLatticeProperties()
     case HCP_LATTICE: 
       theRowSize = (unsigned int)rint((theCenterPoint.z)/
                                       (theNormalizedVoxelRadius));
-      theLayerSize = (unsigned int)rint((theCenterPoint.y*2)/theHCPl);
-      theColSize = (unsigned int)rint((theCenterPoint.x*2)/theHCPh);
+      theLayerSize = (unsigned int)rint((theCenterPoint.y*2)/theHCPy);
+      theColSize = (unsigned int)rint((theCenterPoint.x*2)/theHCPx);
       break;
     case CUBIC_LATTICE:
       theRowSize = (unsigned int)rint((theCenterPoint.z)/
@@ -1119,7 +1119,7 @@ bool SpatiocyteStepper::isPeriodicEdgeCoord(unsigned int aCoord, Comp* aComp)
   unsigned int aRow;
   unsigned int aLayer;
   unsigned int aCol;
-  coord2global(aCoord, &aRow, &aLayer, &aCol);
+  coord2global(aCoord, aRow, aLayer, aCol);
   if(aComp->system->getSuperSystem()->isRootSystem() &&
      ((aRow <= 1 && aCol <= 1) ||
       (aRow <= 1 && aLayer <= 1) ||
@@ -1144,7 +1144,7 @@ bool SpatiocyteStepper::isRemovableEdgeCoord(unsigned int aCoord, Comp* aComp)
   unsigned int aRow;
   unsigned int aLayer;
   unsigned int aCol;
-  coord2global(aCoord, &aRow, &aLayer, &aCol);
+  coord2global(aCoord, aRow, aLayer, aCol);
   int sharedCnt(0);
   int removeCnt(0);
   //Minus 1 to maxRow to account for surfaces that use two rows to envelope the
@@ -1447,7 +1447,7 @@ double SpatiocyteStepper::getCuboidSpecArea(Comp* aComp)
     {
       anArea += 2*aComp->lengthY*aComp->lengthZ; 
     }
-  return anArea;;
+  return anArea;
 }
 
 Point SpatiocyteStepper::coord2point(unsigned int aCoord)
@@ -1455,16 +1455,16 @@ Point SpatiocyteStepper::coord2point(unsigned int aCoord)
   unsigned int aGlobalCol;
   unsigned int aGlobalLayer;
   unsigned int aGlobalRow;
-  coord2global(aCoord, &aGlobalRow, &aGlobalLayer, &aGlobalCol);
+  coord2global(aCoord, aGlobalRow, aGlobalLayer, aGlobalCol);
   //the center point of a voxel 
   Point aPoint;
   switch(LatticeType)
     {
     case HCP_LATTICE: 
-      aPoint.y = (aGlobalCol%2)*theHCPk+theHCPl*aGlobalLayer;
+      aPoint.y = (aGlobalCol%2)*theHCPl+theHCPy*aGlobalLayer;
       aPoint.z = aGlobalRow*2*theNormalizedVoxelRadius+
         ((aGlobalLayer+aGlobalCol)%2)*theNormalizedVoxelRadius;
-      aPoint.x = aGlobalCol*theHCPh;
+      aPoint.x = aGlobalCol*theHCPx;
       break;
     case CUBIC_LATTICE:
       aPoint.y = aGlobalLayer*2*theNormalizedVoxelRadius;
@@ -1473,28 +1473,85 @@ Point SpatiocyteStepper::coord2point(unsigned int aCoord)
       break;
     }
   return aPoint;
+};
+
+double SpatiocyteStepper::getRowLength()
+{
+  return theNormalizedVoxelRadius*2;
 }
 
-Voxel* SpatiocyteStepper::point2voxel(Point aPoint)
+double SpatiocyteStepper::getColLength()
 {
-  aPoint.x += theNormalizedVoxelRadius;
-  aPoint.y += theNormalizedVoxelRadius;
-  aPoint.z += theNormalizedVoxelRadius;
-  unsigned int aGlobalCol(0);
-  unsigned int aGlobalLayer(0);
-  unsigned int aGlobalRow(0);
   switch(LatticeType)
     {
     case HCP_LATTICE: 
-      aGlobalCol = (unsigned int)(aPoint.x/theHCPh);
-      aGlobalLayer = (unsigned int)((aPoint.y-(aGlobalCol%2)*theHCPk)/theHCPl);
-      aGlobalRow = (unsigned int)((aPoint.z-((aGlobalLayer+aGlobalCol)%2)*
+      return theHCPx;
+    case CUBIC_LATTICE:
+      return theNormalizedVoxelRadius*2;
+    }
+  return theNormalizedVoxelRadius*2;
+}
+
+double SpatiocyteStepper::getLayerLength()
+{
+  switch(LatticeType)
+    {
+    case HCP_LATTICE: 
+      return theHCPy;
+    case CUBIC_LATTICE:
+      return theNormalizedVoxelRadius*2;
+    }
+  return theNormalizedVoxelRadius*2;
+}
+
+double SpatiocyteStepper::getMinLatticeSpace()
+{
+  switch(LatticeType)
+    {
+    case HCP_LATTICE: 
+      return theHCPl;
+    case CUBIC_LATTICE:
+      return theNormalizedVoxelRadius*2;
+    }
+  return theNormalizedVoxelRadius*2;
+}
+
+Voxel* SpatiocyteStepper::point2voxel(Point& aPoint)
+{
+  unsigned int aGlobalRow(0);
+  unsigned int aGlobalLayer(0);
+  unsigned int aGlobalCol(0);
+  point2global(aPoint, aGlobalRow, aGlobalLayer, aGlobalCol);
+  return global2voxel(aGlobalRow, aGlobalLayer, aGlobalCol);
+}
+
+Voxel* SpatiocyteStepper::global2voxel(unsigned int aGlobalRow,
+                                       unsigned int aGlobalLayer,
+                                       unsigned int aGlobalCol)
+{
+  return &theLattice[aGlobalRow+
+                     theRowSize*aGlobalLayer+
+                     theRowSize*theLayerSize*aGlobalCol];
+}
+
+void SpatiocyteStepper::point2global(Point aPoint, 
+                                     unsigned int& aGlobalRow,
+                                     unsigned int& aGlobalLayer,
+                                     unsigned int& aGlobalCol)
+{
+  switch(LatticeType)
+    {
+    case HCP_LATTICE: 
+      aGlobalCol = (unsigned int)rint(aPoint.x/theHCPx);
+      aGlobalLayer = (unsigned int)rint((aPoint.y-(aGlobalCol%2)*theHCPl)/
+                                        theHCPy);
+      aGlobalRow = (unsigned int)rint((aPoint.z-((aGlobalLayer+aGlobalCol)%2)*
           theNormalizedVoxelRadius)/(2*theNormalizedVoxelRadius));
       break;
     case CUBIC_LATTICE:
-      aGlobalCol = (unsigned int)(aPoint.x/(2*theNormalizedVoxelRadius));
-      aGlobalLayer = (unsigned int)(aPoint.y/(2*theNormalizedVoxelRadius));
-      aGlobalRow = (unsigned int)(aPoint.z/(2*theNormalizedVoxelRadius));
+      aGlobalCol = (unsigned int)rint(aPoint.x/(2*theNormalizedVoxelRadius));
+      aGlobalLayer = (unsigned int)rint(aPoint.y/(2*theNormalizedVoxelRadius));
+      aGlobalRow = (unsigned int)rint(aPoint.z/(2*theNormalizedVoxelRadius));
       break;
     }
   if(aGlobalCol < 0)
@@ -1521,19 +1578,16 @@ Voxel* SpatiocyteStepper::point2voxel(Point aPoint)
     {
       aGlobalLayer = theLayerSize-1;
     }
-  return &theLattice[aGlobalRow+
-                     theRowSize*aGlobalLayer+
-                     theRowSize*theLayerSize*aGlobalCol];
 }
 
 void SpatiocyteStepper::coord2global(unsigned int aCoord,
-                                     unsigned int* aGlobalRow,
-                                     unsigned int* aGlobalLayer,
-                                     unsigned int* aGlobalCol) 
+                                     unsigned int& aGlobalRow,
+                                     unsigned int& aGlobalLayer,
+                                     unsigned int& aGlobalCol) 
 {
-  *aGlobalCol = (aCoord-theStartCoord)/(theRowSize*theLayerSize);
-  *aGlobalLayer = ((aCoord-theStartCoord)%(theRowSize*theLayerSize))/theRowSize;
-  *aGlobalRow = ((aCoord-theStartCoord)%(theRowSize*theLayerSize))%theRowSize;
+  aGlobalCol = (aCoord-theStartCoord)/(theRowSize*theLayerSize);
+  aGlobalLayer = ((aCoord-theStartCoord)%(theRowSize*theLayerSize))/theRowSize;
+  aGlobalRow = ((aCoord-theStartCoord)%(theRowSize*theLayerSize))%theRowSize;
 }
 
 void SpatiocyteStepper::concatenateLayers(Voxel* aVoxel,
@@ -2510,7 +2564,7 @@ void SpatiocyteStepper::setMinMaxSurfaceDimensions(unsigned int aCoord,
   unsigned int aRow;
   unsigned int aLayer;
   unsigned int aCol;
-  coord2global(aCoord, &aRow, &aLayer, &aCol);
+  coord2global(aCoord, aRow, aLayer, aCol);
   if(aRow < aComp->minRow)
     {
       aComp->minRow = aRow;
