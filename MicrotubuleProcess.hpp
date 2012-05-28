@@ -164,6 +164,7 @@ public:
   void connectNwSw(unsigned int);
   bool notInNeighbors(Voxel*, Point&);
   void addAdjoinVoxels(Voxel*, Voxel*);
+  bool notInMTCylinder(Point&);
 protected:
   double DimerPitch;
   double Length;

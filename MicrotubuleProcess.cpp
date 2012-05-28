@@ -306,7 +306,8 @@ void MicrotubuleProcess::enlistLatticeVoxels()
                   if(dist >= rA && dist <= rA+rB)
                     {
                       //direct connection
-                      if(notInNeighbors(offVoxel, aPoint))
+                      if(notInMTCylinder(aPoint) &&
+                         notInNeighbors(offVoxel, aPoint))
                         {
                           theSpecies[2]->addMolecule(latVoxel);
                         }
@@ -335,7 +336,7 @@ void MicrotubuleProcess::addAdjoinVoxels(Voxel* offVoxel, Voxel* aVoxel)
       Voxel* adjoin(aVoxel->adjoiningVoxels[i]);
       Point adPoint(theSpatiocyteStepper->coord2point(adjoin->coord));
       double aDist(getDistance(&adPoint, &aPoint));
-      if(aDist > offLatticeRadius+latticeRadius &&
+      if(aDist > offLatticeRadius+latticeRadius && notInMTCylinder(adPoint) &&
          notInNeighbors(offVoxel, adPoint))
        {
          theSpecies[2]->addMolecule(adjoin);
@@ -448,6 +449,20 @@ bool MicrotubuleProcess::isValidVoxel(Voxel* aVoxel)
 {
   if(aVoxel->id != theComp->vacantSpecies->getID() && 
      aVoxel->id != theSpecies[2]->getID())
+    {
+      return false;
+    }
+  return true;
+}
+
+bool MicrotubuleProcess::notInMTCylinder(Point& N)
+{
+  Point E(M);
+  Point W(P);
+  Point S(M);
+  double t((-E.x*N.x-E.y*N.y-E.z*N.z+E.x*S.x+E.y*S.y+E.z*S.z+N.x*W.x-S.x*W.x+N.y*W.y-S.y*W.y+N.z*W.z-S.z*W.z)/(E.x*E.x+E.y*E.y+E.z*E.z-2*E.x*W.x+W.x*W.x-2*E.y*W.y+W.y*W.y-2*E.z*W.z+W.z*W.z));
+  double dist(sqrt(pow(-N.x+S.x+t*(-E.x+W.x),2)+pow(-N.y+S.y+t*(-E.y+W.y),2)+pow(-N.z+S.z+t*(-E.z+W.z),2)));
+  if(dist < Radius)
     {
       return false;
     }
