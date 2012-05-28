@@ -163,6 +163,7 @@ public:
   void connectSeamEastWest(unsigned int);
   void connectNwSw(unsigned int);
   bool notInNeighbors(Voxel*, Point&);
+  void addAdjoinVoxels(Voxel*, Voxel*);
 protected:
   double DimerPitch;
   double Length;
