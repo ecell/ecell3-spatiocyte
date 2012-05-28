@@ -162,6 +162,7 @@ public:
   void connectEastWest(unsigned int, unsigned int);
   void connectSeamEastWest(unsigned int);
   void connectNwSw(unsigned int);
+  bool notInNeighbors(Voxel*, Point&);
 protected:
   double DimerPitch;
   double Length;
