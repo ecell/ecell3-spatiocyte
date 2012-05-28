@@ -346,26 +346,6 @@ void MicrotubuleProcess::enlistLatticeVoxels()
                 }
             }
         }
-
-                  /*
-      Voxel* aVoxel(theSpatiocyteStepper->point2voxel();
-
-
-      if(addLatticeVoxel(aVoxel, &(*i)))
-        {
-          for(unsigned int j(0); j != theAdjoiningVoxelSize; ++j)
-            {
-              if(addLatticeVoxel(aVoxel->adjoiningVoxels[j], &(*i)))
-                {
-                  for(unsigned int k(0); k != theAdjoiningVoxelSize; ++k)
-                    {
-                      addLatticeVoxel(
-                        aVoxel->adjoiningVoxels[j]->adjoiningVoxels[k], &(*i));
-                    }
-                }
-            }
-        }
-        */
     }
 }
 
