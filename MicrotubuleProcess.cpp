@@ -62,7 +62,7 @@ void MicrotubuleProcess::initializeThird()
   elongateProtofilaments();
   connectProtofilaments();
   theVacantSpecies->setIsPopulated();
-  connectLatticeVoxels();
+  //connectLatticeVoxels();
 }
 
 void MicrotubuleProcess::addVacantVoxel(unsigned int protoIndex,
@@ -72,8 +72,10 @@ void MicrotubuleProcess::addVacantVoxel(unsigned int protoIndex,
   aVoxel.point = &thePoints[protoIndex*theDimerSize+dimerIndex];
   *aVoxel.point = aPoint;
   aVoxel.adjoiningVoxels = new Voxel*[theAdjoiningVoxelSize];
+  /*
   aVoxel.diffuseSize = 2;
   aVoxel.adjoiningSize = 2;
+  */
   for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
     {
       aVoxel.adjoiningVoxels[i] = theNullVoxel;
@@ -195,16 +197,67 @@ void MicrotubuleProcess::elongateProtofilaments()
 
 void MicrotubuleProcess::connectProtofilaments()
 {
-  for(unsigned int i(0); i != Protofilaments; ++i)
+  for(unsigned int i(0); i != theDimerSize; ++i)
     {
-      for(unsigned int j(0); j != theDimerSize-1; ++j)
+      for(unsigned int j(0); j != Protofilaments; ++j)
         { 
-          Voxel& firstVoxel(theLattice[i*theDimerSize+j]);
-          Voxel& secondVoxel(theLattice[i*theDimerSize+j+1]);
-          firstVoxel.adjoiningVoxels[NORTH] = &secondVoxel;
-          secondVoxel.adjoiningVoxels[SOUTH] = &firstVoxel;
+          if(i > 0)
+            { 
+              connectNorthSouth(i, j);
+            }
+          if(j > 0)
+            {
+              connectEastWest(i, j);
+            }
+        }
+      connectSeamEastWest(i);
+      if(i > 0)
+        {
+          connectNwSw(i);
         }
     }
+}
+
+void MicrotubuleProcess::connectNorthSouth(unsigned int i, unsigned int j)
+{
+  Voxel* aVoxel(&theLattice[j*theDimerSize+i]);
+  Voxel* adjoin(&theLattice[j*theDimerSize+(i-1)]); 
+  aVoxel->adjoiningVoxels[NORTH] = adjoin;
+  adjoin->adjoiningVoxels[SOUTH] = aVoxel;
+  ++aVoxel->diffuseSize;
+  ++adjoin->diffuseSize;
+  std::cout << "diffuseSize:" << aVoxel->diffuseSize << std::endl;
+}
+
+void MicrotubuleProcess::connectEastWest(unsigned int i, unsigned int j)
+{
+  Voxel* aVoxel(&theLattice[j*theDimerSize+i]);
+  Voxel* adjoin(&theLattice[(j-1)*theDimerSize+i]); 
+  aVoxel->adjoiningVoxels[EAST] = adjoin;
+  adjoin->adjoiningVoxels[WEST] = aVoxel;
+  ++aVoxel->diffuseSize;
+  ++adjoin->diffuseSize;
+}
+
+void MicrotubuleProcess::connectSeamEastWest(unsigned int i)
+{
+  Voxel* aVoxel(&theLattice[i]);
+  Voxel* adjoin(&theLattice[(Protofilaments-1)*theDimerSize+i]); 
+  aVoxel->adjoiningVoxels[EAST] = adjoin;
+  adjoin->adjoiningVoxels[WEST] = aVoxel;
+  ++aVoxel->diffuseSize;
+  ++adjoin->diffuseSize;
+}
+
+void MicrotubuleProcess::connectNwSw(unsigned int i)
+{
+  Voxel* aVoxel(&theLattice[i]);
+  Voxel* adjoin(&theLattice[(Protofilaments-1)*theDimerSize+(i-1)]); 
+  aVoxel->adjoiningVoxels[NW] = adjoin;
+  adjoin->adjoiningVoxels[NW] = aVoxel;
+  ++aVoxel->diffuseSize;
+  ++adjoin->diffuseSize;
+  std::cout << "diffuseSize:" << aVoxel->diffuseSize << std::endl;
 }
 
 void MicrotubuleProcess::connectLatticeVoxels()
@@ -216,8 +269,8 @@ void MicrotubuleProcess::connectLatticeVoxels()
 
 void MicrotubuleProcess::enlistLatticeVoxels()
 {
-  for(std::vector<Voxel>::iterator i(theLattice.begin()); 
-      i != theLattice.end(); ++i)
+  for(std::vector<Voxel>::iterator n(theLattice.begin()); 
+      n != theLattice.end(); ++n)
     {
       double rA(theSpatiocyteStepper->getMinLatticeSpace());
       if(rA < offLatticeRadius)
@@ -225,12 +278,12 @@ void MicrotubuleProcess::enlistLatticeVoxels()
          rA = offLatticeRadius;
         } 
       double rB(latticeRadius);
-      Point center(*(*i).point);
+      Point center(*(*n).point);
       Voxel* aVoxel(theSpatiocyteStepper->point2voxel(center));
       Point cl(theSpatiocyteStepper->coord2point(aVoxel->coord));
       theSpecies[3]->addMolecule(aVoxel);
-      Point bottomLeft(*(*i).point);
-      Point topRight(*(*i).point);
+      Point bottomLeft(*(*n).point);
+      Point topRight(*(*n).point);
       bottomLeft.x -= rA+center.x-cl.x+theSpatiocyteStepper->getColLength();
       bottomLeft.y -= rA+center.y-cl.y+theSpatiocyteStepper->getLayerLength();
       bottomLeft.z -= rA+center.z-cl.z+theSpatiocyteStepper->getRowLength();

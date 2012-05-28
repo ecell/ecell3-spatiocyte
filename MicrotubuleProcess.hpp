@@ -158,6 +158,10 @@ public:
   bool isInsideVoxel(Voxel*);
   void removeInsideAdjoins(Voxel*);
   void connectLatticeVoxel(Voxel*, Voxel*);
+  void connectNorthSouth(unsigned int, unsigned int);
+  void connectEastWest(unsigned int, unsigned int);
+  void connectSeamEastWest(unsigned int);
+  void connectNwSw(unsigned int);
 protected:
   double DimerPitch;
   double Length;
