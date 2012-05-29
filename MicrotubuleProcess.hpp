@@ -164,7 +164,9 @@ public:
   void connectNwSw(unsigned int);
   bool notInNeighbors(Voxel*, Point&);
   void addAdjoinVoxels(Voxel*, Voxel*);
-  bool notInMTCylinder(Point&);
+  bool inMTCylinder(Point&);
+  void addDirect(Voxel*, Voxel*);
+  void addIndirect(Voxel*, Voxel*);
 protected:
   double DimerPitch;
   double Length;
@@ -196,6 +198,7 @@ protected:
   std::vector<Point> thePoints;
   std::vector<Species*> theKinesinSpecies;
   std::vector<Voxel*> latticeVoxels;
+  std::vector<Voxel*> occVoxels;
 };
 
 #endif /* __MicrotubuleProcess_hpp */
