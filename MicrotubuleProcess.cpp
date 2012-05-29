@@ -160,13 +160,13 @@ void MicrotubuleProcess::initProtofilaments()
   D.x /= NormD;
   D.y /= NormD;
   D.z /= NormD;
-  std::cout << "D.x:" << D.x << " y:" << D.y << " z:" << D.z << std::endl;
-  std::cout << "T.x:" << T.x << " y:" << T.y << " z:" << T.z << std::endl;
+  //std::cout << "D.x:" << D.x << " y:" << D.y << " z:" << D.z << std::endl;
+  //std::cout << "T.x:" << T.x << " y:" << T.y << " z:" << T.z << std::endl;
   Point S; //The start point of the first protofilament
   S.x = M.x+Radius*D.x;
   S.y = M.y+Radius*D.y;
   S.z = M.z+Radius*D.z;
-  std::cout << "S.x:" << S.x << " y:" << S.y << " z:" << S.z << std::endl;
+  //std::cout << "S.x:" << S.x << " y:" << S.y << " z:" << S.z << std::endl;
   addVacantVoxel(0, 0, S);
   for(int i(1); i != Protofilaments; ++i)
     {
@@ -278,7 +278,6 @@ void MicrotubuleProcess::enlistLatticeVoxels()
         {
          rA = offLatticeRadius;
         } 
-      double rB(latticeRadius);
       Point center(*offVoxel->point);
       Voxel* aVoxel(theSpatiocyteStepper->point2voxel(center));
       Point cl(theSpatiocyteStepper->coord2point(aVoxel->coord));
@@ -334,18 +333,6 @@ void MicrotubuleProcess::enlistLatticeVoxels()
           checkedAdjoins[i]->id = theComp->vacantSpecies->getID();
         }
     }
-  /*
-  for(std::vector<Voxel>::iterator n(theLattice.begin()); 
-      n != theLattice.end(); ++n)
-    {
-      Voxel* offVoxel(&(*n));
-      for(unsigned int i(offVoxel->diffuseSize-1);
-          i != offVoxel->adjoiningSize; ++i)
-        {
-          theSpecies[2]->addMolecule(offVoxel->adjoiningVoxels[i]);
-        }
-    }
-    */
   for(unsigned int i(0); i != occVoxels.size(); ++i)
     {
       Voxel* aVoxel(occVoxels[i]);
@@ -353,6 +340,27 @@ void MicrotubuleProcess::enlistLatticeVoxels()
       aVoxel->initAdjoins = aVoxel->adjoiningVoxels;
       aVoxel->adjoiningVoxels = temp;
       aVoxel->diffuseSize = aVoxel->adjoiningSize;
+    }
+  for(unsigned int i(0); i != occVoxels.size(); ++i)
+    {
+      Voxel* aVoxel(occVoxels[i]);
+      for(unsigned int i(0); i != aVoxel->adjoiningSize; ++i)
+        {
+          Voxel* adjoin(aVoxel->adjoiningVoxels[i]);
+          if(adjoin->id == theComp->vacantSpecies->getID())
+            {
+              Point adPoint(theSpatiocyteStepper->coord2point(adjoin->coord));
+              if(inMTCylinder(adPoint))
+                {
+                  std::cout << "error in MT Process" << std::endl;
+                }
+            }
+          else if(adjoin->id != theVacantSpecies->getID() &&
+                  adjoin->id != theSpatiocyteStepper->getNullID())
+            {
+              std::cout << "species error in MT Process" << std::endl;
+            }
+        }
     }
 }
 
@@ -436,7 +444,6 @@ void MicrotubuleProcess::updateAdjoinSize(Voxel* aVoxel)
         }
       delete[] aVoxel->initAdjoins;
       aVoxel->initAdjoins = temp;
-      std::cout << "adjion si:" << aVoxel->adjoiningSize << std::endl;
     }
 }
 

@@ -428,8 +428,7 @@ public:
                         gsl_rng_uniform_int(theRng, source->diffuseSize)]);
           if(source == target)
             {
-              std::cout << "SpatiocyteSpecies source == target error" <<
-                std::endl;
+             // std::cout << "SpatiocyteSpecies source == target error" << std::endl;
             }
           if(target->id == theVacantID)
             {
