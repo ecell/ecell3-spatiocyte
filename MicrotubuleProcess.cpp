@@ -260,7 +260,9 @@ void MicrotubuleProcess::connectNwSw(unsigned int i)
 void MicrotubuleProcess::connectLatticeVoxels()
 {
   enlistLatticeVoxels();
+  /*
   theSpecies[2]->setIsPopulated();
+  */
   theSpecies[3]->setIsPopulated();
 }
 
@@ -298,26 +300,29 @@ void MicrotubuleProcess::enlistLatticeVoxels()
       unsigned int trCol(0);
       theSpatiocyteStepper->point2global(topRight, trRow, trLayer, trCol);
       std::vector<Voxel*> checkedAdjoins;
-      for(unsigned int i(blRow); i != trRow; ++i)
+      for(unsigned int i(blRow); i < trRow; ++i)
         {
-          for(unsigned int j(blLayer); j != trLayer; ++j)
+          for(unsigned int j(blLayer); j < trLayer; ++j)
             {
-              for(unsigned int k(blCol); k != trCol; ++k)
+              for(unsigned int k(blCol); k < trCol; ++k)
                 {
                   Voxel* latVoxel(theSpatiocyteStepper->global2voxel(i, j, k));
-                  //theSpecies[3]->addMolecule(latVoxel);
-                  Point aPoint(
-                       theSpatiocyteStepper->coord2point(latVoxel->coord));
-                  if(inMTCylinder(aPoint))
+                  if(latVoxel->id != theSpatiocyteStepper->getNullID())
                     {
-                      for(unsigned int l(0); l != theAdjoiningVoxelSize;
-                          ++l)
+                      //theSpecies[3]->addMolecule(latVoxel);
+                      Point aPoint(
+                           theSpatiocyteStepper->coord2point(latVoxel->coord));
+                      if(inMTCylinder(aPoint))
                         {
-                          Voxel* adjoin(latVoxel->adjoiningVoxels[l]);
-                          if(adjoin->id == theComp->vacantSpecies->getID())
+                          for(unsigned int l(0); l != theAdjoiningVoxelSize;
+                              ++l)
                             {
-                              checkedAdjoins.push_back(adjoin);
-                              addDirect(offVoxel, adjoin);
+                              Voxel* adjoin(latVoxel->adjoiningVoxels[l]);
+                              if(adjoin->id == theComp->vacantSpecies->getID())
+                                {
+                                  checkedAdjoins.push_back(adjoin);
+                                  addDirect(offVoxel, adjoin);
+                                }
                             }
                         }
                     }
@@ -329,6 +334,7 @@ void MicrotubuleProcess::enlistLatticeVoxels()
           checkedAdjoins[i]->id = theComp->vacantSpecies->getID();
         }
     }
+  /*
   for(std::vector<Voxel>::iterator n(theLattice.begin()); 
       n != theLattice.end(); ++n)
     {
@@ -339,9 +345,14 @@ void MicrotubuleProcess::enlistLatticeVoxels()
           theSpecies[2]->addMolecule(offVoxel->adjoiningVoxels[i]);
         }
     }
+    */
   for(unsigned int i(0); i != occVoxels.size(); ++i)
     {
-      theSpecies[3]->addMolecule(occVoxels[i]);
+      Voxel* aVoxel(occVoxels[i]);
+      Voxel** temp = aVoxel->initAdjoins;
+      aVoxel->initAdjoins = aVoxel->adjoiningVoxels;
+      aVoxel->adjoiningVoxels = temp;
+      aVoxel->diffuseSize = aVoxel->adjoiningSize;
     }
 }
 
@@ -352,12 +363,17 @@ void MicrotubuleProcess::addDirect(Voxel* offVoxel, Voxel* adjoin)
   Point adPoint(theSpatiocyteStepper->coord2point(adjoin->coord));
   if(!inMTCylinder(adPoint))
     { 
-      occVoxels.push_back(adjoin);
+      if(initAdjoins(adjoin)) 
+        {
+          occVoxels.push_back(adjoin);
+        }
       double dist(getDistance(&aPoint, &adPoint)); 
       if(dist <= latticeRadius+offLatticeRadius)
         {
+          //std::cout << "size:" << offVoxel->adjoiningSize << std::endl;
           offVoxel->adjoiningVoxels[offVoxel->adjoiningSize++] = adjoin;
-          std::cout << "size:" << offVoxel->adjoiningSize << std::endl;
+          updateAdjoinSize(adjoin);
+          adjoin->initAdjoins[adjoin->adjoiningSize++] = offVoxel;
         }
       else
         { 
@@ -372,15 +388,58 @@ void MicrotubuleProcess::addIndirect(Voxel* offVoxel, Voxel* latVoxel)
   for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
     {
       Voxel* adjoin(latVoxel->adjoiningVoxels[i]);
-      Point adPoint(theSpatiocyteStepper->coord2point(adjoin->coord));
-      double dist(getDistance(&aPoint, &adPoint)); 
-      if(dist <= offLatticeRadius)
-        { 
-          offVoxel->adjoiningVoxels[offVoxel->adjoiningSize++] = latVoxel;
-          std::cout << "insize:" << offVoxel->adjoiningSize << std::endl;
+      if(adjoin->id == theComp->vacantSpecies->getID() || 
+         adjoin->id == tempID)
+        {
+          Point adPoint(theSpatiocyteStepper->coord2point(adjoin->coord));
+          double dist(getDistance(&aPoint, &adPoint)); 
+          if(dist <= offLatticeRadius && inMTCylinder(adPoint))
+            { 
+              //std::cout << "insize:" << offVoxel->adjoiningSize << std::endl;
+              offVoxel->adjoiningVoxels[offVoxel->adjoiningSize++] = latVoxel;
+              initAdjoins(latVoxel);
+              updateAdjoinSize(latVoxel);
+              latVoxel->initAdjoins[latVoxel->adjoiningSize++] = offVoxel;
+            }
         }
     }
 }
+
+bool MicrotubuleProcess::initAdjoins(Voxel* aVoxel)
+{
+  if(aVoxel->initAdjoins == NULL)
+    {
+      aVoxel->adjoiningSize = 0;
+      aVoxel->initAdjoins = new Voxel*[theAdjoiningVoxelSize];
+      for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+        {
+          Voxel* adjoin(aVoxel->adjoiningVoxels[i]);
+          Point aPoint(theSpatiocyteStepper->coord2point(adjoin->coord));
+          if(!inMTCylinder(aPoint))
+            {
+              aVoxel->initAdjoins[aVoxel->adjoiningSize++] = adjoin;
+            }
+        }
+      return true;
+    }
+  return false;
+}
+
+void MicrotubuleProcess::updateAdjoinSize(Voxel* aVoxel)
+{
+ if(aVoxel->adjoiningSize >= theAdjoiningVoxelSize)
+    {
+      Voxel** temp = new Voxel*[aVoxel->adjoiningSize+1];
+      for(unsigned int i(0); i != aVoxel->adjoiningSize; ++i)
+        {
+          temp[i] = aVoxel->initAdjoins[i];
+        }
+      delete[] aVoxel->initAdjoins;
+      aVoxel->initAdjoins = temp;
+      std::cout << "adjion si:" << aVoxel->adjoiningSize << std::endl;
+    }
+}
+
 
 /*
 void MicrotubuleProcess::connectDirect(Voxel* offVoxel, Voxel* latVoxel,

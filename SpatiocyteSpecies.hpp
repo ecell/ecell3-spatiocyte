@@ -831,7 +831,7 @@ public:
       std::vector<Voxel*> CompVoxels;
       if(theStepper->getSearchVacant())
         { 
-          for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+          for(unsigned int i(0); i != source->adjoiningSize; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
               if(aVoxel->id == theVacantID)
@@ -842,7 +842,7 @@ public:
         }
       else
         {
-          for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+          for(unsigned int i(0); i != source->adjoiningSize; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
               if(theStepper->id2Comp(aVoxel->id) == theComp)
@@ -858,7 +858,7 @@ public:
       std::vector<Voxel*> CompVoxels;
       if(theStepper->getSearchVacant())
         { 
-          for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+          for(unsigned int i(0); i != source->adjoiningSize; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
               if(aVoxel->id == aVacantSpecies->getID())
@@ -869,7 +869,7 @@ public:
         }
       else
         {
-          for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+          for(unsigned int i(0); i != source->adjoiningSize; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
               if(theStepper->id2Comp(aVoxel->id) == theComp)
@@ -885,7 +885,7 @@ public:
       std::vector<Voxel*> CompVoxels;
       if(theStepper->getSearchVacant())
         { 
-          for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+          for(unsigned int i(0); i != source->adjoiningSize; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
               if(aVoxel->id == theVacantID &&
@@ -897,7 +897,7 @@ public:
         }
       else
         {
-          for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+          for(unsigned int i(0); i != source->adjoiningSize; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
               if(theStepper->id2Comp(aVoxel->id) == theComp &&
@@ -914,7 +914,7 @@ public:
       std::vector<Voxel*> CompVoxels;
       if(theStepper->getSearchVacant())
         { 
-          for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+          for(unsigned int i(0); i != source->adjoiningSize; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
               if(aVoxel->id == theVacantID &&
@@ -926,7 +926,7 @@ public:
         }
       else
         {
-          for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
+          for(unsigned int i(0); i != source->adjoiningSize; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
               if(theStepper->id2Comp(aVoxel->id) == theComp &&

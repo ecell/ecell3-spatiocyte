@@ -167,6 +167,8 @@ public:
   bool inMTCylinder(Point&);
   void addDirect(Voxel*, Voxel*);
   void addIndirect(Voxel*, Voxel*);
+  bool initAdjoins(Voxel*);
+  void updateAdjoinSize(Voxel*);
 protected:
   double DimerPitch;
   double Length;

@@ -117,6 +117,7 @@ struct Voxel
   unsigned short adjoiningSize;
   unsigned int coord; //coord = theLattice[x] + theStartCoord
   Voxel** adjoiningVoxels;
+  Voxel** initAdjoins;
   Subunit* subunit;
   Point* point;
   //Contains adjoining and extended surface voxels:
