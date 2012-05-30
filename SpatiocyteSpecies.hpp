@@ -317,6 +317,14 @@ public:
     {
       isOffLattice = true;
       isFixedAdjoins = false;
+      for(unsigned int i(0); i != theComp->species.size(); ++i)
+        {
+          theComp->species[i]->setIsFixedAdjoins(false);
+        }
+    }
+  void setIsFixedAdjoins(bool state)
+    {
+      isFixedAdjoins = state;
     }
   void setIsPolymer(std::vector<double> bendAngles, int aDirectionality)
     {
@@ -424,12 +432,23 @@ public:
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
+          int size;
+          if(isFixedAdjoins)
+            {
+              size = theAdjoiningVoxelSize;
+            }
+          else
+            {
+              size = source->diffuseSize;
+            }
           Voxel* target(source->adjoiningVoxels[
-                        gsl_rng_uniform_int(theRng, source->diffuseSize)]);
+                        gsl_rng_uniform_int(theRng, size)]);
+          /*
           if(source == target)
             {
-             // std::cout << "SpatiocyteSpecies source == target error" << std::endl;
+              std::cout << "SpatiocyteSpecies source=target error" << std::endl;
             }
+            */
           if(target->id == theVacantID)
             {
               if(theWalkProbability == 1 ||
@@ -475,7 +494,7 @@ public:
             }
           else
             {
-              size = source->adjoiningSize;
+              size = source->diffuseSize;
             }
           Voxel* target(source->adjoiningVoxels[
                         gsl_rng_uniform_int(theRng, size)]);
