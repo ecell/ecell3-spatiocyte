@@ -871,6 +871,18 @@ public:
         }
       return getRandomVacantVoxel(&CompVoxels);
     } 
+  Voxel* getRandomAdjoiningVoxel(Voxel* source, int bindingSite)
+    {
+      if(bindingSite < source->adjoiningSize)
+        { 
+          Voxel* aVoxel(source->adjoiningVoxels[bindingSite]);
+          if(aVoxel->id == theVacantID)
+            {
+              return aVoxel;
+            }
+        }
+      return NULL;
+    } 
   Voxel* getRandomAdjoiningVoxel(Voxel* source, Species* aVacantSpecies)
     {
       std::vector<Voxel*> CompVoxels;

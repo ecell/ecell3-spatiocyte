@@ -229,8 +229,10 @@ void MicrotubuleProcess::connectNorthSouth(unsigned int i, unsigned int j)
 {
   Voxel* aVoxel(&theLattice[j*theDimerSize+i]);
   Voxel* adjoin(&theLattice[j*theDimerSize+(i-1)]); 
-  aVoxel->adjoiningVoxels[aVoxel->adjoiningSize++] = adjoin;
-  adjoin->adjoiningVoxels[adjoin->adjoiningSize++] = aVoxel;
+  aVoxel->adjoiningVoxels[NORTH] = adjoin;
+  adjoin->adjoiningVoxels[SOUTH] = aVoxel;
+  aVoxel->adjoiningSize = 2;
+  adjoin->adjoiningSize = 2;
 }
 
 void MicrotubuleProcess::connectEastWest(unsigned int i, unsigned int j)
