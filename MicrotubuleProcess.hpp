@@ -67,7 +67,9 @@ public:
     RotateX(0),
     RotateY(0),
     RotateZ(0),
-    theVacantSpecies(NULL) {}
+    theVacantSpecies(NULL),
+    theMinusSpecies(NULL),
+    thePlusSpecies(NULL) {}
   virtual ~MicrotubuleProcess() {}
   SIMPLE_SET_GET_METHOD(Real, DimerPitch);
   SIMPLE_SET_GET_METHOD(Real, Length);
@@ -95,20 +97,57 @@ public:
                                    (*i).getVariable())); 
           if((*i).getCoefficient())
             {
-              if(theVacantSpecies)
+              if((*i).getCoefficient() == -1)
                 {
-                  THROW_EXCEPTION(ValueError, String(
-                                  getPropertyInterface().getClassName()) +
-                                  "[" + getFullID().asString() + 
-                                  "]: A MicrotubuleProcess requires only one " +
-                                  "vacant variable reference with negative " +
-                                  "coefficient as the vacant species of the " +
-                                  "microtubule compartment, but " +
-                                  getIDString(theVacantSpecies) + " and " +
-                                  getIDString(aSpecies) + " are given."); 
+                  if(theVacantSpecies)
+                    {
+                      THROW_EXCEPTION(ValueError, String(
+                                      getPropertyInterface().getClassName()) +
+                                      "[" + getFullID().asString() + 
+                                      "]: A MicrotubuleProcess requires only " +
+                                      "one vacant variable reference with -1 " +
+                                      "coefficient as the vacant species of " +
+                                      "the microtubule compartment, but " +
+                                      getIDString(theVacantSpecies) + " and " +
+                                      getIDString(aSpecies) + " are given."); 
+                    }
+                  theVacantSpecies = aSpecies;
+                  theVacantSpecies->setIsVacant();
                 }
-              theVacantSpecies = aSpecies;
-              theVacantSpecies->setIsVacant();
+              else if((*i).getCoefficient() == -2)
+                {
+                  if(theMinusSpecies)
+                    {
+                      THROW_EXCEPTION(ValueError, String(
+                                      getPropertyInterface().getClassName()) +
+                                      "[" + getFullID().asString() + 
+                                      "]: A MicrotubuleProcess requires only " +
+                                      "one variable reference with -2 " +
+                                      "coefficient as the minus end species " +
+                                      "of the microtubule compartment, but " +
+                                      getIDString(theMinusSpecies) + " and " +
+                                      getIDString(aSpecies) + " are given."); 
+                    }
+                  theMinusSpecies = aSpecies;
+                  theMinusSpecies->setIsVacant();
+                }
+              else if((*i).getCoefficient() == -3)
+                {
+                  if(thePlusSpecies)
+                    {
+                      THROW_EXCEPTION(ValueError, String(
+                                      getPropertyInterface().getClassName()) +
+                                      "[" + getFullID().asString() + 
+                                      "]: A MicrotubuleProcess requires only " +
+                                      "one variable reference with -3 " +
+                                      "coefficient as the plus end species " +
+                                      "of the microtubule compartment, but " +
+                                      getIDString(thePlusSpecies) + " and " +
+                                      getIDString(aSpecies) + " are given."); 
+                    }
+                  thePlusSpecies = aSpecies;
+                  thePlusSpecies->setIsVacant();
+                }
             }
           else
             {
@@ -133,6 +172,14 @@ public:
                           "nonHD variable reference with negative " +
                           "coefficient as the vacant species, " +
                           "but none is given."); 
+        }
+      if(!theMinusSpecies)
+        {
+          theMinusSpecies = theVacantSpecies;
+        }
+      if(!thePlusSpecies)
+        {
+          thePlusSpecies = theVacantSpecies;
         }
     }
 
@@ -196,6 +243,8 @@ protected:
   std::vector<Voxel*> startVoxels;
   std::vector<std::vector<Voxel*> > vacantVoxels;
   Species* theVacantSpecies;
+  Species* theMinusSpecies;
+  Species* thePlusSpecies;
   std::vector<Voxel> theLattice;
   std::vector<Point> thePoints;
   std::vector<Species*> theKinesinSpecies;

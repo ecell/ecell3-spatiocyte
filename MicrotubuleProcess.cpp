@@ -37,6 +37,10 @@ void MicrotubuleProcess::initializeThird()
   theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
   theVacantSpecies->setIsOffLattice();
   theVacantSpecies->setRadius(DimerPitch/2);
+  theMinusSpecies->setIsOffLattice();
+  theMinusSpecies->setRadius(DimerPitch/2);
+  thePlusSpecies->setIsOffLattice();
+  thePlusSpecies->setRadius(DimerPitch/2);
   tempID = theSpecies.size();
   C = theComp->centerPoint;
   C.x += OriginX*theComp->lengthX/2;
@@ -62,7 +66,9 @@ void MicrotubuleProcess::initializeThird()
   elongateProtofilaments();
   connectProtofilaments();
   theVacantSpecies->setIsPopulated();
-  connectLatticeVoxels();
+  theMinusSpecies->setIsPopulated();
+  thePlusSpecies->setIsPopulated();
+  enlistLatticeVoxels();
 }
 
 void MicrotubuleProcess::addVacantVoxel(unsigned int protoIndex,
@@ -80,7 +86,18 @@ void MicrotubuleProcess::addVacantVoxel(unsigned int protoIndex,
     {
       aVoxel.adjoiningVoxels[i] = theNullVoxel;
     }
-  theVacantSpecies->hardAddMolecule(&aVoxel);
+  if(!dimerIndex)
+    {
+      theMinusSpecies->hardAddMolecule(&aVoxel);
+    }
+  else if(dimerIndex == theDimerSize-1)
+    { 
+      thePlusSpecies->hardAddMolecule(&aVoxel);
+    }
+  else
+    {
+      theVacantSpecies->hardAddMolecule(&aVoxel);
+    }
 }
 
 void MicrotubuleProcess::initializeDirectionVector()
@@ -259,15 +276,6 @@ void MicrotubuleProcess::connectNwSw(unsigned int i)
   adjoin->adjoiningVoxels[adjoin->adjoiningSize++] = aVoxel;
 }
 
-void MicrotubuleProcess::connectLatticeVoxels()
-{
-  enlistLatticeVoxels();
-  /*
-  theSpecies[2]->setIsPopulated();
-  */
-  theSpecies[3]->setIsPopulated();
-}
-
 void MicrotubuleProcess::enlistLatticeVoxels()
 {
   for(std::vector<Voxel>::iterator n(theLattice.begin()); 
@@ -358,6 +366,8 @@ void MicrotubuleProcess::enlistLatticeVoxels()
                 }
             }
           else if(adjoin->id != theVacantSpecies->getID() &&
+                  adjoin->id != theMinusSpecies->getID() &&
+                  adjoin->id != thePlusSpecies->getID() &&
                   adjoin->id != theSpatiocyteStepper->getNullID())
             {
               std::cout << "species error in MT Process" << std::endl;
@@ -450,192 +460,8 @@ void MicrotubuleProcess::updateAdjoinSize(Voxel* aVoxel)
 }
 
 
-/*
-void MicrotubuleProcess::connectDirect(Voxel* offVoxel, Voxel* latVoxel,
-                                       Voxel* adjoin)
-{
-  for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
-    {
-      if(adjoin->adjoiningVoxels[i] == latVoxel)
-        {
-          adjoin->adjoiningVoxels[i] = offVoxel;
-          offVoxel->adjoiningVoxels[offVoxel->adjoiningSize++] = adjoin;
-          latticeVoxels.push_back(adjoin);
-          theSpecies[2]->addMolecule(adjoin);
-          return;
-        }
-    }
-  std::cout << "error in MT connectDirect" << std::endl;
-}
-
-void MicrotubuleProcess::connectInDirect(Voxel* offVoxel, Voxel* latVoxel)
-{
-  Point aPoint(*offVoxel->point);
-  for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
-    {
-      Voxel* adjoin(latVoxel->adjoiningVoxels[i]);
-      if(adjoin->id == theComp->vacantSpecies->getID())
-        {
-          Point adPoint(theSpatiocyteStepper->coord2point(adjoin->coord));
-          double dist(getDistance(&aPoint, &adPoint)); 
-          if(dist <= offLatticeRadius+latticeRadius)
-            { 
-              latVoxel->adjoiningVoxels[i] = offVoxel;
-              offVoxel->adjoiningVoxels[offVoxel->adjoiningSize++] = latVoxel;
-              latticeVoxels.push_back(latVoxel);
-              theSpecies[2]->addMolecule(latVoxel);
-            }
-
-        }
-    }
-}
-*/
-
-
-void MicrotubuleProcess::addAdjoinVoxels(Voxel* offVoxel, Voxel* aVoxel)
-{
-  Point aPoint(*offVoxel->point);
-  for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
-    {
-      Voxel* adjoin(aVoxel->adjoiningVoxels[i]);
-      Point adPoint(theSpatiocyteStepper->coord2point(adjoin->coord));
-      double aDist(getDistance(&adPoint, &aPoint));
-      if(aDist > offLatticeRadius+latticeRadius && !inMTCylinder(adPoint) &&
-         notInNeighbors(offVoxel, adPoint))
-       {
-         theSpecies[2]->addMolecule(adjoin);
-       }
-    }
-}
-
-bool MicrotubuleProcess::notInNeighbors(Voxel* offVoxel, Point& aPoint)
-{
-  for(unsigned int i(0); i != offVoxel->adjoiningSize; ++i)
-    {
-      Voxel* adjoin(offVoxel->adjoiningVoxels[i]);
-      Point adPoint(*adjoin->point);
-      double dist(getDistance(&aPoint, &adPoint));
-      if(dist <= offLatticeRadius+latticeRadius)
-        {
-          return false;
-        }
-    }
-  return true;
-}
-
-
-bool MicrotubuleProcess::addLatticeVoxel(Voxel* aVoxel, Voxel* offVoxel)
-{
-  /*
-    if(aVoxel->id != theComp->vacantSpecies->getID() && 
-     aVoxel->id != theSpecies[2]->getID())
-    {
-      return false;
-    }
-  std::cout << "true:" << std::endl;
-  if(aVoxel->id == theComp->vacantSpecies->getID())
-    {
-      theSpecies[2]->addMolecule(aVoxel);
-      latticeVoxels.push_back(aVoxel);
-    }
-  return true;
-  */
-  if(!isValidVoxel(aVoxel))
-    {
-      return false;
-    }
-  Point targetPoint(theSpatiocyteStepper->coord2point(aVoxel->coord));
-  double dist(getDistance(&targetPoint, offVoxel->point));
-  if(dist < offLatticeRadius)
-    {
-      std::cout << "less" << std::endl;
-      for(unsigned int i(0); i != aVoxel->adjoiningSize; ++i) 
-        {
-          Voxel* anAdjoin(aVoxel->adjoiningVoxels[i]);
-          if(isValidVoxel(anAdjoin) && !isInsideVoxel(anAdjoin))
-            {
-              for(unsigned int j(0); j != anAdjoin->adjoiningSize; ++j) 
-                {
-                  if(anAdjoin->adjoiningVoxels[j] == aVoxel)
-                    {
-                      anAdjoin->adjoiningVoxels[j] = offVoxel;
-                      if(offVoxel->adjoiningSize < theAdjoiningVoxelSize)
-                        {
-                          offVoxel->adjoiningVoxels[offVoxel->adjoiningSize] =
-                            anAdjoin;
-                          ++offVoxel->adjoiningSize;
-                        } 
-                      theSpecies[2]->addMolecule(anAdjoin);
-                    }
-                }
-            }
-        }
-      return false;
-    }
-  return true;
-}
-
-void MicrotubuleProcess::connectLatticeVoxel(Voxel* aVoxel, Voxel* offVoxel)
-{
-  removeInsideAdjoins(aVoxel);
-  if(aVoxel->diffuseSize < theAdjoiningVoxelSize)
-    {
-      aVoxel->adjoiningVoxels[aVoxel->diffuseSize] = offVoxel;
-      ++aVoxel->diffuseSize;
-    }
-  if(offVoxel->adjoiningSize < theAdjoiningVoxelSize)
-    {
-      offVoxel->adjoiningVoxels[offVoxel->adjoiningSize] = aVoxel;
-      ++offVoxel->adjoiningSize;
-    }
-  theSpecies[2]->addMolecule(aVoxel);
-}
-
-void MicrotubuleProcess::removeInsideAdjoins(Voxel* aVoxel)
-{
-  std::vector<Voxel*> outsideVoxels;
-  for(unsigned int i(0); i != aVoxel->adjoiningSize; ++i)
-    {
-      if(!isInsideVoxel(aVoxel->adjoiningVoxels[i]))
-        {
-          outsideVoxels.push_back(aVoxel->adjoiningVoxels[i]);
-        }
-    }
-  for(unsigned int i(0); i != outsideVoxels.size(); ++i)
-    {
-      aVoxel->adjoiningVoxels[i] = outsideVoxels[i];
-    }
-  aVoxel->adjoiningSize = outsideVoxels.size();
-  aVoxel->diffuseSize = outsideVoxels.size();
-}
-
-bool MicrotubuleProcess::isValidVoxel(Voxel* aVoxel)
-{
-  if(aVoxel->id != theComp->vacantSpecies->getID() && 
-     aVoxel->id != theSpecies[2]->getID())
-    {
-      return false;
-    }
-  return true;
-}
-
 bool MicrotubuleProcess::inMTCylinder(Point& N)
 {
-  Point E(M);
-  Point W(P);
-  Point S(M);
-  double t((-E.x*N.x-E.y*N.y-E.z*N.z+E.x*S.x+E.y*S.y+E.z*S.z+N.x*W.x-S.x*W.x+N.y*W.y-S.y*W.y+N.z*W.z-S.z*W.z)/(E.x*E.x+E.y*E.y+E.z*E.z-2*E.x*W.x+W.x*W.x-2*E.y*W.y+W.y*W.y-2*E.z*W.z+W.z*W.z));
-  double dist(sqrt(pow(-N.x+S.x+t*(-E.x+W.x),2)+pow(-N.y+S.y+t*(-E.y+W.y),2)+pow(-N.z+S.z+t*(-E.z+W.z),2)));
-  if(dist < Radius)
-    {
-      return true;
-    }
-  return false;
-}
-
-bool MicrotubuleProcess::isInsideVoxel(Voxel* aVoxel)
-{
-  Point N(theSpatiocyteStepper->coord2point(aVoxel->coord));
   Point E(M);
   Point W(P);
   Point S(M);
