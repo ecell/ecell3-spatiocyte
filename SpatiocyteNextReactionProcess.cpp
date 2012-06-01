@@ -782,16 +782,14 @@ void SpatiocyteNextReactionProcess::printParameters()
       std::cout << " + " << getIDString(variableD);
     }
   std::cout << " k:" << k << " p = " << pFormula.str() << " = " << p
-    << std::endl;
+    << " nextTime:" << getStepInterval() << std::endl;
 }
 
 
 GET_METHOD_DEF(Real, StepInterval, SpatiocyteNextReactionProcess)
 {
   double step(getPropensity_R()*(-log(gsl_rng_uniform_pos(getStepper()->getRng()))));
-  /*
-  std::cout << getFullID().asString() << " " << theTime <<  " next:" << theTime+step << " interval:" << step << std::endl; 
-  */
+  //std::cout << getFullID().asString() << " " << theTime <<  " next:" << theTime+step << " interval:" << step << std::endl; 
   return step;
 }
 
