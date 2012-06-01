@@ -54,6 +54,7 @@ public:
       PROPERTYSLOT_SET_GET(Real, RotateX);
       PROPERTYSLOT_SET_GET(Real, RotateY);
       PROPERTYSLOT_SET_GET(Real, RotateZ);
+      PROPERTYSLOT_SET_GET(Integer, Periodic);
     }
   MicrotubuleProcess():
     DimerPitch(8e-9),
@@ -67,6 +68,7 @@ public:
     RotateX(0),
     RotateY(0),
     RotateZ(0),
+    Periodic(0),
     theVacantSpecies(NULL),
     theMinusSpecies(NULL),
     thePlusSpecies(NULL) {}
@@ -82,6 +84,7 @@ public:
   SIMPLE_SET_GET_METHOD(Real, RotateX);
   SIMPLE_SET_GET_METHOD(Real, RotateY);
   SIMPLE_SET_GET_METHOD(Real, RotateZ);
+  SIMPLE_SET_GET_METHOD(Integer, Periodic);
   virtual void initialize()
     {
       if(isInitialized)
@@ -206,6 +209,7 @@ public:
   void removeInsideAdjoins(Voxel*);
   void connectLatticeVoxel(Voxel*, Voxel*);
   void connectNorthSouth(unsigned int, unsigned int);
+  void connectPeriodic(unsigned int);
   void connectEastWest(unsigned int, unsigned int);
   void connectSeamEastWest(unsigned int);
   void connectNwSw(unsigned int);
@@ -231,6 +235,7 @@ protected:
   double RotateZ;
   double offLatticeRadius;
   double latticeRadius;
+  unsigned int Periodic;
   unsigned int theDimerSize;
   unsigned int theAdjoiningVoxelSize;
   int tempID;

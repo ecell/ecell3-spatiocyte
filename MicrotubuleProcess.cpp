@@ -222,6 +222,10 @@ void MicrotubuleProcess::connectProtofilaments()
             { 
               connectNorthSouth(i, j);
             }
+          else if(Periodic)
+            {
+              connectPeriodic(j);
+            }
           /*
           if(j > 0)
             {
@@ -242,10 +246,20 @@ void MicrotubuleProcess::connectProtofilaments()
     }
 }
 
+void MicrotubuleProcess::connectPeriodic(unsigned int j)
+{
+  Voxel* aVoxel(&theLattice[j*theDimerSize+theDimerSize-1]);
+  Voxel* adjoin(&theLattice[j*theDimerSize]); 
+  aVoxel->adjoiningVoxels[NORTH] = adjoin;
+  adjoin->adjoiningVoxels[SOUTH] = aVoxel;
+  aVoxel->adjoiningSize = 2;
+  adjoin->adjoiningSize = 2;
+}
+
 void MicrotubuleProcess::connectNorthSouth(unsigned int i, unsigned int j)
 {
-  Voxel* aVoxel(&theLattice[j*theDimerSize+i]);
-  Voxel* adjoin(&theLattice[j*theDimerSize+(i-1)]); 
+  Voxel* aVoxel(&theLattice[j*theDimerSize+(i-1)]);
+  Voxel* adjoin(&theLattice[j*theDimerSize+i]);
   aVoxel->adjoiningVoxels[NORTH] = adjoin;
   adjoin->adjoiningVoxels[SOUTH] = aVoxel;
   aVoxel->adjoiningSize = 2;
