@@ -469,6 +469,7 @@ void SpatiocyteStepper::initPriorityQueue()
           //executed at simulation steps according to their execution times:
           if(aClassName == "DiffusionProcess" ||
              aClassName == "IteratingLogProcess" ||
+             aClassName == "HistogramLogProcess" ||
              aClassName == "CompartmentGrowthProcess" ||
              aClassName == "MoleculePopulateProcess" ||
              aClassName == "CoordinateLogProcess" ||

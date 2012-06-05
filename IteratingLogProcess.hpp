@@ -69,6 +69,7 @@ public:
   IteratingLogProcess():
     SpatiocyteProcess(false),
     Centered(0),
+    Iterations(1),
     Diffusion(0),
     Displacement(0),
     InContact(0),

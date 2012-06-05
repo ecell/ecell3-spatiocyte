@@ -43,18 +43,18 @@ public:
   LIBECS_DM_OBJECT(MicrotubuleProcess, Process)
     {
       INHERIT_PROPERTIES(Process);
+      PROPERTYSLOT_SET_GET(Integer, Periodic);
       PROPERTYSLOT_SET_GET(Real, DimerPitch);
-      PROPERTYSLOT_SET_GET(Real, Length);
       PROPERTYSLOT_SET_GET(Real, MonomerPitch);
       PROPERTYSLOT_SET_GET(Real, Protofilaments);
       PROPERTYSLOT_SET_GET(Real, Radius);
+      PROPERTYSLOT_SET_GET(Real, Length);
       PROPERTYSLOT_SET_GET(Real, OriginX);
       PROPERTYSLOT_SET_GET(Real, OriginY);
       PROPERTYSLOT_SET_GET(Real, OriginZ);
       PROPERTYSLOT_SET_GET(Real, RotateX);
       PROPERTYSLOT_SET_GET(Real, RotateY);
       PROPERTYSLOT_SET_GET(Real, RotateZ);
-      PROPERTYSLOT_SET_GET(Integer, Periodic);
     }
   MicrotubuleProcess():
     DimerPitch(8e-9),
@@ -73,18 +73,18 @@ public:
     theMinusSpecies(NULL),
     thePlusSpecies(NULL) {}
   virtual ~MicrotubuleProcess() {}
+  SIMPLE_SET_GET_METHOD(Integer, Periodic);
   SIMPLE_SET_GET_METHOD(Real, DimerPitch);
-  SIMPLE_SET_GET_METHOD(Real, Length);
   SIMPLE_SET_GET_METHOD(Real, MonomerPitch);
   SIMPLE_SET_GET_METHOD(Real, Protofilaments);
   SIMPLE_SET_GET_METHOD(Real, Radius);
+  SIMPLE_SET_GET_METHOD(Real, Length);
   SIMPLE_SET_GET_METHOD(Real, OriginX);
   SIMPLE_SET_GET_METHOD(Real, OriginY);
   SIMPLE_SET_GET_METHOD(Real, OriginZ);
   SIMPLE_SET_GET_METHOD(Real, RotateX);
   SIMPLE_SET_GET_METHOD(Real, RotateY);
   SIMPLE_SET_GET_METHOD(Real, RotateZ);
-  SIMPLE_SET_GET_METHOD(Integer, Periodic);
   virtual void initialize()
     {
       if(isInitialized)
@@ -185,7 +185,14 @@ public:
           thePlusSpecies = theVacantSpecies;
         }
     }
-
+  virtual void initializeSecond()
+    {
+      SpatiocyteProcess::initializeSecond();
+      theLattice.resize(0);
+      thePoints.resize(0);
+      latticeVoxels.resize(0);
+      occVoxels.resize(0);
+    }
   virtual void initializeThird();
   void initProtofilaments();
   void elongateProtofilaments();
