@@ -115,7 +115,7 @@ public:
                                       getIDString(aSpecies) + " are given."); 
                     }
                   theVacantSpecies = aSpecies;
-                  theVacantSpecies->setIsVacant();
+                  //theVacantSpecies->setIsVacant();
                 }
               else if((*i).getCoefficient() == -2)
                 {
@@ -132,7 +132,7 @@ public:
                                       getIDString(aSpecies) + " are given."); 
                     }
                   theMinusSpecies = aSpecies;
-                  theMinusSpecies->setIsVacant();
+                  //theMinusSpecies->setIsVacant();
                 }
               else if((*i).getCoefficient() == -3)
                 {
@@ -149,7 +149,7 @@ public:
                                       getIDString(aSpecies) + " are given."); 
                     }
                   thePlusSpecies = aSpecies;
-                  thePlusSpecies->setIsVacant();
+                  //thePlusSpecies->setIsVacant();
                 }
             }
           else

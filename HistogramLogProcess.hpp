@@ -101,7 +101,7 @@ public:
   void saveBackup();
   void logValues();
   void initializeVectors();
-  bool isInside(unsigned int, Point);
+  bool isInside(unsigned int&, Point);
 protected:
   int Iterations;
   int SaveCounts;

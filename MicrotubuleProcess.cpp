@@ -49,7 +49,7 @@ void MicrotubuleProcess::initializeThird()
   for(unsigned int i(0); i != theKinesinSpecies.size(); ++i)
     {
       theKinesinSpecies[i]->setIsOffLattice();
-      theKinesinSpecies[i]->setVacantSpecies(theVacantSpecies);
+      //theKinesinSpecies[i]->setVacantSpecies(theVacantSpecies);
       //theKinesinSpecies[i]->setRadius(DimerPitch/2);
     }
   VoxelDiameter = theSpatiocyteStepper->getVoxelRadius()*2;
@@ -69,6 +69,7 @@ void MicrotubuleProcess::initializeThird()
   theMinusSpecies->setIsPopulated();
   thePlusSpecies->setIsPopulated();
   enlistLatticeVoxels();
+  //std::cout << getIDString(theVacantSpecies) << theVacantSpecies->size() << std::endl;
 }
 
 void MicrotubuleProcess::addVacantVoxel(unsigned int protoIndex,

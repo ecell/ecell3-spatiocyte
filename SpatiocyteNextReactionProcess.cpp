@@ -414,6 +414,7 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
 bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
 {
   Voxel* moleculeA(a->getRandomMolecule());
+ //std::cout << getIDString(a) << " " << a->size() << " " << a->getIsVacant() << " " << a->getIsDiffuseVacant() << std::endl;
   Voxel* moleculeC(NULL);
   if(a->getVacantID() == c->getVacantID() || a->getID() == c->getVacantID())
     {

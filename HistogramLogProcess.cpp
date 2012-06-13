@@ -158,20 +158,17 @@ void HistogramLogProcess::saveBackup()
 void HistogramLogProcess::logValues()
 {
  //std::cout << "timePoint:" << timePointCnt <<  " curr:" << theSpatiocyteStepper->getCurrentTime() << std::endl;
-  for(unsigned int i(0); i != Bins; ++i)
+  for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
     {
-      for(unsigned int j(0); j != theProcessSpecies.size(); ++j)
+      Species* aSpecies(theProcessSpecies[i]);
+      std::cout << getIDString(aSpecies) << " " << aSpecies->size() << std::endl;
+      for(unsigned int j(0); j != aSpecies->size(); ++j)
         {
-          Species* aSpecies(theProcessSpecies[j]);
-          int cnt(0);
-          for(unsigned int k(0); k != aSpecies->size(); ++k)
+          unsigned int bin;
+          if(isInside(bin, aSpecies->getPoint(j)))
             {
-              if(isInside(i, aSpecies->getPoint(k)))
-                {
-                  ++cnt;
-                }
+              ++theLogValues[timePointCnt][bin][i];
             }
-          theLogValues[timePointCnt][i][j] = cnt;
         }
     }
 }
@@ -214,12 +211,16 @@ void HistogramLogProcess::initializeVectors()
 }
 
 
-bool HistogramLogProcess::isInside(unsigned int bin, Point N)
+bool HistogramLogProcess::isInside(unsigned int& bin, Point N)
 {
-  double binLength(binInterval*(bin+0.5));
   double t((D.x*N.x+D.y*N.y+D.z*N.z-D.x*E.x-D.y*E.y-D.z*E.z)/
            (D.x*D.x +D.y*D.y+D.z*D.z));
-  if(sqrt(pow(binLength-t,2)) > binInterval/2)
+  if(t < 0)
+    {
+      return false;
+    }
+  bin = (unsigned int)floor(t/binInterval);
+  if(bin >= Bins)
     {
       return false;
     }
