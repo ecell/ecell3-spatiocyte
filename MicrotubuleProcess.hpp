@@ -57,6 +57,7 @@ public:
       PROPERTYSLOT_SET_GET(Real, RotateZ);
     }
   MicrotubuleProcess():
+    isCompartmentalized(false),
     DimerPitch(8e-9),
     Length(100e-9),
     MonomerPitch(4e-9),
@@ -184,6 +185,16 @@ public:
         {
           thePlusSpecies = theVacantSpecies;
         }
+  VoxelDiameter = theSpatiocyteStepper->getVoxelRadius()*2;
+ std::cout << "VoxelDiameter:" << VoxelDiameter << std::endl;
+  std::cout << "Length:" << Length << " DimerPitch:" << DimerPitch << std::endl;
+  std::cout << "MonomerPitch:" << MonomerPitch << " Radius:" << Radius << std::endl;
+  DimerPitch /= VoxelDiameter;
+  Length /= VoxelDiameter;
+  MonomerPitch /= VoxelDiameter;
+  Radius /= VoxelDiameter;
+
+
     }
   virtual void initializeSecond()
     {
@@ -206,6 +217,8 @@ public:
   bool isLine(Voxel*, Point&);
   bool checkStartVoxel(Voxel*);
   void addVacantVoxel(unsigned int, unsigned int, Point&);
+  void addVacantVoxel(unsigned int, Voxel*);
+  void addVacantVoxels();
   void removeVacantVoxels(unsigned int);
   void rotatePointAlongVector(Point&, double);
   void connectLatticeVoxels();
@@ -228,6 +241,7 @@ public:
   bool initAdjoins(Voxel*);
   void updateAdjoinSize(Voxel*);
 protected:
+  bool isCompartmentalized;
   double DimerPitch;
   double Length;
   double MonomerPitch;

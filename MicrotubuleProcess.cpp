@@ -34,42 +34,57 @@ LIBECS_DM_INIT(MicrotubuleProcess, Process);
 
 void MicrotubuleProcess::initializeThird()
 {
-  theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
-  theVacantSpecies->setIsOffLattice();
-  theVacantSpecies->setRadius(DimerPitch/2);
-  theMinusSpecies->setIsOffLattice();
-  theMinusSpecies->setRadius(DimerPitch/2);
-  thePlusSpecies->setIsOffLattice();
-  thePlusSpecies->setRadius(DimerPitch/2);
-  tempID = theSpecies.size();
-  C = theComp->centerPoint;
-  C.x += OriginX*theComp->lengthX/2;
-  C.y += OriginY*theComp->lengthY/2;
-  C.z += OriginZ*theComp->lengthZ/2;
-  for(unsigned int i(0); i != theKinesinSpecies.size(); ++i)
+  if(!isCompartmentalized)
     {
-      theKinesinSpecies[i]->setIsOffLattice();
-      //theKinesinSpecies[i]->setVacantSpecies(theVacantSpecies);
-      //theKinesinSpecies[i]->setRadius(DimerPitch/2);
+      theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
+      theVacantSpecies->setIsOffLattice();
+      theVacantSpecies->setRadius(DimerPitch/2);
+      theMinusSpecies->setIsOffLattice();
+      theMinusSpecies->setRadius(DimerPitch/2);
+      thePlusSpecies->setIsOffLattice();
+      thePlusSpecies->setRadius(DimerPitch/2);
+      tempID = theSpecies.size();
+      C = theComp->centerPoint;
+      C.x += OriginX*theComp->lengthX/2;
+      C.y += OriginY*theComp->lengthY/2;
+      C.z += OriginZ*theComp->lengthZ/2;
+      for(unsigned int i(0); i != theKinesinSpecies.size(); ++i)
+        {
+          theKinesinSpecies[i]->setIsOffLattice();
+          //theKinesinSpecies[i]->setVacantSpecies(theVacantSpecies);
+          //theKinesinSpecies[i]->setRadius(DimerPitch*VoxelDiameter/2);
+        }
+      offLatticeRadius = DimerPitch/2;
+      latticeRadius = 0.5;
+      theDimerSize = (unsigned int)rint(Length/DimerPitch);
+      theLattice.resize(Protofilaments*theDimerSize);
+      thePoints.resize(Protofilaments*theDimerSize);
+      initProtofilaments();
+      elongateProtofilaments();
+      connectProtofilaments();
+      theVacantSpecies->setIsPopulated();
+      theMinusSpecies->setIsPopulated();
+      thePlusSpecies->setIsPopulated();
+      enlistLatticeVoxels();
+      std::cout << getIDString(theVacantSpecies) << theVacantSpecies->size() << std::endl;
+      isCompartmentalized = true;
     }
-  VoxelDiameter = theSpatiocyteStepper->getVoxelRadius()*2;
-  DimerPitch /= VoxelDiameter;
-  Length /= VoxelDiameter;
-  MonomerPitch /= VoxelDiameter;
-  Radius /= VoxelDiameter;
-  offLatticeRadius = DimerPitch/2;
-  latticeRadius = 0.5;
-  theDimerSize = (unsigned int)rint(Length/DimerPitch);
-  theLattice.resize(Protofilaments*theDimerSize);
-  thePoints.resize(Protofilaments*theDimerSize);
-  initProtofilaments();
-  elongateProtofilaments();
-  connectProtofilaments();
-  theVacantSpecies->setIsPopulated();
-  theMinusSpecies->setIsPopulated();
-  thePlusSpecies->setIsPopulated();
-  enlistLatticeVoxels();
-  //std::cout << getIDString(theVacantSpecies) << theVacantSpecies->size() << std::endl;
+  else
+    {
+      addVacantVoxels();
+    }
+}
+
+void MicrotubuleProcess::addVacantVoxels()
+{
+  for(unsigned int i(0); i != Protofilaments; ++i)
+    {
+      for(unsigned int j(0); j != theDimerSize; ++j)
+        {
+          Voxel* aVoxel(&theLattice[i*theDimerSize+j]);
+          addVacantVoxel(j, aVoxel);
+        }
+    }
 }
 
 void MicrotubuleProcess::addVacantVoxel(unsigned int protoIndex,
@@ -87,17 +102,22 @@ void MicrotubuleProcess::addVacantVoxel(unsigned int protoIndex,
     {
       aVoxel.adjoiningVoxels[i] = theNullVoxel;
     }
+  addVacantVoxel(dimerIndex, &aVoxel);
+}
+
+void MicrotubuleProcess::addVacantVoxel(unsigned int dimerIndex, Voxel* aVoxel)
+{
   if(!dimerIndex)
     {
-      theMinusSpecies->hardAddMolecule(&aVoxel);
+      theMinusSpecies->hardAddMolecule(aVoxel);
     }
   else if(dimerIndex == theDimerSize-1)
     { 
-      thePlusSpecies->hardAddMolecule(&aVoxel);
+      thePlusSpecies->hardAddMolecule(aVoxel);
     }
   else
     {
-      theVacantSpecies->hardAddMolecule(&aVoxel);
+      theVacantSpecies->hardAddMolecule(aVoxel);
     }
 }
 
@@ -199,6 +219,7 @@ void MicrotubuleProcess::initProtofilaments()
 
 void MicrotubuleProcess::elongateProtofilaments()
 {
+  std::cout << "proto:" << Protofilaments << " dimer:" << theDimerSize << std::endl;
   for(unsigned int i(0); i != Protofilaments; ++i)
     {
       Voxel& startVoxel(theLattice[i*theDimerSize]);
