@@ -70,6 +70,16 @@ void HistogramLogProcess::initializeLastOnce()
             }
         }
     }
+  theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
+  C = theComp->centerPoint;
+  C.x += OriginX*theComp->lengthX/2;
+  C.y += OriginY*theComp->lengthY/2;
+  C.z += OriginZ*theComp->lengthZ/2;
+  VoxelDiameter = theSpatiocyteStepper->getVoxelRadius()*2;
+  Length /= VoxelDiameter;
+  Radius /= VoxelDiameter;
+  binInterval = Length/Bins;
+  initializeVectors();
 }
 
 void HistogramLogProcess::fire()
@@ -175,16 +185,6 @@ void HistogramLogProcess::logValues()
 
 void HistogramLogProcess::initializeFourth()
 {
-  theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
-  C = theComp->centerPoint;
-  C.x += OriginX*theComp->lengthX/2;
-  C.y += OriginY*theComp->lengthY/2;
-  C.z += OriginZ*theComp->lengthZ/2;
-  VoxelDiameter = theSpatiocyteStepper->getVoxelRadius()*2;
-  Length /= VoxelDiameter;
-  Radius /= VoxelDiameter;
-  binInterval = Length/Bins;
-  initializeVectors();
 }
 
 void HistogramLogProcess::initializeVectors()

@@ -196,14 +196,6 @@ public:
 
 
     }
-  virtual void initializeSecond()
-    {
-      SpatiocyteProcess::initializeSecond();
-      theLattice.resize(0);
-      thePoints.resize(0);
-      latticeVoxels.resize(0);
-      occVoxels.resize(0);
-    }
   virtual void initializeThird();
   void initProtofilaments();
   void elongateProtofilaments();
