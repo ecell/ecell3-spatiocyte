@@ -48,7 +48,7 @@ void HistogramLogProcess::initializeFifth()
     {
       LogInterval = theStepInterval;
     }
-  theTime = LogInterval;
+  theTime = LogStart;
   thePriorityQueue->move(theQueueID);
 }
 
@@ -56,7 +56,7 @@ void HistogramLogProcess::initializeLastOnce()
 {
   theLogFile.open(FileName.c_str(), std::ios::trunc);
   theTotalIterations = Iterations;
-  timePoints = (unsigned int)ceil(LogDuration/theStepInterval);
+  timePoints = (unsigned int)ceil((LogEnd-LogStart)/theStepInterval)+1;
   theLogValues.resize(timePoints);
   for(unsigned int i(0); i != timePoints; ++i)
     {
@@ -84,12 +84,12 @@ void HistogramLogProcess::initializeLastOnce()
 
 void HistogramLogProcess::fire()
 {
-  if(theTime <= LogDuration)
+  if(theTime >= LogStart && theTime <= LogEnd)
     {
       logValues();
       ++timePointCnt;
     }
-  if(theTime >= LogDuration && Iterations > 0)
+  if(theTime >= LogEnd && Iterations > 0)
     {
       theStepInterval = LogInterval;
       --Iterations;
@@ -171,7 +171,7 @@ void HistogramLogProcess::logValues()
   for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
     {
       Species* aSpecies(theProcessSpecies[i]);
-      std::cout << getIDString(aSpecies) << " " << aSpecies->size() << std::endl;
+      //std::cout << getIDString(aSpecies) << " " << aSpecies->size() << std::endl;
       for(unsigned int j(0); j != aSpecies->size(); ++j)
         {
           unsigned int bin;

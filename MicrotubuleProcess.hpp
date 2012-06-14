@@ -185,16 +185,11 @@ public:
         {
           thePlusSpecies = theVacantSpecies;
         }
-  VoxelDiameter = theSpatiocyteStepper->getVoxelRadius()*2;
- std::cout << "VoxelDiameter:" << VoxelDiameter << std::endl;
-  std::cout << "Length:" << Length << " DimerPitch:" << DimerPitch << std::endl;
-  std::cout << "MonomerPitch:" << MonomerPitch << " Radius:" << Radius << std::endl;
-  DimerPitch /= VoxelDiameter;
-  Length /= VoxelDiameter;
-  MonomerPitch /= VoxelDiameter;
-  Radius /= VoxelDiameter;
-
-
+      VoxelDiameter = theSpatiocyteStepper->getVoxelRadius()*2;
+      DimerPitch /= VoxelDiameter;
+      Length /= VoxelDiameter;
+      MonomerPitch /= VoxelDiameter;
+      Radius /= VoxelDiameter;
     }
   virtual void initializeThird();
   void initProtofilaments();

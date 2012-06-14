@@ -66,7 +66,8 @@ void MicrotubuleProcess::initializeThird()
       theMinusSpecies->setIsPopulated();
       thePlusSpecies->setIsPopulated();
       enlistLatticeVoxels();
-      std::cout << getIDString(theVacantSpecies) << theVacantSpecies->size() << std::endl;
+      //std::cout << getIDString(theVacantSpecies) << 
+      //  theVacantSpecies->size() << std::endl;
       isCompartmentalized = true;
     }
   else
@@ -219,7 +220,7 @@ void MicrotubuleProcess::initProtofilaments()
 
 void MicrotubuleProcess::elongateProtofilaments()
 {
-  std::cout << "proto:" << Protofilaments << " dimer:" << theDimerSize << std::endl;
+  //std::cout << "proto:" << Protofilaments << " dimer:" << theDimerSize << std::endl;
   for(unsigned int i(0); i != Protofilaments; ++i)
     {
       Voxel& startVoxel(theLattice[i*theDimerSize]);

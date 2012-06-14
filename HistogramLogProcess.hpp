@@ -43,7 +43,8 @@ public:
   LIBECS_DM_OBJECT(HistogramLogProcess, Process)
     {
       INHERIT_PROPERTIES(Process);
-      PROPERTYSLOT_SET_GET(Real, LogDuration);
+      PROPERTYSLOT_SET_GET(Real, LogEnd);
+      PROPERTYSLOT_SET_GET(Real, LogStart);
       PROPERTYSLOT_SET_GET(Real, LogInterval);
       PROPERTYSLOT_SET_GET(Integer, Iterations);
       PROPERTYSLOT_SET_GET(Integer, SaveCounts);
@@ -58,7 +59,8 @@ public:
       PROPERTYSLOT_SET_GET(Real, RotateY);
       PROPERTYSLOT_SET_GET(Real, RotateZ);
     }
-  SIMPLE_SET_GET_METHOD(Real, LogDuration);
+  SIMPLE_SET_GET_METHOD(Real, LogEnd);
+  SIMPLE_SET_GET_METHOD(Real, LogStart);
   SIMPLE_SET_GET_METHOD(Real, LogInterval);
   SIMPLE_SET_GET_METHOD(Integer, Iterations);
   SIMPLE_SET_GET_METHOD(Integer, SaveCounts);
@@ -77,6 +79,7 @@ public:
     Iterations(1),
     SaveCounts(0),
     Bins(1),
+    LogStart(0),
     LogInterval(0),
     OriginX(0),
     OriginY(0),
@@ -111,7 +114,8 @@ protected:
   unsigned int timePoints;
   double binInterval;
   double Length;
-  double LogDuration;
+  double LogEnd;
+  double LogStart;
   double LogInterval;
   double OriginX;
   double OriginY;
