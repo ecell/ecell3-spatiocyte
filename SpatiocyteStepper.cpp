@@ -176,14 +176,15 @@ std::vector<Species*> SpatiocyteStepper::getSpecies()
   return theSpecies;
 }
 
-bool SpatiocyteStepper::isBoundaryCoord(unsigned int aCoord, bool isVolume)
+bool SpatiocyteStepper::isBoundaryCoord(unsigned int aCoord,
+                                        unsigned int aDimension)
 {
   //This method is only for checking boundaries on a cube:
   unsigned int aRow;
   unsigned int aLayer;
   unsigned int aCol;
   coord2global(aCoord, aRow, aLayer, aCol);
-  if(isVolume)
+  if(aDimension == 3)
     {
       //If the voxel is on one of the 6 cuboid surfaces:
       if(aRow == 1 || aLayer == 1 || aCol == 1 ||
@@ -217,7 +218,7 @@ bool SpatiocyteStepper::isBoundaryCoord(unsigned int aCoord, bool isVolume)
 }
 
 Voxel* SpatiocyteStepper::getPeriodicVoxel(unsigned int aCoord,
-                                           bool isVolume,
+                                           unsigned int aDimension,
                                            Origin* anOrigin)
 {
   //This method is only for checking boundaries on a cube:
@@ -229,7 +230,7 @@ Voxel* SpatiocyteStepper::getPeriodicVoxel(unsigned int aCoord,
   unsigned int nextLayer(aLayer);
   unsigned int nextCol(aCol);
   unsigned int adj(1);
-  if(isVolume)
+  if(aDimension == 3)
     {
       adj = 0;
     }
@@ -273,11 +274,11 @@ Voxel* SpatiocyteStepper::getPeriodicVoxel(unsigned int aCoord,
 }
 
 Point SpatiocyteStepper::getPeriodicPoint(unsigned int aCoord,
-                                          bool isVolume,
+                                          unsigned int aDimension,
                                           Origin* anOrigin)
 {
   unsigned int adj(1);
-  if(isVolume)
+  if(aDimension == 3)
     {
       adj = 0;
     }
@@ -356,7 +357,7 @@ void SpatiocyteStepper::checkLattice()
       if(theSpecies[i]->getVariable() != NULL)
         {
           std::cout << theSpecies[i]->getVariable()->getFullID().asString();
-          if(theSpecies[i]->getIsVolume())
+          if(theSpecies[i]->getDimension() == 3)
             {
               volumeCnt += list[i];
             }
@@ -755,19 +756,14 @@ void SpatiocyteStepper::registerCompSpecies(Comp* aComp)
           aComp->vacantSpecies = aSpecies;
           aSpecies->setVacantSpecies(aSpecies);
           aComp->vacantID = aSpecies->getID(); //remove this
-          aSpecies->setIsVacant();
+          aSpecies->setIsCompVacant();
         }
       std::vector<Species*>::iterator j(variable2ispecies(aVariable));
       if(j != theSpecies.end())
         {
           aComp->species.push_back(*j);
           (*j)->setComp(aComp);
-          if(aComp->dimension == 3)
-            {
-              //By default all biochemical species are assumed to be
-              //surface species. Here we set it as a volume species:
-              (*j)->setIsVolume();
-            }
+          (*j)->setDimension(aComp->dimension);
         }
     }
 }
@@ -2015,7 +2011,7 @@ void SpatiocyteStepper::setDiffusiveComp(Comp* aComp)
       for(unsigned int i(0); i != aVacantSpecies->size(); ++i)
         {
           Voxel* aVoxel(aVacantSpecies->getMolecule(i));
-          aComp->diffusiveComp->vacantSpecies->hardAddMolecule(aVoxel);
+          aComp->diffusiveComp->vacantSpecies->addCompVoxel(aVoxel);
         }
       aVacantSpecies->clearMolecules();
     }
@@ -2300,7 +2296,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel, Comp* aComp)
                   //a future surface voxel)
                   if(isEnclosedSurfaceVoxel(aVoxel, aComp))
                     {
-                      aComp->surfaceSub->vacantSpecies->hardAddMolecule(aVoxel);
+                      aComp->surfaceSub->vacantSpecies->addCompVoxel(aVoxel);
                       setMinMaxSurfaceDimensions(aVoxel->coord, aComp);
                       return true;
                     }
@@ -2318,7 +2314,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel, Comp* aComp)
               if(aComp->surfaceSub && 
                  isEnclosedRootSurfaceVoxel(aVoxel, aComp, aRootComp))
                 {
-                  aComp->surfaceSub->vacantSpecies->hardAddMolecule(aVoxel);
+                  aComp->surfaceSub->vacantSpecies->addCompVoxel(aVoxel);
                   setMinMaxSurfaceDimensions(aVoxel->coord, aComp);
                   return true;
                 }
@@ -2329,7 +2325,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel, Comp* aComp)
               if(aComp->surfaceSub && aComp->surfaceSub->enclosed &&
                  isParentSurfaceVoxel(aVoxel, aParentComp))
                 {
-                  aComp->surfaceSub->vacantSpecies->hardAddMolecule(aVoxel);
+                  aComp->surfaceSub->vacantSpecies->addCompVoxel(aVoxel);
                   setMinMaxSurfaceDimensions(aVoxel->coord, aComp);
                   return true;
                 }
@@ -2341,7 +2337,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel, Comp* aComp)
                   return true;
                 }
             }
-          aComp->vacantSpecies->hardAddMolecule(aVoxel);
+          aComp->vacantSpecies->addCompVoxel(aVoxel);
           return true;
         }
       if(aComp->surfaceSub)
@@ -2349,7 +2345,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel, Comp* aComp)
           if(isInsideCoord(aVoxel->coord, aComp, 4) &&
              isSurfaceVoxel(aVoxel, aComp))
             {
-              aComp->surfaceSub->vacantSpecies->hardAddMolecule(aVoxel);
+              aComp->surfaceSub->vacantSpecies->addCompVoxel(aVoxel);
               setMinMaxSurfaceDimensions(aVoxel->coord, aComp);
               return true;
             }
@@ -2361,7 +2357,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel* aVoxel, Comp* aComp)
       if(!isInsideCoord(aVoxel->coord, aRootComp, -4) &&
          isRootSurfaceVoxel(aVoxel, aRootComp))
         {
-          aComp->vacantSpecies->hardAddMolecule(aVoxel);
+          aComp->vacantSpecies->addCompVoxel(aVoxel);
           setMinMaxSurfaceDimensions(aVoxel->coord, aRootComp);
           return true;
         }
@@ -2731,14 +2727,14 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
 {
   unsigned int populationSize(0);
   std::vector<Species*> prioritySpecies;
-  std::vector<Species*> diffuseSpecies;
+  std::vector<Species*> diffusiveSpecies;
   std::vector<Species*> normalSpecies;
   for(std::vector<Species*>::const_iterator i(aComp->species.begin());
       i != aComp->species.end(); ++i)
     {
-      if((*i)->getVacantSpecies()->getIsDiffuseVacant())
+      if((*i)->getVacantSpecies()->getIsDiffusiveVacant())
         {
-          diffuseSpecies.push_back(*i);
+          diffusiveSpecies.push_back(*i);
         }
       else if((*i)->getIsPopulateSpecies())
         {
@@ -2752,7 +2748,7 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
               //in the high priority populate list
               if((*j)->getPopulatePriority() > (*i)->getPopulatePriority() ||
                  ((*j)->getPopulatePriority() == (*i)->getPopulatePriority() &&
-                  (*j)->getIsDiffuseVacant()))
+                  (*j)->getIsDiffusiveVacant()))
                 {
                   temp.push_back(*j);
                 }
@@ -2797,10 +2793,10 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
     {
       populateSpeciesSparse(prioritySpecies);
     }
-  for(std::vector<Species*>::const_iterator i(diffuseSpecies.begin());
-      i != diffuseSpecies.end(); ++i)
+  for(std::vector<Species*>::const_iterator i(diffusiveSpecies.begin());
+      i != diffusiveSpecies.end(); ++i)
     {
-      (*i)->populateUniformOnDiffuseVacant();
+      (*i)->populateUniformOnDiffusiveVacant();
     }
 }
 

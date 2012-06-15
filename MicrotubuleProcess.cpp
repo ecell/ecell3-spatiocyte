@@ -38,11 +38,11 @@ void MicrotubuleProcess::initializeThird()
     {
       theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
       theVacantSpecies->setIsOffLattice();
-      theVacantSpecies->setRadius(DimerPitch/2);
+      theVacantSpecies->setRadius(DimerPitch*VoxelDiameter/2);
       theMinusSpecies->setIsOffLattice();
-      theMinusSpecies->setRadius(DimerPitch/2);
+      theMinusSpecies->setRadius(DimerPitch*VoxelDiameter/2);
       thePlusSpecies->setIsOffLattice();
-      thePlusSpecies->setRadius(DimerPitch/2);
+      thePlusSpecies->setRadius(DimerPitch*VoxelDiameter/2);
       tempID = theSpecies.size();
       C = theComp->centerPoint;
       C.x += OriginX*theComp->lengthX/2;
@@ -51,8 +51,9 @@ void MicrotubuleProcess::initializeThird()
       for(unsigned int i(0); i != theKinesinSpecies.size(); ++i)
         {
           theKinesinSpecies[i]->setIsOffLattice();
-          //theKinesinSpecies[i]->setVacantSpecies(theVacantSpecies);
-          //theKinesinSpecies[i]->setRadius(DimerPitch*VoxelDiameter/2);
+          theKinesinSpecies[i]->setDimension(1);
+          theKinesinSpecies[i]->setVacantSpecies(theVacantSpecies);
+          theKinesinSpecies[i]->setRadius(DimerPitch*VoxelDiameter/2);
         }
       offLatticeRadius = DimerPitch/2;
       latticeRadius = 0.5;
@@ -62,34 +63,21 @@ void MicrotubuleProcess::initializeThird()
       initProtofilaments();
       elongateProtofilaments();
       connectProtofilaments();
-      theVacantSpecies->setIsPopulated();
-      theMinusSpecies->setIsPopulated();
-      thePlusSpecies->setIsPopulated();
       enlistLatticeVoxels();
       //std::cout << getIDString(theVacantSpecies) << 
       //  theVacantSpecies->size() << std::endl;
       isCompartmentalized = true;
     }
+  /*
   else
     {
-      addVacantVoxels();
+      populateMolecules();
     }
+    */
 }
 
-void MicrotubuleProcess::addVacantVoxels()
-{
-  for(unsigned int i(0); i != Protofilaments; ++i)
-    {
-      for(unsigned int j(0); j != theDimerSize; ++j)
-        {
-          Voxel* aVoxel(&theLattice[i*theDimerSize+j]);
-          addVacantVoxel(j, aVoxel);
-        }
-    }
-}
-
-void MicrotubuleProcess::addVacantVoxel(unsigned int protoIndex,
-                                        unsigned int dimerIndex, Point& aPoint)
+void MicrotubuleProcess::addCompVoxel(unsigned int protoIndex,
+                                      unsigned int dimerIndex, Point& aPoint)
 {
   Voxel& aVoxel(theLattice[protoIndex*theDimerSize+dimerIndex]);
   aVoxel.point = &thePoints[protoIndex*theDimerSize+dimerIndex];
@@ -103,22 +91,17 @@ void MicrotubuleProcess::addVacantVoxel(unsigned int protoIndex,
     {
       aVoxel.adjoiningVoxels[i] = theNullVoxel;
     }
-  addVacantVoxel(dimerIndex, &aVoxel);
-}
-
-void MicrotubuleProcess::addVacantVoxel(unsigned int dimerIndex, Voxel* aVoxel)
-{
   if(!dimerIndex)
     {
-      theMinusSpecies->hardAddMolecule(aVoxel);
+      theMinusSpecies->addCompVoxel(&aVoxel);
     }
   else if(dimerIndex == theDimerSize-1)
     { 
-      thePlusSpecies->hardAddMolecule(aVoxel);
+      thePlusSpecies->addCompVoxel(&aVoxel);
     }
   else
     {
-      theVacantSpecies->hardAddMolecule(aVoxel);
+      theVacantSpecies->addCompVoxel(&aVoxel);
     }
 }
 
@@ -206,7 +189,7 @@ void MicrotubuleProcess::initProtofilaments()
   S.y = M.y+Radius*D.y;
   S.z = M.z+Radius*D.z;
   //std::cout << "S.x:" << S.x << " y:" << S.y << " z:" << S.z << std::endl;
-  addVacantVoxel(0, 0, S);
+  addCompVoxel(0, 0, S);
   for(int i(1); i != Protofilaments; ++i)
     {
       double angle(2*M_PI/Protofilaments);
@@ -214,7 +197,7 @@ void MicrotubuleProcess::initProtofilaments()
       S.x += MonomerPitch/(Protofilaments-1)*T.x;
       S.y += MonomerPitch/(Protofilaments-1)*T.y;
       S.z += MonomerPitch/(Protofilaments-1)*T.z;
-      addVacantVoxel(i, 0, S);
+      addCompVoxel(i, 0, S);
     }
 }
 
@@ -230,7 +213,7 @@ void MicrotubuleProcess::elongateProtofilaments()
           A.x += DimerPitch*T.x;
           A.y += DimerPitch*T.y;
           A.z += DimerPitch*T.z;
-          addVacantVoxel(i, j, A);
+          addCompVoxel(i, j, A);
         }
     }
 }

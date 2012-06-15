@@ -120,7 +120,7 @@ public:
     {
       if(theVacantSpecies)
         {
-          theVacantSpecies->setIsDiffuseVacant();
+          theVacantSpecies->setIsDiffusiveVacant();
           theDiffusionSpecies->setVacantSpecies(theVacantSpecies);
         }
     }
@@ -135,16 +135,20 @@ public:
       if(D > 0)
         {
           double r_v(theSpatiocyteStepper->getVoxelRadius());
-          double lambda(2.0/3);
-          if(!theDiffusionSpecies->getIsVolume())
+          double alpha(0.5); //default for 1D diffusion
+          if(theDiffusionSpecies->getDimension() == 2)
             {
-              lambda = pow((2*sqrt(2)+4*sqrt(3)+3*sqrt(6)+sqrt(22))/
+              alpha = pow((2*sqrt(2)+4*sqrt(3)+3*sqrt(6)+sqrt(22))/
                            (6*sqrt(2)+4*sqrt(3)+3*sqrt(6)), 2);
             }
-          theStepInterval = lambda*r_v*r_v*WalkProbability/D;
+          else if(theDiffusionSpecies->getDimension() == 3)
+            {
+              alpha = 2/3;
+            }
+          theStepInterval = alpha*r_v*r_v*WalkProbability/D;
         }
       theDiffusionSpecies->setDiffusionInterval(theStepInterval);
-      if(theDiffusionSpecies->getIsDiffuseVacant())
+      if(theDiffusionSpecies->getIsDiffusiveVacant())
         {
           theWalkMethod = &DiffusionProcess::walkVacant;
         }

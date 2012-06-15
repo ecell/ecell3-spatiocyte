@@ -86,7 +86,7 @@ public:
                               (*i)->getVariable()->getFullID().asString() +
                               " is a diffusing species.");
             }
-          if((*i)->getIsVolume())
+          if((*i)->getDimension() == 3)
             {
               THROW_EXCEPTION(ValueError, 
                               String(getPropertyInterface().getClassName()) + 

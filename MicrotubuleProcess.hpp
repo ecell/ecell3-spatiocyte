@@ -116,7 +116,6 @@ public:
                                       getIDString(aSpecies) + " are given."); 
                     }
                   theVacantSpecies = aSpecies;
-                  //theVacantSpecies->setIsVacant();
                 }
               else if((*i).getCoefficient() == -2)
                 {
@@ -133,7 +132,6 @@ public:
                                       getIDString(aSpecies) + " are given."); 
                     }
                   theMinusSpecies = aSpecies;
-                  //theMinusSpecies->setIsVacant();
                 }
               else if((*i).getCoefficient() == -3)
                 {
@@ -150,7 +148,6 @@ public:
                                       getIDString(aSpecies) + " are given."); 
                     }
                   thePlusSpecies = aSpecies;
-                  //thePlusSpecies->setIsVacant();
                 }
             }
           else
@@ -191,6 +188,12 @@ public:
       MonomerPitch /= VoxelDiameter;
       Radius /= VoxelDiameter;
     }
+  virtual void initializeSecond()
+    {
+      theVacantSpecies->setIsCompVacant();
+      theMinusSpecies->setIsCompVacant();
+      thePlusSpecies->setIsCompVacant();
+    }
   virtual void initializeThird();
   void initProtofilaments();
   void elongateProtofilaments();
@@ -203,9 +206,7 @@ public:
   bool isInsidePlane(Voxel*, Point&);
   bool isLine(Voxel*, Point&);
   bool checkStartVoxel(Voxel*);
-  void addVacantVoxel(unsigned int, unsigned int, Point&);
-  void addVacantVoxel(unsigned int, Voxel*);
-  void addVacantVoxels();
+  void addCompVoxel(unsigned int, unsigned int, Point&);
   void removeVacantVoxels(unsigned int);
   void rotatePointAlongVector(Point&, double);
   void connectLatticeVoxels();

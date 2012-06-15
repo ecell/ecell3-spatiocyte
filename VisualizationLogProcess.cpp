@@ -111,14 +111,18 @@ void VisualizationLogProcess::initializeLog()
 void VisualizationLogProcess::logMolecules(int anIndex)
 {
   Species* aSpecies(theLatticeSpecies[anIndex]);
-  //No need to log lipid or vacant molecules since the size is 0:
+  //No need to log lipid or vacant molecules since we have
+  //already logged them once during initialization:
   if(aSpecies->getIsVacant())
     {
-      return;
-    }
-  else if(aSpecies->getIsDiffuseVacant())
-    {
-      aSpecies->updateDiffuseVacantMolecules();
+      if(aSpecies->getIsDiffusiveVacant() || aSpecies->getIsReactiveVacant())
+        {
+          aSpecies->updateMolecules();
+        }
+      else
+        {
+          return;
+        }
     }
   theLogFile.write((char*)(&anIndex), sizeof(anIndex));
   //The species molecule size:
@@ -136,11 +140,14 @@ void VisualizationLogProcess::logOffLattice(int anIndex)
   Species* aSpecies(theOffLatticeSpecies[anIndex]);
   if(aSpecies->getIsVacant())
     {
-      return;
-    }
-  else if(aSpecies->getIsDiffuseVacant())
-    {
-      aSpecies->updateDiffuseVacantMolecules();
+      if(aSpecies->getIsDiffusiveVacant() || aSpecies->getIsReactiveVacant())
+        {
+          aSpecies->updateMolecules();
+        }
+      else
+        {
+          return;
+        }
     }
   theLogFile.write((char*)(&anIndex), sizeof(anIndex));
   //The species molecule size:
@@ -280,7 +287,7 @@ void VisualizationLogProcess::logSurfaceVoxels()
   for(unsigned int i(0); i != theLatticeSpecies.size(); ++i)
     {
         if(theLatticeSpecies[i]->getIsVacant() && 
-           !theLatticeSpecies[i]->getIsVolume())
+           !theLatticeSpecies[i]->getDimension() == 3)
         {
           Species* aVacantSpecies(theLatticeSpecies[i]);
           //The species index in the process:

@@ -240,7 +240,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
 {
   //Refer to the paper for the description of the variables used in this
   //method.
-  if(A->getIsVolume() && B->getIsVolume())
+  if(A->getDimension() == 3 && B->getDimension() == 3)
     {
       if(A != B)
         {
@@ -265,7 +265,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
             }
         }
     }
-  else if(!A->getIsVolume() && !B->getIsVolume())
+  else if(A->getDimension() != 3 && B->getDimension() != 3)
     {
       //Inter-surface Comp reaction.
       //For surface edge absorbing reactions:
@@ -300,7 +300,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
             }
         }
     }
-  else if(A->getIsVolume() && B->getIsLipid())
+  else if(A->getDimension() == 3 && B->getIsLipid())
     {
       if(p == -1)
         {
@@ -311,7 +311,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
           k = p*((6+3*sqrt(3)+2*sqrt(6))*D_A)/(24*r_v);
         }
     }
-  else if(A->getIsLipid() && B->getIsVolume())
+  else if(A->getIsLipid() && B->getDimension() == 3)
     {
       if(p == -1)
         {
@@ -322,7 +322,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
           k = p*((6+3*sqrt(3)+2*sqrt(6))*D_B)/(24*r_v);
         }
     }
-  else if(A->getIsVolume() && !B->getIsVolume())
+  else if(A->getDimension() == 3 && B->getDimension() != 3)
     {
       if(p == -1)
         {
@@ -333,7 +333,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
           k = p*(3*D_A*r_v)/sqrt(2);
         }
     }
-  else if(!A->getIsVolume() && B->getIsVolume())
+  else if(A->getDimension() != 3 && B->getDimension() == 3)
     {
       if(p == -1)
         {

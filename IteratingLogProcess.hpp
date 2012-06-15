@@ -270,7 +270,7 @@ public:
                 }
               else if(Diffusion)
                 {
-                  if(theProcessSpecies[i]->getIsVolume())
+                  if(theProcessSpecies[i]->getDimension() == 3)
                     {
                       theLogValues[i][theLogCnt] += 
                         theProcessSpecies[i]->getMeanSquaredDisplacement()/

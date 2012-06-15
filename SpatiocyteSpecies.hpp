@@ -48,23 +48,55 @@ String int2str(int anInt)
   return aStream.str();
 }
 
+/*
+ * isVacant: vacant species definition: a species on which other species can
+ * diffuse on or occupy. One major optimization in speed for vacant species is
+ * that theMolecules list is not updated when other species diffuse on it. 
+ * There are four possible types of vacant species:
+ * 1. !isDiffusiveVacant && !isReactiveVacant: a vacant species
+ *    whose theMolecules list and theMoleculeSize are never updated. This is
+ *    the most basic version. This vacant species never diffuses, or reacts
+ *    using SNRP. 
+ * 2. !isDiffusiveVacant && isReactiveVacant: a vacant species which is a
+ *    substrate of a SNRP reaction. In this case theMoleculeSize is updated
+ *    before the step interval of SNRP is calculated, and theMolecules list is
+ *    updated before the SNRP reaction (fire) is executed to get a valid
+ *    molecule list. Set by SNRP.
+ * 3. isDiffusiveVacant && !isReactiveVacant: a vacant species which also
+ *    diffuses. In this case, theMolecules list and theMoleculesSize are
+ *    updated just before it is diffused. Set by DiffusionProcess.   
+ * 4. isDiffusiveVacant && isReactiveVacant: a vacant species which reacts
+ *    using SNRP and also diffuses.
+ * 5. isCompVacant: the VACANT species declared for each compartment. It can
+ *    also be isDiffusiveVacant and isReactiveVacant. Set during compartment
+ *    registration. It also persistently stores all the compartment voxels.
+ *    Referred to as theVacantSpecies. For isCompVacant, initially there
+ *    are no molecules in its list. All voxels are stored in theCompVoxels. Only
+ *    if it is updated before being called by VisualizationLogProcess, SNRP or
+ *    DiffusionProcess, it will be theMolecules will be populated with the
+ *    CompVoxels.
+ * 6. isVacant {isCompVacant; isDiffusiveVacant; isReactiveVacant): the
+ *    general name used to identify either isCompVacant, isDiffusiveVacant or
+ *    isReactiveVacant to reduce comparison operations.
+ */
+
 class Species
 {
 public:
   Species(SpatiocyteStepper* aStepper, Variable* aVariable, int anID, 
           int anInitMoleculeSize, const gsl_rng* aRng, double voxelRadius):
-    isDiffuseVacant(false),
-    isVacant(false),
-    isVolume(false),
     isCentered(false),
+    isCompVacant(false),
     isDiffusing(false),
+    isDiffusiveVacant(false),
+    isFixedAdjoins(false),
     isGaussianPopulation(false),
     isInContact(false),
-    isPolymer(false),
     isOffLattice(false),
-    isStatic(true),
+    isPolymer(false),
+    isReactiveVacant(false),
     isSubunitInitialized(false),
-    isFixedAdjoins(false),
+    isVacant(false),
     theID(anID),
     theInitMoleculeSize(anInitMoleculeSize),
     theMoleculeSize(0),
@@ -163,11 +195,11 @@ public:
             " not MoleculePopulated." << std::endl;
         }
     }
-  void populateUniformOnDiffuseVacant()
+  void populateUniformOnDiffusiveVacant()
     {
       if(thePopulateProcess)
         {
-          thePopulateProcess->populateUniformOnDiffuseVacant(this);
+          thePopulateProcess->populateUniformOnDiffusiveVacant(this);
         }
       else if(theMoleculeSize)
         {
@@ -273,7 +305,7 @@ public:
         {
           Point aCurrentPoint(theStepper->getPeriodicPoint(
                                                  theMolecules[i]->coord,
-                                                 getIsVolume(),
+                                                 theDimension,
                                                  &theMoleculeOrigins[i]));
           double aDistance(getDistance(&theMoleculeOrigins[i].point,
                                        &aCurrentPoint));
@@ -286,15 +318,11 @@ public:
     {
       isSubunitInitialized = true;
     }
-  void setIsVacant()
+  void setIsCompVacant()
     {
+      isCompVacant = true;
       isVacant = true;
-      isStatic = false;
-    }
-  void setIsVolume()
-    {
-      isVolume = true;
-      isFixedAdjoins = true;
+      setVacantSpecies(this);
     }
   void setIsInContact()
     {
@@ -309,9 +337,15 @@ public:
       theInitMoleculeSize = theMoleculeSize;
       getVariable()->setValue(theMoleculeSize);
     }
-  void setIsDiffuseVacant()
+  void setIsDiffusiveVacant()
     {
-      isDiffuseVacant = true;
+      isDiffusiveVacant = true;
+      isVacant = true;
+    }
+  void setIsReactiveVacant()
+    {
+      isReactiveVacant = true;
+      isVacant = true;
     }
   void setIsOffLattice()
     {
@@ -347,7 +381,6 @@ public:
       if(D > 0)
         {
           isDiffusing = true;
-          isStatic = false;
         }
     }
   double getDiffusionCoefficient() const
@@ -357,14 +390,6 @@ public:
   double getWalkProbability() const
     {
       return theWalkProbability;
-    }
-  bool getIsVolume() const
-    {
-        return isVolume;
-    }
-  bool getIsStatic() const
-    {
-      return isStatic;
     }
   bool getIsPolymer() const
     {
@@ -382,17 +407,25 @@ public:
     {
       return isDiffusing;
     }
+  bool getIsCompVacant() const
+    {
+      return isCompVacant;
+    }
   bool getIsVacant() const
     {
-      return isVacant;
+      return isCompVacant;
     }
-  bool getIsDiffuseVacant()
+  bool getIsDiffusiveVacant()
     {
-      return isDiffuseVacant;
+      return isDiffusiveVacant;
+    }
+  bool getIsReactiveVacant()
+    {
+      return isReactiveVacant;
     }
   bool getIsLipid() const
     {
-      return (isVacant && theComp->dimension == 2);
+      return (isCompVacant && theComp->dimension == 2);
     }
   bool getIsInContact() const
     {
@@ -409,6 +442,18 @@ public:
   double getDiffusionInterval() const
     {
       return theDiffusionInterval;
+    }
+  unsigned int getDimension()
+    {
+      return theDimension;
+    }
+  void setDimension(unsigned int aDimension)
+    {
+      theDimension = aDimension;
+      if(theDimension == 3)
+        {
+          isFixedAdjoins = true;
+        }
     }
   void resetFinalizeReactions()
     {
@@ -483,7 +528,7 @@ public:
     }
   void walkVacant()
     {
-      updateDiffuseVacantMolecules();
+      updateVacantMolecules();
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
@@ -550,7 +595,7 @@ public:
             {
               Comp* aSuperComp(
                  theStepper->system2Comp(theComp->system->getSuperSystem())); 
-              aSuperComp->vacantSpecies->hardAddMolecule(aVoxel);
+              aSuperComp->vacantSpecies->addCompVoxel(aVoxel);
             }
           else 
             { 
@@ -580,13 +625,34 @@ public:
       theMoleculeSize = newMoleculeSize;
       theVariable->setValue(theMoleculeSize);
     }
-  void updateDiffuseVacantMolecules()
+  //If it isReactiveVacant it will only be called by SNRP when it is substrate
+  //If it isDiffusiveVacant it will only be called by DiffusionProcess before
+  //being diffused. So we need to only check if it isVacant:
+  void updateMolecules()
+    {
+      if(isVacant)
+        {
+          updateVacantMolecules();
+        }
+    }
+  //If it isReactiveVacant it will only be called by SNRP when it is substrate:
+  void updateMoleculeSize()
+    {
+      if(isVacant)
+        {
+          updateVacantMoleculeSize();
+        }
+    }
+  //Even if it is a isCompVacant, this method will be called by
+  //VisualizationLogProcess, or SNRP if it is Reactive or DiffusionProcess
+  //if it is Diffusive:
+  void updateVacantMolecules()
     {
       theMoleculeSize = 0;
-      int aSize(theVacantSpecies->size());
+      int aSize(theVacantSpecies->compVoxelSize());
       for(int i(0); i != aSize; ++i)
         { 
-          Voxel* aMolecule(theVacantSpecies->getMolecule(i));
+          Voxel* aMolecule(theVacantSpecies->getCompVoxel(i));
           if(aMolecule->id == theID)
             {
               ++theMoleculeSize;
@@ -602,10 +668,28 @@ public:
         }
       theVariable->setValue(theMoleculeSize);
     }
+  void updateVacantMoleculeSize()
+    {
+      theMoleculeSize = 0;
+      int aSize(theVacantSpecies->compVoxelSize());
+      for(int i(0); i != aSize; ++i)
+        { 
+          Voxel* aMolecule(theVacantSpecies->getCompVoxel(i));
+          if(aMolecule->id == theID)
+            {
+              ++theMoleculeSize;
+            }
+        }
+      if(theMoleculeSize > theMolecules.size())
+        {
+          theMolecules.resize(theMoleculeSize);
+        }
+      theVariable->setValue(theMoleculeSize);
+    }
   void addMolecule(Voxel* aMolecule)
     {
       aMolecule->id = theID;
-      if(!getIsVacant() && !getIsDiffuseVacant())
+      if(!isVacant)
         {
           ++theMoleculeSize;
           if(theMoleculeSize > theMolecules.size())
@@ -619,24 +703,23 @@ public:
           theVariable->setValue(theMoleculeSize);
         }
     }
-  void hardAddMolecule(Voxel* aMolecule)
+  void addCompVoxel(Voxel* aVoxel)
     {
-      aMolecule->id = theID;
-      ++theMoleculeSize;
-      if(theMoleculeSize > theMolecules.size())
-        {
-          theMolecules.push_back(aMolecule);
-        }
-      else
-        {
-          theMolecules[theMoleculeSize-1] = aMolecule;
-        }
-      theVariable->setValue(theMoleculeSize);
+      aVoxel->id = theID;
+      theCompVoxels.push_back(aVoxel);
+    }
+  unsigned int compVoxelSize()
+    {
+      return theCompVoxels.size();
+    }
+  Voxel* getCompVoxel(unsigned int index)
+    {
+      return theCompVoxels[index];
     }
   //it is soft remove because the id of the molecule is not changed:
   void softRemoveMolecule(Voxel* aMolecule)
     {
-      if(!getIsVacant() && !getIsDiffuseVacant())
+      if(!isVacant)
         {
           for(unsigned int i(0); i < theMoleculeSize; ++i)
             {
@@ -651,7 +734,7 @@ public:
     }
   void removeMolecule(Voxel* aMolecule)
     {
-      if(!getIsVacant() && !getIsDiffuseVacant())
+      if(!isVacant)
         {
           for(unsigned int i(0); i < theMoleculeSize; ++i)
             {
@@ -676,9 +759,9 @@ public:
   //clear the whole compartment using theComp->vacantSpecies->getVacantID():
   void removeMolecules()
     {
-      if(getIsDiffuseVacant())
+      if(isDiffusiveVacant || isReactiveVacant)
         {
-          updateDiffuseVacantMolecules();
+          updateVacantMolecules();
         }
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
@@ -711,8 +794,8 @@ public:
     {
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
-            if(theStepper->isBoundaryCoord(
-                   theMolecules[i]->coord, getIsVolume()))
+          if(theStepper->isBoundaryCoord(
+                               theMolecules[i]->coord, theDimension))
             {
               std::cout << "is still there" << std::endl;
             }
@@ -726,8 +809,7 @@ public:
           Origin anOrigin(theMoleculeOrigins[i]);
           Voxel* periodicVoxel(theStepper->getPeriodicVoxel(
                                                 theMolecules[i]->coord,
-                                                getIsVolume(),
-                                                &anOrigin));
+                                                theDimension, &anOrigin));
           if(periodicVoxel != NULL && 
              periodicVoxel->id == theVacantID)
             {
@@ -1036,19 +1118,20 @@ public:
       return getRandomAdjoiningVoxel(aVoxel);
     }
 private:
-  bool isDiffuseVacant;
-  bool isVacant;
-  bool isVolume;
   bool isCentered;
+  bool isCompVacant;
   bool isDiffusing;
+  bool isDiffusiveVacant;
+  bool isFixedAdjoins;
   bool isGaussianPopulation;
   bool isInContact;
-  bool isPolymer;
   bool isOffLattice;
-  bool isStatic;
+  bool isPolymer;
+  bool isReactiveVacant;
   bool isSubunitInitialized;
-  bool isFixedAdjoins;
+  bool isVacant;
   const unsigned short theID;
+  unsigned int theDimension;
   unsigned int theInitMoleculeSize;
   unsigned int theMoleculeSize;
   unsigned int theAdjoiningVoxelSize;
@@ -1068,6 +1151,7 @@ private:
   std::vector<double> theBendAngles;
   std::vector<double> theReactionProbabilities;
   std::vector<Voxel*> theMolecules;
+  std::vector<Voxel*> theCompVoxels;
   std::vector<Species*> theDiffusionInfluencedReactantPairs;
   std::vector<DiffusionInfluencedReactionProcessInterface*> 
     theDiffusionInfluencedReactions;

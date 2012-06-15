@@ -160,52 +160,10 @@ protected:
   virtual Voxel* reactvAC(Variable*, Species*);
   virtual Comp* getComp2D(Species*);
   virtual Voxel* reactvAvBC(Species*);
-  Real getPropensity_ZerothOrder() 
-    {
-      return p;
-    }
-  Real getPropensity_FirstOrder() 
-    {
-      Real aValue(theVariableReferenceVector[0].getVariable()->getValue());
-      if(aValue > 0.0)
-        {
-          //std::cout << "p1:" << p << " v:" << aValue << std::endl;
-          return p*aValue;
-        }
-      else
-        {
-          //std::cout << "p1:0" << std::endl;
-          return 0.0;
-        }
-    }
-  Real getPropensity_SecondOrder_TwoSubstrates() 
-    {
-      Real aValue1(theVariableReferenceVector[0].getVariable()->getValue());
-      Real aValue2(theVariableReferenceVector[1].getVariable()->getValue());
-      if(aValue1 > 0.0 && aValue2 > 0.0)
-        {
-          //std::cout << "p2:" << p << " v1:" << aValue1 << " v2:" << aValue2 << std::endl;
-          return p*aValue1*aValue2;
-        }
-      else
-        {
-          //std::cout << "p2:0" << std::endl;
-          return 0.0;
-        }
-    }
-  Real getPropensity_SecondOrder_OneSubstrate() 
-    {
-      Real aValue(theVariableReferenceVector[0].getVariable()->getValue());
-      //There must be two or more molecules:
-      if(aValue > 1.0)
-        {
-          return p*aValue*(aValue-1.0);
-        }
-      else
-        {
-          return 0.0;
-        }
-    }
+  Real getPropensity_ZerothOrder(); 
+  Real getPropensity_FirstOrder();
+  Real getPropensity_SecondOrder_TwoSubstrates(); 
+  Real getPropensity_SecondOrder_OneSubstrate();
 protected:
   double initSizeA;
   double initSizeB;

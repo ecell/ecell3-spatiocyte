@@ -42,6 +42,14 @@ void SpatiocyteNextReactionProcess::fire()
   std::cout << "aValue1:" << aValue1 << " " << variableA->getValue();
   std::cout << " aValue2:" << aValue2 << " " << B->size() << std::endl;
   */
+  if(A)
+    {
+      A->updateMolecules();
+    }
+  if(B)
+    {
+      B->updateMolecules();
+    }
 
   if(theOrder == 0)
     {
@@ -414,7 +422,6 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
 bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
 {
   Voxel* moleculeA(a->getRandomMolecule());
- //std::cout << getIDString(a) << " " << a->size() << " " << a->getIsVacant() << " " << a->getIsDiffuseVacant() << std::endl;
   Voxel* moleculeC(NULL);
   if(a->getVacantID() == c->getVacantID() || a->getID() == c->getVacantID())
     {
@@ -509,6 +516,73 @@ Voxel* SpatiocyteNextReactionProcess::reactvAvBC(Species* c)
   return moleculeC;
 }
 
+
+Real SpatiocyteNextReactionProcess::getPropensity_ZerothOrder() 
+{
+  return p;
+}
+
+Real SpatiocyteNextReactionProcess::getPropensity_FirstOrder() 
+{
+  if(A)
+    {
+      A->updateMoleculeSize();
+    }
+  Real aValue(theVariableReferenceVector[0].getVariable()->getValue());
+  if(aValue > 0.0)
+    {
+      //std::cout << "p1:" << p << " v:" << aValue << std::endl;
+      return p*aValue;
+    }
+  else
+    {
+      //std::cout << "p1:0" << std::endl;
+      return 0.0;
+    }
+}
+
+Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_TwoSubstrates() 
+{
+  if(A)
+    {
+      A->updateMoleculeSize();
+    }
+  if(B)
+    {
+      B->updateMoleculeSize();
+    }
+  Real aValue1(theVariableReferenceVector[0].getVariable()->getValue());
+  Real aValue2(theVariableReferenceVector[1].getVariable()->getValue());
+  if(aValue1 > 0.0 && aValue2 > 0.0)
+    {
+      //std::cout << "p2:" << p << " v1:" << aValue1 << " v2:" << aValue2 << std::endl;
+      return p*aValue1*aValue2;
+    }
+  else
+    {
+      //std::cout << "p2:0" << std::endl;
+      return 0.0;
+    }
+}
+
+Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_OneSubstrate() 
+{
+  if(A)
+    {
+      A->updateMoleculeSize();
+    }
+  Real aValue(theVariableReferenceVector[0].getVariable()->getValue());
+  //There must be two or more molecules:
+  if(aValue > 1.0)
+    {
+      return p*aValue*(aValue-1.0);
+    }
+  else
+    {
+      return 0.0;
+    }
+}
+
 void SpatiocyteNextReactionProcess::initializeFourth()
 {
   ReactionProcess::initializeFourth();
@@ -523,8 +597,15 @@ void SpatiocyteNextReactionProcess::initializeFourth()
   if(A)
     {
       compA = A->getComp();
+      if(A->getIsVacant())
+        {
+          A->setIsReactiveVacant();
+          //Need to update molecules to populate theMolecules with
+          //the voxels of the compartment if it isCompVacant
+          A->updateMolecules();
+        }
     }
-  else
+  else if(variableA)
     {
       compA = theSpatiocyteStepper->system2Comp(
                          variableA->getSuperSystem());
@@ -532,6 +613,11 @@ void SpatiocyteNextReactionProcess::initializeFourth()
   if(B)
     {
       compB = B->getComp();
+      if(B->getIsVacant())
+        {
+          B->setIsReactiveVacant();
+          B->updateMolecules();
+        }
     }
   else if(variableB)
     {
@@ -542,7 +628,7 @@ void SpatiocyteNextReactionProcess::initializeFourth()
     {
       compC = C->getComp();
     }
-  else
+  else if(variableC)
     {
       compC = theSpatiocyteStepper->system2Comp(
                          variableC->getSuperSystem());
@@ -783,7 +869,8 @@ void SpatiocyteNextReactionProcess::printParameters()
       std::cout << " + " << getIDString(variableD);
     }
   std::cout << " k:" << k << " p = " << pFormula.str() << " = " << p
-    << " nextTime:" << getStepInterval() << std::endl;
+    << " nextTime:" << getStepInterval() << " propensity:" << getPropensity_R()
+    << std::endl;
 }
 
 

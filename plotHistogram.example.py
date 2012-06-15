@@ -34,12 +34,12 @@ for i in range(timePoints):
     y2[j] = y2[j] + data[i*bins+j][3]
 
 for i in range(bins):
-  y1[i] = y1[i]/timePoints/(9100.0/bins)
-  y2[i] = y2[i]/timePoints/(9100.0/bins)
+  y1[i] = y1[i]/timePoints/(700.0/bins)
+  y2[i] = y2[i]/timePoints/(700.0/bins)
 
 plot(x, y1, ls=lines[0], color=colors[0], label=legendTitles[0], linewidth=2)
 plot(x, y2, ls=lines[0], color=colors[1], label=legendTitles[1], linewidth=2)
-print y1
+
 ax = gca()
 ax.grid(color='b', linestyle='--')
 ax.yaxis.set_major_locator(MaxNLocator(14))

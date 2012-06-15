@@ -351,10 +351,18 @@ void H5VisualizationLogProcess::initializeLog()
 
 void H5VisualizationLogProcess::logMolecules(H5::DataSpace const& space, H5::DataSet const& dataSet, hsize_t (&dims)[1], Species* aSpecies)
 {
-    //No need to log lipid or vacant molecules since the size is 0:
-    if (aSpecies->getIsVacant())
+    //No need to log lipid or vacant molecules since we have
+    //already logged them once during initialization:
+    if(aSpecies->getIsVacant())
     {
-        return;
+      if(aSpecies->getIsDiffusiveVacant() || aSpecies->getIsReactiveVacant())
+        {
+          aSpecies->updateMolecules();
+        }
+      else
+        {
+          return;
+        }
     }
     //theLogFile.write((char*)(&anIndex), sizeof(anIndex));
     //The species molecule size:

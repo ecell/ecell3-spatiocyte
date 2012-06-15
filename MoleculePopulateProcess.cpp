@@ -63,9 +63,10 @@ void MoleculePopulateProcess::populateGaussian(Species* aSpecies)
 {
 }
 
-void MoleculePopulateProcess::populateUniformOnDiffuseVacant(Species* aSpecies)
+void MoleculePopulateProcess::populateUniformOnDiffusiveVacant(Species*
+                                                               aSpecies)
 {
-  std::cout << "    Populating uniformly on diffuse vacant:" <<
+  std::cout << "    Populating uniformly on diffusive vacant:" <<
     getIDString(aSpecies) << std::endl;
   if(!aSpecies->getIsPopulated())
     {
@@ -73,7 +74,7 @@ void MoleculePopulateProcess::populateUniformOnDiffuseVacant(Species* aSpecies)
          !OriginX && !OriginY && !OriginZ)
         {
           Species* aVacantSpecies(aSpecies->getVacantSpecies());
-          aVacantSpecies->updateDiffuseVacantMolecules();
+          aVacantSpecies->updateMolecules();
           unsigned int aSize(aSpecies->getPopulateMoleculeSize());
           if(aVacantSpecies->size() < aSize)
             {
@@ -91,7 +92,6 @@ void MoleculePopulateProcess::populateUniformOnDiffuseVacant(Species* aSpecies)
           for(unsigned int i(0); i != aSize; ++i)
             {
               Voxel* aMolecule(aVacantSpecies->getRandomMolecule());
-              aVacantSpecies->softRemoveMolecule(aMolecule);
               aSpecies->addMolecule(aMolecule);
             }
         }

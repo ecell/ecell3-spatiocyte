@@ -49,7 +49,7 @@ void MassActionProcess::fire()
               break;
             }
         }
-      if(aSpecies->getIsVolume())
+      if(aSpecies->getDimension() == 3)
         {
           theSpace = aSpecies->getComp()->actualVolume;
           std::cout << "Mass Action Volume:" << theSpace << std::endl;

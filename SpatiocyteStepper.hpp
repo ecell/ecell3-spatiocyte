@@ -75,9 +75,9 @@ public:
   void coord2global(unsigned int, unsigned int&, unsigned int&, unsigned int&);
   void point2global(Point, unsigned int&, unsigned int&, unsigned int&);
   Comp* system2Comp(System*);
-  bool isBoundaryCoord(unsigned int, bool);
-  Voxel* getPeriodicVoxel(unsigned int, bool, Origin*);
-  Point getPeriodicPoint(unsigned int, bool, Origin*);
+  bool isBoundaryCoord(unsigned int, unsigned int);
+  Voxel* getPeriodicVoxel(unsigned int, unsigned int, Origin*);
+  Point getPeriodicPoint(unsigned int, unsigned int, Origin*);
   void checkLattice();
   void setPeriodicEdge();
   void reset(int);
