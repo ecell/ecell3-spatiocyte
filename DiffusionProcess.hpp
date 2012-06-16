@@ -143,7 +143,7 @@ public:
             }
           else if(theDiffusionSpecies->getDimension() == 3)
             {
-              alpha = 2/3;
+              alpha = 2.0/3;
             }
           theStepInterval = alpha*r_v*r_v*WalkProbability/D;
         }

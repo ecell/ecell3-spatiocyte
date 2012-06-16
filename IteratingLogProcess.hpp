@@ -37,6 +37,22 @@
 #include "SpatiocyteProcess.hpp"
 #include "SpatiocyteSpecies.hpp"
 
+  int Centered;
+  int Diffusion;
+  int Displacement;
+  int InContact;
+  int Iterations;
+  int RebindTime;
+  int SaveInterval;
+  int Survival;
+  int theLogCnt;
+  int theSurvivalCnt;
+  int theTotalIterations;
+  double LogDuration;
+  double LogInterval;
+  String FileName;
+  std::ofstream theLogFile;
+  std::vector<std::vector<double> > theLogValues;
 LIBECS_DM_CLASS(IteratingLogProcess, SpatiocyteProcess)
 { 
 public:
@@ -69,10 +85,10 @@ public:
   IteratingLogProcess():
     SpatiocyteProcess(false),
     Centered(0),
-    Iterations(1),
     Diffusion(0),
     Displacement(0),
     InContact(0),
+    Iterations(1),
     RebindTime(0),
     SaveInterval(0),
     Survival(0),

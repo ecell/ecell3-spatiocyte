@@ -797,7 +797,7 @@ bool PolymerizationProcess::setExtendedTargetVoxel(Subunit* aRefSubunit,
           std::vector<Voxel*>& 
             aSharedList((*aRefVoxel->surfaceVoxels)[SHARED+extIndex]);
           double aSharedDist(LARGE_DISTANCE);
-          Voxel* aSelectedSharedVoxel;
+          Voxel* aSelectedSharedVoxel(NULL);
           for(unsigned int i(0); i!=aSharedList.size(); ++i)
             { 
               Voxel* aSharedVoxel(aSharedList[i]);

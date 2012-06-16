@@ -2117,7 +2117,7 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(Voxel* aVoxel,
     {
       aVoxel->surfaceVoxels->push_back(*i);
     }
-  aVoxel->adjoiningSize = forward-aVoxel->adjoiningVoxels;
+  aVoxel->diffuseSize = forward-aVoxel->adjoiningVoxels;
 }
 
 Species* SpatiocyteStepper::id2species(unsigned short id)

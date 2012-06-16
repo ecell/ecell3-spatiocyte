@@ -52,8 +52,8 @@ public:
   PolymerizationProcess():
     BendAngle(0),
     CylinderYaw(0),
-    SphereYaw(0),
-    theMonomerLength(1) {}
+    theMonomerLength(1),
+    SphereYaw(0) {}
   virtual ~PolymerizationProcess() {}
   virtual void initialize()
     {
@@ -103,14 +103,14 @@ protected:
   unsigned int theBendIndexB;
   double BendAngle;
   double CylinderYaw;
-  double SphereYaw;
   double theInitSphereDcm[9];
-  double theRadius;
-  double theMinX;
   double theMaxX;
+  double theMinX;
+  double theMonomerLength;
   double theOriY;
   double theOriZ;
-  double theMonomerLength;
+  double theRadius;
+  double SphereYaw;
 };
 
 #endif /* __PolymerizationProcess_hpp */

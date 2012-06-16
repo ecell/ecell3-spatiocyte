@@ -1014,8 +1014,7 @@ public:
           for(unsigned int i(0); i != source->adjoiningSize; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
-              if(aVoxel->id == theVacantID &&
-                 aVoxel != target)
+              if(aVoxel->id == theVacantID && aVoxel != target)
                 {
                   CompVoxels.push_back(aVoxel);
                 }

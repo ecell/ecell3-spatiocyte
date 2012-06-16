@@ -119,17 +119,17 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
 : Gtk::GL::DrawingArea(config),
   m_Run(false),
   m_RunReverse(false),
-  m_stepCnt(0),
-  thePngNumber(1),
-  theRotateAngle(5.0),
   show3DMolecule(false),
-  startRecord(false),
-  theResetTime(0),
   showTime(true),
+  startRecord(false),
+  m_stepCnt(0),
   theMeanCoordSize(0),
+  thePngNumber(1),
+  theResetTime(0),
   xAngle(0),
   yAngle(0),
-  zAngle(0)
+  zAngle(0),
+  theRotateAngle(5.0)
 {
   add_events(Gdk::VISIBILITY_NOTIFY_MASK); 
   
@@ -2434,7 +2434,7 @@ unsigned int convertFiles2LittleEndian( const char* aBaseName )
 
 int main(int argc, char** argv)
 {
-  char* aBaseName;
+  std::string aBaseName;
   unsigned int aThreadSize;
   if(argc == 1)
     {
@@ -2487,7 +2487,7 @@ int main(int argc, char** argv)
           std::ifstream aFile( aFileName.str().c_str(), std::ios::binary );
           if( !aFile.is_open() )
             {
-              printNotEndian( "Little", aBaseName, i, aThreadSize );
+              printNotEndian( "Little", aBaseName.c_str(), i, aThreadSize );
               printUsage( argv[0] );
               std::exit(1);
             }
@@ -2512,7 +2512,7 @@ int main(int argc, char** argv)
         }
     }
 
-  Rulers aRuler(aGLConfig, aBaseName);
+  Rulers aRuler(aGLConfig, aBaseName.c_str());
   Gtk::Main::run(aRuler);
   return 0;
 }
