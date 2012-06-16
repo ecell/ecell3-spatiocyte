@@ -1394,6 +1394,38 @@ void SpatiocyteStepper::setCompProperties(Comp* aComp)
       aComp->specArea =  aComp->lengthZ*aComp->lengthX+
         2*(aComp->lengthZ*aRadius)+2*(aComp->lengthX*aRadius);
       break;
+    case ERYTHROCYTE:
+      if(!aComp->lengthX)
+        {
+          THROW_EXCEPTION(NotFound, "Property LENGTHX of the Erythrocyte Comp "
+                          + aSystem->getFullID().asString() + ", which "
+                          + "specifies the length of the Erythrocyte, "
+                          + "not defined." );
+        }
+      if(!aComp->lengthY)
+        {
+          THROW_EXCEPTION(NotFound, "Property LENGTHY of the Erythrocyte Comp "
+                          + aSystem->getFullID().asString() + ", which "
+                          + "specifies the height of the Erythrocyte, "
+                          + "not defined." );
+        }
+      if(!aComp->lengthZ)
+        {
+          THROW_EXCEPTION(NotFound, "Property LENGTHZ of the Erythrocyte Comp "
+                          + aSystem->getFullID().asString() + ", which "
+                          + "specifies the depth of the Erythrocyte, "
+                          + "not defined." );
+        }
+      aComp->specVolume = 4*M_PI*aComp->lengthX*
+        aComp->lengthY* aComp->lengthZ/24;
+      aComp->specArea = 4*M_PI*
+        pow((pow(aComp->lengthX/2, 1.6075)*
+             pow(aComp->lengthY/2, 1.6075)+
+             pow(aComp->lengthX/2, 1.6075)*
+             pow(aComp->lengthZ/2, 1.6075)+
+             pow(aComp->lengthY/2, 1.6075)*
+             pow(aComp->lengthZ/2, 1.6075))/ 3, 1/1.6075); 
+      break;
     }
   aComp->lengthX /= VoxelRadius*2;
   aComp->lengthY /= VoxelRadius*2;
@@ -2725,6 +2757,25 @@ bool SpatiocyteStepper::isInsideCoord(unsigned int aCoord,
          aComp->lengthX*aRadius/2+delta &&
          sqrt(pow(aPoint.z-aCenterPoint.z, 2)) <=
          aComp->lengthZ*aRadius/2+delta)
+        {
+          return true;
+        }
+      break;
+    case ERYTHROCYTE: 
+      const double Rsq(pow(aPoint.x-aCenterPoint.x, 2)/
+                       pow((aComp->lengthX+delta)/2, 2)+ 
+                       pow(aPoint.y-aCenterPoint.y, 2)/
+                       pow((aComp->lengthY+delta)/2, 2));
+      if(Rsq > 1)
+        {
+          return false;
+        }
+      const double a(0.5);
+      const double b(0.1);
+      const double R(sqrt(Rsq));
+      const double thickness(((1-cos(M_PI*0.5*R))*(a-b)+b)*sqrt(1-Rsq));
+      const double height((aPoint.z-aCenterPoint.z)/(2*(aComp->lengthZ+delta)));
+      if(thickness*thickness >= height*height)
         {
           return true;
         }

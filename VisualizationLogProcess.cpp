@@ -286,8 +286,7 @@ void VisualizationLogProcess::logSurfaceVoxels()
   theLogFile.write((char*)(&aCurrentTime), sizeof(aCurrentTime));
   for(unsigned int i(0); i != theLatticeSpecies.size(); ++i)
     {
-        if(theLatticeSpecies[i]->getIsVacant() && 
-           !theLatticeSpecies[i]->getDimension() == 3)
+      if(theLatticeSpecies[i]->getIsVacant())
         {
           Species* aVacantSpecies(theLatticeSpecies[i]);
           //The species index in the process:
@@ -297,7 +296,7 @@ void VisualizationLogProcess::logSurfaceVoxels()
           theLogFile.write((char*)(&aSize), sizeof(aSize)); 
           for(unsigned int j(0); j != aSize; ++j)
             {
-              unsigned int aCoord(aVacantSpecies->getMolecule(i)->coord);
+              unsigned int aCoord(aVacantSpecies->getMolecule(j)->coord);
               theLogFile.write((char*)(&aCoord), sizeof(aCoord));
             }  
         }
