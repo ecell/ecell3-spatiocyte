@@ -107,7 +107,8 @@ public:
     theRng(aRng),
     thePopulateProcess(NULL),
     theStepper(aStepper),
-    theVariable(aVariable) {}
+    theVariable(aVariable),
+    theCompVoxels(&theMolecules) {}
   ~Species() {}
   void initialize(int speciesSize, int anAdjoiningVoxelSize)
     {
@@ -625,12 +626,23 @@ public:
       theMoleculeSize = newMoleculeSize;
       theVariable->setValue(theMoleculeSize);
     }
+  void updateSpecies()
+    {
+      if(isCompVacant && (isDiffusiveVacant || isReactiveVacant))
+        {
+          theCompVoxels = new std::vector<Voxel*>;
+          for(unsigned int i(0); i != theMoleculeSize; ++i)
+            { 
+              theCompVoxels->push_back(theMolecules[i]);
+            }
+        }
+    }
   //If it isReactiveVacant it will only be called by SNRP when it is substrate
   //If it isDiffusiveVacant it will only be called by DiffusionProcess before
   //being diffused. So we need to only check if it isVacant:
   void updateMolecules()
     {
-      if(isVacant)
+      if(isDiffusiveVacant || isReactiveVacant)
         {
           updateVacantMolecules();
         }
@@ -638,7 +650,7 @@ public:
   //If it isReactiveVacant it will only be called by SNRP when it is substrate:
   void updateMoleculeSize()
     {
-      if(isVacant)
+      if(isDiffusiveVacant || isReactiveVacant)
         {
           updateVacantMoleculeSize();
         }
@@ -706,15 +718,17 @@ public:
   void addCompVoxel(Voxel* aVoxel)
     {
       aVoxel->id = theID;
-      theCompVoxels.push_back(aVoxel);
+      theCompVoxels->push_back(aVoxel);
+      ++theMoleculeSize;
+      theVariable->setValue(theMoleculeSize);
     }
   unsigned int compVoxelSize()
     {
-      return theCompVoxels.size();
+      return theCompVoxels->size();
     }
   Voxel* getCompVoxel(unsigned int index)
     {
-      return theCompVoxels[index];
+      return (*theCompVoxels)[index];
     }
   //it is soft remove because the id of the molecule is not changed:
   void softRemoveMolecule(Voxel* aMolecule)
@@ -1079,13 +1093,14 @@ public:
     }
   Voxel* getRandomCompVoxel()
     {
-      int aSize(theVacantSpecies->size());
+      Species* aVacantSpecies(theComp->vacantSpecies);
+      int aSize(aVacantSpecies->compVoxelSize());
       int r(gsl_rng_uniform_int(theRng, aSize));
       if(theStepper->getSearchVacant())
         {
           for(int i(r); i != aSize; ++i)
             {
-              Voxel* aVoxel(theVacantSpecies->getMolecule(i));
+              Voxel* aVoxel(aVacantSpecies->getCompVoxel(i));
               if(aVoxel->id == theVacantID)
                 {
                   return aVoxel;
@@ -1093,7 +1108,7 @@ public:
             }
           for(int i(0); i != r; ++i)
             {
-              Voxel* aVoxel(theVacantSpecies->getMolecule(i));
+              Voxel* aVoxel(aVacantSpecies->getCompVoxel(i));
               if(aVoxel->id == theVacantID)
                 {
                   return aVoxel;
@@ -1102,7 +1117,7 @@ public:
         }
       else
         {
-          Voxel* aVoxel(theVacantSpecies->getMolecule(r));
+          Voxel* aVoxel(aVacantSpecies->getCompVoxel(r));
           if(aVoxel->id == theVacantID)
             {
               return aVoxel;
@@ -1151,7 +1166,7 @@ private:
   std::vector<double> theBendAngles;
   std::vector<double> theReactionProbabilities;
   std::vector<Voxel*> theMolecules;
-  std::vector<Voxel*> theCompVoxels;
+  std::vector<Voxel*>* theCompVoxels;
   std::vector<Species*> theDiffusionInfluencedReactantPairs;
   std::vector<DiffusionInfluencedReactionProcessInterface*> 
     theDiffusionInfluencedReactions;

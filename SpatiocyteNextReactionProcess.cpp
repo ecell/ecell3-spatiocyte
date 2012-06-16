@@ -583,6 +583,41 @@ Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_OneSubstrate()
     }
 }
 
+void SpatiocyteNextReactionProcess::initializeSecond()
+{
+  ReactionProcess::initializeSecond();
+  if(A)
+    {
+      if(A->getIsVacant())
+        {
+          A->setIsReactiveVacant();
+        }
+    }
+  else if(variableA)
+    {
+      variableA->setValue(initSizeA);
+    }
+  if(B)
+    {
+      if(B->getIsVacant())
+        {
+          B->setIsReactiveVacant();
+        }
+    }
+  else if(variableB)
+    {
+      variableB->setValue(initSizeB);
+    }
+  if(variableC)
+    {
+      variableC->setValue(initSizeC);
+    }
+  if(variableD)
+    {
+      variableD->setValue(initSizeD);
+    }
+}
+
 void SpatiocyteNextReactionProcess::initializeFourth()
 {
   ReactionProcess::initializeFourth();
@@ -597,13 +632,6 @@ void SpatiocyteNextReactionProcess::initializeFourth()
   if(A)
     {
       compA = A->getComp();
-      if(A->getIsVacant())
-        {
-          A->setIsReactiveVacant();
-          //Need to update molecules to populate theMolecules with
-          //the voxels of the compartment if it isCompVacant
-          A->updateMolecules();
-        }
     }
   else if(variableA)
     {
@@ -613,11 +641,6 @@ void SpatiocyteNextReactionProcess::initializeFourth()
   if(B)
     {
       compB = B->getComp();
-      if(B->getIsVacant())
-        {
-          B->setIsReactiveVacant();
-          B->updateMolecules();
-        }
     }
   else if(variableB)
     {

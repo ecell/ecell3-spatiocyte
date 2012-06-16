@@ -102,6 +102,7 @@ public:
   double getColLength();
   double getLayerLength();
   double getMinLatticeSpace();
+  void updateSpecies();
 private:
   void setCompsCenterPoint();
   void setIntersectingCompartmentList();

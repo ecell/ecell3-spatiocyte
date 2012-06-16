@@ -99,26 +99,7 @@ public:
           initSizeD = variableD->getValue();
         }
     }
-  virtual void initializeSecond()
-    {
-      ReactionProcess::initializeSecond();
-      if(variableA)
-        {
-          variableA->setValue(initSizeA);
-        }
-      if(variableB)
-        {
-          variableB->setValue(initSizeB);
-        }
-      if(variableC)
-        {
-          variableC->setValue(initSizeC);
-        }
-      if(variableD)
-        {
-          variableD->setValue(initSizeD);
-        }
-    }
+  virtual void initializeSecond();
   GET_METHOD(Real, Propensity)
     {
       Real aPropensity(theGetPropensityMethodPtr(this));

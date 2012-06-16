@@ -81,6 +81,7 @@ void SpatiocyteStepper::initialize()
   setCompVoxelProperties();
   initProcessThird();
   std::cout << "9. printing simulation parameters..." << std::endl;
+  updateSpecies();
   storeSimulationParameters();
   printSimulationParameters();
   std::cout << "10. populating compartments with molecules..." << std::endl;
@@ -97,6 +98,15 @@ void SpatiocyteStepper::initialize()
     std::endl;
   printProcessParameters();
   std::cout << "16. simulation is started..." << std::endl;
+}
+
+void SpatiocyteStepper::updateSpecies()
+{
+  for(std::vector<Species*>::iterator i(theSpecies.begin());
+      i != theSpecies.end(); ++i)
+    {
+      (*i)->updateSpecies();
+    }
 }
 
 unsigned int SpatiocyteStepper::getStartCoord()

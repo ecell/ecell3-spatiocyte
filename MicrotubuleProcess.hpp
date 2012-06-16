@@ -190,6 +190,7 @@ public:
     }
   virtual void initializeSecond()
     {
+      SpatiocyteProcess::initializeSecond();
       theVacantSpecies->setIsCompVacant();
       theMinusSpecies->setIsCompVacant();
       thePlusSpecies->setIsCompVacant();
