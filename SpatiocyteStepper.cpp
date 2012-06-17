@@ -1346,54 +1346,6 @@ void SpatiocyteStepper::setCompProperties(Comp* aComp)
       aComp->specArea = 4*M_PI*aRadius*aRadius+
         2*M_PI*aRadius*(aComp->lengthX-2*aRadius);
       break;
-    case TORUS:
-      if(!aComp->lengthX)
-        {
-          THROW_EXCEPTION(NotFound, "Property LENGTHX of the Torus Comp "
-                          + aSystem->getFullID().asString() + ", which "
-                          + "specifies the diameter of the torus, "
-                          + "not defined." );
-        }
-      if(!aComp->lengthY)
-        {
-          THROW_EXCEPTION(NotFound, "Property LENGTHY of the Torus Comp "
-                          + aSystem->getFullID().asString() + ", which "
-                          + "specifies the diameter of tube, not defined." );
-        }
-      aRadius = aComp->lengthY/2;
-      aLongRadius = (aComp->lengthX-aComp->lengthY)/2;
-      aComp->lengthZ = aComp->lengthX;
-      aComp->specVolume = M_PI*aRadius*aRadius*2*M_PI*aLongRadius;
-      aComp->specArea = 2*M_PI*aRadius*2*M_PI*aLongRadius;
-      break;
-    case PYRAMID:
-      if(!aComp->lengthX)
-        {
-          THROW_EXCEPTION(NotFound, "Property LENGTHX of the Pyramid Comp "
-                          + aSystem->getFullID().asString() + ", which "
-                          + "specifies the length of the pyramid, "
-                          + "not defined." );
-        }
-      if(!aComp->lengthY)
-        {
-          THROW_EXCEPTION(NotFound, "Property LENGTHY of the Pyramid Comp "
-                          + aSystem->getFullID().asString() + ", which "
-                          + "specifies the height of the pyramid, "
-                          + "not defined." );
-        }
-      if(!aComp->lengthZ)
-        {
-          THROW_EXCEPTION(NotFound, "Property LENGTHZ of the Pyramid Comp "
-                          + aSystem->getFullID().asString() + ", which "
-                          + "specifies the depth of the pyramid, "
-                          + "not defined." );
-        }
-      aComp->specVolume = aComp->lengthX*aComp->lengthY*aComp->lengthZ/3;
-      aRadius = sqrt(pow(aComp->lengthX/2,2)+pow(aComp->lengthY,2));
-      aLongRadius = sqrt(pow(aComp->lengthZ/2,2)+pow(aComp->lengthY,2));
-      aComp->specArea =  aComp->lengthZ*aComp->lengthX+
-        2*(aComp->lengthZ*aRadius)+2*(aComp->lengthX*aRadius);
-      break;
     case ERYTHROCYTE:
       if(!aComp->lengthX)
         {
@@ -1425,6 +1377,34 @@ void SpatiocyteStepper::setCompProperties(Comp* aComp)
              pow(aComp->lengthZ/2, 1.6075)+
              pow(aComp->lengthY/2, 1.6075)*
              pow(aComp->lengthZ/2, 1.6075))/ 3, 1/1.6075); 
+      break;
+    case PYRAMID:
+      if(!aComp->lengthX)
+        {
+          THROW_EXCEPTION(NotFound, "Property LENGTHX of the Pyramid Comp "
+                          + aSystem->getFullID().asString() + ", which "
+                          + "specifies the length of the pyramid, "
+                          + "not defined." );
+        }
+      if(!aComp->lengthY)
+        {
+          THROW_EXCEPTION(NotFound, "Property LENGTHY of the Pyramid Comp "
+                          + aSystem->getFullID().asString() + ", which "
+                          + "specifies the height of the pyramid, "
+                          + "not defined." );
+        }
+      if(!aComp->lengthZ)
+        {
+          THROW_EXCEPTION(NotFound, "Property LENGTHZ of the Pyramid Comp "
+                          + aSystem->getFullID().asString() + ", which "
+                          + "specifies the depth of the pyramid, "
+                          + "not defined." );
+        }
+      aComp->specVolume = aComp->lengthX*aComp->lengthY*aComp->lengthZ/3;
+      aRadius = sqrt(pow(aComp->lengthX/2,2)+pow(aComp->lengthY,2));
+      aLongRadius = sqrt(pow(aComp->lengthZ/2,2)+pow(aComp->lengthY,2));
+      aComp->specArea =  aComp->lengthZ*aComp->lengthX+
+        2*(aComp->lengthZ*aRadius)+2*(aComp->lengthX*aRadius);
       break;
     }
   aComp->lengthX /= VoxelRadius*2;
@@ -2747,20 +2727,6 @@ bool SpatiocyteStepper::isInsideCoord(unsigned int aCoord,
           return true;
         }
       break;
-    case TORUS: 
-      return true;
-      break;
-    case PYRAMID: 
-      aRadius = ((aCenterPoint.y+aComp->lengthY/2)-aPoint.y)/aComp->lengthY;
-      if(sqrt(pow(aPoint.y-aCenterPoint.y, 2)) <= aComp->lengthY/2+delta &&
-         sqrt(pow(aPoint.x-aCenterPoint.x, 2)) <= 
-         aComp->lengthX*aRadius/2+delta &&
-         sqrt(pow(aPoint.z-aCenterPoint.z, 2)) <=
-         aComp->lengthZ*aRadius/2+delta)
-        {
-          return true;
-        }
-      break;
     case ERYTHROCYTE: 
       if(delta > 0)
         {
@@ -2784,6 +2750,17 @@ bool SpatiocyteStepper::isInsideCoord(unsigned int aCoord,
       const double thickness(((1-cos(M_PI*0.5*R))*(a-b)+b)*sqrt(1-Rsq));
       const double height((aPoint.z-aCenterPoint.z)/(2*(aComp->lengthZ)));
       if(thickness*thickness >= height*height)
+        {
+          return true;
+        }
+      break;
+    case PYRAMID: 
+      aRadius = ((aCenterPoint.y+aComp->lengthY/2)-aPoint.y)/aComp->lengthY;
+      if(sqrt(pow(aPoint.y-aCenterPoint.y, 2)) <= aComp->lengthY/2+delta &&
+         sqrt(pow(aPoint.x-aCenterPoint.x, 2)) <= 
+         aComp->lengthX*aRadius/2+delta &&
+         sqrt(pow(aPoint.z-aCenterPoint.z, 2)) <=
+         aComp->lengthZ*aRadius/2+delta)
         {
           return true;
         }
