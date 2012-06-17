@@ -2762,16 +2762,13 @@ bool SpatiocyteStepper::isInsideCoord(unsigned int aCoord,
         }
       break;
     case ERYTHROCYTE: 
-      if(delta)
+      if(delta > 0)
         {
-          if(aComp->system->isRootSystem())
-            {
-              return false;
-            }
-          else
-            {
-              return true;
-            }
+          return true;
+        }
+      else if(delta < 0)
+        {
+          return false;
         }
       const double Rsq(pow(aPoint.x-aCenterPoint.x, 2)/
                        pow((aComp->lengthX)/2, 2)+ 
