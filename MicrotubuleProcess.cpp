@@ -60,7 +60,7 @@ void MicrotubuleProcess::initializeThird()
       theDimerSize = (unsigned int)rint(Length/DimerPitch);
       theLattice.resize(Protofilaments*theDimerSize);
       thePoints.resize(Protofilaments*theDimerSize);
-      initProtofilaments();
+      initializeProtofilaments();
       elongateProtofilaments();
       connectProtofilaments();
       enlistLatticeVoxels();
@@ -149,7 +149,7 @@ void MicrotubuleProcess::initializeDirectionVector()
   */
 }
 
-void MicrotubuleProcess::initProtofilaments()
+void MicrotubuleProcess::initializeProtofilaments()
 {
   theAdjoiningVoxelSize = theSpatiocyteStepper->getAdjoiningVoxelSize();
   theNullVoxel = new Voxel;

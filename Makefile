@@ -8,6 +8,7 @@ MassActionProcess\
 ReactionProcess\
 VisualizationLogProcess\
 MicrotubuleProcess\
+ErythrocyteProcess\
 HistogramLogProcess\
 H5VisualizationLogProcess\
 IteratingLogProcess\
@@ -59,6 +60,9 @@ DiffusionInfluencedReactionProcess.so: 	DiffusionInfluencedReactionProcess.cpp
 
 MicrotubuleProcess.so: 	MicrotubuleProcess.cpp
 	$(ECELL3_DMC) -o MicrotubuleProcess.so --ldflags="SpatiocyteProcess.so" MicrotubuleProcess.cpp
+
+ErythrocyteProcess.so: 	ErythrocyteProcess.cpp
+	$(ECELL3_DMC) -o ErythrocyteProcess.so --ldflags="SpatiocyteProcess.so" ErythrocyteProcess.cpp
 
 HistogramLogProcess.so: 	HistogramLogProcess.cpp
 	$(ECELL3_DMC) -o HistogramLogProcess.so --ldflags="SpatiocyteProcess.so" HistogramLogProcess.cpp

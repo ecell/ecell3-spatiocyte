@@ -196,7 +196,7 @@ public:
       thePlusSpecies->setIsCompVacant();
     }
   virtual void initializeThird();
-  void initProtofilaments();
+  void initializeProtofilaments();
   void elongateProtofilaments();
   void connectProtofilaments();
   double getWestPlaneDist(Voxel*);
