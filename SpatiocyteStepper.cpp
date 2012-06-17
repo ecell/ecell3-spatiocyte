@@ -2762,10 +2762,21 @@ bool SpatiocyteStepper::isInsideCoord(unsigned int aCoord,
         }
       break;
     case ERYTHROCYTE: 
+      if(delta)
+        {
+          if(aComp->system->isRootSystem())
+            {
+              return false;
+            }
+          else
+            {
+              return true;
+            }
+        }
       const double Rsq(pow(aPoint.x-aCenterPoint.x, 2)/
-                       pow((aComp->lengthX+delta)/2, 2)+ 
+                       pow((aComp->lengthX)/2, 2)+ 
                        pow(aPoint.y-aCenterPoint.y, 2)/
-                       pow((aComp->lengthY+delta)/2, 2));
+                       pow((aComp->lengthY)/2, 2));
       if(Rsq > 1)
         {
           return false;
@@ -2774,7 +2785,7 @@ bool SpatiocyteStepper::isInsideCoord(unsigned int aCoord,
       const double b(0.1);
       const double R(sqrt(Rsq));
       const double thickness(((1-cos(M_PI*0.5*R))*(a-b)+b)*sqrt(1-Rsq));
-      const double height((aPoint.z-aCenterPoint.z)/(2*(aComp->lengthZ+delta)));
+      const double height((aPoint.z-aCenterPoint.z)/(2*(aComp->lengthZ)));
       if(thickness*thickness >= height*height)
         {
           return true;
