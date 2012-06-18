@@ -15,8 +15,8 @@ System System(/)
                        #   1: Ellipsoid (uses LENGTHX, LENGTHY, LENGTHZ) }
                        #   2: Cylinder (uses LENGTHX, LENGTHY=2*radius)
                        #   3: Rod (uses LENGTHX, LENGTHY=2*radius)
-                       #   4: Torus (uses LENGTHX, LENGTHY, LENGTHZ) }
-                       #   5: Pyramid (uses LENGTHX, LENGTHY, LENGTHZ) }
+                       #   4: Pyramid (uses LENGTHX, LENGTHY, LENGTHZ) }
+                       #   5: Erythrocyte (uses LENGTHX, LENGTHY, LENGTHZ) }
     } 
   Variable Variable(LENGTHX)
     {
