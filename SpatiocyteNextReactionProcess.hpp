@@ -99,7 +99,7 @@ public:
           initSizeD = variableD->getValue();
         }
     }
-  virtual void initializeSecond();
+  virtual void initializeThird();
   GET_METHOD(Real, Propensity)
     {
       Real aPropensity(theGetPropensityMethodPtr(this));

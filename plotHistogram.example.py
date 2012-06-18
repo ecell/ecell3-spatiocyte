@@ -49,7 +49,7 @@ for t in leg.get_texts():
 xticks(fontsize=tickFontSize)
 yticks(fontsize=tickFontSize)
 xlim(0,bins-1)
-ylim(0,0.65)
+#ylim(0,0.65)
 frame = leg.get_frame()
 frame.set_linewidth(None)
 frame.set_facecolor('0.95')

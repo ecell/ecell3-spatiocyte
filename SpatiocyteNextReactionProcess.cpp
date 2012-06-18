@@ -35,13 +35,6 @@ LIBECS_DM_INIT(SpatiocyteNextReactionProcess, Process);
 
 void SpatiocyteNextReactionProcess::fire()
 {
-  /*
-  std::cout << std::endl << "before:" << getFullID().asString() << std::endl;
-  Real aValue1(theVariableReferenceVector[0].getVariable()->getValue());
-  Real aValue2(theVariableReferenceVector[1].getVariable()->getValue());
-  std::cout << "aValue1:" << aValue1 << " " << variableA->getValue();
-  std::cout << " aValue2:" << aValue2 << " " << B->size() << std::endl;
-  */
   if(A)
     {
       A->updateMolecules();
@@ -367,13 +360,6 @@ void SpatiocyteNextReactionProcess::fire()
             }
         }
     }
-  /*
-  std::cout << "after" << std::endl;
-  aValue1=theVariableReferenceVector[0].getVariable()->getValue();
-  aValue2=theVariableReferenceVector[1].getVariable()->getValue();
-  std::cout << "aValue1:" << aValue1 << " " << variableA->getValue();
-  std::cout << " aValue2:" << aValue2 << " " << B->size() << std::endl;
-  */
   ReactionProcess::fire();
 }
 
@@ -592,9 +578,13 @@ Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_OneSubstrate()
     }
 }
 
-void SpatiocyteNextReactionProcess::initializeSecond()
+
+//Cannot put the setIsReactiveVacant in initializeSecond because some
+//species will only be initialized as vacant in the initializeSecond method
+//of other processes (eg. MicrotubuleProcess).
+void SpatiocyteNextReactionProcess::initializeThird()
 {
-  ReactionProcess::initializeSecond();
+  ReactionProcess::initializeThird();
   if(A)
     {
       if(A->getIsVacant())
