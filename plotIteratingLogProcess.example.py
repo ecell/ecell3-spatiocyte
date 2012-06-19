@@ -37,5 +37,3 @@ xlabel('site')
 ylabel('density')
 show()
 
-
-
