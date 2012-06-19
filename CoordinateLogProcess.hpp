@@ -59,7 +59,7 @@ public:
     }
   virtual void fire()
     {
-      if(theTime <= LogDuration)
+      if(theTime <= LogEnd)
         {
           logSpecies();
           theTime += theStepInterval;

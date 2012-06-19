@@ -141,8 +141,7 @@ void HistogramLogProcess::saveBackup()
     {
       std::string aFileName(FileName.c_str());
       aFileName = aFileName + ".back";
-      std::cout << "Saving backup data in: " << aFileName 
-        << std::endl;
+      std::cout << "Saving backup data in: " << aFileName << std::endl;
       std::ofstream aFile;
       aFile.open(aFileName.c_str(), std::ios::trunc);
       double aTime(LogInterval);
@@ -177,14 +176,10 @@ void HistogramLogProcess::logValues()
           unsigned int bin;
           if(isInside(bin, aSpecies->getPoint(j)))
             {
-              ++theLogValues[timePointCnt][bin][i];
+              theLogValues[timePointCnt][bin][i] += 1;
             }
         }
     }
-}
-
-void HistogramLogProcess::initializeFourth()
-{
 }
 
 void HistogramLogProcess::initializeVectors()

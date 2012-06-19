@@ -94,9 +94,8 @@ public:
     {
       SpatiocyteProcess::initializeSecond(); 
       timePointCnt = 0;
-      //thePriority = -10;
+      thePriority = -10;
     }
-  virtual void initializeFourth();
   virtual void initializeFifth();
   virtual void initializeLastOnce();
   virtual void fire();
