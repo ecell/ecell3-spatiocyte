@@ -9,7 +9,6 @@ ReactionProcess\
 VisualizationLogProcess\
 MicrotubuleProcess\
 ErythrocyteProcess\
-HistogramLogProcess\
 H5VisualizationLogProcess\
 IteratingLogProcess\
 DiffusionInfluencedReactionProcess\
@@ -17,6 +16,7 @@ OscillationAnalysisProcess\
 SpatiocyteNextReactionProcess\
 MicroscopyTrackingProcess\
 CoordinateLogProcess\
+HistogramLogProcess\
 MoleculePopulateProcess\
 DiffusionProcess\
 PolymerFragmentationProcess\
@@ -65,7 +65,7 @@ ErythrocyteProcess.so: 	ErythrocyteProcess.cpp
 	$(ECELL3_DMC) -o ErythrocyteProcess.so --ldflags="SpatiocyteProcess.so" ErythrocyteProcess.cpp
 
 HistogramLogProcess.so: 	HistogramLogProcess.cpp
-	$(ECELL3_DMC) -o HistogramLogProcess.so --ldflags="SpatiocyteProcess.so" HistogramLogProcess.cpp
+	$(ECELL3_DMC) -o HistogramLogProcess.so --ldflags="SpatiocyteProcess.so IteratingLogProcess.so" HistogramLogProcess.cpp
 
 OscillationAnalysisProcess.so: 	OscillationAnalysisProcess.cpp
 	$(ECELL3_DMC) -o OscillationAnalysisProcess.so --ldflags="SpatiocyteProcess.so" OscillationAnalysisProcess.cpp

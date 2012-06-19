@@ -34,22 +34,16 @@
 
 #include <fstream> //provides ofstream
 #include <math.h>
-#include "SpatiocyteProcess.hpp"
+#include "IteratingLogProcess.hpp"
 #include "SpatiocyteSpecies.hpp"
 
-LIBECS_DM_CLASS(HistogramLogProcess, SpatiocyteProcess)
+LIBECS_DM_CLASS(HistogramLogProcess, IteratingLogProcess)
 { 
 public:
   LIBECS_DM_OBJECT(HistogramLogProcess, Process)
     {
-      INHERIT_PROPERTIES(Process);
-      PROPERTYSLOT_SET_GET(Real, LogEnd);
-      PROPERTYSLOT_SET_GET(Real, LogStart);
-      PROPERTYSLOT_SET_GET(Real, LogInterval);
-      PROPERTYSLOT_SET_GET(Integer, Iterations);
-      PROPERTYSLOT_SET_GET(Integer, SaveCounts);
+      INHERIT_PROPERTIES(IteratingLogProcess);
       PROPERTYSLOT_SET_GET(Integer, Bins);
-      PROPERTYSLOT_SET_GET(String, FileName);
       PROPERTYSLOT_SET_GET(Real, Radius);
       PROPERTYSLOT_SET_GET(Real, Length);
       PROPERTYSLOT_SET_GET(Real, OriginX);
@@ -59,13 +53,7 @@ public:
       PROPERTYSLOT_SET_GET(Real, RotateY);
       PROPERTYSLOT_SET_GET(Real, RotateZ);
     }
-  SIMPLE_SET_GET_METHOD(Real, LogEnd);
-  SIMPLE_SET_GET_METHOD(Real, LogStart);
-  SIMPLE_SET_GET_METHOD(Real, LogInterval);
-  SIMPLE_SET_GET_METHOD(Integer, Iterations);
-  SIMPLE_SET_GET_METHOD(Integer, SaveCounts);
   SIMPLE_SET_GET_METHOD(Integer, Bins);
-  SIMPLE_SET_GET_METHOD(String, FileName);
   SIMPLE_SET_GET_METHOD(Real, Radius);
   SIMPLE_SET_GET_METHOD(Real, Length);
   SIMPLE_SET_GET_METHOD(Real, OriginX);
@@ -75,47 +63,30 @@ public:
   SIMPLE_SET_GET_METHOD(Real, RotateY);
   SIMPLE_SET_GET_METHOD(Real, RotateZ);
   HistogramLogProcess():
-    SpatiocyteProcess(false),
-    Iterations(1),
-    SaveCounts(0),
     Bins(1),
-    LogStart(0),
-    LogInterval(0),
     OriginX(0),
     OriginY(0),
     OriginZ(0),
     Radius(12.5e-9),
     RotateX(0),
     RotateY(0),
-    RotateZ(0),
-    FileName("HisLog.csv") {}
+    RotateZ(0) 
+  {
+    FileName = "HisLog.csv";
+  }
   virtual ~HistogramLogProcess() {}
-  virtual void initializeSecond()
-    {
-      SpatiocyteProcess::initializeSecond(); 
-      timePointCnt = 0;
-      thePriority = -10;
-    }
   virtual void initializeFifth();
   virtual void initializeLastOnce();
   virtual void fire();
-  void saveFile();
-  void saveBackup();
-  void logValues();
+  virtual void saveFile();
+  virtual void saveBackup();
+  virtual void logValues();
   void initializeVectors();
   bool isInside(unsigned int&, Point);
 protected:
-  int Iterations;
-  int SaveCounts;
-  int timePointCnt;
-  int theTotalIterations;
   unsigned int Bins;
-  unsigned int timePoints;
   double binInterval;
   double Length;
-  double LogEnd;
-  double LogStart;
-  double LogInterval;
   double OriginX;
   double OriginY;
   double OriginZ;
@@ -127,8 +98,6 @@ protected:
   Point C;
   Point E;
   Point D;
-  String FileName;
-  std::ofstream theLogFile;
   Comp* theComp;
   std::vector<std::vector<std::vector<double> > > theLogValues;
 };

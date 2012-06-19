@@ -106,11 +106,9 @@ public:
   virtual void initializeFifth();
   virtual void initializeLastOnce();
   virtual void fire();
-  void saveFile();
-  void saveBackup();
-  void logValues();
-  void initializeVectors();
-  bool isInside(unsigned int&, Point);
+  virtual void saveFile();
+  virtual void saveBackup();
+  virtual void logValues();
 protected:
   bool isSurviving;
   int Centered;
