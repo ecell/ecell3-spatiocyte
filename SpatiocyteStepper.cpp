@@ -150,8 +150,8 @@ void SpatiocyteStepper::reset(int seed)
   setCurrentTime(0);
   initProcessSecond();
   clearComps();
-  populateComps();
   initProcessThird();
+  populateComps();
   initProcessFourth();
   initPriorityQueue();
   initProcessFifth();
@@ -2886,6 +2886,7 @@ void SpatiocyteStepper::clearComp(Comp* aComp)
       i != aComp->species.end(); ++i)
     {
       (*i)->removeMolecules();
+      (*i)->updateMolecules();
     }
 }
 

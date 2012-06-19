@@ -773,13 +773,9 @@ public:
   //clear the whole compartment using theComp->vacantSpecies->getVacantID():
   void removeMolecules()
     {
-      if(isDiffusiveVacant || isReactiveVacant)
-        {
-          updateVacantMolecules();
-        }
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
-          theMolecules[i]->id = theComp->vacantSpecies->getID();
+          theMolecules[i]->id = theVacantSpecies->getID();
         }
       theMoleculeSize = 0;
       theVariable->setValue(theMoleculeSize);

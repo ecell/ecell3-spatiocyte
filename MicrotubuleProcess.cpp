@@ -64,16 +64,8 @@ void MicrotubuleProcess::initializeThird()
       elongateProtofilaments();
       connectProtofilaments();
       enlistLatticeVoxels();
-      //std::cout << getIDString(theVacantSpecies) << 
-      //  theVacantSpecies->size() << std::endl;
       isCompartmentalized = true;
     }
-  /*
-  else
-    {
-      populateMolecules();
-    }
-    */
 }
 
 void MicrotubuleProcess::addCompVoxel(unsigned int protoIndex,
@@ -84,9 +76,6 @@ void MicrotubuleProcess::addCompVoxel(unsigned int protoIndex,
   *aVoxel.point = aPoint;
   aVoxel.adjoiningVoxels = new Voxel*[theAdjoiningVoxelSize];
   aVoxel.diffuseSize = 2;
-  /*
-  aVoxel.adjoiningSize = 2;
-  */
   for(unsigned int i(0); i != theAdjoiningVoxelSize; ++i)
     {
       aVoxel.adjoiningVoxels[i] = theNullVoxel;
