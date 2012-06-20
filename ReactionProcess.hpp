@@ -43,12 +43,14 @@ public:
       INHERIT_PROPERTIES(SpatiocyteProcess);
       PROPERTYSLOT_SET_GET(Real, k);
       PROPERTYSLOT_SET_GET(Real, p);
+      PROPERTYSLOT_SET_GET(Integer, SearchVacant);
       PROPERTYSLOT_GET_NO_LOAD_SAVE(Integer, Order);
     }
   ReactionProcess():
+    SearchVacant(-1),
+    theOrder(0),
     k(-1),
     p(-1),
-    theOrder(0),
     A(NULL),
     B(NULL),
     C(NULL),
@@ -62,6 +64,7 @@ public:
   virtual ~ReactionProcess() {}
   SIMPLE_SET_GET_METHOD(Real, k);
   SIMPLE_SET_GET_METHOD(Real, p);
+  SIMPLE_SET_GET_METHOD(Integer, SearchVacant);
   virtual bool isInterrupting(Process*);
   virtual void fire()
     {
@@ -90,6 +93,13 @@ public:
           return;
         }
       SpatiocyteProcess::initialize();
+      //SearchVacant of each reaction is set according to the master
+      //SearchVacant property of the SpatiocyteStepper if it is not
+      //specified at the reaction level:
+      if(SearchVacant == -1)
+        {
+          SearchVacant = theSpatiocyteStepper->getSearchVacant();
+        }
       declareUnidirectional();
       calculateOrder();
     }
@@ -155,9 +165,10 @@ public:
 protected:
   virtual void calculateOrder();
 protected:
+  int SearchVacant;
+  int theOrder;
   double k;
   double p;
-  int theOrder;
   //Species are for non HD species:
   Species* A;
   Species* B;

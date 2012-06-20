@@ -68,6 +68,7 @@ public:
   virtual void finalizeReaction();
 protected:
   void calculateReactionProbability();
+  bool isAddMoleculeE();
 protected:
   double D_A;
   double D_B;

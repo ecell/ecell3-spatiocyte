@@ -45,7 +45,7 @@ void PolymerFragmentationProcess::fire()
       Voxel* moleculeC;
       if(A->getVacantID() != C->getVacantID())
         {
-          moleculeC = C->getRandomAdjoiningVoxel(moleculeA);
+          moleculeC = C->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
           //Only proceed if we can find an adjoining vacant voxel
           //of A which can be occupied by C:
           if(moleculeC == NULL)
@@ -63,7 +63,8 @@ void PolymerFragmentationProcess::fire()
         {
           //Find an adjoining vacant voxel of B belonging to the
           //compartment of D which is not molecule C:
-          moleculeD = D->getRandomAdjoiningVoxel(moleculeB, moleculeC);
+          moleculeD = D->getRandomAdjoiningVoxel(moleculeB, moleculeC,
+                                                 SearchVacant);
           //Only proceed if we can find an adjoining vacant voxel
           //of B which can be occupied by D and the vacant voxel is not
           //used by moleculeC:
@@ -115,7 +116,7 @@ void PolymerFragmentationProcess::fire()
       Voxel* moleculeD;
       if(A->getVacantID() != C->getVacantID())
         {
-          moleculeC = C->getRandomAdjoiningVoxel(moleculeA);
+          moleculeC = C->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
           //Only proceed if we can find an adjoining vacant voxel
           //of A which can be occupied by C:
           if(moleculeC == NULL)
@@ -126,13 +127,15 @@ void PolymerFragmentationProcess::fire()
             {
               //Find an adjoining vacant voxel of A belonging to the
               //compartment of D which is not molecule C:
-              moleculeD = D->getRandomAdjoiningVoxel(moleculeA, moleculeC);
+              moleculeD = D->getRandomAdjoiningVoxel(moleculeA, moleculeC,
+                                                     SearchVacant);
               //Only proceed if we can find an adjoining vacant voxel
               //of B which can be occupied by D and the vacant voxel is not
               //used by moleculeC:
               if(moleculeD == NULL)
                 {
-                  moleculeD = D->getRandomAdjoiningVoxel(moleculeC);
+                  moleculeD = D->getRandomAdjoiningVoxel(moleculeC,
+                                                         SearchVacant);
                   if(moleculeD == NULL)
                     {
                       return;
@@ -147,7 +150,7 @@ void PolymerFragmentationProcess::fire()
       else
         {
           moleculeC = moleculeA;
-          moleculeD = D->getRandomAdjoiningVoxel(moleculeA);
+          moleculeD = D->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
           if(moleculeD == NULL)
             {
               return;

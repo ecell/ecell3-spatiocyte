@@ -100,12 +100,13 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
         }
       else
         { 
-          moleculeP = nonHD_p->getRandomAdjoiningVoxel(moleculeA);
+          moleculeP = nonHD_p->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
           //Only proceed if we can find an adjoining vacant voxel
           //of A which can be occupied by C:
           if(moleculeP == NULL)
             {
-              moleculeP = nonHD_p->getRandomAdjoiningVoxel(moleculeB);
+              moleculeP = nonHD_p->getRandomAdjoiningVoxel(moleculeB,
+                                                           SearchVacant);
               if(moleculeP == NULL)
                 {
                   return false;
@@ -146,8 +147,9 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
             }
           else
             {
-              moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC);
-              if(moleculeD == NULL)
+              moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC,
+                                                     SearchVacant);
+              if(moleculeD == NULL || !isAddMoleculeE())
                 {
                   return false;
                 }
@@ -174,8 +176,9 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
             }
           else
             {
-              moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC);
-              if(moleculeD == NULL)
+              moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC,
+                                                     SearchVacant);
+              if(moleculeD == NULL || !isAddMoleculeE())
                 {
                   return false;
                 }
@@ -191,11 +194,11 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
     }
   else
     {
-      moleculeC = C->getRandomAdjoiningVoxel(moleculeA);
+      moleculeC = C->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
       if(moleculeC == NULL)
         {
-          moleculeC = C->getRandomAdjoiningVoxel(moleculeB);
-          if(moleculeC == NULL)
+          moleculeC = C->getRandomAdjoiningVoxel(moleculeB, SearchVacant);
+          if(moleculeC == NULL || !isAddMoleculeE())
             {
               //Only proceed if we can find an adjoining vacant voxel
               //of A or B which can be occupied by C:
@@ -204,8 +207,9 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
         }
       if(D)
         {
-          moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC);
-          if(moleculeD == NULL)
+          moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC,
+                                                 SearchVacant);
+          if(moleculeD == NULL || !isAddMoleculeE())
             {
               return false;
             }
@@ -221,7 +225,24 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
 }
 
 
-  
+//zero-coefficient E
+//we create a molecule E at random location in the compartment to avoid
+//rebinding effect, useful when maintaining the concentration of a 
+//substrate species:
+bool DiffusionInfluencedReactionProcess::isAddMoleculeE()
+{
+  if(!E)
+    {
+      return true;
+    } 
+  Voxel* moleculeE(E->getRandomCompVoxel(SearchVacant));
+  if(moleculeE == NULL)
+    {
+      return false;
+    }
+  E->addMolecule(moleculeE);
+  return true;
+}
 
 void DiffusionInfluencedReactionProcess::finalizeReaction()
 {

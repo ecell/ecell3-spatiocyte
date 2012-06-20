@@ -936,10 +936,10 @@ public:
         }
       return 0;
     }
-  Voxel* getRandomAdjoiningVoxel(Voxel* source)
+  Voxel* getRandomAdjoiningVoxel(Voxel* source, int searchVacant)
     {
       std::vector<Voxel*> CompVoxels;
-      if(theStepper->getSearchVacant())
+      if(searchVacant)
         { 
           for(unsigned int i(0); i != source->adjoiningSize; ++i)
             {
@@ -963,7 +963,7 @@ public:
         }
       return getRandomVacantVoxel(&CompVoxels);
     } 
-  Voxel* getRandomAdjoiningVoxel(Voxel* source, int bindingSite)
+  Voxel* getBindingSiteAdjoiningVoxel(Voxel* source, int bindingSite)
     {
       if(bindingSite < source->adjoiningSize)
         { 
@@ -975,10 +975,11 @@ public:
         }
       return NULL;
     } 
-  Voxel* getRandomAdjoiningVoxel(Voxel* source, Species* aVacantSpecies)
+  Voxel* getRandomAdjoiningVoxel(Voxel* source, Species* aVacantSpecies,
+                                 int searchVacant)
     {
       std::vector<Voxel*> CompVoxels;
-      if(theStepper->getSearchVacant())
+      if(searchVacant)
         { 
           for(unsigned int i(0); i != source->adjoiningSize; ++i)
             {
@@ -1002,10 +1003,10 @@ public:
         }
       return getRandomVacantVoxel(&CompVoxels, aVacantSpecies);
     } 
-  Voxel* getRandomAdjoiningVoxel(Voxel* source, Voxel* target)
+  Voxel* getRandomAdjoiningVoxel(Voxel* source, Voxel* target, int searchVacant)
     {
       std::vector<Voxel*> CompVoxels;
-      if(theStepper->getSearchVacant())
+      if(searchVacant)
         { 
           for(unsigned int i(0); i != source->adjoiningSize; ++i)
             {
@@ -1030,10 +1031,11 @@ public:
         }
       return getRandomVacantVoxel(&CompVoxels);
     }
-  Voxel* getRandomAdjoiningVoxel(Voxel* source, Voxel* targetA, Voxel* targetB)
+  Voxel* getRandomAdjoiningVoxel(Voxel* source, Voxel* targetA, Voxel* targetB,
+                                 int searchVacant)
     {
       std::vector<Voxel*> CompVoxels;
-      if(theStepper->getSearchVacant())
+      if(searchVacant)
         { 
           for(unsigned int i(0); i != source->adjoiningSize; ++i)
             {
@@ -1086,12 +1088,12 @@ public:
         }
       return NULL;
     }
-  Voxel* getRandomCompVoxel()
+  Voxel* getRandomCompVoxel(int searchVacant)
     {
       Species* aVacantSpecies(theComp->vacantSpecies);
       int aSize(aVacantSpecies->compVoxelSize());
       int r(gsl_rng_uniform_int(theRng, aSize));
-      if(theStepper->getSearchVacant())
+      if(searchVacant)
         {
           for(int i(r); i != aSize; ++i)
             {
@@ -1120,12 +1122,12 @@ public:
         }
       return NULL;
     }
-  Voxel* getRandomAdjoiningCompVoxel(Comp* aComp)
+  Voxel* getRandomAdjoiningCompVoxel(Comp* aComp, int searchVacant)
     {
       int aSize(theVacantSpecies->size());
       int r(gsl_rng_uniform_int(theRng, aSize)); 
       Voxel* aVoxel(theVacantSpecies->getMolecule(r));
-      return getRandomAdjoiningVoxel(aVoxel);
+      return getRandomAdjoiningVoxel(aVoxel, searchVacant);
     }
 private:
   bool isCentered;

@@ -48,7 +48,7 @@ void SpatiocyteNextReactionProcess::fire()
     {
       if(C)
         { 
-          Voxel* moleculeC(C->getRandomCompVoxel());
+          Voxel* moleculeC(C->getRandomCompVoxel(SearchVacant));
           if(moleculeC == NULL)
             {
               requeue();
@@ -147,26 +147,29 @@ void SpatiocyteNextReactionProcess::fire()
           //if A is a surface compartment:
           if(compA != C->getComp() && compA->dimension != 3)
             {
-              moleculeC = C->getRandomAdjoiningCompVoxel(compA);
+              moleculeC = C->getRandomAdjoiningCompVoxel(compA, SearchVacant);
               if(moleculeC)
                 {
-                  moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC);
+                  moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC,
+                                                         SearchVacant);
                 }
             }
           else if(compA != D->getComp() && compA->dimension != 3)
             {
-              moleculeD = D->getRandomAdjoiningCompVoxel(compA);
+              moleculeD = D->getRandomAdjoiningCompVoxel(compA, SearchVacant);
               if(moleculeD)
                 {
-                  moleculeC = C->getRandomAdjoiningVoxel(moleculeD, moleculeD);
+                  moleculeC = C->getRandomAdjoiningVoxel(moleculeD, moleculeD,
+                                                         SearchVacant);
                 }
             }
           else
             {
-              moleculeC = C->getRandomCompVoxel();
+              moleculeC = C->getRandomCompVoxel(SearchVacant);
               if(moleculeC)
                 {
-                  moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC);
+                  moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC,
+                                                         SearchVacant);
                 }
             }
           if(moleculeC == NULL || moleculeD == NULL)
@@ -280,12 +283,13 @@ void SpatiocyteNextReactionProcess::fire()
                   if(moleculeD)
                     {
                       moleculeC = C->getRandomAdjoiningVoxel(moleculeD,
-                                                             moleculeD);
+                                                     moleculeD, SearchVacant);
                     }
                 }
               else
                 { 
-                  moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC);
+                  moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC,
+                                                         SearchVacant);
                 }
               if(moleculeC == NULL || moleculeD == NULL)
                 {
@@ -372,7 +376,8 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
   if(a->getVacantID() == c->getVacantID() || a->getID() == c->getVacantID())
     {
       moleculeC = moleculeA;
-      moleculeD = d->getRandomAdjoiningVoxel(moleculeC, moleculeC);
+      moleculeD = d->getRandomAdjoiningVoxel(moleculeC, moleculeC,
+                                             SearchVacant);
       if(moleculeD == NULL)
         {
           requeue();
@@ -383,7 +388,8 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
           a->getID() == d->getVacantID())
     {
       moleculeD = moleculeA;
-      moleculeC = c->getRandomAdjoiningVoxel(moleculeD, moleculeD);
+      moleculeC = c->getRandomAdjoiningVoxel(moleculeD, moleculeD,
+                                             SearchVacant);
       if(moleculeC == NULL)
         {
           requeue();
@@ -392,7 +398,7 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
     }
   else
     {
-      moleculeC = c->getRandomAdjoiningVoxel(moleculeA);
+      moleculeC = c->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
       if(moleculeC == NULL)
         {
           //Only proceed if we can find an adjoining vacant voxel
@@ -400,7 +406,8 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
           requeue();
           return false;
         }
-      moleculeD = d->getRandomAdjoiningVoxel(moleculeC, moleculeC);
+      moleculeD = d->getRandomAdjoiningVoxel(moleculeC, moleculeC,
+                                             SearchVacant);
       if(moleculeD == NULL)
         {
           requeue();
@@ -424,7 +431,7 @@ bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
     }
   else
     {
-      moleculeC = c->getRandomAdjoiningVoxel(moleculeA);
+      moleculeC = c->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
       if(moleculeC == NULL)
         {
           //Only proceed if we can find an adjoining vacant voxel
@@ -438,12 +445,12 @@ bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
   return true;
 }
 
-//nonHD (+Vacant[BindingSite]) -> nonHD
+//nonHD (+Vacant[BindingSite]) -> nonHD[BindingSite]
 bool SpatiocyteNextReactionProcess::reactACbind(Species* a, Species* c)
 {
   Voxel* moleculeA(a->getRandomMolecule());
   Voxel* moleculeC(NULL);
-  moleculeC = c->getRandomAdjoiningVoxel(moleculeA, BindingSite);
+  moleculeC = c->getBindingSiteAdjoiningVoxel(moleculeA, BindingSite);
   if(moleculeC == NULL)
     {
       //Only proceed if we can find an adjoining vacant voxel
@@ -465,11 +472,11 @@ Voxel* SpatiocyteNextReactionProcess::reactvAC(Variable* vA, Species* c)
   //if A is a surface compartment:
   if(compA != c->getComp() && compA->dimension != 3)
     {
-      moleculeC = c->getRandomAdjoiningCompVoxel(compA);
+      moleculeC = c->getRandomAdjoiningCompVoxel(compA, SearchVacant);
     }
   else
     {
-      moleculeC = c->getRandomCompVoxel();
+      moleculeC = c->getRandomCompVoxel(SearchVacant);
     }
   return moleculeC;
 }
@@ -502,11 +509,11 @@ Voxel* SpatiocyteNextReactionProcess::reactvAvBC(Species* c)
   Comp* aComp2D(getComp2D(c));
   if(aComp2D)
     {
-      moleculeC = C->getRandomAdjoiningCompVoxel(aComp2D);
+      moleculeC = C->getRandomAdjoiningCompVoxel(aComp2D, SearchVacant);
     }
   else
     {
-      moleculeC = C->getRandomCompVoxel();
+      moleculeC = C->getRandomCompVoxel(SearchVacant);
     }
   return moleculeC;
 }

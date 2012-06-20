@@ -627,10 +627,12 @@ bool PolymerizationProcess::react(Voxel* moleculeB, Voxel** target)
             {
               if(B->getVacantID() != C->getVacantID())
                 {
-                  moleculeC = C->getRandomAdjoiningVoxel(moleculeA);
+                  moleculeC = C->getRandomAdjoiningVoxel(moleculeA,
+                                                         SearchVacant);
                   if(moleculeC == NULL)
                     {
-                      moleculeC = C-> getRandomAdjoiningVoxel(moleculeB);
+                      moleculeC = C-> getRandomAdjoiningVoxel(moleculeB,
+                                                              SearchVacant);
                       if(moleculeC == NULL)
                         {
                           //cout << "unavailable" << endl;
