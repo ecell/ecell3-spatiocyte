@@ -773,12 +773,15 @@ public:
   //clear the whole compartment using theComp->vacantSpecies->getVacantID():
   void removeMolecules()
     {
-      for(unsigned int i(0); i < theMoleculeSize; ++i)
+      if(!isCompVacant)
         {
-          theMolecules[i]->id = theVacantSpecies->getID();
+          for(unsigned int i(0); i < theMoleculeSize; ++i)
+            {
+              theMolecules[i]->id = theVacantSpecies->getID();
+            }
+          theMoleculeSize = 0;
+          theVariable->setValue(theMoleculeSize);
         }
-      theMoleculeSize = 0;
-      theVariable->setValue(theMoleculeSize);
     }
   int getPopulateMoleculeSize()
     {

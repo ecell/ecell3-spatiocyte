@@ -149,7 +149,7 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
             {
               moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC,
                                                      SearchVacant);
-              if(moleculeD == NULL || !isAddMoleculeE())
+              if(moleculeD == NULL)
                 {
                   return false;
                 }
@@ -178,7 +178,7 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
             {
               moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC,
                                                      SearchVacant);
-              if(moleculeD == NULL || !isAddMoleculeE())
+              if(moleculeD == NULL)
                 {
                   return false;
                 }
@@ -198,7 +198,7 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
       if(moleculeC == NULL)
         {
           moleculeC = C->getRandomAdjoiningVoxel(moleculeB, SearchVacant);
-          if(moleculeC == NULL || !isAddMoleculeE())
+          if(moleculeC == NULL)
             {
               //Only proceed if we can find an adjoining vacant voxel
               //of A or B which can be occupied by C:
@@ -209,7 +209,7 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
         {
           moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC,
                                                  SearchVacant);
-          if(moleculeD == NULL || !isAddMoleculeE())
+          if(moleculeD == NULL)
             {
               return false;
             }
@@ -221,27 +221,27 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
       moleculeB->id = B->getVacantID();
     }
   C->addMolecule(moleculeC);
+  addMoleculeE();
   return true;
 }
 
-
 //zero-coefficient E
 //we create a molecule E at random location in the compartment to avoid
-//rebinding effect, useful when maintaining the concentration of a 
-//substrate species:
-bool DiffusionInfluencedReactionProcess::isAddMoleculeE()
+//rebinding effect, useful to maintain the concentration of a substrate species
+//even after the reaction:
+void DiffusionInfluencedReactionProcess::addMoleculeE()
 {
   if(!E)
     {
-      return true;
+      return;
     } 
   Voxel* moleculeE(E->getRandomCompVoxel(SearchVacant));
   if(moleculeE == NULL)
     {
-      return false;
+      std::cout << getFullID().asString() << " unable to add molecule E" <<
+        std::endl;
     }
   E->addMolecule(moleculeE);
-  return true;
 }
 
 void DiffusionInfluencedReactionProcess::finalizeReaction()
