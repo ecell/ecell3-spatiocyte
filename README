@@ -1,2 +1,13 @@
 INSTALL: detailed installation instructions
 spatiocyteGuide.odt: document describing model building essentials
+
+Details of the method:
+
+1. Arjunan, S. N. V. and Tomita, M. (2010). A new multicompartmental
+   reaction-diffusion modeling method links transient membrane attachment of
+   E. coli MinE to E-ring formation. Syst. Synth. Biol. 4(1):35-53.
+
+2. Arjunan, S. N. V. and Tomita, M. (2009). Modeling reaction-diffusion of
+   molecules on surface and in volume spaces with the E-Cell System. 
+   International Journal of Computer Science and Information Security.
+   3(1): 211–216

@@ -235,7 +235,7 @@ void DiffusionInfluencedReactionProcess::addMoleculeE()
     {
       return;
     } 
-  Voxel* moleculeE(E->getRandomCompVoxel(SearchVacant));
+  Voxel* moleculeE(E->getRandomCompVoxel(1));
   if(moleculeE == NULL)
     {
       std::cout << getFullID().asString() << " unable to add molecule E" <<

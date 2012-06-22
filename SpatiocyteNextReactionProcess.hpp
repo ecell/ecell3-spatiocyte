@@ -145,6 +145,7 @@ protected:
   Real getPropensity_FirstOrder();
   Real getPropensity_SecondOrder_TwoSubstrates(); 
   Real getPropensity_SecondOrder_OneSubstrate();
+  void removeMoleculeE();
 protected:
   double initSizeA;
   double initSizeB;

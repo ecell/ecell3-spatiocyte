@@ -442,7 +442,27 @@ bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
     }
   a->removeMolecule(moleculeA);
   c->addMolecule(moleculeC);
+  removeMoleculeE();
   return true;
+}
+
+//zero-coefficient E
+//we remove a molecule E at random location in the compartment to allow
+//rebinding effect of the dissociated nonHD molecule while maintain the 
+//concentration of a substrate species even after the reaction:
+void SpatiocyteNextReactionProcess::removeMoleculeE()
+{
+  if(!E)
+    {
+      return;
+    }
+  Voxel* moleculeE(E->getRandomMolecule());
+  if(moleculeE == NULL)
+    {
+      std::cout << getFullID().asString() << " unable to remove molecule E" <<
+        std::endl;
+    }
+  E->removeMolecule(moleculeE);
 }
 
 //nonHD (+Vacant[BindingSite]) -> nonHD[BindingSite]
