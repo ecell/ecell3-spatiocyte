@@ -98,6 +98,7 @@ public:
     isSubunitInitialized(false),
     isVacant(false),
     theID(anID),
+    theCollision(0),
     theInitMoleculeSize(anInitMoleculeSize),
     theMoleculeSize(0),
     D(0),
@@ -315,6 +316,10 @@ public:
       return
         aDisplacement*pow(theRadius*2, 2)/theMoleculeSize;
     }
+  void setCollision(unsigned int aCollision)
+    {
+      theCollision = aCollision;
+    }
   void setIsSubunitInitialized()
     {
       isSubunitInitialized = true;
@@ -337,6 +342,23 @@ public:
     {
       theInitMoleculeSize = theMoleculeSize;
       getVariable()->setValue(theMoleculeSize);
+      if(theCollision)
+        {
+          collisionCnts.resize(theMoleculeSize);
+          for(std::vector<unsigned int>::iterator 
+              i(collisionCnts.begin()); i != collisionCnts.end(); ++i)
+            {
+              *i = 0;
+            }
+        }
+    }
+  unsigned int getCollisionCnt(unsigned int anIndex)
+    {
+      return collisionCnts[anIndex];
+    }
+  unsigned int getCollision() const
+    {
+      return theCollision;
     }
   void setIsDiffusiveVacant()
     {
@@ -473,6 +495,71 @@ public:
             }
         }
     }
+  void addCollision(Voxel* aVoxel)
+    {
+      for(unsigned int i(0); i < theMoleculeSize; ++i)
+        {
+          if(aVoxel == theMolecules[i])
+            {
+              ++collisionCnts[i];
+              return;
+            }
+        }
+      std::cout << "error in species add collision" << std::endl;
+    }
+  void collide()
+    {
+      for(unsigned int i(0); i < theMoleculeSize; ++i)
+        {
+          Voxel* source(theMolecules[i]);
+          int size;
+          if(isFixedAdjoins)
+            {
+              size = theAdjoiningVoxelSize;
+            }
+          else
+            {
+              size = source->diffuseSize;
+            }
+          Voxel* target(source->adjoiningVoxels[
+                        gsl_rng_uniform_int(theRng, size)]);
+          if(target->id == theVacantID)
+            {
+              if(theWalkProbability == 1 ||
+                 gsl_rng_uniform(theRng) < theWalkProbability)
+                {
+                  target->id = theID;
+                  source->id = theVacantID;
+                  theMolecules[i] = target;
+                }
+            }
+          else if(theDiffusionInfluencedReactions[target->id])
+            {
+              //If it meets the reaction probability:
+              if(gsl_rng_uniform(theRng) < theReactionProbabilities[target->id])
+                { 
+                  Species* targetSpecies(theStepper->id2species(target->id));
+                  ++collisionCnts[i];
+                  targetSpecies->addCollision(target);
+                  if(theCollision == 2)
+                    {
+                      DiffusionInfluencedReactionProcessInterface* aReaction(
+                                 theDiffusionInfluencedReactions[target->id]);
+                      if(aReaction->react(source, target))
+                        {
+                          //Soft remove the source molecule, i.e.,
+                          //keep the id intact:
+                          theMolecules[i--] = theMolecules[--theMoleculeSize];
+                          theVariable->setValue(theMoleculeSize);
+                          //Soft remove the target molecule:
+                          targetSpecies->softRemoveMolecule(target);
+                          theFinalizeReactions[targetSpecies->getID()] = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
   void walk()
     {
       for(unsigned int i(0); i < theMoleculeSize; ++i)
@@ -489,12 +576,6 @@ public:
             }
           Voxel* target(source->adjoiningVoxels[
                         gsl_rng_uniform_int(theRng, size)]);
-          /*
-          if(source == target)
-            {
-              std::cout << "SpatiocyteSpecies source=target error" << std::endl;
-            }
-            */
           if(target->id == theVacantID)
             {
               if(theWalkProbability == 1 ||
@@ -505,7 +586,7 @@ public:
                   theMolecules[i] = target;
                 }
             }
-          else if(theDiffusionInfluencedReactions[target->id] != NULL)
+          else if(theDiffusionInfluencedReactions[target->id])
             {
               //If it meets the reaction probability:
               if(gsl_rng_uniform(theRng) < theReactionProbabilities[target->id])
@@ -1146,6 +1227,7 @@ private:
   bool isSubunitInitialized;
   bool isVacant;
   const unsigned short theID;
+  unsigned int theCollision;
   unsigned int theDimension;
   unsigned int theInitMoleculeSize;
   unsigned int theMoleculeSize;
@@ -1163,6 +1245,7 @@ private:
   SpatiocyteStepper* theStepper;
   Variable* theVariable;
   std::vector<bool> theFinalizeReactions;
+  std::vector<unsigned int> collisionCnts;
   std::vector<double> theBendAngles;
   std::vector<double> theReactionProbabilities;
   std::vector<Voxel*> theMolecules;

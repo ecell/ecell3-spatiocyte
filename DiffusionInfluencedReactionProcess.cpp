@@ -33,10 +33,16 @@
 
 LIBECS_DM_INIT(DiffusionInfluencedReactionProcess, Process);
 
+void DiffusionInfluencedReactionProcess::initializeSecond()
+{
+  ReactionProcess::initializeSecond(); 
+  A->setCollision(Collision);
+  B->setCollision(Collision);
+}
 
 void DiffusionInfluencedReactionProcess::initializeThird()
 {
-  ReactionProcess::initializeSecond();
+  ReactionProcess::initializeThird();
   A->setDiffusionInfluencedReactantPair(B); 
   B->setDiffusionInfluencedReactantPair(A); 
   r_v = theSpatiocyteStepper->getVoxelRadius();

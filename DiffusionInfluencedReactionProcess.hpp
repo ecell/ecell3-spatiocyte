@@ -41,8 +41,11 @@ public:
   LIBECS_DM_OBJECT(DiffusionInfluencedReactionProcess, Process)
     {
       INHERIT_PROPERTIES(ReactionProcess);
+      PROPERTYSLOT_SET_GET(Integer, Collision);
     }
-  DiffusionInfluencedReactionProcess() {}
+  SIMPLE_SET_GET_METHOD(Integer, Collision);
+  DiffusionInfluencedReactionProcess():
+   Collision(0) {}
   virtual ~DiffusionInfluencedReactionProcess() {}
   virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
   virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
@@ -62,6 +65,7 @@ public:
                           "diffusion influenced reactions.");
         }
     }
+  virtual void initializeSecond();
   virtual void initializeThird();
   virtual bool react(Voxel*, Voxel*);
   virtual void printParameters();
@@ -70,6 +74,7 @@ protected:
   void calculateReactionProbability();
   void addMoleculeE();
 protected:
+  unsigned int Collision;
   double D_A;
   double D_B;
   double r_v;

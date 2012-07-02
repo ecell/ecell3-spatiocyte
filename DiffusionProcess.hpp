@@ -148,7 +148,11 @@ public:
           theStepInterval = alpha*r_v*r_v*WalkProbability/D;
         }
       theDiffusionSpecies->setDiffusionInterval(theStepInterval);
-      if(theDiffusionSpecies->getIsDiffusiveVacant())
+      if(theDiffusionSpecies->getCollision())
+        {
+          theWalkMethod = &DiffusionProcess::collide;
+        }
+      else if(theDiffusionSpecies->getIsDiffusiveVacant())
         {
           theWalkMethod = &DiffusionProcess::walkVacant;
         }
@@ -174,6 +178,10 @@ public:
       theDiffusionSpecies->finalizeReactions();
       theTime += theStepInterval;
       thePriorityQueue->moveTop();
+    }
+  void collide() const
+    {
+      theDiffusionSpecies->collide();
     }
   void walk() const
     {

@@ -78,7 +78,7 @@ void HistogramLogProcess::initializeLastOnce()
   VoxelDiameter = theSpatiocyteStepper->getVoxelRadius()*2;
   Length /= VoxelDiameter;
   Radius /= VoxelDiameter;
-  binInterval = Length/Bins;
+  binInterval = Length/(Bins+1);
   initializeVectors();
 }
 
@@ -166,11 +166,38 @@ void HistogramLogProcess::saveBackup()
 
 void HistogramLogProcess::logValues()
 {
- //std::cout << "timePoint:" << timePointCnt <<  " curr:" << theSpatiocyteStepper->getCurrentTime() << std::endl;
+  if(Collision)
+    {
+      logCollision();
+    }
+  else
+    {
+      logDensity();
+    }
+}
+
+void HistogramLogProcess::logCollision()
+{
   for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
     {
       Species* aSpecies(theProcessSpecies[i]);
-      //std::cout << getIDString(aSpecies) << " " << aSpecies->size() << std::endl;
+      for(unsigned int j(0); j != aSpecies->size(); ++j)
+        {
+          unsigned int bin;
+          if(isInside(bin, aSpecies->getPoint(j)))
+            {
+              theLogValues[timePointCnt][bin][i] += 
+                aSpecies->getCollisionCnt(j);
+            }
+        }
+    }
+}
+
+void HistogramLogProcess::logDensity()
+{
+  for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
+    {
+      Species* aSpecies(theProcessSpecies[i]);
       for(unsigned int j(0); j != aSpecies->size(); ++j)
         {
           unsigned int bin;

@@ -66,6 +66,9 @@ void MicrotubuleProcess::initializeThird()
       enlistLatticeVoxels();
       isCompartmentalized = true;
     }
+  theVacantSpecies->setIsPopulated();
+  theMinusSpecies->setIsPopulated();
+  thePlusSpecies->setIsPopulated();
 }
 
 void MicrotubuleProcess::addCompVoxel(unsigned int protoIndex,
