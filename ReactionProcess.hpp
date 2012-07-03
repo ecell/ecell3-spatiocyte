@@ -69,18 +69,16 @@ public:
   virtual void fire()
     {
       const Time aCurrentTime(theTime); // do this only for the Processes in Q
-      requeue();
-      for(std::vector<ReactionProcess*>::const_iterator 
+      requeue(); //theTop in thePriorityQueue is still this process since
+      //we have not interrupted other processes to update their queue. 
+      //So it is valid to call requeue, which only requeues theTop process, 
+      //assuming it to be this process.
+      for(std::vector<SpatiocyteProcess*>::const_iterator 
           i(theInterruptingProcesses.begin());
           i!=theInterruptingProcesses.end(); ++i)
         {
           (*i)->substrateValueChanged(aCurrentTime);
         }
-    }
-  void requeue()
-    {
-      theTime += getStepInterval(); // do this only for the Processes in Q
-      thePriorityQueue->moveTop(); // do this only for the Processes in Q
     }
   GET_METHOD(Integer, Order)
     {
@@ -114,20 +112,8 @@ public:
     }
   //This method is called whenever the substrate (-1 and 0 coefficients)
   //value of the process listed in isInterrupting method has changed:
-  virtual void substrateValueChanged(Time aCurrentTime)
-    {
-      const Time anOldTime(theTime);
-      theTime = aCurrentTime + getStepInterval();
-      if(theTime >= anOldTime)
-        {
-          thePriorityQueue->moveDown(theQueueID);
-        }
-      else
-        {
-          thePriorityQueue->moveUp(theQueueID);
-        }          
-    }
-  virtual void setInterrupt(std::vector<Process*> const &aProcessList, Process* aProcess)
+  virtual void setInterrupt(std::vector<Process*> const &aProcessList,
+                            Process* aProcess)
     {
       for(std::vector<Process*>::const_iterator i(aProcessList.begin());
           i != aProcessList.end(); ++i)
@@ -135,7 +121,7 @@ public:
           if(aProcess != (*i) && isInterrupting(*i))
             {
               theInterruptingProcesses.push_back(
-                                     dynamic_cast<ReactionProcess*>(*i));
+                                     dynamic_cast<SpatiocyteProcess*>(*i));
 
             }
         }
@@ -181,7 +167,7 @@ protected:
   Variable* variableC;
   Variable* variableD;
   Variable* variableE;
-  std::vector<ReactionProcess*> theInterruptingProcesses;
+  std::vector<SpatiocyteProcess*> theInterruptingProcesses;
 };
 
 inline void ReactionProcess::calculateOrder()
@@ -278,7 +264,8 @@ bool ReactionProcess::isInterrupting(Process* aProcess)
   //List all the processes here that need to be notified when their
   //substrateValueChanged:
   if(aProcess->getPropertyInterface().getClassName() ==
-     "SpatiocyteNextReactionProcess") 
+     "SpatiocyteNextReactionProcess" ||
+     aProcess->getPropertyInterface().getClassName() == "DiffusionProcess") 
     {
       //First get the unique variable pointers of this process:
       std::vector<Variable*> aVariableList;

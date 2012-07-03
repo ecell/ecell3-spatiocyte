@@ -255,7 +255,7 @@ void DiffusionInfluencedReactionProcess::finalizeReaction()
   //The number of molecules may have changed for both reactant and product
   //species. We need to update SpatiocyteNextReactionProcesses which are
   //dependent on these species:
-  for(std::vector<ReactionProcess*>::const_iterator 
+  for(std::vector<SpatiocyteProcess*>::const_iterator 
       i(theInterruptingProcesses.begin());
       i!=theInterruptingProcesses.end(); ++i)
     {

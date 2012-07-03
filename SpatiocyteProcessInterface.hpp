@@ -44,7 +44,6 @@ public:
   virtual void initializeFifth() = 0;
   virtual void initializeLastOnce() = 0;
   virtual void printParameters() = 0;
-  virtual void substrateValueChanged(Time) = 0;
   virtual void setPriorityQueue(ProcessPriorityQueue* aPriorityQueue) = 0;
   virtual void setTime(Time aTime) = 0;
   virtual Time getTime() const = 0;

@@ -173,11 +173,14 @@ public:
     }
   virtual void fire()
     {
+      //you must requeue before diffusing and reacting the molecules
+      //because requeue calls the moveTop method and the moveTop method
+      //becomes invalid once other processes are requeued by 
+      //substrateValueChanged in DiffusionInfluencedReactionProcess:
+      requeue();
       theDiffusionSpecies->resetFinalizeReactions();
       (this->*theWalkMethod)();
       theDiffusionSpecies->finalizeReactions();
-      theTime += theStepInterval;
-      thePriorityQueue->moveTop();
     }
   void collide() const
     {
@@ -195,27 +198,13 @@ public:
     {
       theDiffusionSpecies->addInterruptedProcess(this);
     }
-  virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule)
+  virtual GET_METHOD(Real, StepInterval)
     {
-      if(theStepInterval == libecs::INF)
+      if(theDiffusionSpecies->size())
         {
-          theStepInterval = theDiffusionSpecies->getDiffusionInterval();
-          theTime = theSpatiocyteStepper->getCurrentTime() + theStepInterval; 
-          thePriorityQueue->move(theQueueID);
+          return theStepInterval;
         }
-    }
-  virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule)
-    {
-      if(theStepInterval != libecs::INF)
-        {
-          if(theDiffusionSpecies->size())
-            {
-              return;
-            }
-          theStepInterval = libecs::INF;
-          theTime = theStepInterval; 
-          thePriorityQueue->move(theQueueID);
-        }
+      return libecs::INF;
     }
 protected:
   double D;

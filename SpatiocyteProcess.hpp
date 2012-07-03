@@ -60,7 +60,6 @@ public:
   virtual void initializeFifth() {}
   virtual void initializeLastOnce() {}
   virtual void printParameters() {}
-  virtual void substrateValueChanged(Time) {}
   virtual void initialize()
     {
       if(isInitialized)
@@ -103,6 +102,11 @@ public:
             }
         }
     }
+  void requeue()
+    {
+      theTime += getStepInterval(); // do this only for the Processes in Q
+      thePriorityQueue->moveTop(); // do this only for the Processes in Q
+    }
   virtual GET_METHOD(Real, StepInterval)
     {
       return theStepInterval;
@@ -127,11 +131,24 @@ public:
     {
       theQueueID = anID;
     }
-  virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
-  virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
   Species* id2species(unsigned short id)
     {
       return theSpatiocyteStepper->id2species(id);
+    }
+  virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
+  virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
+  virtual void substrateValueChanged(Time aCurrentTime)
+    {
+      const Time anOldTime(theTime);
+      theTime = aCurrentTime + getStepInterval();
+      if(theTime > anOldTime)
+        {
+          thePriorityQueue->moveDown(theQueueID);
+        }
+      else if(theTime < anOldTime)
+        {
+          thePriorityQueue->moveUp(theQueueID);
+        }          
     }
 protected:
   String getIDString(Voxel*) const;

@@ -103,7 +103,8 @@ public:
     {
       std::ostringstream aFilename;
       aFilename << FileName << std::ends;
-      theLogFile.open(aFilename.str().c_str(), std::ios::binary | std::ios::trunc);
+      theLogFile.open(aFilename.str().c_str(), std::ios::binary |
+                      std::ios::trunc);
       initializeLog();
       logSurfaceVoxels();
       logSpecies();

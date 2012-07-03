@@ -75,8 +75,11 @@ System System(/Surface)
     }
   Process DiffusionProcess( diff )
     {
-      VariableReferenceList [_ Variable:/Surface:MinD1]
-                            [_ Variable:/:MinD1];
+      VariableReferenceList [_ Variable:/Surface:MinD1];
+    }
+  Process DiffusionProcess( diff1 )
+    {
+      VariableReferenceList [_ Variable:/:MinD1];
     }
   Process MassActionProcess( ES_to_E_P )
     {
@@ -152,14 +155,22 @@ System System(/Surface)
     }
   Process DiffusionProcess(diffpe)
     {
-      VariableReferenceList   [_ Variable:/Surface:MinDpe]
-                              [_ Variable:/Surface:PE -1];
+      VariableReferenceList   [_ Variable:/Surface:MinDpe];
+      D 0.02e-12; 
+    }
+  Process DiffusionProcess(diffpea)
+    {
+      VariableReferenceList [_ Variable:/Surface:PE -1];
       D 0.02e-12; 
     }
   Process DiffusionProcess(diffpg)
     {
       VariableReferenceList   [_ Variable:/Surface:MinDpg]
-                              [_ Variable:/Surface:PG -1];
+      D 0.02e-12; 
+    }
+  Process DiffusionProcess(diffpg1)
+    {
+      VariableReferenceList [_ Variable:/Surface:PG -1];
       D 0.02e-12; 
     }
   Process SpatiocyteNextReactionProcess(pg2)
