@@ -66,7 +66,14 @@ void SpatiocyteNextReactionProcess::fire()
       //nonHD_A -> nonHD_C + nonHD_D:
       if(A && C && D)
         {
-          if(!reactACD(A, C, D))
+          if(BindingSite == -1)
+            {
+              if(!reactACD(A, C, D))
+                {
+                  return;
+                }
+            }
+          else if(!reactACDbind(A, C, D))
             {
               return;
             }
@@ -477,6 +484,33 @@ bool SpatiocyteNextReactionProcess::reactACbind(Species* a, Species* c)
       //of nonND which can be occupied by C:
       requeue();
       return false;
+    }
+  a->removeMolecule(moleculeA);
+  c->addMolecule(moleculeC);
+  return true;
+}
+
+//nonHD(a) -> nonHD(c[BindingSite]) if vacant[BindingSite]
+//else if BindingSite is not vacant:
+//nonHD(a) -> nonHD(d)
+bool SpatiocyteNextReactionProcess::reactACDbind(Species* a, Species* c,
+                                                 Species* d)
+{
+  Voxel* moleculeA(a->getRandomMolecule());
+  Voxel* moleculeC(NULL);
+  moleculeC = c->getBindingSiteAdjoiningVoxel(moleculeA, BindingSite);
+  if(moleculeC == NULL)
+    {
+      Voxel* moleculeD(NULL);
+      moleculeD = d->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
+      if(moleculeD == NULL)
+        {
+          requeue();
+          return false;
+        }
+      a->removeMolecule(moleculeA);
+      d->addMolecule(moleculeD);
+      return true;
     }
   a->removeMolecule(moleculeA);
   c->addMolecule(moleculeC);

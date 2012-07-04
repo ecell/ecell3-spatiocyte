@@ -155,6 +155,7 @@ protected:
   String getIDString(Species*) const;
   String getIDString(Variable*) const;
   String getIDString(Comp*) const;
+  String getIDString(unsigned int) const;
 protected:
   bool isInitialized;
   int thePriority;
