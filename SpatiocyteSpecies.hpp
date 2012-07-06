@@ -26,6 +26,7 @@
 
 #include <sstream>
 #include <Variable.hpp>
+#include <gsl/gsl_randist.h>
 #include "SpatiocyteCommon.hpp"
 #include "SpatiocyteStepper.hpp"
 #include "SpatiocyteProcessInterface.hpp"
@@ -611,9 +612,15 @@ public:
   void walkVacant()
     {
       updateVacantMolecules();
+      unsigned int index[theMoleculeSize];
+      for(unsigned int i(0); i != theMoleculeSize; ++i)
+        {
+          index[i] = i;
+        }
+      gsl_ran_shuffle(theRng, index, theMoleculeSize, sizeof(unsigned int));
       for(unsigned int i(0); i < theMoleculeSize; ++i)
         {
-          Voxel* source(theMolecules[i]);
+          Voxel* source(theMolecules[index[i]]);
           int size;
           if(isFixedAdjoins)
             {
