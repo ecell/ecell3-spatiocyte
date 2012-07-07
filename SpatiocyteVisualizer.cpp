@@ -632,8 +632,13 @@ void GLScene::on_realize()
       GLfloat LightPosition[]= { theLayerSize/2, theRowSize/2, theColSize, 1 };
       glLightfv(GL_LIGHT0, GL_AMBIENT, LightAmbient);
       glLightfv(GL_LIGHT0, GL_DIFFUSE, LightDiffuse);
-      glLightfv(GL_LIGHT0, GL_POSITION, LightPosition);
+      //glLightfv(GL_LIGHT0, GL_POSITION, LightPosition);
       glEnable(GL_LIGHT0);
+      /*
+      GLfloat   whiteSpecular[] = { 1.0, 1.0, 1.0, 1.0 };
+      glMaterialfv( GL_FRONT, GL_SPECULAR, whiteSpecular );
+      glMaterialf( GL_FRONT, GL_SHININESS, 50.0 );
+      */
     }
   GLUquadricObj* qobj = gluNewQuadric();
   gluQuadricDrawStyle(qobj, GLU_FILL);
@@ -670,10 +675,13 @@ bool GLScene::on_expose_event(GdkEventExpose* event)
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   if(show3DMolecule)
     {
+      glEnable(GL_LIGHTING);
+      glEnable(GL_LIGHT0);
       (this->*thePlot3DFunction)();
     }
   else
     { 
+      glDisable(GL_LIGHTING);
       (this->*thePlotFunction)();
     }
   if(showTime)
