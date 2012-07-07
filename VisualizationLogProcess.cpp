@@ -111,18 +111,17 @@ void VisualizationLogProcess::initializeLog()
 void VisualizationLogProcess::logMolecules(int anIndex)
 {
   Species* aSpecies(theLatticeSpecies[anIndex]);
-  //No need to log lipid or vacant molecules since we have
+  //No need to log lipid or non diffusing vacant molecules since we have
   //already logged them once during initialization:
+  if(aSpecies->getIsCompVacant())
+    {
+      return;
+    }
+  //The remaining vacant molecules must be diffusive, so we need to update
+  //them before logging their position:
   if(aSpecies->getIsVacant())
     {
-      if(aSpecies->getIsDiffusiveVacant() || aSpecies->getIsReactiveVacant())
-        {
-          aSpecies->updateMolecules();
-        }
-      else
-        {
-          return;
-        }
+      aSpecies->updateMolecules();
     }
   theLogFile.write((char*)(&anIndex), sizeof(anIndex));
   //The species molecule size:
@@ -273,7 +272,7 @@ void VisualizationLogProcess::logSpecies()
   theLogFile.seekp(aCurrentPos);
 }
 
-void VisualizationLogProcess::logSurfaceVoxels()
+void VisualizationLogProcess::logCompVacant()
 {
   double aCurrentTime(theSpatiocyteStepper->getCurrentTime());
   theStepStartPos = theLogFile.tellp();
@@ -286,7 +285,7 @@ void VisualizationLogProcess::logSurfaceVoxels()
   theLogFile.write((char*)(&aCurrentTime), sizeof(aCurrentTime));
   for(unsigned int i(0); i != theLatticeSpecies.size(); ++i)
     {
-      if(theLatticeSpecies[i]->getIsVacant())
+      if(theLatticeSpecies[i]->getIsCompVacant())
         {
           Species* aVacantSpecies(theLatticeSpecies[i]);
           //The species index in the process:
@@ -305,15 +304,18 @@ void VisualizationLogProcess::logSurfaceVoxels()
   theLogFile.write((char*)(&theLogMarker), sizeof(theLogMarker));
   for(unsigned int i(0); i != theOffLatticeSpecies.size(); ++i)
     {
-      Species* aSpecies(theOffLatticeSpecies[i]);
-      theLogFile.write((char*)(&i), sizeof(i));
-      //The species molecule size:
-      int aSize(aSpecies->size());
-      theLogFile.write((char*)(&aSize), sizeof(aSize)); 
-      for(int i(0); i != aSize; ++i)
+      if(theOffLatticeSpecies[i]->getIsCompVacant())
         {
-          Point aPoint(aSpecies->getPoint(i));
-          theLogFile.write((char*)(&aPoint), sizeof(aPoint));
+          Species* aSpecies(theOffLatticeSpecies[i]);
+          theLogFile.write((char*)(&i), sizeof(i));
+          //The species molecule size:
+          int aSize(aSpecies->size());
+          theLogFile.write((char*)(&aSize), sizeof(aSize)); 
+          for(int i(0); i != aSize; ++i)
+            {
+              Point aPoint(aSpecies->getPoint(i));
+              theLogFile.write((char*)(&aPoint), sizeof(aPoint));
+            }
         }
     }
   theLogFile.write((char*)(&theLogMarker), sizeof(theLogMarker));

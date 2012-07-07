@@ -343,6 +343,9 @@ public:
     {
       theInitMoleculeSize = theMoleculeSize;
       getVariable()->setValue(theMoleculeSize);
+    }
+  void finalizeSpecies()
+    {
       if(theCollision)
         {
           collisionCnts.resize(theMoleculeSize);
@@ -352,9 +355,18 @@ public:
               *i = 0;
             }
         }
-      if(isDiffusiveVacant)
+      //need to shuffle molecules of the compVacant species if it has
+      //diffusing vacant species to avoid bias when random walking:
+      if(isCompVacant)
         {
-          theVacantSpecies->shuffleMolecules();
+          for(unsigned int i(0); i != theComp->species.size(); ++i)
+            {
+              if(theComp->species[i]->getIsDiffusiveVacant())
+                {
+                  shuffleMolecules();
+                  break;
+                }
+            }
         }
     }
   void shuffleMolecules()
@@ -445,7 +457,7 @@ public:
     }
   bool getIsVacant() const
     {
-      return isCompVacant;
+      return isVacant;
     }
   bool getIsDiffusiveVacant()
     {

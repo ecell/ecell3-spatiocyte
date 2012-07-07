@@ -95,10 +95,21 @@ void SpatiocyteStepper::initialize()
   initProcessFifth();
   std::cout << "15. initializing processes the last time..." << std::endl;
   initProcessLastOnce();
-  std::cout << "16. printing final process parameters..." << std::endl <<
+  std::cout << "16. finalizing species..." << std::endl;
+  finalizeSpecies();
+  std::cout << "17. printing final process parameters..." << std::endl <<
     std::endl;
   printProcessParameters();
-  std::cout << "17. simulation is started..." << std::endl;
+  std::cout << "18. simulation is started..." << std::endl;
+}
+
+void SpatiocyteStepper::finalizeSpecies()
+{
+  for(std::vector<Species*>::iterator i(theSpecies.begin());
+      i != theSpecies.end(); ++i)
+    {
+      (*i)->finalizeSpecies();
+    }
 }
 
 void SpatiocyteStepper::updateSpecies()
@@ -156,6 +167,7 @@ void SpatiocyteStepper::reset(int seed)
   initProcessFourth();
   initPriorityQueue();
   initProcessFifth();
+  finalizeSpecies();
   //checkLattice();
 }
 

@@ -149,7 +149,7 @@ public:
       aFilename << FileName << std::ends;
       theLogFile.open(aFilename.str().c_str(), std::ios::binary | std::ios::trunc);
       initializeLog();
-      logSurfaceVoxels();
+      logCompVacant();
     }
   virtual void fire()
     {

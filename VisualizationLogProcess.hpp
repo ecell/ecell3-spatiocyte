@@ -106,7 +106,7 @@ public:
       theLogFile.open(aFilename.str().c_str(), std::ios::binary |
                       std::ios::trunc);
       initializeLog();
-      logSurfaceVoxels();
+      logCompVacant();
       logSpecies();
     }
   virtual void fire()
@@ -134,7 +134,7 @@ public:
     }
 protected:
   virtual void initializeLog();
-  virtual void logSurfaceVoxels();
+  virtual void logCompVacant();
   void logSpecies();
   void logMolecules(int);
   void logSourceMolecules(int);
