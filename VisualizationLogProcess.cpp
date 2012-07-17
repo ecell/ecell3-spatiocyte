@@ -34,9 +34,7 @@ LIBECS_DM_INIT(VisualizationLogProcess, Process);
 
 void VisualizationLogProcess::initializeLog()
 {
-  unsigned int aThreadSize(1);
   unsigned int aLatticeType(theSpatiocyteStepper->getLatticeType());
-  theLogFile.write((char*)(&aThreadSize), sizeof(aThreadSize));
   theLogFile.write((char*)(&aLatticeType), sizeof(aLatticeType));
   theLogFile.write((char*)(&theMeanCount), sizeof(theMeanCount));
   unsigned int aStartCoord(theSpatiocyteStepper->getStartCoord());
@@ -95,17 +93,6 @@ void VisualizationLogProcess::initializeLog()
       double aRadius(theOffLatticeSpecies[i]->getRadius());
       theLogFile.write((char*)(&aRadius), sizeof(aRadius));
     }
-  //a, b, c are used for multithreaded simulation which is
-  //not implemented yet.
-  //The visualizer assumes multithreaded data, so we need to initialize the 
-  //logger with the expected values for a single threaded simulation.
-  unsigned int a(aStartCoord-1);
-  unsigned int c(a+aRowSize*aLayerSize*aColSize);
-  unsigned int b(c-aRowSize*aLayerSize*0);
-  theLogFile.write((char*)(&a), sizeof(a));
-  theLogFile.write((char*)(&b), sizeof(b));
-  theLogFile.write((char*)(&c), sizeof(c));
-  theLogFile.flush();
 }
 
 void VisualizationLogProcess::logMolecules(int anIndex)
@@ -220,10 +207,6 @@ void VisualizationLogProcess::logSharedMolecules(int anIndex)
 
 void VisualizationLogProcess::logSpecies()
 {
-  int aDataSize(0);
-  std::streampos aStartPos(theLogFile.tellp());
-  // write the next size (create a temporary space for it) 
-  theLogFile.write((char*)(&aDataSize), sizeof(aDataSize));
   double aCurrentTime(theSpatiocyteStepper->getCurrentTime());
   theLogFile.write((char*)(&aCurrentTime), sizeof(aCurrentTime));
   for(unsigned int i(0); i != theLatticeSpecies.size(); ++i)
@@ -260,28 +243,11 @@ void VisualizationLogProcess::logSpecies()
     }
   //theLogMarker is a constant throughout the simulation:
   theLogFile.write((char*)(&theLogMarker), sizeof(theLogMarker));
-  aDataSize = (theLogFile.tellp()-aStartPos)-static_cast<std::streampos>(sizeof(aDataSize));
-  int aPrevDataSize(theLogFile.tellp()-theStepStartPos+static_cast<std::streampos>(sizeof(int))*2);
-  theStepStartPos = theLogFile.tellp();
-  // write the prev size at the end of this step
-  theLogFile.write((char*)(&aPrevDataSize), sizeof(aPrevDataSize));
-  std::streampos aCurrentPos(theLogFile.tellp());
-  theLogFile.seekp(aStartPos);
-  // write the next size at the beginning of this step
-  theLogFile.write((char*) (&aDataSize), sizeof(aDataSize));
-  theLogFile.seekp(aCurrentPos);
 }
 
 void VisualizationLogProcess::logCompVacant()
 {
   double aCurrentTime(theSpatiocyteStepper->getCurrentTime());
-  theStepStartPos = theLogFile.tellp();
-  // write prev pos = 0;
-  int aDataSize(sizeof(int)*2);
-  theLogFile.write((char*)(&aDataSize), sizeof(aDataSize));
-  std::streampos aStartPos(theLogFile.tellp());
-  // write the next size (create a temporary space for it) 
-  theLogFile.write((char*)(&aDataSize), sizeof(aDataSize));
   theLogFile.write((char*)(&aCurrentTime), sizeof(aCurrentTime));
   for(unsigned int i(0); i != theLatticeSpecies.size(); ++i)
     {
@@ -319,14 +285,4 @@ void VisualizationLogProcess::logCompVacant()
         }
     }
   theLogFile.write((char*)(&theLogMarker), sizeof(theLogMarker));
-  aDataSize = (theLogFile.tellp()-aStartPos)-static_cast<std::streampos>(sizeof(aDataSize)); 
-  int aPrevDataSize(theLogFile.tellp()-theStepStartPos+static_cast<std::streampos>(sizeof(int))*2);
-  theStepStartPos = theLogFile.tellp();
-  // write the prev size at the end of this step
-  theLogFile.write((char*)(&aPrevDataSize), sizeof(aPrevDataSize));
-  std::streampos aCurrentPos(theLogFile.tellp());
-  theLogFile.seekp(aStartPos);
-  // write the next size at the beginning of this step
-  theLogFile.write((char*)(&aDataSize), sizeof(aDataSize));
-  theLogFile.seekp(aCurrentPos);
 }

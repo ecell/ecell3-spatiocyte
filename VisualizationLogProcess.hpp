@@ -108,6 +108,7 @@ public:
       initializeLog();
       logCompVacant();
       logSpecies();
+      theLogFile.flush();
     }
   virtual void fire()
     {

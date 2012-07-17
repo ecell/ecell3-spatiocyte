@@ -122,7 +122,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   show3DMolecule(false),
   showTime(true),
   startRecord(false),
-  m_stepCnt(0),
+  m_stepCnt(-1),
   theMeanCoordSize(0),
   thePngNumber(1),
   theResetTime(0),
@@ -132,37 +132,24 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   theRotateAngle(5.0)
 {
   add_events(Gdk::VISIBILITY_NOTIFY_MASK); 
-  
-  std::ostringstream aParentFileName;
-  aParentFileName << aBaseName << std::ends;
-  std::ifstream aParentFile(aParentFileName.str().c_str(),
-                            std::ios::binary );
-  aParentFile.read((char *)(&theThreadSize), sizeof(unsigned int));
-  aParentFile.close();
-  theFile = new std::ifstream*[theThreadSize];
-  for(unsigned int i(0); i!=theThreadSize; ++i)
-    {
-      std::ostringstream aFileName;
-      aFileName << aBaseName << std::ends;
-      theFile[i] = 
-        new std::ifstream( aFileName.str().c_str(), std::ios::binary );
-    }
-  theFile[0]->read((char*) (&theThreadSize), sizeof(theThreadSize));
-  theFile[0]->read((char*) (&theLatticeType), sizeof(theLatticeType));
-  theFile[0]->read((char*) (&theMeanCount), sizeof(theMeanCount));
-  theFile[0]->read((char*) (&theStartCoord), sizeof(theStartCoord));
-  theFile[0]->read((char*) (&theRowSize), sizeof(theRowSize));
-  theFile[0]->read((char*) (&theLayerSize), sizeof(theLayerSize));
-  theFile[0]->read((char*) (&theColSize), sizeof(theColSize));
-  theFile[0]->read((char*) (&theRealRowSize), sizeof(theRealRowSize));
-  theFile[0]->read((char*) (&theRealLayerSize), sizeof(theRealLayerSize));
-  theFile[0]->read((char*) (&theRealColSize), sizeof(theRealColSize));
-  theFile[0]->read((char*) (&theLatticeSpSize), sizeof(theLatticeSpSize));
-  theFile[0]->read((char*) (&thePolymerSize), sizeof(thePolymerSize));
-  theFile[0]->read((char*) (&theReservedSize), sizeof(theReservedSize));
-  theFile[0]->read((char*) (&theOffLatticeSpSize), sizeof(theOffLatticeSpSize));
-  theFile[0]->read((char*) (&theLogMarker), sizeof(theLogMarker));
-  theFile[0]->read((char*) (&theVoxelRadius), sizeof(theVoxelRadius));
+  std::ostringstream aFileName;
+  aFileName << aBaseName << std::ends;
+  theFile.open( aFileName.str().c_str(), std::ios::binary );
+  theFile.read((char*) (&theLatticeType), sizeof(theLatticeType));
+  theFile.read((char*) (&theMeanCount), sizeof(theMeanCount));
+  theFile.read((char*) (&theStartCoord), sizeof(theStartCoord));
+  theFile.read((char*) (&theRowSize), sizeof(theRowSize));
+  theFile.read((char*) (&theLayerSize), sizeof(theLayerSize));
+  theFile.read((char*) (&theColSize), sizeof(theColSize));
+  theFile.read((char*) (&theRealRowSize), sizeof(theRealRowSize));
+  theFile.read((char*) (&theRealLayerSize), sizeof(theRealLayerSize));
+  theFile.read((char*) (&theRealColSize), sizeof(theRealColSize));
+  theFile.read((char*) (&theLatticeSpSize), sizeof(theLatticeSpSize));
+  theFile.read((char*) (&thePolymerSize), sizeof(thePolymerSize));
+  theFile.read((char*) (&theReservedSize), sizeof(theReservedSize));
+  theFile.read((char*) (&theOffLatticeSpSize), sizeof(theOffLatticeSpSize));
+  theFile.read((char*) (&theLogMarker), sizeof(theLogMarker));
+  theFile.read((char*) (&theVoxelRadius), sizeof(theVoxelRadius));
   unsigned int aSourceSize(thePolymerSize);
   unsigned int aTargetSize(thePolymerSize);
   unsigned int aSharedSize(thePolymerSize);
@@ -185,14 +172,14 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   for(unsigned int i(0); i!=theLatticeSpSize; ++i)
     {
       unsigned int aStringSize;
-      theFile[0]->read((char*) (&aStringSize), sizeof(aStringSize));
+      theFile.read((char*) (&aStringSize), sizeof(aStringSize));
       theSpeciesNameList[i] = new char[aStringSize];
       char* buffer;
       buffer = new char[aStringSize+1];
-      theFile[0]->read(buffer, aStringSize);
+      theFile.read(buffer, aStringSize);
       buffer[aStringSize] = '\0';
       sscanf(buffer, "Variable:%s", theSpeciesNameList[i]);
-      theFile[0]->read((char*) (&theRadii[i]), sizeof(theRadii[i]));
+      theFile.read((char*) (&theRadii[i]), sizeof(theRadii[i]));
       std::cout << theSpeciesNameList[i] << " radius:" <<
         theRadii[i] << std::endl;
     }
@@ -205,11 +192,11 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   for(unsigned int i(theLatticeSpSize); i!=theLatticeSpSize+thePolymerSize; ++i)
     {
       unsigned int aPolySpeciesIndex;
-      theFile[0]->read((char*) (&aPolySpeciesIndex), sizeof(aPolySpeciesIndex));
+      theFile.read((char*) (&aPolySpeciesIndex), sizeof(aPolySpeciesIndex));
       thePolySpeciesList.push_back(aPolySpeciesIndex);
       theSpeciesNameList[i] = new char[20];
       sprintf(theSpeciesNameList[i], "source");
-      theFile[0]->read((char*) (&theRadii[i]), sizeof(theRadii[i]));
+      theFile.read((char*) (&theRadii[i]), sizeof(theRadii[i]));
       theSpeciesNameList[thePolymerSize+i] = new char[20];
       sprintf(theSpeciesNameList[thePolymerSize+i], "target");
       theRadii[thePolymerSize+i] = theRadii[i];
@@ -234,14 +221,14 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
       ++i)
     {
       unsigned int aStringSize;
-      theFile[0]->read((char*) (&aStringSize), sizeof(aStringSize));
+      theFile.read((char*) (&aStringSize), sizeof(aStringSize));
       theSpeciesNameList[i] = new char[aStringSize];
       char* buffer;
       buffer = new char[aStringSize+1];
-      theFile[0]->read(buffer, aStringSize);
+      theFile.read(buffer, aStringSize);
       buffer[aStringSize] = '\0';
       sscanf(buffer, "Variable:%s", theSpeciesNameList[i]);
-      theFile[0]->read((char*) (&theRadii[i]), sizeof(theRadii[i]));
+      theFile.read((char*) (&theRadii[i]), sizeof(theRadii[i]));
       std::cout << theSpeciesNameList[i] << " radius:" <<
         theRadii[i] << std::endl;
     }
@@ -249,15 +236,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
     {
       theRadii[i] /= theVoxelRadius*2;
     }
-
   theOriCol = theStartCoord/(theRowSize*theLayerSize);
-  theRegionSep = new unsigned int[theThreadSize*3*2];
-  for(unsigned int i(0); i!=theThreadSize*3; ++i)
-    {
-      theFile[0]->read((char*) (&theRegionSep[i]), sizeof(unsigned int));
-      theRegionSep[i] = theRegionSep[i]/(theRowSize*theLayerSize)-
-        theOriCol;
-    }
   theSpeciesColor = new Color[theTotalSpeciesSize];
   theSpeciesVisibility = new bool[theTotalSpeciesSize];
   theSpeciesVisibility = new bool[theTotalSpeciesSize];
@@ -267,54 +246,34 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   theYLowBound = new unsigned int[theTotalSpeciesSize];
   theZUpBound = new unsigned int[theTotalSpeciesSize];
   theZLowBound = new unsigned int[theTotalSpeciesSize];
-  theMoleculeSize = new unsigned int*[theThreadSize];
-  theOffLatticeMoleculeSize = new unsigned int*[theThreadSize];
-  theCoords = new unsigned int**[theThreadSize];
-  theMeanCoords = new unsigned int*[theThreadSize];
-  theFrequency = new unsigned int**[theThreadSize];
-  thePoints = new Point**[theThreadSize];
-  for(unsigned int i(0); i!=theThreadSize; ++i)
+  theCoords = new unsigned int*[theTotalLatticeSpSize];
+  theMeanCoords = new unsigned int[1];
+  theFrequency = new unsigned int*[theLatticeSpSize];
+  theMoleculeSize = new unsigned int[theTotalLatticeSpSize];
+  for(unsigned int j(0); j!=theTotalLatticeSpSize; ++j)
     {
-      theCoords[i] = new unsigned int*[theTotalLatticeSpSize];
-      theMeanCoords[i] = new unsigned int[1];
-      theFrequency[i] = new unsigned int*[theLatticeSpSize];
-      theMoleculeSize[i] = new unsigned int[theTotalLatticeSpSize];
-      for(unsigned int j(0); j!=theTotalLatticeSpSize; ++j)
-        {
-          theSpeciesVisibility[j] = true; 
-          theXUpBound[j] = 0;
-          theXLowBound[j] = 0;
-          theYUpBound[j] = theLayerSize;
-          theYLowBound[j] = 0;
-          theZUpBound[j] = theRowSize;
-          theZLowBound[j] = 0;
-          theMoleculeSize[i][j] = 0;
-          theCoords[i][j] = new unsigned int[1];
-        }
-      for(unsigned int j(0); j!=theLatticeSpSize; ++j )
-        {
-          theFrequency[i][j] = new unsigned int[1];
-        }
-      thePoints[i] = new Point*[theTotalOffLatticeSpSize];
-      theOffLatticeMoleculeSize[i] = new unsigned int[theTotalOffLatticeSpSize];
-      for(unsigned int j(0); j!=theTotalOffLatticeSpSize; ++j )
-        {
-          theSpeciesVisibility[theTotalLatticeSpSize+j] = true;
-          theOffLatticeMoleculeSize[i][j] = 0;
-          thePoints[i][j] = new Point[1];
-        }
+      theSpeciesVisibility[j] = true; 
+      theXUpBound[j] = 0;
+      theXLowBound[j] = 0;
+      theYUpBound[j] = theLayerSize;
+      theYLowBound[j] = 0;
+      theZUpBound[j] = theRowSize;
+      theZLowBound[j] = 0;
+      theMoleculeSize[j] = 0;
+      theCoords[j] = new unsigned int[1];
     }
-  /*
-  for( unsigned int i(0); i!=theLatticeSpSize; ++i )
+  for(unsigned int j(0); j!=theLatticeSpSize; ++j )
     {
-      if(std::find(thePolySpeciesList.begin(),
-                   thePolySpeciesList.end(), i) == 
-         thePolySpeciesList.end())
-        {
-          theSpeciesVisibility[i] = true;
-        }
+      theFrequency[j] = new unsigned int[1];
     }
-    */
+  thePoints = new Point*[theTotalOffLatticeSpSize];
+  theOffLatticeMoleculeSize = new unsigned int[theTotalOffLatticeSpSize];
+  for(unsigned int j(0); j!=theTotalOffLatticeSpSize; ++j )
+    {
+      theSpeciesVisibility[theTotalLatticeSpSize+j] = true;
+      theOffLatticeMoleculeSize[j] = 0;
+      thePoints[j] = new Point[1];
+    }
   double hueInterval(1.0/double(theLatticeSpSize+theOffLatticeSpSize));
   double speciesLuminosity(0.4);
   double sourceLuminosity(0.6);
@@ -375,21 +334,13 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
               &theSpeciesColor[i].b); 
       theSpeciesVisibility[i] = false;
     }
-
-  std::cout << "thread:" << theThreadSize <<  " row:" << theRowSize <<
-    " col:" << theColSize  << " layer:" << theLayerSize << " marker:" <<
+  std::cout << "row:" << theRowSize << " col:" << theColSize  <<
+    " layer:" << theLayerSize << " marker:" <<
     theLogMarker << std::endl << std::flush;
-  theFile[0]->read((char*) (&thePrevSize), sizeof(thePrevSize));
-  theFile[0]->read((char*) (&theNextSize), sizeof(theNextSize));
-  //load the surface coordinates:
-  loadCoords();
+  std::streampos aStreamPos;
+  loadCoords(aStreamPos);
   theOriRow = 0;
   theOriLayer = 0;
-  /*
-  theColSize = 5;
-  theRowSize = 4;
-  theLayerSize = 3;
-  */
   theRadius = 0.5;
   switch(theLatticeType)
     {
@@ -629,7 +580,7 @@ void GLScene::on_realize()
       glEnable(GL_LIGHTING);
       GLfloat LightAmbient[]= { 0.8, 0.8, 0.8, 1 }; 
       GLfloat LightDiffuse[]= { 1, 1, 1, 1 };
-      GLfloat LightPosition[]= { theLayerSize/2, theRowSize/2, theColSize, 1 };
+      //GLfloat LightPosition[]= { theLayerSize/2, theRowSize/2, theColSize, 1 };
       glLightfv(GL_LIGHT0, GL_AMBIENT, LightAmbient);
       glLightfv(GL_LIGHT0, GL_DIFFUSE, LightDiffuse);
       //glLightfv(GL_LIGHT0, GL_POSITION, LightPosition);
@@ -830,147 +781,194 @@ bool GLScene::on_configure_event(GdkEventConfigure* event)
   return true;
 }
 
-void GLScene::loadCoords()
+bool GLScene::loadCoords(std::streampos& aStreamPos)
 {
-  for(unsigned int i(0); i!=theThreadSize; ++i)
+  aStreamPos = theFile.tellg();
+  if(theFile.read((char*) (&theCurrentTime), sizeof(theCurrentTime)).fail())
     {
-      if(theFile[i]->eof() != true)
+      return false;
+    }
+  unsigned int anIndex;
+  // Get the species index
+  if(theFile.read((char*) (&anIndex), sizeof(anIndex)).fail())
+    {
+      return false;
+    }
+  while(anIndex != theLogMarker)
+    {
+      unsigned int aMoleculeSize(0);
+      if(theFile.read((char*) (&aMoleculeSize), sizeof(unsigned int)).fail())
         {
-          theFile[i]->read((char*) (&theCurrentTime), sizeof(theCurrentTime));
-          unsigned int anIndex;
-          // Get the species index
-          theFile[i]->read((char*) (&anIndex), sizeof(anIndex));
-          while( anIndex != theLogMarker && theFile[i]->eof() != true )
-            { 
-              // Get the number of molecules for the species
-              if( theMoleculeSize[i][anIndex] != 0 )
-                {
-                  delete []theCoords[i][anIndex];
-                }
-              theFile[i]->read((char*) (&theMoleculeSize[i][anIndex]),
-                               sizeof(unsigned int));
-              if( theMoleculeSize[i][anIndex] != 0 )
-                {
-                  theCoords[i][anIndex] = 
-                    new unsigned int[theMoleculeSize[i][anIndex]];
-                  theFile[i]->read((char*) (theCoords[i][anIndex]), 
-                         sizeof(unsigned int)*theMoleculeSize[i][anIndex]);
-                }
-              theFile[i]->read((char*) (&anIndex), sizeof(anIndex));
+          return false;
+        }
+      unsigned int aCoords[aMoleculeSize];
+      if(aMoleculeSize)
+        {
+          if(theFile.read((char*) (aCoords), 
+                          sizeof(unsigned int)*aMoleculeSize).fail())
+            {
+              return false;
             }
-          theFile[i]->read((char*) (&anIndex), sizeof(anIndex));
-          while( anIndex != theLogMarker && theFile[i]->eof() != true )
-            { 
-              // Get the number of molecules for the species
-              if(theOffLatticeMoleculeSize[i][anIndex] != 0 )
-                {
-                  delete []thePoints[i][anIndex];
-                }
-              theFile[i]->read((char*) (&theOffLatticeMoleculeSize[i][anIndex]),
-                               sizeof(unsigned int));
-              if( theOffLatticeMoleculeSize[i][anIndex] != 0 )
-                {
-                  thePoints[i][anIndex] = 
-                    new Point[theOffLatticeMoleculeSize[i][anIndex]];
-                  theFile[i]->read((char*) (thePoints[i][anIndex]), 
-                       sizeof(Point)*theOffLatticeMoleculeSize[i][anIndex]);
-                }
-              theFile[i]->read((char*) (&anIndex), sizeof(anIndex));
-            }
-          theFile[i]->read((char*) (&thePrevSize), sizeof(int));
-          theFile[i]->read((char*) (&theNextSize), sizeof(int));
+        }
+      if(theMoleculeSize[anIndex])
+        {
+          delete []theCoords[anIndex];
+        }
+      theMoleculeSize[anIndex] = aMoleculeSize;
+      theCoords[anIndex] = new unsigned int[aMoleculeSize];
+      for(unsigned int j(0); j != aMoleculeSize; ++j)
+        {
+          theCoords[anIndex][j] = aCoords[j];
+        }
+      if(theFile.read((char*) (&anIndex), sizeof(anIndex)).fail())
+        {
+          return false;
         }
     }
+  if(theFile.read((char*) (&anIndex), sizeof(anIndex)).fail())
+    {
+      return false;
+    }
+  while(anIndex != theLogMarker)
+    { 
+      unsigned int aMoleculeSize(0);
+      if(theFile.read((char*) (&aMoleculeSize), sizeof(unsigned int)).fail())
+        {
+          return false;
+        }
+      Point aPoints[aMoleculeSize];
+      if(aMoleculeSize)
+        { 
+          if(theFile.read((char*) (aPoints),
+                          sizeof(Point)*aMoleculeSize).fail())
+            {
+              return false;
+            }
+        }
+      if(theOffLatticeMoleculeSize[anIndex])
+        {
+          delete []thePoints[anIndex];
+        }
+      theOffLatticeMoleculeSize[anIndex] = aMoleculeSize;
+      thePoints[anIndex] = new Point[aMoleculeSize];
+      for(unsigned int j(0); j != aMoleculeSize; ++j)
+        {
+          thePoints[anIndex][j] = aPoints[j];
+        }
+      if(theFile.read((char*) (&anIndex), sizeof(anIndex)).fail())
+        {
+          return false;
+        }
+    }
+  ++m_stepCnt;
+  if(m_stepCnt > theStreamPosList.size())
+    {
+      theStreamPosList.push_back(aStreamPos);
+    }
+  return true;
 }
 
-void GLScene::loadMeanCoords()
+bool GLScene::loadMeanCoords(std::streampos& aStreamPos)
 {
-  for(unsigned int i(0); i!=theThreadSize; ++i)
+  aStreamPos = theFile.tellg();
+  if(theFile.read((char*) (&theCurrentTime), sizeof(theCurrentTime)).fail())
     {
-      if(theFile[i]->eof() != true)
+      return false;
+    }
+  unsigned int aMoleculeSize(0);
+  if(theFile.read((char*) (&aMoleculeSize), sizeof(aMoleculeSize)).fail())
+    {
+      return false;
+    }
+  unsigned int aCoords[aMoleculeSize];
+  if(theFile.read((char*) (aCoords), sizeof(unsigned int)*aMoleculeSize).fail())
+    {
+      return false;
+    }
+  delete []theMeanCoords;
+  theMeanCoordSize = aMoleculeSize;
+  theMeanCoords = new unsigned int[aMoleculeSize];
+  for(unsigned int j(0); j != aMoleculeSize; ++j)
+    {
+      theMeanCoords[j] = aCoords[j];
+    }
+  for(unsigned int j(0); j != theLatticeSpSize; ++j)
+    {
+      delete []theFrequency[j];
+      theFrequency[j] = new unsigned int[theMeanCoordSize];
+      if(theFile.read((char*) (theFrequency[j]), 
+                      sizeof(unsigned int)*theMeanCoordSize).fail())
         {
-          theFile[i]->read((char*) (&theCurrentTime), sizeof(theCurrentTime));
-          theFile[i]->read((char*) (&theMeanCoordSize),
-                           sizeof(theMeanCoordSize));
-          delete []theMeanCoords[i];
-          theMeanCoords[i] = new unsigned int[theMeanCoordSize];
-          theFile[i]->read((char*) (theMeanCoords[i]), 
-                           sizeof(unsigned int)*theMeanCoordSize);
-          for(unsigned int j(0); j != theLatticeSpSize; ++j)
-            {
-              delete []theFrequency[i][j];
-              theFrequency[i][j] = new unsigned int[theMeanCoordSize];
-              theFile[i]->read((char*) (theFrequency[i][j]), 
-                               sizeof(unsigned int)*theMeanCoordSize);
-            }
-          theFile[i]->read((char*) (&thePrevSize), sizeof(int));
-          theFile[i]->read((char*) (&theNextSize), sizeof(int));
+          return false;
         }
     }
+  ++m_stepCnt;
+  if(m_stepCnt > theStreamPosList.size())
+    {
+      theStreamPosList.push_back(aStreamPos);
+    }
+  return true;
 }
 
 void GLScene::plotMean3DHCPMolecules()
 {
   unsigned int col, layer, row;
   double x,y,z;
-  for(unsigned int i(0); i != theThreadSize; ++i)
-    { 
-      for(unsigned int k(0); k != theMeanCoordSize; ++k)
-        {
-          col = theMeanCoords[i][k]/(theRowSize*theLayerSize)-theOriCol; 
-          layer = (theMeanCoords[i][k]%(theRowSize*theLayerSize))/theRowSize;
-          row = (theMeanCoords[i][k]%(theRowSize*theLayerSize))%theRowSize;
-          y = (col%2)*theHCPl + theHCPy*layer + theRadius;
-          z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
-          x = col*theHCPx + theRadius; 
-          for(unsigned int j(0); j!=theLatticeSpSize; ++j)
-            {
-              if(theSpeciesVisibility[j])
-                {
-                  Color clr(theSpeciesColor[j]);
-                  double intensity((double)(theFrequency[i][j][k])/
-                                   (double)(theMeanCount/4));
-                  //glColor3f(clr.r*intensity, clr.g*intensity, clr.b*intensity); 
-                  glColor4f(clr.r, clr.g, clr.b, intensity);
-                  //glColor4f(clr.r*intensity, clr.g*intensity, clr.b*intensity,
-                   //         0.5f); 
-                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                      y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                      z <= theZUpBound[j] && z >= theZLowBound[j]))
-                    {
-                      glPushMatrix();
-                      glTranslatef(x,y,z);
-                      glCallList(theGLIndex+j);
-                      glPopMatrix();
-                    }
-                }
-            }
-        }
-      for(unsigned int j(theLatticeSpSize); j!=theTotalLatticeSpSize; ++j )
+  for(unsigned int k(0); k != theMeanCoordSize; ++k)
+    {
+      col = theMeanCoords[k]/(theRowSize*theLayerSize)-theOriCol; 
+      layer = (theMeanCoords[k]%(theRowSize*theLayerSize))/theRowSize;
+      row = (theMeanCoords[k]%(theRowSize*theLayerSize))%theRowSize;
+      y = (col%2)*theHCPl + theHCPy*layer + theRadius;
+      z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
+      x = col*theHCPx + theRadius; 
+      for(unsigned int j(0); j!=theLatticeSpSize; ++j)
         {
           if(theSpeciesVisibility[j])
             {
               Color clr(theSpeciesColor[j]);
-              glColor3f(clr.r, clr.g, clr.b); 
-              for( unsigned int k(0); k!=theMoleculeSize[i][j]; ++k )
+              double intensity((double)(theFrequency[j][k])/
+                               (double)(theMeanCount/4));
+              //glColor3f(clr.r*intensity, clr.g*intensity, clr.b*intensity); 
+              glColor4f(clr.r, clr.g, clr.b, intensity);
+              //glColor4f(clr.r*intensity, clr.g*intensity, clr.b*intensity,
+               //         0.5f); 
+              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                  z <= theZUpBound[j] && z >= theZLowBound[j]))
                 {
-                  col = theCoords[i][j][k]/(theRowSize*theLayerSize)-theOriCol; 
-                  layer =
-                    (theCoords[i][j][k]%(theRowSize*theLayerSize))/theRowSize;
-                  row =
-                    (theCoords[i][j][k]%(theRowSize*theLayerSize))%theRowSize;
-                  y = (col%2)*theHCPl + theHCPy*layer + theRadius;
-                  z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
-                  x = col*theHCPx + theRadius;
-                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                      y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                      z <= theZUpBound[j] && z >= theZLowBound[j]))
-                    {
-                      glPushMatrix();
-                      glTranslatef(x,y,z);
-                      glCallList(theGLIndex+j);
-                      glPopMatrix();
-                    }
+                  glPushMatrix();
+                  glTranslatef(x,y,z);
+                  glCallList(theGLIndex+j);
+                  glPopMatrix();
+                }
+            }
+        }
+    }
+  for(unsigned int j(theLatticeSpSize); j!=theTotalLatticeSpSize; ++j )
+    {
+      if(theSpeciesVisibility[j])
+        {
+          Color clr(theSpeciesColor[j]);
+          glColor3f(clr.r, clr.g, clr.b); 
+          for( unsigned int k(0); k!=theMoleculeSize[j]; ++k )
+            {
+              col = theCoords[j][k]/(theRowSize*theLayerSize)-theOriCol; 
+              layer =
+                (theCoords[j][k]%(theRowSize*theLayerSize))/theRowSize;
+              row =
+                (theCoords[j][k]%(theRowSize*theLayerSize))%theRowSize;
+              y = (col%2)*theHCPl + theHCPy*layer + theRadius;
+              z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
+              x = col*theHCPx + theRadius;
+              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                  z <= theZUpBound[j] && z >= theZLowBound[j]))
+                {
+                  glPushMatrix();
+                  glTranslatef(x,y,z);
+                  glCallList(theGLIndex+j);
+                  glPopMatrix();
                 }
             }
         }
@@ -981,64 +979,61 @@ void GLScene::plotMean3DCubicMolecules()
 {
   unsigned int col, layer, row;
   double x,y,z;
-  for(unsigned int i(0); i != theThreadSize; ++i)
-    { 
-      for(unsigned int k(0); k != theMeanCoordSize; ++k)
-        {
-          col = theMeanCoords[i][k]/(theRowSize*theLayerSize)-theOriCol; 
-          layer = (theMeanCoords[i][k]%(theRowSize*theLayerSize))/theRowSize;
-          row = (theMeanCoords[i][k]%(theRowSize*theLayerSize))%theRowSize;
-          y = layer*2*theRadius + theRadius;
-          z = row*2*theRadius + theRadius;
-          x = col*2*theRadius + theRadius; 
-          for(unsigned int j(0); j!=theLatticeSpSize; ++j)
-            {
-              if(theSpeciesVisibility[j])
-                {
-                  Color clr(theSpeciesColor[j]);
-                  double intensity((double)(theFrequency[i][j][k])/
-                                   (double)(theMeanCount/4));
-                  //glColor3f(clr.r*intensity, clr.g*intensity, clr.b*intensity); 
-                  glColor4f(clr.r, clr.g, clr.b, intensity);
-                  //glColor4f(clr.r*intensity, clr.g*intensity, clr.b*intensity,
-                   //         0.5f); 
-                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                      y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                      z <= theZUpBound[j] && z >= theZLowBound[j]))
-                    {
-                      glPushMatrix();
-                      glTranslatef(x,y,z);
-                      glCallList(theGLIndex+j);
-                      glPopMatrix();
-                    }
-                }
-            }
-        }
-      for(unsigned int j(theLatticeSpSize); j!=theTotalLatticeSpSize; ++j )
+  for(unsigned int k(0); k != theMeanCoordSize; ++k)
+    {
+      col = theMeanCoords[k]/(theRowSize*theLayerSize)-theOriCol; 
+      layer = (theMeanCoords[k]%(theRowSize*theLayerSize))/theRowSize;
+      row = (theMeanCoords[k]%(theRowSize*theLayerSize))%theRowSize;
+      y = layer*2*theRadius + theRadius;
+      z = row*2*theRadius + theRadius;
+      x = col*2*theRadius + theRadius; 
+      for(unsigned int j(0); j!=theLatticeSpSize; ++j)
         {
           if(theSpeciesVisibility[j])
             {
               Color clr(theSpeciesColor[j]);
-              glColor3f(clr.r, clr.g, clr.b); 
-              for( unsigned int k(0); k!=theMoleculeSize[i][j]; ++k )
+              double intensity((double)(theFrequency[j][k])/
+                               (double)(theMeanCount/4));
+              //glColor3f(clr.r*intensity, clr.g*intensity, clr.b*intensity); 
+              glColor4f(clr.r, clr.g, clr.b, intensity);
+              //glColor4f(clr.r*intensity, clr.g*intensity, clr.b*intensity,
+               //         0.5f); 
+              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                  z <= theZUpBound[j] && z >= theZLowBound[j]))
                 {
-                  col = theCoords[i][j][k]/(theRowSize*theLayerSize)-theOriCol; 
-                  layer =
-                    (theCoords[i][j][k]%(theRowSize*theLayerSize))/theRowSize;
-                  row =
-                    (theCoords[i][j][k]%(theRowSize*theLayerSize))%theRowSize;
-                  y = layer*2*theRadius + theRadius;
-                  z = row*2*theRadius + theRadius;
-                  x = col*2*theRadius + theRadius; 
-                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                      y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                      z <= theZUpBound[j] && z >= theZLowBound[j]))
-                    {
-                      glPushMatrix();
-                      glTranslatef(x,y,z);
-                      glCallList(theGLIndex+j);
-                      glPopMatrix();
-                    }
+                  glPushMatrix();
+                  glTranslatef(x,y,z);
+                  glCallList(theGLIndex+j);
+                  glPopMatrix();
+                }
+            }
+        }
+    }
+  for(unsigned int j(theLatticeSpSize); j!=theTotalLatticeSpSize; ++j )
+    {
+      if(theSpeciesVisibility[j])
+        {
+          Color clr(theSpeciesColor[j]);
+          glColor3f(clr.r, clr.g, clr.b); 
+          for( unsigned int k(0); k!=theMoleculeSize[j]; ++k )
+            {
+              col = theCoords[j][k]/(theRowSize*theLayerSize)-theOriCol; 
+              layer =
+                (theCoords[j][k]%(theRowSize*theLayerSize))/theRowSize;
+              row =
+                (theCoords[j][k]%(theRowSize*theLayerSize))%theRowSize;
+              y = layer*2*theRadius + theRadius;
+              z = row*2*theRadius + theRadius;
+              x = col*2*theRadius + theRadius; 
+              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                  z <= theZUpBound[j] && z >= theZLowBound[j]))
+                {
+                  glPushMatrix();
+                  glTranslatef(x,y,z);
+                  glCallList(theGLIndex+j);
+                  glPopMatrix();
                 }
             }
         }
@@ -1049,56 +1044,53 @@ void GLScene::plot3DHCPMolecules()
 {
   unsigned int col, layer, row;
   double x,y,z;
-  for( unsigned int i(0); i!=theThreadSize; ++i )
+  for( unsigned int j(0); j!=theTotalLatticeSpSize; ++j )
     {
-      for( unsigned int j(0); j!=theTotalLatticeSpSize; ++j )
+      if( theSpeciesVisibility[j] )
         {
-          if( theSpeciesVisibility[j] )
+          Color clr(theSpeciesColor[j]);
+          glColor3f(clr.r, clr.g, clr.b); 
+          for( unsigned int k(0); k!=theMoleculeSize[j]; ++k )
             {
-              Color clr(theSpeciesColor[j]);
-              glColor3f(clr.r, clr.g, clr.b); 
-              for( unsigned int k(0); k!=theMoleculeSize[i][j]; ++k )
+              col = theCoords[j][k]/(theRowSize*theLayerSize)-theOriCol; 
+              layer =
+                (theCoords[j][k]%(theRowSize*theLayerSize))/theRowSize;
+              row =
+                (theCoords[j][k]%(theRowSize*theLayerSize))%theRowSize;
+              y = (col%2)*theHCPl + theHCPy*layer + theRadius;
+              z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
+              x = col*theHCPx + theRadius;
+              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                  z <= theZUpBound[j] && z >= theZLowBound[j]))
                 {
-                  col = theCoords[i][j][k]/(theRowSize*theLayerSize)-theOriCol; 
-                  layer =
-                    (theCoords[i][j][k]%(theRowSize*theLayerSize))/theRowSize;
-                  row =
-                    (theCoords[i][j][k]%(theRowSize*theLayerSize))%theRowSize;
-                  y = (col%2)*theHCPl + theHCPy*layer + theRadius;
-                  z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
-                  x = col*theHCPx + theRadius;
-                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                      y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                      z <= theZUpBound[j] && z >= theZLowBound[j]))
-                    {
-                      glPushMatrix();
-                      glTranslatef(x,y,z);
-                      glCallList(theGLIndex+j);
-                      glPopMatrix();
-                    }
+                  glPushMatrix();
+                  glTranslatef(x,y,z);
+                  glCallList(theGLIndex+j);
+                  glPopMatrix();
                 }
             }
         }
-      for(int j(theTotalOffLatticeSpSize-1); j!=-1; --j )
+    }
+  for(int j(theTotalOffLatticeSpSize-1); j!=-1; --j )
+    {
+      if(theSpeciesVisibility[j+theTotalLatticeSpSize])
         {
-          if(theSpeciesVisibility[j+theTotalLatticeSpSize])
+          Color clr(theSpeciesColor[j+theTotalLatticeSpSize]);
+          glColor3f(clr.r, clr.g, clr.b); 
+          for( unsigned int k(0); k!=theOffLatticeMoleculeSize[j]; ++k )
             {
-              Color clr(theSpeciesColor[j+theTotalLatticeSpSize]);
-              glColor3f(clr.r, clr.g, clr.b); 
-              for( unsigned int k(0); k!=theOffLatticeMoleculeSize[i][j]; ++k )
+              x = (thePoints[j][k].x)+theRadius;
+              y = (thePoints[j][k].y)+theRadius;
+              z = (thePoints[j][k].z)+theRadius;
+              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                  z <= theZUpBound[j] && z >= theZLowBound[j]))
                 {
-                  x = (thePoints[i][j][k].x)+theRadius;
-                  y = (thePoints[i][j][k].y)+theRadius;
-                  z = (thePoints[i][j][k].z)+theRadius;
-                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                      y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                      z <= theZUpBound[j] && z >= theZLowBound[j]))
-                    {
-                      glPushMatrix();
-                      glTranslatef(x,y,z);
-                      glCallList(theGLIndex+j+theTotalLatticeSpSize);
-                      glPopMatrix();
-                    }
+                  glPushMatrix();
+                  glTranslatef(x,y,z);
+                  glCallList(theGLIndex+j+theTotalLatticeSpSize);
+                  glPopMatrix();
                 }
             }
         }
@@ -1109,56 +1101,53 @@ void GLScene::plot3DCubicMolecules()
 {
   unsigned int col, layer, row;
   double x,y,z;
-  for( unsigned int i(0); i!=theThreadSize; ++i )
+  for( unsigned int j(0); j!=theTotalLatticeSpSize; ++j )
     {
-      for( unsigned int j(0); j!=theTotalLatticeSpSize; ++j )
+      if( theSpeciesVisibility[j] )
         {
-          if( theSpeciesVisibility[j] )
+          Color clr(theSpeciesColor[j]);
+          glColor3f(clr.r, clr.g, clr.b); 
+          for( unsigned int k(0); k!=theMoleculeSize[j]; ++k )
             {
-              Color clr(theSpeciesColor[j]);
-              glColor3f(clr.r, clr.g, clr.b); 
-              for( unsigned int k(0); k!=theMoleculeSize[i][j]; ++k )
+              col = theCoords[j][k]/(theRowSize*theLayerSize)-theOriCol; 
+              layer =
+                (theCoords[j][k]%(theRowSize*theLayerSize))/theRowSize;
+              row =
+                (theCoords[j][k]%(theRowSize*theLayerSize))%theRowSize;
+              y = layer*2*theRadius + theRadius;
+              z = row*2*theRadius + theRadius;
+              x = col*2*theRadius + theRadius; 
+              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                  z <= theZUpBound[j] && z >= theZLowBound[j]))
                 {
-                  col = theCoords[i][j][k]/(theRowSize*theLayerSize)-theOriCol; 
-                  layer =
-                    (theCoords[i][j][k]%(theRowSize*theLayerSize))/theRowSize;
-                  row =
-                    (theCoords[i][j][k]%(theRowSize*theLayerSize))%theRowSize;
-                  y = layer*2*theRadius + theRadius;
-                  z = row*2*theRadius + theRadius;
-                  x = col*2*theRadius + theRadius; 
-                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                      y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                      z <= theZUpBound[j] && z >= theZLowBound[j]))
-                    {
-                      glPushMatrix();
-                      glTranslatef(x,y,z);
-                      glCallList(theGLIndex+j);
-                      glPopMatrix();
-                    }
+                  glPushMatrix();
+                  glTranslatef(x,y,z);
+                  glCallList(theGLIndex+j);
+                  glPopMatrix();
                 }
             }
         }
-      for(int j(theTotalOffLatticeSpSize-1); j!=-1; --j )
+    }
+  for(int j(theTotalOffLatticeSpSize-1); j!=-1; --j )
+    {
+      if( theSpeciesVisibility[j+theTotalLatticeSpSize] )
         {
-          if( theSpeciesVisibility[j+theTotalLatticeSpSize] )
+          Color clr(theSpeciesColor[j+theTotalLatticeSpSize]);
+          glColor3f(clr.r, clr.g, clr.b); 
+          for( unsigned int k(0); k!=theOffLatticeMoleculeSize[j]; ++k )
             {
-              Color clr(theSpeciesColor[j+theTotalLatticeSpSize]);
-              glColor3f(clr.r, clr.g, clr.b); 
-              for( unsigned int k(0); k!=theOffLatticeMoleculeSize[i][j]; ++k )
+              x = (thePoints[j][k].x)+theRadius;
+              y = (thePoints[j][k].y)+theRadius;
+              z = (thePoints[j][k].z)+theRadius;
+              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                  z <= theZUpBound[j] && z >= theZLowBound[j]))
                 {
-                  x = (thePoints[i][j][k].x)+theRadius;
-                  y = (thePoints[i][j][k].y)+theRadius;
-                  z = (thePoints[i][j][k].z)+theRadius;
-                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                      y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                      z <= theZUpBound[j] && z >= theZLowBound[j]))
-                    {
-                      glPushMatrix();
-                      glTranslatef(x,y,z);
-                      glCallList(theGLIndex+j+theTotalLatticeSpSize);
-                      glPopMatrix();
-                    }
+                  glPushMatrix();
+                  glTranslatef(x,y,z);
+                  glCallList(theGLIndex+j+theTotalLatticeSpSize);
+                  glPopMatrix();
                 }
             }
         }
@@ -1170,50 +1159,47 @@ void GLScene::plotHCPPoints()
   glBegin(GL_POINTS);
   unsigned int col, layer, row;
   double x,y,z;
-  for( unsigned int i(0); i!=theThreadSize; ++i )
+  for( unsigned int j(0); j!=theTotalLatticeSpSize; ++j )
     {
-      for( unsigned int j(0); j!=theTotalLatticeSpSize; ++j )
+      if( theSpeciesVisibility[j] )
         {
-          if( theSpeciesVisibility[j] )
+          Color clr(theSpeciesColor[j]);
+          glColor3f(clr.r, clr.g, clr.b); 
+          for( unsigned int k(0); k!=theMoleculeSize[j]; ++k )
             {
-              Color clr(theSpeciesColor[j]);
-              glColor3f(clr.r, clr.g, clr.b); 
-              for( unsigned int k(0); k!=theMoleculeSize[i][j]; ++k )
+              col = theCoords[j][k]/(theRowSize*theLayerSize)-theOriCol; 
+              layer =
+                (theCoords[j][k]%(theRowSize*theLayerSize))/theRowSize;
+              row =
+                (theCoords[j][k]%(theRowSize*theLayerSize))%theRowSize;
+              y = (col%2)*theHCPl + theHCPy*layer + theRadius;
+              z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
+              x = col*theHCPx + theRadius;
+              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                  z <= theZUpBound[j] && z >= theZLowBound[j]))
                 {
-                  col = theCoords[i][j][k]/(theRowSize*theLayerSize)-theOriCol; 
-                  layer =
-                    (theCoords[i][j][k]%(theRowSize*theLayerSize))/theRowSize;
-                  row =
-                    (theCoords[i][j][k]%(theRowSize*theLayerSize))%theRowSize;
-                  y = (col%2)*theHCPl + theHCPy*layer + theRadius;
-                  z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
-                  x = col*theHCPx + theRadius;
-                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                      y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                      z <= theZUpBound[j] && z >= theZLowBound[j]))
-                    {
-                      glVertex3f(x, y, z);
-                    }
+                  glVertex3f(x, y, z);
                 }
             }
         }
-      for(int j(theTotalOffLatticeSpSize-1); j!=-1; --j )
+    }
+  for(int j(theTotalOffLatticeSpSize-1); j!=-1; --j )
+    {
+      if( theSpeciesVisibility[j+theTotalLatticeSpSize] )
         {
-          if( theSpeciesVisibility[j+theTotalLatticeSpSize] )
+          Color clr(theSpeciesColor[j+theTotalLatticeSpSize]);
+          glColor3f(clr.r, clr.g, clr.b); 
+          for( unsigned int k(0); k!=theOffLatticeMoleculeSize[j]; ++k )
             {
-              Color clr(theSpeciesColor[j+theTotalLatticeSpSize]);
-              glColor3f(clr.r, clr.g, clr.b); 
-              for( unsigned int k(0); k!=theOffLatticeMoleculeSize[i][j]; ++k )
+              x = (thePoints[j][k].x)+theRadius;
+              y = (thePoints[j][k].y)+theRadius;
+              z = (thePoints[j][k].z)+theRadius;
+              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                  z <= theZUpBound[j] && z >= theZLowBound[j]))
                 {
-                  x = (thePoints[i][j][k].x)+theRadius;
-                  y = (thePoints[i][j][k].y)+theRadius;
-                  z = (thePoints[i][j][k].z)+theRadius;
-                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                      y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                      z <= theZUpBound[j] && z >= theZLowBound[j]))
-                    {
-                      glVertex3f(x, y, z);
-                    }
+                  glVertex3f(x, y, z);
                 }
             }
         }
@@ -1226,50 +1212,47 @@ void GLScene::plotCubicPoints()
   glBegin(GL_POINTS);
   unsigned int col, layer, row;
   double x,y,z;
-  for( unsigned int i(0); i!=theThreadSize; ++i )
+  for( unsigned int j(0); j!=theTotalLatticeSpSize; ++j )
     {
-      for( unsigned int j(0); j!=theTotalLatticeSpSize; ++j )
+      if( theSpeciesVisibility[j] )
         {
-          if( theSpeciesVisibility[j] )
+          Color clr(theSpeciesColor[j]);
+          glColor3f(clr.r, clr.g, clr.b); 
+          for( unsigned int k(0); k!=theMoleculeSize[j]; ++k )
             {
-              Color clr(theSpeciesColor[j]);
-              glColor3f(clr.r, clr.g, clr.b); 
-              for( unsigned int k(0); k!=theMoleculeSize[i][j]; ++k )
+              col = theCoords[j][k]/(theRowSize*theLayerSize)-theOriCol; 
+              layer =
+                (theCoords[j][k]%(theRowSize*theLayerSize))/theRowSize;
+              row =
+                (theCoords[j][k]%(theRowSize*theLayerSize))%theRowSize;
+              y = layer*2*theRadius + theRadius;
+              z = row*2*theRadius + theRadius;
+              x = col*2*theRadius + theRadius; 
+              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                  z <= theZUpBound[j] && z >= theZLowBound[j]))
                 {
-                  col = theCoords[i][j][k]/(theRowSize*theLayerSize)-theOriCol; 
-                  layer =
-                    (theCoords[i][j][k]%(theRowSize*theLayerSize))/theRowSize;
-                  row =
-                    (theCoords[i][j][k]%(theRowSize*theLayerSize))%theRowSize;
-                  y = layer*2*theRadius + theRadius;
-                  z = row*2*theRadius + theRadius;
-                  x = col*2*theRadius + theRadius; 
-                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                      y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                      z <= theZUpBound[j] && z >= theZLowBound[j]))
-                    {
-                      glVertex3f(x, y, z);
-                    }
+                  glVertex3f(x, y, z);
                 }
             }
         }
-      for(int j(theTotalOffLatticeSpSize-1); j!=-1; --j )
+    }
+  for(int j(theTotalOffLatticeSpSize-1); j!=-1; --j )
+    {
+      if( theSpeciesVisibility[j+theTotalLatticeSpSize] )
         {
-          if( theSpeciesVisibility[j+theTotalLatticeSpSize] )
+          Color clr(theSpeciesColor[j+theTotalLatticeSpSize]);
+          glColor3f(clr.r, clr.g, clr.b); 
+          for( unsigned int k(0); k!=theOffLatticeMoleculeSize[j]; ++k )
             {
-              Color clr(theSpeciesColor[j+theTotalLatticeSpSize]);
-              glColor3f(clr.r, clr.g, clr.b); 
-              for( unsigned int k(0); k!=theOffLatticeMoleculeSize[i][j]; ++k )
+              x = (thePoints[j][k].x)+theRadius;
+              y = (thePoints[j][k].y)+theRadius;
+              z = (thePoints[j][k].z)+theRadius;
+              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                  z <= theZUpBound[j] && z >= theZLowBound[j]))
                 {
-                  x = (thePoints[i][j][k].x)+theRadius;
-                  y = (thePoints[i][j][k].y)+theRadius;
-                  z = (thePoints[i][j][k].z)+theRadius;
-                  if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                      y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                      z <= theZUpBound[j] && z >= theZLowBound[j]))
-                    {
-                      glVertex3f(x, y, z);
-                    }
+                  glVertex3f(x, y, z);
                 }
             }
         }
@@ -1384,40 +1367,31 @@ void GLScene::zoomOut()
 
 bool GLScene::on_timeout()
 {
-  if( m_RunReverse )
+  if(m_RunReverse)
     {
-      for( unsigned int i(0); i!=theThreadSize; ++i )
-        { 
-          theFile[i]->seekg(-thePrevSize, std::ios::cur); 
-          theFile[i]->read((char*) (&thePrevSize), sizeof(thePrevSize));
-          theFile[i]->read((char*) (&theNextSize), sizeof(theNextSize));
-          theFile[i]->seekg(-thePrevSize, std::ios::cur); 
-          theFile[i]->read((char*) (&thePrevSize), sizeof(thePrevSize));
-          theFile[i]->read((char*) (&theNextSize), sizeof(theNextSize));
-        }
-    }
-  (this->*theLoadCoordsFunction)();
-  if( theFile[0]->eof() != true )
-    {
-      char buffer[50];
-      if( !m_RunReverse )
+      if(m_stepCnt > 1)
         {
-          ++m_stepCnt;
+          m_stepCnt -= 2;
         }
       else
         {
-          if( m_stepCnt != 0 )
-            {
-              --m_stepCnt;
-            }
+          m_stepCnt = 0;
         }
-      sprintf(buffer, "%d", m_stepCnt);
-      m_control->setStep(buffer);
-      sprintf(buffer, "%f", theCurrentTime);
-      m_control->setTime(buffer);
+      theFile.seekg(theStreamPosList[m_stepCnt]);
     }
+  std::streampos aCurrStreamPos;
+  if(!(this->*theLoadCoordsFunction)(aCurrStreamPos))
+    {
+      theFile.clear();
+      theFile.seekg(aCurrStreamPos);
+    }
+  char buffer[50];
+  sprintf(buffer, "%d", m_stepCnt-1);
+  m_control->setStep(buffer);
+  sprintf(buffer, "%f", theCurrentTime);
+  m_control->setTime(buffer);
   invalidate();
-  if( startRecord )
+  if(startRecord)
     {
       timeout_remove();
       writePng();
@@ -1434,63 +1408,8 @@ void GLScene::step()
       m_Run = false;
       timeout_remove();
     }
-  if( m_RunReverse )
-    {
-      for( unsigned int i(0); i!=theThreadSize; ++i )
-        { 
-          theFile[i]->seekg(-thePrevSize, std::ios::cur); 
-          theFile[i]->read((char*) (&thePrevSize), sizeof(thePrevSize));
-          theFile[i]->read((char*) (&theNextSize), sizeof(theNextSize));
-          theFile[i]->seekg(-thePrevSize, std::ios::cur); 
-          theFile[i]->read((char*) (&thePrevSize), sizeof(thePrevSize));
-          theFile[i]->read((char*) (&theNextSize), sizeof(theNextSize));
-        }
-    }
-  (this->*theLoadCoordsFunction)();
-  if( theFile[0]->eof() != true )
-    {
-      char buffer[50];
-      if( !m_RunReverse )
-        {
-          ++m_stepCnt;
-        }
-      else
-        {
-          if( m_stepCnt != 0 )
-            {
-              --m_stepCnt;
-            }
-        }
-      sprintf(buffer, "%d", m_stepCnt);
-      m_control->setStep(buffer);
-      sprintf(buffer, "%f", theCurrentTime);
-      m_control->setTime(buffer);
-    }
-  isChanged = true;
-  invalidate();
-  if( startRecord )
-    {
-      timeout_remove();
-      writePng();
-      std::cout << "wrote png:" << thePngNumber << std::endl; 
-      timeout_add();
-    }
+  on_timeout();
 }
-
-/*
-  Gtk::HBox aStepBox;
-  m_table.attach(aStepBox, 0, 1, 0, 1, Gtk::FILL,
-                 Gtk::SHRINK | Gtk::FILL, 0, 0 );
-  Gtk::Label aStepLabel("Step:");
-  aStepBox.pack_start(aStepLabel);
-  aStepBox.pack_start(m_steps);
-  Gtk::HBox aTimeBox;
-  m_table.attach(aTimeBox, 0, 1, 1, 2, Gtk::FILL,
-                 Gtk::SHRINK | Gtk::FILL, 0, 0 );
-  Gtk::Label aTimeLabel("Time:");
-  aTimeBox.pack_start(aTimeLabel);
-  aTimeBox.pack_start(m_time);
-  */
 
 void GLScene::timeout_add()
 {
@@ -1640,8 +1559,7 @@ void GLScene::normalizeAngle(double &angle)
 void GLScene::pause()
 {
   m_Run = !m_Run;
-
-  if (m_Run)
+  if(m_Run)
     {
       timeout_add();
     }
@@ -1655,10 +1573,7 @@ void GLScene::pause()
 void GLScene::play()
 {
   m_Run = true;
-  if (m_Run)
-    {
-      timeout_add();
-    }
+  timeout_add();
 }
 
 ControlBox::ControlBox(GLScene *anArea) :
@@ -2377,73 +2292,17 @@ void printUsage( const char* aProgramName )
     << std::endl << std::flush;
 }
 
-void printNotEndian( const char* anEndian, const char* aBaseName, 
-                     const unsigned int count, const unsigned int aThreadSize )
+void printNotEndian( const char* anEndian, const char* aBaseName)
 {
-  std::cerr << "theThreadSize from file " << aBaseName << " is:" <<
-    aThreadSize << "\nbut I can't open " << aBaseName << " file.\n";
+  std::cerr << "file is " << aBaseName << 
+    "\nbut I can't open " << aBaseName << " file.\n";
   std::cerr << "Could it be that " << aBaseName << " is not";
   std::cerr << " a " << anEndian << " Endian binary file?\n";
 }
 
-unsigned int convertFiles2LittleEndian( const char* aBaseName )
-                          
-{
-  unsigned int aThreadSize;
-  std::ostringstream aFileName;
-  aFileName << aBaseName << std::ends;
-  std::ifstream aParentFile( aFileName.str().c_str(), std::ios::binary );
-  if ( !aParentFile.is_open() )
-    {
-      std::cerr << "Could not open file: " << aBaseName << std::endl;
-      return 1;
-    }
-  aParentFile.read((char *)(&aThreadSize), sizeof(unsigned int)); 
-  aThreadSize = ntohl( aThreadSize );
-  for( unsigned int i(1); i!=aThreadSize; ++i )
-    {
-      std::ostringstream aFileName;
-      aFileName << aBaseName << std::ends;
-      std::ifstream aFile( aFileName.str().c_str(), std::ios::binary );
-      if( !aFile.is_open() )
-        {
-          printNotEndian( "Big", aBaseName, i, aThreadSize );
-          return 1;
-        }
-    }
-
-  // do the conversion
-  std::cout << "Starting to convert data files to Little Endian format...\n";
-  for( unsigned int i(0); i!=aThreadSize; ++i )
-    {
-      std::ostringstream aFileName;
-      aFileName << aBaseName << std::ends;
-      std::ifstream anInput( aFileName.str().c_str(), std::ios::binary );
-
-      std::ostringstream anOutFileName;
-      anOutFileName << "lcoord" << i << ".dat" << std::ends;
-      std::ofstream anOutput( anOutFileName.str().c_str(), std::ios::binary | 
-                              std::ios::trunc );
-      while( anInput.eof() != true )
-        {
-          unsigned int aValue;
-          anInput.read((char *)(&aValue), sizeof(unsigned int)); 
-          aValue = ntohl( aValue );
-          anOutput.write((char*) (&aValue), sizeof(unsigned int));
-        }
-      anInput.close();
-      anOutput.close();
-    }
-  std::cout << "Finished converting data files to Little Endian format...\n";
-  std::cout << "The Little Endian files have lcoord as the base name.\n";
-  return 0;
-}
-
-
 int main(int argc, char** argv)
 {
   std::string aBaseName;
-  unsigned int aThreadSize;
   if(argc == 1)
     {
       aBaseName = "visualLog0.dat";
@@ -2456,12 +2315,6 @@ int main(int argc, char** argv)
     {
       if( argv[1][1] == 'b' )
         {
-          if( convertFiles2LittleEndian( argv[2] ) )
-            {
-              printUsage( argv[0] );
-              std::exit(1);
-            }
-          aBaseName = "lvisualLog0.dat";
         }
       else
         {
@@ -2487,18 +2340,14 @@ int main(int argc, char** argv)
     }
   else
     {
-      aParentFile.read((char *)(&aThreadSize), sizeof(unsigned int)); 
-      for( unsigned int i(1); i!=aThreadSize; ++i )
+      std::ostringstream aFileName;
+      aFileName << aBaseName << std::ends;
+      std::ifstream aFile( aFileName.str().c_str(), std::ios::binary );
+      if( !aFile.is_open() )
         {
-          std::ostringstream aFileName;
-          aFileName << aBaseName << std::ends;
-          std::ifstream aFile( aFileName.str().c_str(), std::ios::binary );
-          if( !aFile.is_open() )
-            {
-              printNotEndian( "Little", aBaseName.c_str(), i, aThreadSize );
-              printUsage( argv[0] );
-              std::exit(1);
-            }
+          printNotEndian( "Little", aBaseName.c_str());
+          printUsage( argv[0] );
+          std::exit(1);
         }
     }
   Gtk::Main anApp(argc, argv);

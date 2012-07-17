@@ -268,16 +268,16 @@ protected:
   void plotMean3DCubicMolecules();
   void plotCubicPoints();
   void timeout_remove();
-  void loadCoords();
-  void loadMeanCoords();
   void setColor(unsigned int i, Color *c);
   void setRandColor(Color *c);
   void setTranslucentColor(unsigned int i, GLfloat j);
   void setLayerColor(unsigned int i);
   void (GLScene::*thePlotFunction)();
   void (GLScene::*thePlot3DFunction)();
-  void (GLScene::*theLoadCoordsFunction)();
   void normalizeAngle(double&);
+  bool loadCoords(std::streampos&);
+  bool loadMeanCoords(std::streampos&);
+  bool (GLScene::*theLoadCoordsFunction)(std::streampos&);
 protected:
   bool isChanged;
   bool m_Run;
@@ -289,8 +289,6 @@ protected:
   int m_FontHeight;
   int m_FontWidth;
   int theGLIndex;
-  int theNextSize;
-  int thePrevSize;
   unsigned int m_stepCnt;
   unsigned int theCutCol;
   unsigned int theCutLayer;
@@ -316,18 +314,17 @@ protected:
   unsigned int theTotalLatticeSpSize;
   unsigned int theTotalOffLatticeSpSize;
   unsigned int theTotalSpeciesSize;
-  unsigned int* theRegionSep;
   unsigned int* theXLowBound;
   unsigned int* theXUpBound;
   unsigned int* theYLowBound;
   unsigned int* theYUpBound;
   unsigned int* theZLowBound;
   unsigned int* theZUpBound;
-  unsigned int** theMeanCoords;
-  unsigned int** theMoleculeSize;
-  unsigned int** theOffLatticeMoleculeSize;
-  unsigned int*** theCoords;
-  unsigned int*** theFrequency;
+  unsigned int* theMeanCoords;
+  unsigned int* theMoleculeSize;
+  unsigned int* theOffLatticeMoleculeSize;
+  unsigned int** theCoords;
+  unsigned int** theFrequency;
   double theCurrentTime;
   double theRadius;
   double theRealColSize;
@@ -361,14 +358,15 @@ protected:
   GLfloat Z;
   GLfloat Xtrans;
   GLfloat Ytrans;
-  Point*** thePoints;
+  Point** thePoints;
   Color* theSpeciesColor;
   ControlBox* m_control;
   sigc::connection m_ConnectionTimeout;
   Glib::ustring m_FontString;
   Glib::ustring m_timeString;
-  std::ifstream** theFile;
+  std::ifstream theFile;
   std::vector<unsigned int> thePolySpeciesList;
+  std::vector<std::streampos> theStreamPosList;
 };
 
 class Rulers : public Gtk::Window
