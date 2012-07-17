@@ -1,5 +1,5 @@
 On a freshly installed Ubuntu Linux, E-Cell System version 3 and Spatiocyte
-requires several additional packages: 
+require several additional packages: 
 $ sudo apt-get install automake libtool g++ libgsl0-dev python-numpy python-ply libboost-python-dev libgtkmm-2.4-dev libgtkglextmm-x11-1.2-dev libhdf5-serial-dev git valgrind
 
 The general installation procedure of the E-Cell System version 3 is as follows:

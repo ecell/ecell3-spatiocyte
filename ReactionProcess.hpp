@@ -264,8 +264,8 @@ bool ReactionProcess::isInterrupting(Process* aProcess)
   //List all the processes here that need to be notified when their
   //substrateValueChanged:
   if(aProcess->getPropertyInterface().getClassName() ==
-     "SpatiocyteNextReactionProcess" ||
-     aProcess->getPropertyInterface().getClassName() == "DiffusionProcess") 
+     "SpatiocyteNextReactionProcess" /* ||
+     aProcess->getPropertyInterface().getClassName() == "DiffusionProcess"*/) 
     {
       //First get the unique variable pointers of this process:
       std::vector<Variable*> aVariableList;

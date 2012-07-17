@@ -202,6 +202,7 @@ public:
     {
       theDiffusionSpecies->addInterruptedProcess(this);
     }
+  /*
   virtual GET_METHOD(Real, StepInterval)
     {
       if(theDiffusionSpecies->size())
@@ -210,6 +211,7 @@ public:
         }
       return libecs::INF;
     }
+    */
 protected:
   double D;
   double P;
