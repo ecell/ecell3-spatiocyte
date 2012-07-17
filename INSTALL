@@ -66,6 +66,15 @@ The visualizer will load the visualLog0.dat file by default and display the
 molecules at every log interval. The keyboard shortcuts that are available for
 the visualizer are listed in the SpatiocyteVisualizer module section.
 
+To update the local Spatiocyte code to the latest source, under the ecell3-spatiocyte directory, issue the following:
+$ git pull
+$ make clean
+$ make -j3
+
+To checkout a specific committed version of the source:
+$ git checkout <10 digit hex commit code>
+The 10 digit hex commit codes are available at https://github.com/ecell/ecell3-spatiocyte/commits/master/
+
 If the program fails and crashes when loading or running a model, we can get
 some debugging information using the Valgrind tool:
 $ valgrind --tool=memcheck --num-callers=40 --leak-check=full python $HOME/root/bin/ecell3-session -f modelFileName.eml
