@@ -120,6 +120,7 @@ private:
   void initProcessFifth();
   void initProcessLastOnce();
   void storeSimulationParameters();
+  void setSystemSize(System*, double);
   void printSimulationParameters();
   void setCompProperties();
   void initSpecies();

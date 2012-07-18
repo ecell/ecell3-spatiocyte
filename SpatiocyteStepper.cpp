@@ -892,21 +892,7 @@ void SpatiocyteStepper::storeSimulationParameters()
           aComp->actualArea =  (72*pow(VoxelRadius,2))*
             aComp->vacantSpecies->size()/(6*pow(2,0.5)+4*pow(3,0.5)+
                                          3*pow(6, 0.5));
-          Variable* size(getVariable(aComp->system, "SIZE"));
-          if(size)
-            {
-              size->setValue(aComp->actualVolume*1e+3);
-            }
-          else
-            { 
-              String aStringID("Variable:" + 
-                           aComp->system->getSystemPath().asString() + 
-                           aComp->system->getID() + ":SIZE");
-              FullID aFullID(aStringID);
-              Variable& aSize(*reinterpret_cast<Variable*>(
-                      getModel()->createEntity("Variable", aFullID)));
-              aSize.setValue(aComp->actualArea*1e+2);
-            }
+          setSystemSize(aComp->system, aComp->actualArea*1e+2);
         }
       else // (aComp->dimension == 3)
         { 
@@ -917,22 +903,27 @@ void SpatiocyteStepper::storeSimulationParameters()
             }
           aComp->actualVolume = (4*pow(2,0.5)*pow(VoxelRadius,3))*
             voxelCnt;
-          Variable* size(getVariable(aComp->system, "SIZE"));
-          if(size)
-            {
-              size->setValue(aComp->actualVolume*1e+3);
-            }
-          else
-            {
-              String aStringID("Variable:" + 
-                               aComp->system->getSystemPath().asString() + 
-                               aComp->system->getID() + ":SIZE");
-              FullID aFullID(aStringID);
-              Variable& aSize(*reinterpret_cast<Variable*>(
-                    getModel()->createEntity("Variable", aFullID)));
-              aSize.setValue(aComp->actualVolume*1e+3);
-            }
+          setSystemSize(aComp->system, aComp->actualVolume*1e+3);
         }
+    }
+}
+
+void SpatiocyteStepper::setSystemSize(System* aSystem, double aSize)
+{
+  Variable* aVariable(getVariable(aSystem, "SIZE"));
+  if(aVariable)
+    {
+      aVariable->setValue(aSize);
+    }
+  else
+    {
+      String aStringID("Variable:" + 
+                       aSystem->getSystemPath().asString() + 
+                       aSystem->getID() + ":SIZE");
+      FullID aFullID(aStringID);
+      aVariable = reinterpret_cast<Variable*>(
+                  getModel()->createEntity("Variable", aFullID));
+      aVariable->setValue(aSize);
     }
 }
 
