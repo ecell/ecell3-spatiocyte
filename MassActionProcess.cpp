@@ -29,35 +29,24 @@
 //
 
 #include "MassActionProcess.hpp"
-#include "SpatiocyteSpecies.hpp"
 
 LIBECS_DM_INIT(MassActionProcess, Process); 
 
 void MassActionProcess::fire()
 { 
-  if(theSpace == 0)
+  if(!theSpace)
     {
-      Species* aSpecies(NULL);
       for(VariableReferenceVector::iterator
           i(theVariableReferenceVector.begin());
           i != theVariableReferenceVector.end(); ++i)
         {
           Variable* aVariable((*i).getVariable()); 
-          aSpecies = theSpatiocyteStepper->getSpecies(aVariable);
-          if(aSpecies != NULL)
+          theSpace = 
+            aVariable->getSuperSystem()->getSizeVariable()->getValue()*1e-3;
+          if(theSpace)
             {
               break;
             }
-        }
-      if(aSpecies->getDimension() == 3)
-        {
-          theSpace = aSpecies->getComp()->actualVolume;
-          std::cout << "Mass Action Volume:" << theSpace << std::endl;
-        }
-      else
-        {
-          theSpace = aSpecies->getComp()->actualArea;
-          std::cout << "Mass Action Area:" << theSpace << std::endl;
         }
     }
   double velocity(k);

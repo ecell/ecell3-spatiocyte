@@ -54,13 +54,10 @@ public:
     {
       Process::initialize();
       declareUnidirectional();
-      theSpatiocyteStepper =
-        dynamic_cast<SpatiocyteStepper*>(getSuperSystem()->getStepper());
     }
 protected:
   double k;
   double theSpace;
-  SpatiocyteStepper* theSpatiocyteStepper;
 };
 
 #endif /* __MassActionProcess_hpp */

@@ -6,6 +6,10 @@ Stepper SpatiocyteStepper(SS)
   VoxelRadius 4.4e-9;
 }
 
+Stepper ODEStepper(DE)
+{
+}
+
 System System( / )
 {
   StepperID       SS; 
@@ -72,6 +76,14 @@ System System(/Surface)
     {
       VariableReferenceList [_ Variable:/:A];
     }
+  Process MassActionProcess( ES_to_E_P )
+    {
+      StepperID DE;
+      VariableReferenceList [_ Variable:/Surface:A -1]
+                            [_ Variable:/:A 1];
+      k 2.3e-3;
+    }  
+
   Variable Variable(B)
     {
       Value 2000;         # molecule number
@@ -129,7 +141,7 @@ System System(/Surface)
     }
   Process DiffusionProcess(diffpg)
     {
-      VariableReferenceList   [_ Variable:/Surface:E]
+      VariableReferenceList   [_ Variable:/Surface:E];
       D 0.02e-12; 
     }
   Process SpatiocyteNextReactionProcess(pg2)
