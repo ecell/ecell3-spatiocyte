@@ -32,6 +32,7 @@ System System( / )
   Variable Variable(A)
     {
       Value 0;         # molecule number
+      Name "HD";
     } 
   Variable Variable(B)
     {
@@ -67,14 +68,7 @@ System System(/Surface)
   Variable Variable(A)
     {
       Value 2000;         # molecule number
-    }
-  Process DiffusionProcess( diff )
-    {
-      VariableReferenceList [_ Variable:/Surface:A];
-    }
-  Process DiffusionProcess( diff1 )
-    {
-      VariableReferenceList [_ Variable:/:A];
+      Name "HD";
     }
   Process MassActionProcess( ES_to_E_P )
     {
