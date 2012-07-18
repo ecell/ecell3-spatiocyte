@@ -931,10 +931,11 @@ void SpatiocyteStepper::setSystemSize(System* aSystem, double aSize)
     }
   else
     {
-      String aStringID("Variable:" + 
-                       aSystem->getSystemPath().asString() + 
-                       aSystem->getID() + ":SIZE");
-      FullID aFullID(aStringID);
+      String anEntityType("Variable");
+      String anID("SIZE");
+      SystemPath aSystemPath(aSystem->getSystemPath());
+      aSystemPath.push_back(aSystem->getID());
+      FullID aFullID(anEntityType, aSystemPath, anID);
       aVariable = reinterpret_cast<Variable*>(
                   getModel()->createEntity("Variable", aFullID));
       aVariable->setValue(aSize);
