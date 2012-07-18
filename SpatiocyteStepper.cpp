@@ -892,13 +892,21 @@ void SpatiocyteStepper::storeSimulationParameters()
           aComp->actualArea =  (72*pow(VoxelRadius,2))*
             aComp->vacantSpecies->size()/(6*pow(2,0.5)+4*pow(3,0.5)+
                                          3*pow(6, 0.5));
-          String aStringID("Variable:" + 
+          Variable* size(getVariable(aComp->system, "SIZE"));
+          if(size)
+            {
+              size->setValue(aComp->actualVolume*1e+3);
+            }
+          else
+            { 
+              String aStringID("Variable:" + 
                            aComp->system->getSystemPath().asString() + 
                            aComp->system->getID() + ":SIZE");
-          FullID aFullID(aStringID);
-          Variable& size(*reinterpret_cast<Variable*>(
-                getModel()->createEntity("Variable", aFullID)));
-          size.setValue(aComp->actualArea*1e+2);
+              FullID aFullID(aStringID);
+              Variable& aSize(*reinterpret_cast<Variable*>(
+                      getModel()->createEntity("Variable", aFullID)));
+              aSize.setValue(aComp->actualArea*1e+2);
+            }
         }
       else // (aComp->dimension == 3)
         { 
@@ -909,9 +917,9 @@ void SpatiocyteStepper::storeSimulationParameters()
             }
           aComp->actualVolume = (4*pow(2,0.5)*pow(VoxelRadius,3))*
             voxelCnt;
-          if(aComp->system->isRootSystem())
+          Variable* size(getVariable(aComp->system, "SIZE"));
+          if(size)
             {
-              Variable* size(aComp->system->getVariable("SIZE"));
               size->setValue(aComp->actualVolume*1e+3);
             }
           else
@@ -920,9 +928,9 @@ void SpatiocyteStepper::storeSimulationParameters()
                                aComp->system->getSystemPath().asString() + 
                                aComp->system->getID() + ":SIZE");
               FullID aFullID(aStringID);
-              Variable& size(*reinterpret_cast<Variable*>(
+              Variable& aSize(*reinterpret_cast<Variable*>(
                     getModel()->createEntity("Variable", aFullID)));
-              size.setValue(aComp->actualVolume*1e+3);
+              aSize.setValue(aComp->actualVolume*1e+3);
             }
         }
     }
