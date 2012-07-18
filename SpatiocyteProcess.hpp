@@ -141,7 +141,7 @@ public:
     {
       const Time anOldTime(theTime);
       theTime = aCurrentTime + getStepInterval();
-      if(theTime > anOldTime)
+      if(theTime >= anOldTime)
         {
           thePriorityQueue->moveDown(theQueueID);
         }

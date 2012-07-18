@@ -59,7 +59,7 @@ public:
   virtual void initialize();
   // need to check interrupt when we suddenly stop the simulation, do we
   // need to update the priority queue?
-  virtual void interrupt(Time) {}
+  virtual void interrupt(Time);
   virtual void step();
   void createSpecies();
   Species* addSpecies(Variable*);
@@ -193,6 +193,7 @@ private:
   std::vector<Species*> theSpecies;
   std::vector<Comp*> theComps;
   std::vector<Voxel> theLattice;
+  std::vector<Process*> theQueuedProcesses;
 };
 
 #endif /* __SpatiocyteStepper_hpp */

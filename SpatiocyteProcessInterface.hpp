@@ -51,6 +51,7 @@ public:
   virtual void setQueueID(ProcessID anID) = 0;
   virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) = 0;
   virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) = 0;
+  virtual void substrateValueChanged(Time) = 0;
   virtual void fire() = 0;
 };
 
