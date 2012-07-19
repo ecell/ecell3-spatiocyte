@@ -62,7 +62,7 @@ the three-dimensional positional information of a logged molecule species will
 be stored in visualLog0.dat (default file name). The molecules can be viewed in
 a separate visualizer window even while the simulation is still running. To view
 them, we can run SpatiocyteVisualizer by issuing
-$ ./spatiocyte
+$ spatiocyte
 The visualizer will load the visualLog0.dat file by default and display the
 molecules at every log interval. The keyboard shortcuts that are available for
 the visualizer are listed in the SpatiocyteVisualizer module section.
