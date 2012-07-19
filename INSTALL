@@ -15,11 +15,12 @@ $ make install (files will be installed in the $HOME/root directory)
 $ gedit ~/.bashrc (other editors such as emacs or vim can also be used here) 
 The following lines, which specify the environment variables of the E-Cell 
 System should be appended to the .bashrc file:
-  export PATH=$HOME/root/bin:$PATH
-  export LD_LIBRARY_PATH=$HOME/root/lib:$LD_LIBRARY_PATH:.
+  export SPATIOCYTE_PATH=$HOME/wrk/ecell3-spatiocyte
+  export PATH=$SPATIOCYTE_PATH:$HOME/root/bin:$PATH
+  export LD_LIBRARY_PATH=$SPATIOCYTE_PATH:$HOME/root/lib:$LD_LIBRARY_PATH:.
   export PYTHONPATH=$HOME/root/lib/python:$HOME/root/lib/python2.7/site-packages:$PYTHONPATH
-  export ECELL3_DM_PATH=.
-In the line 3 above, the Python version number '2.7' should be updated if it is
+  export ECELL3_DM_PATH=$SPATIOCYTE_PATH:.
+In the line 4 above, the Python version number '2.7' should be updated if it is
 different in the installed system. Next, we load the new environment variables:
 $ source ~/.bashrc
 $ ecell3-session-monitor (try opening it, and then close it)
