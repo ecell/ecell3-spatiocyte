@@ -57,7 +57,7 @@ $ ecell3-session -f 2010.arjunan.syst.synth.biol.wt.em
 Models that are created using the Python script can be run as,
 $ ecell3-session microtubulesExample.py
 
-When running a Spatiocyte model with the VisualizationLogProcess module enable,
+When running a Spatiocyte model with the VisualizationLogProcess module enabled,
 the three-dimensional positional information of a logged molecule species will
 be stored in visualLog0.dat (default file name). The molecules can be viewed in
 a separate visualizer window even while the simulation is still running. To view
