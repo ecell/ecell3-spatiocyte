@@ -105,6 +105,7 @@ void SpatiocyteStepper::initialize()
 
 void SpatiocyteStepper::interrupt(Time aTime)
 {
+  /*
   setCurrentTime(aTime); 
   for(std::vector<Process*>::const_iterator i(theQueuedProcesses.begin());
       i != theQueuedProcesses.end(); ++i)
@@ -114,6 +115,7 @@ void SpatiocyteStepper::interrupt(Time aTime)
       aProcess->substrateValueChanged(getCurrentTime()); 
     }
   setNextTime(thePriorityQueue.getTop()->getTime());
+  */
 }
 
 void SpatiocyteStepper::finalizeSpecies()
@@ -520,7 +522,10 @@ void SpatiocyteStepper::initPriorityQueue()
             {
               aSpatiocyteProcess->setQueueID(
                                    thePriorityQueue.push(aSpatiocyteProcess));
-              theQueuedProcesses.push_back(aProcess);
+              if(aClassName == "SpatiocyteNextReactionProcess")
+                {
+                  theQueuedProcesses.push_back(aProcess);
+                }
             }
         }
       //The following processes never interrupt other Processes.
