@@ -794,6 +794,7 @@ bool GLScene::loadCoords(std::streampos& aStreamPos)
     {
       return false;
     }
+  //Read lattice species:
   while(anIndex != theLogMarker)
     {
       unsigned int aMoleculeSize(0);
@@ -801,7 +802,10 @@ bool GLScene::loadCoords(std::streampos& aStreamPos)
         {
           return false;
         }
-      unsigned int aCoords[aMoleculeSize];
+      //First read the coords into a temporary holder, aCoords
+      //Only if we have successfully read it, we store the coords
+      //in theCoords:
+      unsigned int* aCoords(new unsigned int[aMoleculeSize]);
       if(aMoleculeSize)
         {
           if(theFile.read((char*) (aCoords), 
@@ -820,6 +824,10 @@ bool GLScene::loadCoords(std::streampos& aStreamPos)
         {
           theCoords[anIndex][j] = aCoords[j];
         }
+      if(aMoleculeSize)
+        {
+          delete []aCoords;
+        }
       if(theFile.read((char*) (&anIndex), sizeof(anIndex)).fail())
         {
           return false;
@@ -829,6 +837,7 @@ bool GLScene::loadCoords(std::streampos& aStreamPos)
     {
       return false;
     }
+  //Read off lattice species:
   while(anIndex != theLogMarker)
     { 
       unsigned int aMoleculeSize(0);
@@ -836,7 +845,10 @@ bool GLScene::loadCoords(std::streampos& aStreamPos)
         {
           return false;
         }
-      Point aPoints[aMoleculeSize];
+      //First read the points into a temporary holder, aPoints
+      //Only if we have successfully read it, we store the points
+      //in thePoints:
+      Point* aPoints(new Point[aMoleculeSize]);
       if(aMoleculeSize)
         { 
           if(theFile.read((char*) (aPoints),
@@ -854,6 +866,10 @@ bool GLScene::loadCoords(std::streampos& aStreamPos)
       for(unsigned int j(0); j != aMoleculeSize; ++j)
         {
           thePoints[anIndex][j] = aPoints[j];
+        }
+      if(aMoleculeSize)
+        {
+          delete []aPoints;
         }
       if(theFile.read((char*) (&anIndex), sizeof(anIndex)).fail())
         {
@@ -880,17 +896,24 @@ bool GLScene::loadMeanCoords(std::streampos& aStreamPos)
     {
       return false;
     }
-  unsigned int aCoords[aMoleculeSize];
+  unsigned int* aCoords(new unsigned int[aMoleculeSize]);
   if(theFile.read((char*) (aCoords), sizeof(unsigned int)*aMoleculeSize).fail())
     {
       return false;
     }
-  delete []theMeanCoords;
+  if(theMeanCoordSize)
+    {
+      delete []theMeanCoords;
+    }
   theMeanCoordSize = aMoleculeSize;
   theMeanCoords = new unsigned int[aMoleculeSize];
   for(unsigned int j(0); j != aMoleculeSize; ++j)
     {
       theMeanCoords[j] = aCoords[j];
+    }
+  if(aMoleculeSize)
+    {
+      delete []aCoords;
     }
   for(unsigned int j(0); j != theLatticeSpSize; ++j)
     {
