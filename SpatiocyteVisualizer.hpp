@@ -185,16 +185,14 @@ public:
   GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
           const char* aFileName);
   virtual ~GLScene();
-
 protected:
   virtual void on_realize();
-  virtual bool on_configure_event(GdkEventConfigure* event);
   virtual bool on_expose_event(GdkEventExpose* event);
   virtual bool on_map_event(GdkEventAny* event);
   virtual bool on_unmap_event(GdkEventAny* event);
   virtual bool on_visibility_notify_event(GdkEventVisibility* event);
   virtual bool on_timeout();
-
+  virtual bool on_configure_event(GdkEventConfigure* event);
 public:
   // Invalidate whole window.
   void rotate(int aMult, int x, int y, int z);
@@ -388,7 +386,7 @@ protected:
   //Gtk::DrawingArea m_area;
   Gtk::HRuler m_hrule;
   Gtk::VRuler m_vrule;
-  static const int XSIZE = 200, YSIZE = 200;
+  static const int XSIZE = 250, YSIZE = 250;
   bool isRecord;
 };
 

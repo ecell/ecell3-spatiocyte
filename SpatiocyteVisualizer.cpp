@@ -537,8 +537,10 @@ void GLScene::on_realize()
     {
       return;
     }
+  glClearDepth (1);
   //background color3D:
   glClearColor (0, 0, 0, 0);
+  //glClearColor (1, 1, 1, 0);
   glClearDepth (1);
   if(!theMeanCount)
     {
@@ -727,6 +729,7 @@ bool GLScene::writePng()
   png_destroy_write_struct(&png_ptr, &info_ptr); 
   free(rowPtrs);
   fclose(outFile);
+  delete []rowPtrs;
   return true;
 }
 
@@ -805,19 +808,18 @@ bool GLScene::loadCoords(std::streampos& aStreamPos)
       //First read the coords into a temporary holder, aCoords
       //Only if we have successfully read it, we store the coords
       //in theCoords:
-      unsigned int* aCoords(new unsigned int[aMoleculeSize]);
+      unsigned int* aCoords;
       if(aMoleculeSize)
         {
+          aCoords = new unsigned int[aMoleculeSize];
           if(theFile.read((char*) (aCoords), 
                           sizeof(unsigned int)*aMoleculeSize).fail())
             {
+              delete []aCoords;
               return false;
             }
         }
-      if(theMoleculeSize[anIndex])
-        {
-          delete []theCoords[anIndex];
-        }
+      delete []theCoords[anIndex];
       theMoleculeSize[anIndex] = aMoleculeSize;
       theCoords[anIndex] = new unsigned int[aMoleculeSize];
       for(unsigned int j(0); j != aMoleculeSize; ++j)
@@ -848,19 +850,18 @@ bool GLScene::loadCoords(std::streampos& aStreamPos)
       //First read the points into a temporary holder, aPoints
       //Only if we have successfully read it, we store the points
       //in thePoints:
-      Point* aPoints(new Point[aMoleculeSize]);
+      Point* aPoints;
       if(aMoleculeSize)
         { 
+          aPoints = new Point[aMoleculeSize];
           if(theFile.read((char*) (aPoints),
                           sizeof(Point)*aMoleculeSize).fail())
             {
+              delete []aPoints;
               return false;
             }
         }
-      if(theOffLatticeMoleculeSize[anIndex])
-        {
-          delete []thePoints[anIndex];
-        }
+      delete []thePoints[anIndex];
       theOffLatticeMoleculeSize[anIndex] = aMoleculeSize;
       thePoints[anIndex] = new Point[aMoleculeSize];
       for(unsigned int j(0); j != aMoleculeSize; ++j)
@@ -896,15 +897,18 @@ bool GLScene::loadMeanCoords(std::streampos& aStreamPos)
     {
       return false;
     }
-  unsigned int* aCoords(new unsigned int[aMoleculeSize]);
-  if(theFile.read((char*) (aCoords), sizeof(unsigned int)*aMoleculeSize).fail())
+  unsigned int* aCoords;
+  if(aMoleculeSize)
     {
-      return false;
+      aCoords = new unsigned int[aMoleculeSize];
+      if(theFile.read((char*) (aCoords), 
+                      sizeof(unsigned int)*aMoleculeSize).fail())
+        {
+          delete []aCoords;
+          return false;
+        }
     }
-  if(theMeanCoordSize)
-    {
-      delete []theMeanCoords;
-    }
+  delete []theMeanCoords;
   theMeanCoordSize = aMoleculeSize;
   theMeanCoords = new unsigned int[aMoleculeSize];
   for(unsigned int j(0); j != aMoleculeSize; ++j)
@@ -1386,7 +1390,6 @@ void GLScene::zoomOut()
   glMatrixMode(GL_MODELVIEW);
   invalidate();
 }
-
 
 bool GLScene::on_timeout()
 {
@@ -2305,6 +2308,7 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
     }
   return true;
 }
+
 void printUsage( const char* aProgramName )
 {
   std::cerr << "usage:" << std::endl;
