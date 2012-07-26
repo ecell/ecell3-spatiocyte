@@ -311,7 +311,7 @@ void SpatiocyteNextReactionProcess::fire()
         }
       //HD + nonHD -> product(s)
       //nonHD + HD -> product(s)
-      else
+      else if(variableA || variableB)
         {
           Species* nonHD(A);
           Variable* HD(variableB);
@@ -370,11 +370,42 @@ void SpatiocyteNextReactionProcess::fire()
               HD_p->addValue(1);
             }
         }
+      //nonHD + nonHD -> product(s)
+      else
+        {
+          //nonHD + nonHD -> nonHD + nonHD
+          if(C && D)
+            {
+              reactABCD();
+            }
+        }
     }
   ReactionProcess::fire();
 }
 
-//nonHD + nonHD -> nonHD
+
+//nonHD + nonHD -> nonHD + nonHD
+//Both A and B are immobile nonHD
+void SpatiocyteNextReactionProcess::reactABCD()
+{
+  unsigned int rand(gsl_rng_uniform_int(getStepper()->getRng(),
+                                        moleculesA.size()));
+  Voxel* moleculeA(moleculesA[rand]);
+  Voxel* moleculeB(A->getRandomAdjoiningVoxel(moleculeA, B, SearchVacant));
+  if(A != C)
+    {
+      A->removeMolecule(moleculeA);
+      C->addMolecule(moleculeA);
+    }
+  if(B != D)
+    { 
+      B->removeMolecule(moleculeB);
+      D->addMolecule(moleculeB);
+    }
+}
+
+
+//nonHD -> nonHD + nonHD
 bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
 {
   Voxel* moleculeA(a->getRandomMolecule());
@@ -607,18 +638,46 @@ Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_TwoSubstrates()
     {
       B->updateMoleculeSize();
     }
-  Real aValue1(theVariableReferenceVector[0].getVariable()->getValue());
-  Real aValue2(theVariableReferenceVector[1].getVariable()->getValue());
-  if(aValue1 > 0.0 && aValue2 > 0.0)
+  double sizeA(0);
+  double sizeB(0);
+  //for zero-diffusion nonHD A and B substrates:
+  if(A && B)
+    {
+      sizeB = updateImmobileSubstrates();
+      sizeA = moleculesA.size();
+    }
+  else
+    {
+      sizeA = theVariableReferenceVector[0].getVariable()->getValue();
+      sizeB = theVariableReferenceVector[1].getVariable()->getValue();
+    }
+  if(sizeA > 0.0 && sizeB > 0.0)
     {
       //std::cout << "p2:" << p << " v1:" << aValue1 << " v2:" << aValue2 << std::endl;
-      return p*aValue1*aValue2;
+      return p*sizeA*sizeB;
     }
   else
     {
       //std::cout << "p2:0" << std::endl;
       return 0.0;
     }
+}
+
+unsigned int SpatiocyteNextReactionProcess::updateImmobileSubstrates()
+{
+  unsigned int sizeB(0);
+  moleculesA.resize(0);
+  for(unsigned int i(0); i != A->size(); ++i)
+    {
+      Voxel* moleculeA(A->getMolecule(i));
+      unsigned int cnt(A->getAdjoiningMoleculeCnt(moleculeA, B));
+      if(cnt)
+        {
+          moleculesA.push_back(moleculeA);
+          sizeB += cnt;
+        }
+    }
+  return sizeB;
 }
 
 Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_OneSubstrate() 
@@ -667,6 +726,35 @@ void SpatiocyteNextReactionProcess::initializeThird()
   else if(variableB)
     {
       variableB->setValue(initSizeB);
+    }
+  //if second order, with A and B substrates, both of them
+  //must be immobile:
+  if(A && B)
+    {
+      if(A->getDiffusionCoefficient())
+        { 
+          THROW_EXCEPTION(ValueError, String(
+                            getPropertyInterface().getClassName()) +
+                            "[" + getFullID().asString() + 
+                            "]: A SpatiocyteNextReactionProcess can have two " +
+                            "nonHD substrates (second order) only when both " +
+                            "of the species are immobile. However, " +
+                            getIDString(A) + " has nonzero diffusion " +
+                            "coefficient. Use DiffusionInfluencedReaction " +
+                            "instead.");
+        }
+      if(B->getDiffusionCoefficient())
+        {
+          THROW_EXCEPTION(ValueError, String(
+                            getPropertyInterface().getClassName()) +
+                            "[" + getFullID().asString() + 
+                            "]: A SpatiocyteNextReactionProcess can have two " +
+                            "nonHD substrates (second order) only when both " +
+                            "of the species are immobile. However, " +
+                            getIDString(B) + " has nonzero diffusion " +
+                            "coefficient. Use DiffusionInfluencedReaction " +
+                            "instead.");
+        }
     }
   if(variableC)
     {

@@ -1080,7 +1080,7 @@ public:
         }
       return NULL;
     } 
-  Voxel* getRandomAdjoiningVoxel(Voxel* source, Species* aVacantSpecies,
+  Voxel* getRandomAdjoiningVoxel(Voxel* source, Species* aTargetSpecies,
                                  int searchVacant)
     {
       std::vector<Voxel*> CompVoxels;
@@ -1089,7 +1089,7 @@ public:
           for(unsigned int i(0); i != source->adjoiningSize; ++i)
             {
               Voxel* aVoxel(source->adjoiningVoxels[i]);
-              if(aVoxel->id == aVacantSpecies->getID())
+              if(aVoxel->id == aTargetSpecies->getID())
                 {
                   CompVoxels.push_back(aVoxel);
                 }
@@ -1106,7 +1106,7 @@ public:
                 }
             }
         }
-      return getRandomVacantVoxel(&CompVoxels, aVacantSpecies);
+      return getRandomVacantVoxel(&CompVoxels, aTargetSpecies);
     } 
   Voxel* getRandomAdjoiningVoxel(Voxel* source, Voxel* target, int searchVacant)
     {
@@ -1135,6 +1135,18 @@ public:
             }
         }
       return getRandomVacantVoxel(&CompVoxels);
+    }
+  unsigned int getAdjoiningMoleculeCnt(Voxel* source, Species* aTargetSpecies)
+    {
+      unsigned int cnt(0);
+      for(unsigned int i(0); i != source->adjoiningSize; ++i)
+        {
+          if(source->adjoiningVoxels[i]->id == aTargetSpecies->getID())
+            {
+              ++cnt;
+            }
+        }
+      return cnt;
     }
   Voxel* getRandomAdjoiningVoxel(Voxel* source, Voxel* targetA, Voxel* targetB,
                                  int searchVacant)

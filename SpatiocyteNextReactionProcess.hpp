@@ -134,11 +134,13 @@ public:
   virtual void initializeFourth();
   virtual void printParameters();
 protected:
+  unsigned int updateImmobileSubstrates();
   virtual void calculateOrder();
   virtual bool reactACD(Species*, Species*, Species*);
   virtual bool reactAC(Species*, Species*);
   virtual bool reactACbind(Species*, Species*);
   virtual bool reactACDbind(Species*, Species*, Species*);
+  virtual void reactABCD();
   virtual Voxel* reactvAC(Variable*, Species*);
   virtual Comp* getComp2D(Species*);
   virtual Voxel* reactvAvBC(Species*);
@@ -158,6 +160,7 @@ protected:
   int BindingSite;
   std::stringstream pFormula;
   RealMethodProxy theGetPropensityMethodPtr;  
+  std::vector<Voxel*> moleculesA;
 };
 
 inline void SpatiocyteNextReactionProcess::calculateOrder()
