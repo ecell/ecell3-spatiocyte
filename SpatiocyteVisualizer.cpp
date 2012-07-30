@@ -482,7 +482,7 @@ void GLScene::setShowTime(bool isShowTime)
 
 void GLScene::setRecord(bool isRecord)
 {
-  std::cout << "start rec" << std::endl;
+  std::cout << "starting to record frames..." << std::endl;
   startRecord = isRecord;
 }
 
@@ -537,7 +537,6 @@ void GLScene::on_realize()
     {
       return;
     }
-  glClearDepth (1);
   //background color3D:
   glClearColor (0, 0, 0, 0);
   //glClearColor (1, 1, 1, 0);
@@ -558,7 +557,6 @@ void GLScene::on_realize()
   glEnable(GL_COLOR_MATERIAL);
   glMatrixMode(GL_MODELVIEW);
   glTranslatef(-ViewMidx,-ViewMidy,-ViewMidz); 
-
   /*
   m_FontListBase = glGenLists(128); 
   m_FontString = "Courier 8";
@@ -596,7 +594,6 @@ void GLScene::on_realize()
   GLUquadricObj* qobj = gluNewQuadric();
   gluQuadricDrawStyle(qobj, GLU_FILL);
   theGLIndex = glGenLists(theTotalSpeciesSize);
-  std::cout << "theIndex:" << theGLIndex << std::endl;
   for(unsigned int i(theGLIndex); i != theTotalSpeciesSize+theGLIndex; ++i)
     {
       glNewList(i, GL_COMPILE);
@@ -626,7 +623,11 @@ bool GLScene::on_expose_event(GdkEventExpose* event)
       return false;
     }
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  if(show3DMolecule)
+  if(theMeanCount)
+    {
+      (this->*thePlot3DFunction)();
+    }
+  else if(show3DMolecule)
     {
       glEnable(GL_LIGHTING);
       glEnable(GL_LIGHT0);
@@ -729,7 +730,7 @@ bool GLScene::writePng()
   png_destroy_write_struct(&png_ptr, &info_ptr); 
   free(rowPtrs);
   fclose(outFile);
-  delete []rowPtrs;
+  //delete []rowPtrs;
   return true;
 }
 

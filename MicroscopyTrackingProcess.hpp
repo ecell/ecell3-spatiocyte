@@ -55,7 +55,7 @@ public:
     {
       theLatticeSize = theSpatiocyteStepper->getLatticeSize();
       theStartCoord = theSpatiocyteStepper->getStartCoord();
-      theProcessSpecies.resize(0);
+      theLatticeSpecies.resize(0);
       //Put all the unique negative species in the process species list:
       for(VariableReferenceVector::iterator 
           i(theNegativeVariableReferences.begin());
@@ -64,10 +64,10 @@ public:
           Variable* aVariable((*i).getVariable());
           Species* aSpecies(theSpatiocyteStepper->getSpecies(aVariable));
           if(!aSpecies->getIsLipid() &&
-             std::find(theProcessSpecies.begin(), theProcessSpecies.end(), 
-                  aSpecies) == theProcessSpecies.end())
+             std::find(theLatticeSpecies.begin(), theLatticeSpecies.end(), 
+                  aSpecies) == theLatticeSpecies.end())
             {
-              theProcessSpecies.push_back(aSpecies);
+              theLatticeSpecies.push_back(aSpecies);
             }
         }
       VariableReferenceVector::iterator aNegativeVariableIter(
@@ -94,8 +94,8 @@ public:
                       Species* aNegativeSpecies(
                           theSpatiocyteStepper->getSpecies(aNegativeVariable));
                       int aProcessSpeciesIndex(
-                       std::find(theProcessSpecies.begin(), theProcessSpecies.end(), 
-                            aNegativeSpecies) - theProcessSpecies.begin());
+                       std::find(theLatticeSpecies.begin(), theLatticeSpecies.end(), 
+                            aNegativeSpecies) - theLatticeSpecies.begin());
                       while(aNegativeCoefficient)
                         {
                           aNegativeCoefficient += 1;
@@ -106,11 +106,11 @@ public:
                       ++aNegativeVariableIter;
                     }
                   while(aPositiveCoefficient);
-                  theProcessSpeciesIndices.push_back(aProcessSpeciesIndices);
+                  theLatticeSpeciesIndices.push_back(aProcessSpeciesIndices);
                 }
             }
         }
-      theLattice.resize(theProcessSpecies.size());
+      theLattice.resize(theLatticeSpecies.size());
       for(unsigned int i(0); i != theLattice.size(); ++i)
         {
           theLattice[i].resize(theLatticeSize);
@@ -184,7 +184,7 @@ protected:
   double theLastExposedTime;
   std::vector<Species*> thePositiveSpecies;
   std::vector<std::vector<int> > theLattice;
-  std::vector<std::vector<int> > theProcessSpeciesIndices;
+  std::vector<std::vector<int> > theLatticeSpeciesIndices;
 };
 
 #endif /* __MicroscopyTrackingProcess_hpp */

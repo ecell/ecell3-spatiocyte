@@ -41,12 +41,12 @@ void MicroscopyTrackingProcess::incSpeciesLatticeCount()
       for(unsigned int j(0); j != aMoleculeSize; ++j)
         { 
           Voxel* aMolecule(aSpecies->getMolecule(j));
-          ++theLattice[theProcessSpeciesIndices[i][0]][
+          ++theLattice[theLatticeSpeciesIndices[i][0]][
             aMolecule->coord-theStartCoord];
-          for(unsigned int k(1); k != theProcessSpeciesIndices[i].size(); ++k)
+          for(unsigned int k(1); k != theLatticeSpeciesIndices[i].size(); ++k)
             {
               Voxel* anAdjoin(aMolecule->adjoiningVoxels[k-1]);
-              ++theLattice[theProcessSpeciesIndices[i][k]][
+              ++theLattice[theLatticeSpeciesIndices[i][k]][
                 anAdjoin->coord-theStartCoord];
             }
         }
@@ -58,7 +58,7 @@ void MicroscopyTrackingProcess::logFluorescentSpecies()
   std::vector<int> coordList;
   for(unsigned int i(0); i != theLatticeSize; ++i)
     { 
-      for(unsigned int j(0); j != theProcessSpecies.size(); ++j)
+      for(unsigned int j(0); j != theLatticeSpecies.size(); ++j)
         {
           if(theLattice[j][i])
             {
@@ -67,10 +67,6 @@ void MicroscopyTrackingProcess::logFluorescentSpecies()
             }
         }
     }
-  int aDataSize(0);
-  std::streampos aStartPos(theLogFile.tellp());
-  // write the next size (create a temporary space for it) 
-  theLogFile.write((char*)(&aDataSize), sizeof(aDataSize));
   double aCurrentTime(theSpatiocyteStepper->getCurrentTime());
   theLogFile.write((char*)(&aCurrentTime), sizeof(aCurrentTime));
   unsigned int coordSize(coordList.size());
@@ -80,7 +76,7 @@ void MicroscopyTrackingProcess::logFluorescentSpecies()
       unsigned int aCoord(coordList[i]+theStartCoord);
       theLogFile.write((char*)(&aCoord), sizeof(aCoord));
     }
-  for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
+  for(unsigned int i(0); i != theLatticeSpecies.size(); ++i)
     {
       for(unsigned int j(0); j != coordSize; ++j)
         {
@@ -88,15 +84,5 @@ void MicroscopyTrackingProcess::logFluorescentSpecies()
           theLogFile.write((char*)(&frequency), sizeof(frequency));
         }
     }
-  aDataSize = (theLogFile.tellp()-aStartPos)-static_cast<std::streampos>(sizeof(aDataSize)); 
-  int aPrevDataSize(theLogFile.tellp()-theStepStartPos+static_cast<std::streampos>(sizeof(int))*2);
-  theStepStartPos = theLogFile.tellp();
-  // write the prev size at the end of this step
-  theLogFile.write((char*)(&aPrevDataSize), sizeof(aPrevDataSize));
-  std::streampos aCurrentPos(theLogFile.tellp());
-  theLogFile.seekp(aStartPos);
-  // write the next size at the beginning of this step
-  theLogFile.write((char*) (&aDataSize), sizeof(aDataSize));
-  theLogFile.seekp(aCurrentPos);
 }
 
