@@ -76,6 +76,7 @@ public:
     RotateZ(0) 
   {
     FileName = "HisLog.csv";
+    LogStart = 1e-5;
   }
   virtual ~HistogramLogProcess() {}
   virtual void initializeFifth();
@@ -86,6 +87,9 @@ public:
   virtual void logValues();
   virtual void logCollision();
   virtual void logDensity();
+  virtual void initLogValues();
+  virtual void logFile();
+  virtual void saveFileHeader(std::ofstream&);
   void initializeVectors();
   bool isInside(unsigned int&, Point);
 protected:

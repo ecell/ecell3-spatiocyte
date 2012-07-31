@@ -78,6 +78,7 @@ public:
     RebindTime(0),
     SaveCounts(0),
     Survival(0),
+    LogEnd(libecs::INF),
     LogStart(0),
     LogInterval(0),
     FileName("Log.csv") {}

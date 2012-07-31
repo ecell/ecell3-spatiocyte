@@ -78,6 +78,16 @@ System System(/)
 #                            [_ Variable:/Surface:MinD -1];
 #      FileName "microscopyLog0.dat";
 #    }
+  Process HistogramLogProcess(histogram)
+    {
+      VariableReferenceList [_ Variable:/Surface:MinEE]
+                            [_ Variable:/Surface:MinD]
+                            [_ Variable:/Surface:MinDEED];
+      Length 4.5e-6;
+      Radius 0.5e-6;
+      Bins 20;
+      LogInterval 0.1;
+    }
   Process MoleculePopulateProcess(populate)
     {
       VariableReferenceList [_ Variable:/:MinDatp ]

@@ -56,20 +56,6 @@ void HistogramLogProcess::initializeLastOnce()
 {
   theLogFile.open(FileName.c_str(), std::ios::trunc);
   theTotalIterations = Iterations;
-  timePoints = (unsigned int)ceil((LogEnd-LogStart)/theStepInterval)+1;
-  theLogValues.resize(timePoints);
-  for(unsigned int i(0); i != timePoints; ++i)
-    {
-      theLogValues[i].resize(Bins);
-      for(unsigned int j(0); j != Bins; ++j)
-        {
-          theLogValues[i][j].resize(theProcessSpecies.size());
-          for(unsigned int k(0); k != theProcessSpecies.size(); ++k)
-            {
-              theLogValues[i][j][k] = 0;
-            }
-        }
-    }
   theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
   C = theComp->centerPoint;
   C.x += OriginX*theComp->lengthX/2;
@@ -80,6 +66,7 @@ void HistogramLogProcess::initializeLastOnce()
   Radius /= VoxelDiameter;
   binInterval = Length/(Bins+1);
   initializeVectors();
+  saveFileHeader(theLogFile);
 }
 
 void HistogramLogProcess::fire()
@@ -89,7 +76,13 @@ void HistogramLogProcess::fire()
       logValues();
       ++timePointCnt;
     }
-  if(theTime >= LogEnd && Iterations > 0)
+  //Log file incrementally when there is only 1 iteration and we don't
+  //know the LogEnd time:
+  if(theTotalIterations == 1 && LogEnd == libecs::INF)
+    {
+      logFile();
+    }
+  else if(theTime >= LogEnd && Iterations > 0)
     {
       theStepInterval = LogInterval;
       --Iterations;
@@ -116,7 +109,7 @@ void HistogramLogProcess::saveFile()
 {
   std::cout << "Saving data in: " << FileName.c_str() << std::endl;
   double aTime(LogInterval);
-  for(unsigned int i(0); i != timePoints; ++i)
+  for(unsigned int i(0); i != theLogValues.size(); ++i)
     {
       for(unsigned int j(0); j != Bins; ++j)
         {
@@ -134,6 +127,22 @@ void HistogramLogProcess::saveFile()
   theStepInterval = libecs::INF;
 }
 
+
+void HistogramLogProcess::logFile()
+{
+  for(unsigned int j(0); j != Bins; ++j)
+    {
+      theLogFile << std::setprecision(15) << theTime << "," << j;
+      for(unsigned int k(0); k != theProcessSpecies.size(); ++k)
+        {
+          theLogFile << "," << std::setprecision(15) <<
+            theLogValues[timePointCnt-1][j][k];
+        }
+      theLogFile << std::endl;
+    }
+}
+
+
 void HistogramLogProcess::saveBackup()
 {
   if(SaveCounts > 0 && 
@@ -144,9 +153,10 @@ void HistogramLogProcess::saveBackup()
       std::cout << "Saving backup data in: " << aFileName << std::endl;
       std::ofstream aFile;
       aFile.open(aFileName.c_str(), std::ios::trunc);
+      saveFileHeader(aFile);
       double aTime(LogInterval);
       int completedIterations(theTotalIterations-Iterations);
-      for(unsigned int i(0); i != timePoints; ++i)
+      for(unsigned int i(0); i != theLogValues.size(); ++i)
         {
           for(unsigned int j(0); j != Bins; ++j)
             {
@@ -164,8 +174,22 @@ void HistogramLogProcess::saveBackup()
     }
 }
 
+void HistogramLogProcess::saveFileHeader(std::ofstream& aFile)
+{
+  aFile << "Time," << std::scientific << binInterval*VoxelDiameter;
+  for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
+    {
+      aFile << "," << getIDString(theProcessSpecies[i]);
+    }
+  aFile << std::endl;
+}
+
 void HistogramLogProcess::logValues()
 {
+  if(Iterations == theTotalIterations)
+    {
+      initLogValues();
+    }
   if(Collision)
     {
       logCollision();
@@ -173,6 +197,16 @@ void HistogramLogProcess::logValues()
   else
     {
       logDensity();
+    }
+}
+
+void HistogramLogProcess::initLogValues()
+{
+  theLogValues.resize(timePointCnt+1);
+  theLogValues[timePointCnt].resize(Bins);
+  for(unsigned int i(0); i != Bins; ++i)
+    {
+      theLogValues[timePointCnt][i].resize(theProcessSpecies.size(), 0);
     }
 }
 
