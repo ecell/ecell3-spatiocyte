@@ -82,10 +82,19 @@ System System(/)
     {
       VariableReferenceList [_ Variable:/Surface:MinEE]
                             [_ Variable:/Surface:MinD]
+                            [_ Variable:/Surface:MinDEE]
                             [_ Variable:/Surface:MinDEED];
       Length 4.5e-6;
       Radius 0.5e-6;
       Bins 20;
+      LogInterval 0.1;
+    }
+  Process CoordinateLogProcess(coordinate)
+    {
+      VariableReferenceList [_ Variable:/Surface:MinEE]
+                            [_ Variable:/Surface:MinD]
+                            [_ Variable:/Surface:MinDEE]
+                            [_ Variable:/Surface:MinDEED];
       LogInterval 0.1;
     }
   Process MoleculePopulateProcess(populate)

@@ -8,10 +8,10 @@ legendFontSize = 14
 lineFontSize = 14
 
 files = []
-fileNames = ["HisLog.csv"]
+fileNames = ["../example_models/HisLog.csv"]
 legendTitles = []
 lines = ['-', '-', '-', '-']
-colors = ['r', 'g', 'b', 'b', 'g', 'c', 'y', 'c', 'k']
+colors = ['r', 'g', 'b', 'k', 'c', 'y']
 
 fig = P.figure(figsize=(10,6))
 ax1 = fig.add_subplot(2,1,1)
@@ -40,8 +40,6 @@ for i in range(len(fileNames)):
   timePoints = len(data)/bins
   colSize = len(legendTitles)-2
   for l in range(timePoints):
-    ax1.cla()
-    ax2.cla()
     for m in range(colSize):
       h = []
       y = [0]*bins
@@ -56,28 +54,28 @@ for i in range(len(fileNames)):
       if(m == 2):
         ax1.plot(x, y, ls=lines[0], color=colors[i*colSize+m], label=legendTitles[i*colSize+m+2], linewidth=1)
       ax2.plot(x, y, ls=lines[0], color=colors[i*colSize+m], label=legendTitles[i*colSize+m+2], linewidth=1)
-    if(y):
-      leg = ax2.legend(bbox_to_anchor=(1.02,2.25), loc='upper left', labelspacing=0.2, handletextpad=0.2, fancybox=True)
-      ax1.set_ylim(0)
-      ax2.set_ylim(0)
-      for t in leg.get_texts():
-        t.set_fontsize(legendFontSize)   
-      frame = leg.get_frame()
-      frame.set_linewidth(None)
-      frame.set_facecolor('0.95')
-      frame.set_edgecolor('0.75')
-      ax2.set_xlabel('Length (x %.2e m)' %(binInterval))
-      ax1.set_title('t = %.2e s' %(data[l*bins][0]))
-      ax1.set_ylabel('Number of molecules')
-      ax2.set_ylabel('Number of molecules')
-      ax1.grid(True)
-      ax2.grid(True)
-      fname = fileNames[i]+'.%03d.png'%l
-      print 'Saving frame', fname
-      fig.savefig(fname)
-      files.append(fname)
+    leg = ax2.legend(bbox_to_anchor=(1.02,2.25), loc='upper left', labelspacing=0.2, handletextpad=0.2, fancybox=True)
+    ax1.set_ylim(0)
+    ax2.set_ylim(0)
+    for t in leg.get_texts():
+      t.set_fontsize(legendFontSize)   
+    frame = leg.get_frame()
+    frame.set_linewidth(None)
+    frame.set_facecolor('0.95')
+    frame.set_edgecolor('0.75')
+    ax2.set_xlabel('Length (x %.2e m)' %(binInterval))
+    ax1.set_title('t = %.2e s' %(data[l*bins][0]))
+    ax1.set_ylabel('Number of molecules')
+    ax2.set_ylabel('Number of molecules')
+    ax1.grid(True)
+    ax2.grid(True)
+    fileName = fileNames[i]+'.%03d.png'%l
+    print 'Saving frame', fileName
+    fig.savefig(fileName)
+    ax1.cla()
+    ax2.cla()
 
-os.system("ffmpeg -i " + fileNames[i] + ".%03d.png -sameq out.mp4")
+os.system("ffmpeg -i " + fileNames[0] + ".%03d.png -sameq " + fileNames[0] + ".mp4")
 
 
 

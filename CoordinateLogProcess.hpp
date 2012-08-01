@@ -45,7 +45,10 @@ public:
       INHERIT_PROPERTIES(IteratingLogProcess);
     }
   CoordinateLogProcess():
-    theMoleculeSize(0) {}
+    theMoleculeSize(0)
+  {
+    FileName = "CoordLog.csv";
+  }
   virtual ~CoordinateLogProcess() {}
   virtual void initializeLastOnce()
     {
@@ -54,6 +57,7 @@ public:
           theMoleculeSize += theProcessSpecies[i]->size();
         }
       theLogFile.open(FileName.c_str(), std::ios::trunc);
+      theStartCoord = theSpatiocyteStepper->getStartCoord();
       initializeLog();
       logSpecies();
     }
@@ -76,43 +80,41 @@ public:
     {
       for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
         {
+          theLogFile << getStepper()->getCurrentTime();
           logMolecules(i);
+          theLogFile << std::endl;
         }
-      theLogFile << std::endl;
     }
 protected:
   void initializeLog()
     {
       Point aCenterPoint(theSpatiocyteStepper->getCenterPoint());
       theLogFile
-        << "interval:" << theStepInterval
-        << ",startCoord:" << theSpatiocyteStepper->getStartCoord()
-        << ",rowSize:" << theSpatiocyteStepper->getRowSize() 
-        << ",layerSize:" << theSpatiocyteStepper->getLayerSize()
-        << ",colSize:" << theSpatiocyteStepper->getColSize()
-        << ",width:" << aCenterPoint.z*2
-        << ",height:" << aCenterPoint.y*2
-        << ",length:" <<  aCenterPoint.x*2
-        << ",voxelRadius:" << theSpatiocyteStepper->getVoxelRadius();
+        << "log interval=" << theStepInterval
+        << ",world width=" << aCenterPoint.z*2
+        << ",world height=" << aCenterPoint.y*2
+        << ",world length=" <<  aCenterPoint.x*2
+        << ",voxel radius=" <<  theSpatiocyteStepper->getVoxelRadius();
+      for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
+        {
+          theLogFile << "," << getIDString(theProcessSpecies[i]) << "=" <<
+            theProcessSpecies[i]->getRadius();
+        }
+      theLogFile << std::endl;
     }
   void logMolecules(int anIndex)
     {
       Species* aSpecies(theProcessSpecies[anIndex]);
-      if(aSpecies->size())
+      for(unsigned int i(0); i != aSpecies->size(); ++i)
         {
-          theLogFile << aSpecies->getCoord(0);
-        }
-      else
-        {
-          theLogFile << std::endl;
-        }
-      for(unsigned int i(1); i < aSpecies->size(); ++i)
-        {
-          theLogFile << "," << aSpecies->getCoord(i);
+          Point aPoint(aSpecies->getPoint(i));
+          theLogFile << "," << aPoint.x << "," << aPoint.y << "," <<
+            aPoint.z;
         }
     }
 private:
   double theMoleculeSize;
+  unsigned int theStartCoord;
 };
 
 #endif /* __CoordinateLogProcess_hpp */

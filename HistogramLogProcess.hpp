@@ -76,7 +76,7 @@ public:
     RotateZ(0) 
   {
     FileName = "HisLog.csv";
-    LogStart = 1e-5;
+    LogStart = 1e-8;
   }
   virtual ~HistogramLogProcess() {}
   virtual void initializeFifth();
