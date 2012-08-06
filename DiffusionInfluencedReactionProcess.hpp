@@ -64,7 +64,9 @@ public:
                           "]: Only second order scheme is allowed for "+
                           "diffusion influenced reactions.");
         }
+      checkSubstrates();
     }
+  virtual void checkSubstrates();
   virtual void initializeSecond();
   virtual void initializeThird();
   virtual bool react(Voxel*, Voxel*);

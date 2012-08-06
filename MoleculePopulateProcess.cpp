@@ -31,18 +31,83 @@
 #include <algorithm>
 #include <gsl/gsl_randist.h>
 #include <boost/lexical_cast.hpp>
+#include <libecs/Model.hpp>
+#include <libecs/System.hpp>
+#include <libecs/Stepper.hpp>
+#include <libecs/Process.hpp>
+#include <libecs/VariableReference.hpp>
 #include "MoleculePopulateProcess.hpp"
 #include "SpatiocyteSpecies.hpp"
+#include "SpatiocyteProcess.hpp"
 
 LIBECS_DM_INIT(MoleculePopulateProcess, Process); 
+
+
+void MoleculePopulateProcess::initialize()
+{
+  if(isInitialized)
+    {
+      return;
+    }
+  SpatiocyteProcess::initialize();
+  for(VariableReferenceVector::const_iterator
+	i(theVariableReferenceVector.begin());
+        i != theVariableReferenceVector.end(); ++i)
+    {
+      Variable* aVariable((*i).getVariable());
+      if(aVariable->getName() == "HD")
+        {
+          THROW_EXCEPTION(ValueError, getPropertyInterface().getClassName() +
+            " [" + getFullID().asString() + "]: " +  
+            aVariable->getFullID().asString() + " is a HD species and " +
+            "therefore cannot be populated");
+        }
+    }
+}
 
 void MoleculePopulateProcess::initializeSecond()
 {
   SpatiocyteProcess::initializeSecond();
+  checkProcess();
   for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
       i != theProcessSpecies.end(); ++i)
     {
       (*i)->setPopulateProcess(this, GaussianSigma);
+    }
+}
+
+void MoleculePopulateProcess::checkProcess()
+{
+  std::vector<Variable*> aVariables;
+  std::vector<Process*> aProcesses(theSpatiocyteStepper->getProcessVector());
+  for(std::vector<Process*>::const_iterator j(aProcesses.begin());
+      j!= aProcesses.end(); ++j)
+    {
+      MoleculePopulateProcess* aProcess(
+                              dynamic_cast<MoleculePopulateProcess*>(*j));
+      if(aProcess)
+        {
+          VariableReferenceVector aVariableReferences(
+                                  (*j)->getVariableReferenceVector());
+          for(VariableReferenceVector::const_iterator 
+              k(aVariableReferences.begin());
+              k != aVariableReferences.end(); ++k)
+            {
+              aVariables.push_back((*k).getVariable());
+            }	
+        }     
+    }
+  for(std::vector<Species*>::iterator i(theSpecies.begin());
+      i !=theSpecies.end(); ++i)
+    {
+      if((*i)->getVariable() && (*i)->getVariable()->getValue() != 0 &&
+         std::find(aVariables.begin(), aVariables.end(),
+                   (*i)->getVariable()) == aVariables.end())
+        {
+          THROW_EXCEPTION(ValueError, getPropertyInterface().getClassName() +
+            " [" + (*i)->getVariable()->getFullID().asString() + "]: " +  
+            "has a non-zero value but is not populated.");
+        }
     }
 }
 

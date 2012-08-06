@@ -809,7 +809,7 @@ bool GLScene::loadCoords(std::streampos& aStreamPos)
       //First read the coords into a temporary holder, aCoords
       //Only if we have successfully read it, we store the coords
       //in theCoords:
-      unsigned int* aCoords;
+      unsigned int* aCoords(NULL);
       if(aMoleculeSize)
         {
           aCoords = new unsigned int[aMoleculeSize];
@@ -851,7 +851,7 @@ bool GLScene::loadCoords(std::streampos& aStreamPos)
       //First read the points into a temporary holder, aPoints
       //Only if we have successfully read it, we store the points
       //in thePoints:
-      Point* aPoints;
+      Point* aPoints(NULL);
       if(aMoleculeSize)
         { 
           aPoints = new Point[aMoleculeSize];
@@ -898,7 +898,7 @@ bool GLScene::loadMeanCoords(std::streampos& aStreamPos)
     {
       return false;
     }
-  unsigned int* aCoords;
+  unsigned int* aCoords(NULL);
   if(aMoleculeSize)
     {
       aCoords = new unsigned int[aMoleculeSize];

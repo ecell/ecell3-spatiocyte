@@ -113,6 +113,7 @@ private:
   void checkSurfaceComp();
   void shuffleAdjoiningVoxels();
   void setLatticeProperties();
+  void checkModel();
   void initPriorityQueue();
   void initProcessSecond();
   void initProcessThird();

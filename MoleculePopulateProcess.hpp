@@ -71,6 +71,7 @@ public:
   SIMPLE_SET_GET_METHOD(Real, UniformRadiusX);
   SIMPLE_SET_GET_METHOD(Real, UniformRadiusY);
   SIMPLE_SET_GET_METHOD(Real, UniformRadiusZ);
+  virtual void initialize();
   virtual void initializeSecond();
   virtual void populateGaussian(Species*);
   virtual void populateUniformDense(Species*, unsigned int[], unsigned int*);
@@ -88,6 +89,7 @@ public:
     {
       return Priority;
     }
+  void checkProcess();
 protected:
   int Priority;
   double GaussianSigma;

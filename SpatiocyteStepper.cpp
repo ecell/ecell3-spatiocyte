@@ -34,6 +34,8 @@
 #include <libecs/Model.hpp>
 #include <libecs/System.hpp>
 #include <libecs/Process.hpp>
+#include <libecs/Stepper.hpp>
+#include <libecs/VariableReference.hpp>
 #include "SpatiocyteStepper.hpp"
 #include "SpatiocyteSpecies.hpp"
 #include "SpatiocyteProcessInterface.hpp"
@@ -56,51 +58,53 @@ void SpatiocyteStepper::initialize()
                       ": at least one Process must be defined in this" +
                       " Stepper.");
     } 
+  std::cout << "1. checking model..." << std::endl;
+  checkModel();
   //We need a Comp tree to assign the voxels to each Comp
   //and get the available number of vacant voxels. The compartmentalized
   //vacant voxels are needed to randomly place molecules according to the
   //Comp:
-  std::cout << "1. creating compartments..." << std::endl;
+  std::cout << "2. creating compartments..." << std::endl;
   registerComps();
   setCompsProperties();
-  std::cout << "2. setting up lattice properties..." << std::endl;
+  std::cout << "3. setting up lattice properties..." << std::endl;
   setLatticeProperties(); 
   setCompsCenterPoint();
   //All species have been created at this point, we initialize them now:
-  std::cout << "3. initializing species..." << std::endl;
+  std::cout << "4. initializing species..." << std::endl;
   initSpecies();
-  std::cout << "4. initializing processes the second time..." << std::endl;
+  std::cout << "5. initializing processes the second time..." << std::endl;
   initProcessSecond();
-  std::cout << "5. constructing lattice..." << std::endl;
+  std::cout << "6. constructing lattice..." << std::endl;
   constructLattice();
-  std::cout << "6. setting intersecting compartment list..." << std::endl;
+  std::cout << "7. setting intersecting compartment list..." << std::endl;
   setIntersectingCompartmentList();
-  std::cout << "7. compartmentalizing lattice..." << std::endl;
+  std::cout << "8. compartmentalizing lattice..." << std::endl;
   compartmentalizeLattice();
-  std::cout << "8. setting up compartment voxels properties..." << std::endl;
+  std::cout << "9. setting up compartment voxels properties..." << std::endl;
   setCompVoxelProperties();
-  std::cout << "9. initializing processes the third time..." << std::endl;
+  std::cout << "10. initializing processes the third time..." << std::endl;
   initProcessThird();
-  std::cout << "10. printing simulation parameters..." << std::endl;
+  std::cout << "11. printing simulation parameters..." << std::endl;
   updateSpecies();
   storeSimulationParameters();
   printSimulationParameters();
-  std::cout << "11. populating compartments with molecules..." << std::endl;
+  std::cout << "12. populating compartments with molecules..." << std::endl;
   populateComps();
-  std::cout << "12. initializing processes the fourth time..." << std::endl;
+  std::cout << "13. initializing processes the fourth time..." << std::endl;
   initProcessFourth();
-  std::cout << "13. initializing the priority queue..." << std::endl;
+  std::cout << "14. initializing the priority queue..." << std::endl;
   initPriorityQueue();
-  std::cout << "14. initializing processes the fifth time..." << std::endl;
+  std::cout << "15. initializing processes the fifth time..." << std::endl;
   initProcessFifth();
-  std::cout << "15. initializing processes the last time..." << std::endl;
+  std::cout << "16. initializing processes the last time..." << std::endl;
   initProcessLastOnce();
-  std::cout << "16. finalizing species..." << std::endl;
+  std::cout << "17. finalizing species..." << std::endl;
   finalizeSpecies();
-  std::cout << "17. printing final process parameters..." << std::endl <<
+  std::cout << "18. printing final process parameters..." << std::endl <<
     std::endl;
   printProcessParameters();
-  std::cout << "18. simulation is started..." << std::endl;
+  std::cout << "19. simulation is started..." << std::endl;
 }
 
 void SpatiocyteStepper::interrupt(Time aTime)
@@ -374,6 +378,46 @@ Species* SpatiocyteStepper::variable2species(Variable* aVariable)
         }
     }
   return NULL;
+}
+
+void SpatiocyteStepper::checkModel()
+{
+  //check if nonHD species are being used by non-SpatiocyteProcesses
+  Model::StepperMap aStepperMap(getModel()->getStepperMap());  
+  for(Model::StepperMap::const_iterator i(aStepperMap.begin());
+      i != aStepperMap.end(); ++i )
+    {   
+      if(i->second != this)
+        {
+          std::vector<Process*> aProcessVector(i->second->getProcessVector());
+          for(std::vector<Process*>::const_iterator j(aProcessVector.begin());
+              j != aProcessVector.end(); ++j)
+            {
+              Process::VariableReferenceVector aVariableReferenceVector( 
+                               (*j)->getVariableReferenceVector());
+              for(Process::VariableReferenceVector::const_iterator 
+                  k(aVariableReferenceVector.begin());
+                  k != aVariableReferenceVector.end(); ++k)
+                { 
+                  const VariableReference& aNewVariableReference(*k);
+                  Variable* aVariable(aNewVariableReference.getVariable()); 
+                  for(std::vector<Species*>::iterator m(theSpecies.begin());
+                      m !=theSpecies.end(); ++m)
+                    {
+                      if((*m)->getVariable() == aVariable)
+                        {
+                          THROW_EXCEPTION(ValueError, 
+                            getPropertyInterface().getClassName() +
+                            ": " + aVariable->getFullID().asString()  +  
+                            " is a non-HD species but it is being used " +
+                            "by non-SpatiocyteProcess: " +
+                            (*j)->getFullID().asString());
+                        }
+                    } 
+                }
+            }
+        }
+    }
 }
 
 void SpatiocyteStepper::checkLattice()

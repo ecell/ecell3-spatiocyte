@@ -30,6 +30,7 @@
 
 #include "SpatiocyteNextReactionProcess.hpp"
 #include "SpatiocyteSpecies.hpp"
+#include "ReactionProcess.hpp"
 
 LIBECS_DM_INIT(SpatiocyteNextReactionProcess, Process);
 
@@ -698,6 +699,33 @@ Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_OneSubstrate()
     }
 }
 
+void SpatiocyteNextReactionProcess::initializeSecond()
+{
+  ReactionProcess::initializeSecond();
+  if(A && B)
+    {
+      if(A->getDiffusionCoefficient())
+        {
+          THROW_EXCEPTION(ValueError, String(
+                getPropertyInterface().getClassName()) + " " + 
+                getFullID().asString() + ": A SpatiocyteNextReactionProcess " +
+                "can have two nonHD substrates (second order) only when both " +
+                "of the species are immobile. However, " + getIDString(A) + 
+                " has nonzero diffusion coefficient. Use " +
+                "DiffusionInfluencedReactionProcess instead.");
+        }
+      if(B->getDiffusionCoefficient())
+        {
+          THROW_EXCEPTION(ValueError, String(
+                getPropertyInterface().getClassName()) + " " + 
+                getFullID().asString() + ": A SpatiocyteNextReactionProcess " +
+                "can have two nonHD substrates (second order) only when both " +
+                "of the species are immobile. However, " + getIDString(B) + 
+                " has nonzero diffusion coefficient. Use " +
+                "DiffusionInfluencedReactionProcess instead.");
+        }
+    }
+}
 
 //Cannot put the setIsReactiveVacant in initializeSecond because some
 //species will only be initialized as vacant in the initializeSecond method
@@ -729,7 +757,7 @@ void SpatiocyteNextReactionProcess::initializeThird()
     }
   //if second order, with A and B substrates, both of them
   //must be immobile:
-  if(A && B)
+  if (A && B)
     {
       if(A->getDiffusionCoefficient())
         { 

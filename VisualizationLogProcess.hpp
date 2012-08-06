@@ -57,7 +57,29 @@ public:
   virtual ~VisualizationLogProcess() {}
   SIMPLE_SET_GET_METHOD(Integer, Polymer);
   SIMPLE_SET_GET_METHOD(Real, LogInterval);
-  SIMPLE_SET_GET_METHOD(String, FileName);
+  SIMPLE_SET_GET_METHOD(String, FileName); 
+  virtual void initialize()
+    {
+      if(isInitialized)
+        {
+          return;
+        }
+      SpatiocyteProcess::initialize();
+      for(VariableReferenceVector::iterator
+          i(theVariableReferenceVector.begin());
+          i != theVariableReferenceVector.end(); ++i)
+        {
+          Variable* aVariable((*i).getVariable());
+          if(aVariable->getName() == "HD")
+            {
+              THROW_EXCEPTION(ValueError, 
+                getPropertyInterface().getClassName() +
+                " [" + getFullID().asString() + "]: " +  
+                aVariable->getFullID().asString() + " is a HD species and " +
+                "therefore cannot be visualized.");
+            }
+        }
+    }	
   virtual void initializeFourth()
     {
       SpatiocyteProcess::initializeSecond();
@@ -81,7 +103,6 @@ public:
         }
       thePriority = -1;
     }
-
   virtual void initializeFifth()
     {
       if(LogInterval > 0)

@@ -33,6 +33,25 @@
 
 LIBECS_DM_INIT(DiffusionInfluencedReactionProcess, Process);
 
+void DiffusionInfluencedReactionProcess::checkSubstrates()
+{
+  //HD_A or HD_B:
+	if(variableA)
+    {
+      THROW_EXCEPTION(ValueError, String(
+        getPropertyInterface().getClassName()) + " [" + getFullID().asString() +
+		    "]: A DiffusionInfluencedReactionProcess cannot have a HD " +
+        "substrate species: " + getIDString(variableA));
+    }
+  if(variableB)
+    {
+      THROW_EXCEPTION(ValueError, String(
+        getPropertyInterface().getClassName()) + " [" + getFullID().asString() +
+		    "]: A DiffusionInfluencedReactionProcess cannot have a HD " +
+        "substrate species: " + getIDString(variableB));
+    }
+}
+
 void DiffusionInfluencedReactionProcess::initializeSecond()
 {
   ReactionProcess::initializeSecond(); 
@@ -250,6 +269,8 @@ void DiffusionInfluencedReactionProcess::addMoleculeE()
   E->addMolecule(moleculeE);
 }
 
+
+
 void DiffusionInfluencedReactionProcess::finalizeReaction()
 {
   //The number of molecules may have changed for both reactant and product
@@ -375,7 +396,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
     {
       THROW_EXCEPTION(ValueError, 
                       String(getPropertyInterface().getClassName()) + 
-                      "[" + getFullID().asString() + 
+                      " [" + getFullID().asString() + 
                       "]: Error in type of second order reaction.");
     }
 }
