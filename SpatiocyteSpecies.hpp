@@ -33,7 +33,7 @@
 #include "DiffusionInfluencedReactionProcessInterface.hpp"
 #include "MoleculePopulateProcessInterface.hpp"
 
-// The size of Voxel must be 128 bytes to avoid cacheline splits
+// The size of Coord must be 128 bytes to avoid cacheline splits
 // The Core 2 has 64-byte cacheline
 static double getDistance(Point* aSourcePoint, Point* aDestPoint)
 {
@@ -52,19 +52,19 @@ String int2str(int anInt)
 /*
  * isVacant: vacant species definition: a species on which other species can
  * diffuse on or occupy. One major optimization in speed for vacant species is
- * that theMolecules list is not updated when other species diffuse on it. 
+ * that theCoords list is not updated when other species diffuse on it. 
  * There are four possible types of vacant species:
  * 1. !isDiffusiveVacant && !isReactiveVacant: a vacant species
- *    whose theMolecules list and theMoleculeSize are never updated. This is
+ *    whose theCoords list and theCoordSize are never updated. This is
  *    the most basic version. This vacant species never diffuses, or reacts
  *    using SNRP. 
  * 2. !isDiffusiveVacant && isReactiveVacant: a vacant species which is a
- *    substrate of a SNRP reaction. In this case theMoleculeSize is updated
- *    before the step interval of SNRP is calculated, and theMolecules list is
+ *    substrate of a SNRP reaction. In this case theCoordSize is updated
+ *    before the step interval of SNRP is calculated, and theCoords list is
  *    updated before the SNRP reaction (fire) is executed to get a valid
  *    molecule list. Set by SNRP.
  * 3. isDiffusiveVacant && !isReactiveVacant: a vacant species which also
- *    diffuses. In this case, theMolecules list and theMoleculesSize are
+ *    diffuses. In this case, theCoords list and theCoordsSize are
  *    updated just before it is diffused. Set by DiffusionProcess.   
  * 4. isDiffusiveVacant && isReactiveVacant: a vacant species which reacts
  *    using SNRP and also diffuses.
@@ -72,10 +72,10 @@ String int2str(int anInt)
  *    also be isDiffusiveVacant and isReactiveVacant. Set during compartment
  *    registration. It also persistently stores all the compartment voxels.
  *    Referred to as theVacantSpecies. For isCompVacant, initially there
- *    are no molecules in its list. All voxels are stored in theCompVoxels. Only
+ *    are no molecules in its list. All voxels are stored in theCompCoords. Only
  *    if it is updated before being called by VisualizationLogProcess, SNRP or
- *    DiffusionProcess, it will be theMolecules will be populated with the
- *    CompVoxels.
+ *    DiffusionProcess, it will be theCoords will be populated with the
+ *    CompCoords.
  * 6. isVacant {isCompVacant; isDiffusiveVacant; isReactiveVacant): the
  *    general name used to identify either isCompVacant, isDiffusiveVacant or
  *    isReactiveVacant to reduce comparison operations.
@@ -85,7 +85,8 @@ class Species
 {
 public:
   Species(SpatiocyteStepper* aStepper, Variable* aVariable, int anID, 
-          int anInitMoleculeSize, const gsl_rng* aRng, double voxelRadius):
+          int anInitCoordSize, const gsl_rng* aRng, double voxelRadius,
+          std::vector<Voxel>& aLattice):
     isCentered(false),
     isCompVacant(false),
     isDiffusing(false),
@@ -100,8 +101,8 @@ public:
     isVacant(false),
     theID(anID),
     theCollision(0),
-    theInitMoleculeSize(anInitMoleculeSize),
-    theMoleculeSize(0),
+    theInitCoordSize(anInitCoordSize),
+    theCoordSize(0),
     D(0),
     theDiffusionInterval(libecs::INF),
     theWalkProbability(1),
@@ -110,11 +111,12 @@ public:
     thePopulateProcess(NULL),
     theStepper(aStepper),
     theVariable(aVariable),
-    theCompVoxels(&theMolecules) {}
+    theCompCoords(&theCoords),
+    theLattice(aLattice) {}
   ~Species() {}
-  void initialize(int speciesSize, int anAdjoiningVoxelSize)
+  void initialize(int speciesSize, int anAdjoiningCoordSize)
     {
-      theAdjoiningVoxelSize = anAdjoiningVoxelSize;
+      theAdjoiningCoordSize = anAdjoiningCoordSize;
       theReactionProbabilities.resize(speciesSize);
       theDiffusionInfluencedReactions.resize(speciesSize);
       theFinalizeReactions.resize(speciesSize);
@@ -163,7 +165,7 @@ public:
         {
           thePopulateProcess->populateGaussian(this);
         }
-      else if(theMoleculeSize)
+      else if(theCoordSize)
         {
           std::cout << "Warning: Species " <<
             theVariable->getFullID().asString() <<
@@ -180,10 +182,10 @@ public:
         {
           thePopulateProcess->populateUniformDense(this, voxelIDs, aCount);
         }
-      else if(theMoleculeSize)
+      else if(theCoordSize)
         {
           std::cout << "Species:" << theVariable->getFullID().asString() <<
-            " not MoleculePopulated." << std::endl;
+            " not CoordPopulated." << std::endl;
         }
     }
   void populateCompUniformSparse()
@@ -192,10 +194,10 @@ public:
         {
           thePopulateProcess->populateUniformSparse(this);
         }
-      else if(theMoleculeSize)
+      else if(theCoordSize)
         {
           std::cout << "Species:" << theVariable->getFullID().asString() <<
-            " not MoleculePopulated." << std::endl;
+            " not CoordPopulated." << std::endl;
         }
     }
   void populateUniformOnDiffusiveVacant()
@@ -204,10 +206,10 @@ public:
         {
           thePopulateProcess->populateUniformOnDiffusiveVacant(this);
         }
-      else if(theMoleculeSize)
+      else if(theCoordSize)
         {
           std::cout << "Species:" << theVariable->getFullID().asString() <<
-            " not MoleculePopulated." << std::endl;
+            " not CoordPopulated." << std::endl;
         }
     }
   Variable* getVariable() const
@@ -217,15 +219,15 @@ public:
   std::vector<unsigned int> getSourceCoords()
     {
       std::vector<unsigned int> aCoords;
-      for(unsigned int i(0); i != theMoleculeSize; ++i)
+      for(unsigned int i(0); i != theCoordSize; ++i)
         {
-          std::vector<Voxel*>& 
-            aSourceVoxels(theMolecules[i]->subunit->sourceVoxels);
-          for(unsigned int j(0); j != aSourceVoxels.size(); ++j)
+          std::vector<unsigned int>& 
+            aSourceCoords(theLattice[theCoords[i]].subunit->sourceCoords);
+          for(unsigned int j(0); j != aSourceCoords.size(); ++j)
             {
-              if(aSourceVoxels[j])
+              if(aSourceCoords[j] != theNullCoord)
                 {
-                  aCoords.push_back(aSourceVoxels[j]->coord);
+                  aCoords.push_back(aSourceCoords[j]);
                 }
             }
         }
@@ -234,15 +236,15 @@ public:
   std::vector<unsigned int> getTargetCoords()
     {
       std::vector<unsigned int> aCoords;
-      for(unsigned int i(0); i != theMoleculeSize; ++i)
+      for(unsigned int i(0); i != theCoordSize; ++i)
         {
-          std::vector<Voxel*>& 
-            aTargetVoxels(theMolecules[i]->subunit->targetVoxels);
-          for(unsigned int j(0); j != aTargetVoxels.size(); ++j)
+          std::vector<unsigned int>& 
+            aTargetCoords(theLattice[theCoords[i]].subunit->targetCoords);
+          for(unsigned int j(0); j != aTargetCoords.size(); ++j)
             {
-              if(aTargetVoxels[j])
+              if(aTargetCoords[j] != theNullCoord)
                 {
-                  aCoords.push_back(aTargetVoxels[j]->coord);
+                  aCoords.push_back(aTargetCoords[j]);
                 }
             }
         }
@@ -251,47 +253,43 @@ public:
   std::vector<unsigned int> getSharedCoords()
     {
       std::vector<unsigned int> aCoords;
-      for(unsigned int i(0); i != theMoleculeSize; ++i)
+      for(unsigned int i(0); i != theCoordSize; ++i)
         {
-          std::vector<Voxel*>& 
-            aSharedLipids(theMolecules[i]->subunit->sharedLipids);
+          std::vector<unsigned int>& 
+            aSharedLipids(theLattice[theCoords[i]].subunit->sharedLipids);
           for(unsigned int j(0); j != aSharedLipids.size(); ++j)
             {
-              if(aSharedLipids[j])
+              if(aSharedLipids[j] != theNullCoord)
                 {
-                  aCoords.push_back(aSharedLipids[j]->coord);
+                  aCoords.push_back(aSharedLipids[j]);
                 }
             }
         }
       return aCoords;
     }
-  std::vector<Voxel*>& getMolecules()
+  std::vector<unsigned int>& getCoords()
     {
-      return theMolecules;
+      return theCoords;
     }
   unsigned int size() const
     {
-      return theMoleculeSize;
+      return theCoordSize;
     }
   unsigned int getCoord(int anIndex)
     {
-      return theMolecules[anIndex]->coord;
+      return theCoords[anIndex];
     }
   Point getPoint(int anIndex)
     {
       if(isOffLattice)
         {
-          return *theMolecules[anIndex]->point;
+          return *theLattice[theCoords[anIndex]].point;
         }
       else if(isPolymer)
         {
-          return theMolecules[anIndex]->subunit->subunitPoint;
+          return theLattice[theCoords[anIndex]].subunit->subunitPoint;
         }
-      return theStepper->coord2point(theMolecules[anIndex]->coord);
-    }
-  Voxel* getMolecule(int anIndex)
-    {
-      return theMolecules[anIndex];
+      return theStepper->coord2point(theCoords[anIndex]);
     }
   unsigned short getID() const
     {
@@ -299,23 +297,22 @@ public:
     }
   double getMeanSquaredDisplacement()
     {
-      if(!theMoleculeSize)
+      if(!theCoordSize)
         {
           return 0;
         }
       double aDisplacement(0);
-      for(unsigned int i(0); i < theMoleculeSize; ++i)
+      for(unsigned int i(0); i < theCoordSize; ++i)
         {
-          Point aCurrentPoint(theStepper->getPeriodicPoint(
-                                                 theMolecules[i]->coord,
+          Point aCurrentPoint(theStepper->getPeriodicPoint(theCoords[i],
                                                  theDimension,
-                                                 &theMoleculeOrigins[i]));
-          double aDistance(getDistance(&theMoleculeOrigins[i].point,
+                                                 &theCoordOrigins[i]));
+          double aDistance(getDistance(&theCoordOrigins[i].point,
                                        &aCurrentPoint));
           aDisplacement += aDistance*aDistance;
         }
       return
-        aDisplacement*pow(theRadius*2, 2)/theMoleculeSize;
+        aDisplacement*pow(theRadius*2, 2)/theCoordSize;
     }
   void setCollision(unsigned int aCollision)
     {
@@ -341,14 +338,14 @@ public:
     }
   void setIsPopulated()
     {
-      theInitMoleculeSize = theMoleculeSize;
-      getVariable()->setValue(theMoleculeSize);
+      theInitCoordSize = theCoordSize;
+      getVariable()->setValue(theCoordSize);
     }
   void finalizeSpecies()
     {
       if(theCollision)
         {
-          collisionCnts.resize(theMoleculeSize);
+          collisionCnts.resize(theCoordSize);
           for(std::vector<unsigned int>::iterator 
               i(collisionCnts.begin()); i != collisionCnts.end(); ++i)
             {
@@ -363,15 +360,15 @@ public:
             {
               if(theComp->species[i]->getIsDiffusiveVacant())
                 {
-                  shuffleMolecules();
+                  shuffleCoords();
                   break;
                 }
             }
         }
     }
-  void shuffleMolecules()
+  void shuffleCoords()
     {
-      std::random_shuffle(theMolecules.begin(), theMolecules.end());
+      std::random_shuffle(theCoords.begin(), theCoords.end());
     }
   unsigned int getCollisionCnt(unsigned int anIndex)
     {
@@ -481,7 +478,7 @@ public:
     }
   bool getIsPopulated() const
     {
-      return theMoleculeSize == theInitMoleculeSize;
+      return theCoordSize == theInitCoordSize;
     }
   double getDiffusionInterval() const
     {
@@ -516,11 +513,11 @@ public:
             }
         }
     }
-  void addCollision(Voxel* aVoxel)
+  void addCollision(unsigned int aCoord)
     {
-      for(unsigned int i(0); i < theMoleculeSize; ++i)
+      for(unsigned int i(0); i < theCoordSize; ++i)
         {
-          if(aVoxel == theMolecules[i])
+          if(aCoord == theCoords[i])
             {
               ++collisionCnts[i];
               return;
@@ -530,50 +527,50 @@ public:
     }
   void collide()
     {
-      for(unsigned int i(0); i < theMoleculeSize; ++i)
+      for(unsigned int i(0); i < theCoordSize; ++i)
         {
-          Voxel* source(theMolecules[i]);
+          Voxel& source(theLattice[theCoords[i]]);
           int size;
           if(isFixedAdjoins)
             {
-              size = theAdjoiningVoxelSize;
+              size = theAdjoiningCoordSize;
             }
           else
             {
-              size = source->diffuseSize;
+              size = source.diffuseSize;
             }
-          Voxel* target(source->adjoiningVoxels[
-                        gsl_rng_uniform_int(theRng, size)]);
-          if(target->id == theVacantID)
+          Voxel& target(theLattice[source.adjoiningCoords[
+                        gsl_rng_uniform_int(theRng, size)]]);
+          if(target.id == theVacantID)
             {
               if(theWalkProbability == 1 ||
                  gsl_rng_uniform(theRng) < theWalkProbability)
                 {
-                  target->id = theID;
-                  source->id = theVacantID;
-                  theMolecules[i] = target;
+                  target.id = theID;
+                  source.id = theVacantID;
+                  theCoords[i] = target.coord;
                 }
             }
-          else if(theDiffusionInfluencedReactions[target->id])
+          else if(theDiffusionInfluencedReactions[target.id])
             {
               //If it meets the reaction probability:
-              if(gsl_rng_uniform(theRng) < theReactionProbabilities[target->id])
+              if(gsl_rng_uniform(theRng) < theReactionProbabilities[target.id])
                 { 
-                  Species* targetSpecies(theStepper->id2species(target->id));
+                  Species* targetSpecies(theStepper->id2species(target.id));
                   ++collisionCnts[i];
-                  targetSpecies->addCollision(target);
+                  targetSpecies->addCollision(target.coord);
                   if(theCollision == 2)
                     {
                       DiffusionInfluencedReactionProcessInterface* aReaction(
-                                 theDiffusionInfluencedReactions[target->id]);
-                      if(aReaction->react(source, target))
+                                 theDiffusionInfluencedReactions[target.id]);
+                      if(aReaction->react(source.coord, target.coord))
                         {
                           //Soft remove the source molecule, i.e.,
                           //keep the id intact:
-                          theMolecules[i--] = theMolecules[--theMoleculeSize];
-                          theVariable->setValue(theMoleculeSize);
+                          theCoords[i--] = theCoords[--theCoordSize];
+                          theVariable->setValue(theCoordSize);
                           //Soft remove the target molecule:
-                          targetSpecies->softRemoveMolecule(target);
+                          targetSpecies->softRemoveCoord(target.coord);
                           theFinalizeReactions[targetSpecies->getID()] = true;
                         }
                     }
@@ -583,46 +580,46 @@ public:
     }
   void walk()
     {
-      for(unsigned int i(0); i < theMoleculeSize; ++i)
+      for(unsigned int i(0); i < theCoordSize; ++i)
         {
-          Voxel* source(theMolecules[i]);
+          Voxel& source(theLattice[theCoords[i]]);
           int size;
           if(isFixedAdjoins)
             {
-              size = theAdjoiningVoxelSize;
+              size = theAdjoiningCoordSize;
             }
           else
             {
-              size = source->diffuseSize;
+              size = source.diffuseSize;
             }
-          Voxel* target(source->adjoiningVoxels[
-                        gsl_rng_uniform_int(theRng, size)]);
-          if(target->id == theVacantID)
+          Voxel& target(theLattice[source.adjoiningCoords[
+                        gsl_rng_uniform_int(theRng, size)]]);
+          if(target.id == theVacantID)
             {
               if(theWalkProbability == 1 ||
                  gsl_rng_uniform(theRng) < theWalkProbability)
                 {
-                  target->id = theID;
-                  source->id = theVacantID;
-                  theMolecules[i] = target;
+                  target.id = theID;
+                  source.id = theVacantID;
+                  theCoords[i] = target.coord;
                 }
             }
-          else if(theDiffusionInfluencedReactions[target->id])
+          else if(theDiffusionInfluencedReactions[target.id])
             {
               //If it meets the reaction probability:
-              if(gsl_rng_uniform(theRng) < theReactionProbabilities[target->id])
+              if(gsl_rng_uniform(theRng) < theReactionProbabilities[target.id])
                 { 
-                  Species* targetSpecies(theStepper->id2species(target->id));
+                  Species* targetSpecies(theStepper->id2species(target.id));
                   DiffusionInfluencedReactionProcessInterface* aReaction(
-                             theDiffusionInfluencedReactions[target->id]);
-                  if(aReaction->react(source, target))
+                             theDiffusionInfluencedReactions[target.id]);
+                  if(aReaction->react(source.coord, target.coord))
                     {
                       //Soft remove the source molecule, i.e.,
                       //keep the id intact:
-                      theMolecules[i--] = theMolecules[--theMoleculeSize];
-                      theVariable->setValue(theMoleculeSize);
+                      theCoords[i--] = theCoords[--theCoordSize];
+                      theVariable->setValue(theCoordSize);
                       //Soft remove the target molecule:
-                      targetSpecies->softRemoveMolecule(target);
+                      targetSpecies->softRemoveCoord(target.coord);
                       theFinalizeReactions[targetSpecies->getID()] = true;
                     }
                 }
@@ -631,44 +628,44 @@ public:
     }
   void walkVacant()
     {
-      updateVacantMolecules();
-      for(unsigned int i(0); i < theMoleculeSize; ++i)
+      updateVacantCoords();
+      for(unsigned int i(0); i < theCoordSize; ++i)
         {
-          Voxel* source(theMolecules[i]);
+          Voxel& source(theLattice[theCoords[i]]);
           int size;
           if(isFixedAdjoins)
             {
-              size = theAdjoiningVoxelSize;
+              size = theAdjoiningCoordSize;
             }
           else
             {
-              size = source->diffuseSize;
+              size = source.diffuseSize;
             }
-          Voxel* target(source->adjoiningVoxels[
-                        gsl_rng_uniform_int(theRng, size)]);
-          if(target->id == theVacantID)
+          Voxel& target(theLattice[source.adjoiningCoords[
+                        gsl_rng_uniform_int(theRng, size)]]);
+          if(target.id == theVacantID)
             {
               if(theWalkProbability == 1 ||
                  gsl_rng_uniform(theRng) < theWalkProbability)
                 {
-                  target->id = theID;
-                  source->id = theVacantID;
+                  target.id = theID;
+                  source.id = theVacantID;
                 }
             }
           /*
-          else if(theDiffusionInfluencedReactions[target->id] != NULL)
+          else if(theDiffusionInfluencedReactions[target.id] != NULL)
             {
               //If it meets the reaction probability:
               if(gsl_rng_uniform(theRng) <
-                 theReactionProbabilities[target->id])
+                 theReactionProbabilities[target.id])
                 { 
-                  Species* targetSpecies(theStepper->id2species(target->id));
+                  Species* targetSpecies(theStepper->id2species(target.id));
                   DiffusionInfluencedReactionProcessInterface* aReaction(
-                             theDiffusionInfluencedReactions[target->id]);
-                  if(aReaction->react(source, target))
+                             theDiffusionInfluencedReactions[target.id]);
+                  if(aReaction->react(source.coord, target.coord))
                     {
                       //Soft remove the target molecule:
-                      targetSpecies->softRemoveMolecule(target);
+                      targetSpecies->softRemoveCoord(target.coord);
                       theFinalizeReactions[targetSpecies->getID()] = true;
                     }
                 }
@@ -690,248 +687,246 @@ public:
     }
   void removeSurfaces()
     {
-      int newMoleculeSize(0);
-      for(unsigned int i(0); i < theMoleculeSize; ++i) 
+      int newCoordSize(0);
+      for(unsigned int i(0); i < theCoordSize; ++i) 
         {
-          Voxel* aVoxel(theMolecules[i]);
-          if(theStepper->isRemovableEdgeCoord(aVoxel->coord, theComp))
+          unsigned int aCoord(theCoords[i]);
+          if(theStepper->isRemovableEdgeCoord(aCoord, theComp))
             {
               Comp* aSuperComp(
                  theStepper->system2Comp(theComp->system->getSuperSystem())); 
-              aSuperComp->vacantSpecies->addCompVoxel(aVoxel);
+              aSuperComp->vacantSpecies->addCompCoord(aCoord);
             }
           else 
             { 
-              theMolecules[newMoleculeSize] = aVoxel; 
-              ++newMoleculeSize; 
+              theCoords[newCoordSize] = aCoord; 
+              ++newCoordSize; 
             }
         }
-      theMoleculeSize = newMoleculeSize;
-      theVariable->setValue(theMoleculeSize);
+      theCoordSize = newCoordSize;
+      theVariable->setValue(theCoordSize);
     }
-  void removePeriodicEdgeVoxels()
+  void removePeriodicEdgeCoords()
     {
-      int newMoleculeSize(0);
-      for(unsigned int i(0); i < theMoleculeSize; ++i) 
+      int newCoordSize(0);
+      for(unsigned int i(0); i < theCoordSize; ++i) 
         {
-          Voxel* aVoxel(theMolecules[i]);
-          if(theStepper->isPeriodicEdgeCoord(aVoxel->coord, theComp))
+          unsigned int aCoord(theCoords[i]);
+          if(theStepper->isPeriodicEdgeCoord(aCoord, theComp))
             {
-              aVoxel->id = theStepper->getNullID();
+              theLattice[aCoord].id = theLattice[theNullCoord].id;
             }
           else 
             { 
-              theMolecules[newMoleculeSize] = aVoxel; 
-              ++newMoleculeSize; 
+              theCoords[newCoordSize] = aCoord; 
+              ++newCoordSize; 
             }
         }
-      theMoleculeSize = newMoleculeSize;
-      theVariable->setValue(theMoleculeSize);
+      theCoordSize = newCoordSize;
+      theVariable->setValue(theCoordSize);
     }
   void updateSpecies()
     {
       if(isCompVacant && (isDiffusiveVacant || isReactiveVacant))
         {
-          theCompVoxels = new std::vector<Voxel*>;
-          for(unsigned int i(0); i != theMoleculeSize; ++i)
+          theCompCoords = new std::vector<unsigned int>;
+          for(unsigned int i(0); i != theCoordSize; ++i)
             { 
-              theCompVoxels->push_back(theMolecules[i]);
+              theCompCoords->push_back(theCoords[i]);
             }
         }
     }
   //If it isReactiveVacant it will only be called by SNRP when it is substrate
   //If it isDiffusiveVacant it will only be called by DiffusionProcess before
   //being diffused. So we need to only check if it isVacant:
-  void updateMolecules()
+  void updateCoords()
     {
       if(isDiffusiveVacant || isReactiveVacant)
         {
-          updateVacantMolecules();
+          updateVacantCoords();
         }
     }
   //If it isReactiveVacant it will only be called by SNRP when it is substrate:
-  void updateMoleculeSize()
+  void updateCoordSize()
     {
       if(isDiffusiveVacant || isReactiveVacant)
         {
-          updateVacantMoleculeSize();
+          updateVacantCoordSize();
         }
     }
   //Even if it is a isCompVacant, this method will be called by
   //VisualizationLogProcess, or SNRP if it is Reactive or DiffusionProcess
   //if it is Diffusive:
-  void updateVacantMolecules()
+  void updateVacantCoords()
     {
-      theMoleculeSize = 0;
-      int aSize(theVacantSpecies->compVoxelSize());
+      theCoordSize = 0;
+      int aSize(theVacantSpecies->compCoordSize());
       for(int i(0); i != aSize; ++i)
         { 
-          Voxel* aMolecule(theVacantSpecies->getCompVoxel(i));
-          if(aMolecule->id == theID)
+          unsigned int aCoord(theVacantSpecies->getCompCoord(i));
+          if(theLattice[aCoord].id == theID)
             {
-              ++theMoleculeSize;
-              if(theMoleculeSize > theMolecules.size())
+              ++theCoordSize;
+              if(theCoordSize > theCoords.size())
                 {
-                  theMolecules.push_back(aMolecule);
+                  theCoords.push_back(aCoord);
                 }
               else
                 {
-                  theMolecules[theMoleculeSize-1] = aMolecule;
+                  theCoords[theCoordSize-1] = aCoord;
                 }
             }
         }
-      theVariable->setValue(theMoleculeSize);
+      theVariable->setValue(theCoordSize);
     }
-  void updateVacantMoleculeSize()
+  void updateVacantCoordSize()
     {
-      theMoleculeSize = 0;
-      int aSize(theVacantSpecies->compVoxelSize());
+      theCoordSize = 0;
+      int aSize(theVacantSpecies->compCoordSize());
       for(int i(0); i != aSize; ++i)
         { 
-          Voxel* aMolecule(theVacantSpecies->getCompVoxel(i));
-          if(aMolecule->id == theID)
+          unsigned int aCoord(theVacantSpecies->getCompCoord(i));
+          if(theLattice[aCoord].id == theID)
             {
-              ++theMoleculeSize;
+              ++theCoordSize;
             }
         }
-      if(theMoleculeSize > theMolecules.size())
+      if(theCoordSize > theCoords.size())
         {
-          theMolecules.resize(theMoleculeSize);
+          theCoords.resize(theCoordSize);
         }
-      theVariable->setValue(theMoleculeSize);
+      theVariable->setValue(theCoordSize);
     }
-  void addMolecule(Voxel* aMolecule)
+  void addCoord(unsigned int aCoord)
     {
-      aMolecule->id = theID;
+      theLattice[aCoord].id = theID;
       if(!isVacant)
         {
-          ++theMoleculeSize;
-          if(theMoleculeSize > theMolecules.size())
+          ++theCoordSize;
+          if(theCoordSize > theCoords.size())
             {
-              theMolecules.push_back(aMolecule);
+              theCoords.push_back(aCoord);
             }
           else
             {
-              theMolecules[theMoleculeSize-1] = aMolecule;
+              theCoords[theCoordSize-1] = aCoord;
             }
-          theVariable->setValue(theMoleculeSize);
+          theVariable->setValue(theCoordSize);
         }
     }
-  void addCompVoxel(Voxel* aVoxel)
+  void addCompCoord(unsigned int aCoord)
     {
-      aVoxel->id = theID;
-      theCompVoxels->push_back(aVoxel);
-      ++theMoleculeSize;
-      theVariable->setValue(theMoleculeSize);
+      theLattice[aCoord].id = theID;
+      theCompCoords->push_back(aCoord);
+      ++theCoordSize;
+      theVariable->setValue(theCoordSize);
     }
-  unsigned int compVoxelSize()
+  unsigned int compCoordSize()
     {
-      return theCompVoxels->size();
+      return theCompCoords->size();
     }
-  Voxel* getCompVoxel(unsigned int index)
+  unsigned int getCompCoord(unsigned int index)
     {
-      return (*theCompVoxels)[index];
+      return (*theCompCoords)[index];
     }
   //it is soft remove because the id of the molecule is not changed:
-  void softRemoveMolecule(Voxel* aMolecule)
+  void softRemoveCoord(unsigned int aCoord)
     {
       if(!isVacant)
         {
-          for(unsigned int i(0); i < theMoleculeSize; ++i)
+          for(unsigned int i(0); i < theCoordSize; ++i)
             {
-              if(theMolecules[i] == aMolecule)
+              if(theCoords[i] == aCoord)
                 {
-                  theMolecules[i] = theMolecules[--theMoleculeSize];
-                  theVariable->setValue(theMoleculeSize);
+                  theCoords[i] = theCoords[--theCoordSize];
+                  theVariable->setValue(theCoordSize);
                   return;
                 }
             }
         }
     }
-  void removeMolecule(Voxel* aMolecule)
+  void removeCoord(unsigned int aCoord)
     {
       if(!isVacant)
         {
-          for(unsigned int i(0); i < theMoleculeSize; ++i)
+          for(unsigned int i(0); i < theCoordSize; ++i)
             {
-              if(theMolecules[i] == aMolecule)
+              if(theCoords[i] == aCoord)
                 {
-                  aMolecule->id = theVacantID;
-                  theMolecules[i] = theMolecules[--theMoleculeSize];
-                  theVariable->setValue(theMoleculeSize);
+                  theLattice[aCoord].id = theVacantID;
+                  theCoords[i] = theCoords[--theCoordSize];
+                  theVariable->setValue(theCoordSize);
                   return;
                 }
             }
         }
     }
   //Used to remove all molecules and free memory used to store the molecules
-  void clearMolecules()
+  void clearCoords()
     {
-      theMolecules.resize(0);
-      theMoleculeSize = 0;
+      theCoords.resize(0);
+      theCoordSize = 0;
       theVariable->setValue(0);
     }
   //Used by the SpatiocyteStepper when resetting an interation, so must
   //clear the whole compartment using theComp->vacantSpecies->getVacantID():
-  void removeMolecules()
+  void removeCoords()
     {
       if(!isCompVacant)
         {
-          for(unsigned int i(0); i < theMoleculeSize; ++i)
+          for(unsigned int i(0); i < theCoordSize; ++i)
             {
-              theMolecules[i]->id = theVacantSpecies->getID();
+              theLattice[theCoords[i]].id = theVacantSpecies->getID();
             }
-          theMoleculeSize = 0;
-          theVariable->setValue(theMoleculeSize);
+          theCoordSize = 0;
+          theVariable->setValue(theCoordSize);
         }
     }
-  int getPopulateMoleculeSize()
+  int getPopulateCoordSize()
     {
-      return theInitMoleculeSize-theMoleculeSize;
+      return theInitCoordSize-theCoordSize;
     }
-  int getInitMoleculeSize()
+  int getInitCoordSize()
     {
-      return theInitMoleculeSize;
+      return theInitCoordSize;
     }
   void initMoleculeOrigins()
     {
-      theMoleculeOrigins.resize(theMoleculeSize);
-      for(unsigned int i(0); i < theMoleculeSize; ++i)
+      theCoordOrigins.resize(theCoordSize);
+      for(unsigned int i(0); i < theCoordSize; ++i)
         {
-          Origin& anOrigin(theMoleculeOrigins[i]);
-          anOrigin.point = theStepper->coord2point(theMolecules[i]->coord);
+          Origin& anOrigin(theCoordOrigins[i]);
+          anOrigin.point = theStepper->coord2point(theCoords[i]);
           anOrigin.row = 0;
           anOrigin.layer = 0;
           anOrigin.col = 0;
         }
     }
-  void removeBoundaryMolecules()
+  void removeBoundaryCoords()
     {
-      for(unsigned int i(0); i < theMoleculeSize; ++i)
+      for(unsigned int i(0); i < theCoordSize; ++i)
         {
-          if(theStepper->isBoundaryCoord(
-                               theMolecules[i]->coord, theDimension))
+          if(theStepper->isBoundaryCoord(theCoords[i], theDimension))
             {
               std::cout << "is still there" << std::endl;
             }
         }
-      theVariable->setValue(theMoleculeSize);
+      theVariable->setValue(theCoordSize);
     }
-  void relocateBoundaryMolecules()
+  void relocateBoundaryCoords()
     {
-      for(unsigned int i(0); i < theMoleculeSize; ++i)
+      for(unsigned int i(0); i < theCoordSize; ++i)
         {
-          Origin anOrigin(theMoleculeOrigins[i]);
-          Voxel* periodicVoxel(theStepper->getPeriodicVoxel(
-                                                theMolecules[i]->coord,
+          Origin anOrigin(theCoordOrigins[i]);
+          unsigned int periodicCoord(theStepper->getPeriodicCoord(
+                                                theCoords[i],
                                                 theDimension, &anOrigin));
-          if(periodicVoxel != NULL && 
-             periodicVoxel->id == theVacantID)
+          if(theLattice[periodicCoord].id == theVacantID)
             {
-              theMolecules[i]->id = theVacantID;
-              theMolecules[i] = periodicVoxel;
-              theMolecules[i]->id = theID;
-              theMoleculeOrigins[i] = anOrigin;
+              theLattice[theCoords[i]].id = theVacantID;
+              theCoords[i] = periodicCoord;
+              theLattice[theCoords[i]].id = theID;
+              theCoordOrigins[i] = anOrigin;
             }
         }
     }
@@ -1016,15 +1011,15 @@ public:
     {
       theDiffusionInterval = anInterval;
     }
-  Voxel* getRandomMolecule()
+  unsigned int getRandomCoord()
     {
-      if(theMoleculeSize == 0)
+      if(theCoordSize == 0)
         {
           std::cout << theVariable->getFullID().asString() << std::endl;
           std::cout << "Species size error:" <<
             theVariable->getValue() << std::endl;
         }
-      return theMolecules[gsl_rng_uniform_int(theRng, theMoleculeSize)];
+      return theCoords[gsl_rng_uniform_int(theRng, theCoordSize)];
     }
   void addInterruptedProcess(SpatiocyteProcessInterface* aProcess)
     {
@@ -1041,210 +1036,225 @@ public:
         }
       return 0;
     }
-  Voxel* getRandomAdjoiningVoxel(Voxel* source, int searchVacant)
+  unsigned int getRandomAdjoiningCoord(unsigned int coord, int searchVacant)
     {
-      std::vector<Voxel*> CompVoxels;
+      Voxel& source(theLattice[coord]);
+      std::vector<unsigned int> compCoords;
       if(searchVacant)
         { 
-          for(unsigned int i(0); i != source->adjoiningSize; ++i)
+          for(unsigned int i(0); i != source.adjoiningSize; ++i)
             {
-              Voxel* aVoxel(source->adjoiningVoxels[i]);
-              if(aVoxel->id == theVacantID)
+              unsigned int aCoord(source.adjoiningCoords[i]);
+              if(theLattice[aCoord].id == theVacantID)
                 {
-                  CompVoxels.push_back(aVoxel);
+                  compCoords.push_back(aCoord);
                 }
             }
         }
       else
         {
-          for(unsigned int i(0); i != source->adjoiningSize; ++i)
+          for(unsigned int i(0); i != source.adjoiningSize; ++i)
             {
-              Voxel* aVoxel(source->adjoiningVoxels[i]);
-              if(theStepper->id2Comp(aVoxel->id) == theComp)
+              unsigned int aCoord(source.adjoiningCoords[i]);
+              if(theStepper->id2Comp(theLattice[aCoord].id) == theComp)
                 {
-                  CompVoxels.push_back(aVoxel);
+                  compCoords.push_back(aCoord);
                 }
             }
         }
-      return getRandomVacantVoxel(&CompVoxels);
+      return getRandomVacantCoord(compCoords);
     } 
-  Voxel* getBindingSiteAdjoiningVoxel(Voxel* source, int bindingSite)
+  unsigned int getBindingSiteAdjoiningCoord(unsigned int coord, int bindingSite)
     {
-      if(bindingSite < source->adjoiningSize)
+      Voxel& source(theLattice[coord]);
+      if(bindingSite < source.adjoiningSize)
         { 
-          Voxel* aVoxel(source->adjoiningVoxels[bindingSite]);
-          if(aVoxel->id == theVacantID)
+          unsigned int aCoord(source.adjoiningCoords[bindingSite]);
+          if(theLattice[aCoord].id == theVacantID)
             {
-              return aVoxel;
+              return aCoord;
             }
         }
-      return NULL;
+      return theNullCoord;
     } 
-  Voxel* getRandomAdjoiningVoxel(Voxel* source, Species* aTargetSpecies,
-                                 int searchVacant)
+  unsigned int getRandomAdjoiningCoord(unsigned int coord,
+                                       Species* aTargetSpecies,
+                                       int searchVacant)
     {
-      std::vector<Voxel*> CompVoxels;
+      Voxel& source(theLattice[coord]);
+      std::vector<unsigned int> compCoords;
       if(searchVacant)
         { 
-          for(unsigned int i(0); i != source->adjoiningSize; ++i)
+          for(unsigned int i(0); i != source.adjoiningSize; ++i)
             {
-              Voxel* aVoxel(source->adjoiningVoxels[i]);
-              if(aVoxel->id == aTargetSpecies->getID())
+              unsigned int aCoord(source.adjoiningCoords[i]);
+              if(theLattice[aCoord].id == aTargetSpecies->getID())
                 {
-                  CompVoxels.push_back(aVoxel);
+                  compCoords.push_back(aCoord);
                 }
             }
         }
       else
         {
-          for(unsigned int i(0); i != source->adjoiningSize; ++i)
+          for(unsigned int i(0); i != source.adjoiningSize; ++i)
             {
-              Voxel* aVoxel(source->adjoiningVoxels[i]);
-              if(theStepper->id2Comp(aVoxel->id) == theComp)
+              unsigned int aCoord(source.adjoiningCoords[i]);
+              if(theStepper->id2Comp(theLattice[aCoord].id) == theComp)
                 {
-                  CompVoxels.push_back(aVoxel);
+                  compCoords.push_back(aCoord);
                 }
             }
         }
-      return getRandomVacantVoxel(&CompVoxels, aTargetSpecies);
+      return getRandomVacantCoord(compCoords, aTargetSpecies);
     } 
-  Voxel* getRandomAdjoiningVoxel(Voxel* source, Voxel* target, int searchVacant)
+  unsigned int getRandomAdjoiningCoord(unsigned int coord,
+                                       unsigned int target,
+                                       int searchVacant)
     {
-      std::vector<Voxel*> CompVoxels;
+      Voxel& source(theLattice[coord]);
+      std::vector<unsigned int> compCoords;
       if(searchVacant)
         { 
-          for(unsigned int i(0); i != source->adjoiningSize; ++i)
+          for(unsigned int i(0); i != source.adjoiningSize; ++i)
             {
-              Voxel* aVoxel(source->adjoiningVoxels[i]);
-              if(aVoxel->id == theVacantID && aVoxel != target)
+              unsigned int aCoord(source.adjoiningCoords[i]);
+              if(theLattice[aCoord].id == theVacantID && aCoord != target)
                 {
-                  CompVoxels.push_back(aVoxel);
+                  compCoords.push_back(aCoord);
                 }
             }
         }
       else
         {
-          for(unsigned int i(0); i != source->adjoiningSize; ++i)
+          for(unsigned int i(0); i != source.adjoiningSize; ++i)
             {
-              Voxel* aVoxel(source->adjoiningVoxels[i]);
-              if(theStepper->id2Comp(aVoxel->id) == theComp &&
-                 aVoxel != target)
+              unsigned int aCoord(source.adjoiningCoords[i]);
+              if(theStepper->id2Comp(theLattice[aCoord].id) == theComp &&
+                 aCoord != target)
                 {
-                  CompVoxels.push_back(aVoxel);
+                  compCoords.push_back(aCoord);
                 }
             }
         }
-      return getRandomVacantVoxel(&CompVoxels);
+      return getRandomVacantCoord(compCoords);
     }
-  unsigned int getAdjoiningMoleculeCnt(Voxel* source, Species* aTargetSpecies)
+  unsigned int getAdjoiningCoordCnt(unsigned int coord, Species* aTargetSpecies)
     {
+      Voxel& source(theLattice[coord]);
       unsigned int cnt(0);
-      for(unsigned int i(0); i != source->adjoiningSize; ++i)
+      for(unsigned int i(0); i != source.adjoiningSize; ++i)
         {
-          if(source->adjoiningVoxels[i]->id == aTargetSpecies->getID())
+          if(theLattice[source.adjoiningCoords[i]].id == 
+             aTargetSpecies->getID())
             {
               ++cnt;
             }
         }
       return cnt;
     }
-  Voxel* getRandomAdjoiningVoxel(Voxel* source, Voxel* targetA, Voxel* targetB,
-                                 int searchVacant)
+  unsigned int getRandomAdjoiningCoord(unsigned int coord,
+                                       unsigned int targetA,
+                                       unsigned int targetB, int searchVacant)
     {
-      std::vector<Voxel*> CompVoxels;
+      Voxel& source(theLattice[coord]);
+      std::vector<unsigned int> compCoords;
       if(searchVacant)
         { 
-          for(unsigned int i(0); i != source->adjoiningSize; ++i)
+          for(unsigned int i(0); i != source.adjoiningSize; ++i)
             {
-              Voxel* aVoxel(source->adjoiningVoxels[i]);
-              if(aVoxel->id == theVacantID &&
-                 aVoxel != targetA && aVoxel != targetB)
+              unsigned int aCoord(source.adjoiningCoords[i]);
+              if(theLattice[aCoord].id == theVacantID &&
+                 aCoord != targetA && aCoord != targetB)
                 {
-                  CompVoxels.push_back(aVoxel);
+                  compCoords.push_back(aCoord);
                 }
             }
         }
       else
         {
-          for(unsigned int i(0); i != source->adjoiningSize; ++i)
+          for(unsigned int i(0); i != source.adjoiningSize; ++i)
             {
-              Voxel* aVoxel(source->adjoiningVoxels[i]);
-              if(theStepper->id2Comp(aVoxel->id) == theComp &&
-                 aVoxel != targetA && aVoxel != targetB)
+              unsigned int aCoord(source.adjoiningCoords[i]);
+              if(theStepper->id2Comp(theLattice[aCoord].id) == theComp &&
+                 aCoord != targetA && aCoord != targetB)
                 {
-                  CompVoxels.push_back(aVoxel);
+                  compCoords.push_back(aCoord);
                 }
             }
         }
-      return getRandomVacantVoxel(&CompVoxels);
+      return getRandomVacantCoord(compCoords);
     }
-  Voxel* getRandomVacantVoxel(std::vector<Voxel*>* voxels)
+  unsigned int getRandomVacantCoord(std::vector<unsigned int>& aCoords)
     {
-      if(voxels->size())
+      if(aCoords.size())
         {
-          const int r(gsl_rng_uniform_int(theRng, voxels->size())); 
-          Voxel* aVoxel((*voxels)[r]);
-          if(aVoxel->id == theVacantID)
+          const int r(gsl_rng_uniform_int(theRng, aCoords.size())); 
+          unsigned int aCoord(aCoords[r]);
+          if(theLattice[aCoord].id == theVacantID)
             {
-              return aVoxel;
+              return aCoord;
             }
         }
-      return NULL;
+      return theNullCoord;
     }
-  Voxel* getRandomVacantVoxel(std::vector<Voxel*>* voxels,
-                              Species* aVacantSpecies)
+  unsigned int getRandomVacantCoord(std::vector<unsigned int>& aCoords,
+                                    Species* aVacantSpecies)
     {
-      if(voxels->size())
+      if(aCoords.size())
         {
-          const int r(gsl_rng_uniform_int(theRng, voxels->size())); 
-          Voxel* aVoxel((*voxels)[r]);
-          if(aVoxel->id == aVacantSpecies->getID())
+          const int r(gsl_rng_uniform_int(theRng, aCoords.size())); 
+          unsigned int aCoord(aCoords[r]);
+          if(theLattice[aCoord].id == aVacantSpecies->getID())
             {
-              return aVoxel;
+              return aCoord;
             }
         }
-      return NULL;
+      return theNullCoord;
     }
-  Voxel* getRandomCompVoxel(int searchVacant)
+  unsigned int getRandomCompCoord(int searchVacant)
     {
       Species* aVacantSpecies(theComp->vacantSpecies);
-      int aSize(aVacantSpecies->compVoxelSize());
+      int aSize(aVacantSpecies->compCoordSize());
       int r(gsl_rng_uniform_int(theRng, aSize));
       if(searchVacant)
         {
           for(int i(r); i != aSize; ++i)
             {
-              Voxel* aVoxel(aVacantSpecies->getCompVoxel(i));
-              if(aVoxel->id == theVacantID)
+              unsigned int aCoord(aVacantSpecies->getCompCoord(i));
+              if(theLattice[aCoord].id == theVacantID)
                 {
-                  return aVoxel;
+                  return aCoord;
                 }
             }
           for(int i(0); i != r; ++i)
             {
-              Voxel* aVoxel(aVacantSpecies->getCompVoxel(i));
-              if(aVoxel->id == theVacantID)
+              unsigned int aCoord(aVacantSpecies->getCompCoord(i));
+              if(theLattice[aCoord].id == theVacantID)
                 {
-                  return aVoxel;
+                  return aCoord;
                 }
             }
         }
       else
         {
-          Voxel* aVoxel(aVacantSpecies->getCompVoxel(r));
-          if(aVoxel->id == theVacantID)
+          unsigned int aCoord(aVacantSpecies->getCompCoord(r));
+          if(theLattice[aCoord].id == theVacantID)
             {
-              return aVoxel;
+              return aCoord;
             }
         }
-      return NULL;
+      return theNullCoord;
     }
-  Voxel* getRandomAdjoiningCompVoxel(Comp* aComp, int searchVacant)
+  unsigned int getRandomAdjoiningCompCoord(Comp* aComp, int searchVacant)
     {
       int aSize(theVacantSpecies->size());
       int r(gsl_rng_uniform_int(theRng, aSize)); 
-      Voxel* aVoxel(theVacantSpecies->getMolecule(r));
-      return getRandomAdjoiningVoxel(aVoxel, searchVacant);
+      unsigned int aCoord(theVacantSpecies->getCoord(r));
+      return getRandomAdjoiningCoord(aCoord, searchVacant);
+    }
+  void setLatticeProperties(unsigned int aNullCoord)
+    {
+      theNullCoord = aNullCoord;
     }
 private:
   bool isCentered;
@@ -1262,9 +1272,10 @@ private:
   const unsigned short theID;
   unsigned int theCollision;
   unsigned int theDimension;
-  unsigned int theInitMoleculeSize;
-  unsigned int theMoleculeSize;
-  unsigned int theAdjoiningVoxelSize;
+  unsigned int theInitCoordSize;
+  unsigned int theCoordSize;
+  unsigned int theNullCoord;
+  unsigned int theAdjoiningCoordSize;
   int thePolymerDirectionality;
   int theVacantID;
   double D;
@@ -1281,13 +1292,14 @@ private:
   std::vector<unsigned int> collisionCnts;
   std::vector<double> theBendAngles;
   std::vector<double> theReactionProbabilities;
-  std::vector<Voxel*> theMolecules;
-  std::vector<Voxel*>* theCompVoxels;
+  std::vector<unsigned int> theCoords;
+  std::vector<unsigned int>* theCompCoords;
   std::vector<Species*> theDiffusionInfluencedReactantPairs;
   std::vector<DiffusionInfluencedReactionProcessInterface*> 
     theDiffusionInfluencedReactions;
   std::vector<SpatiocyteProcessInterface*> theInterruptedProcesses;
-  std::vector<Origin> theMoleculeOrigins;
+  std::vector<Origin> theCoordOrigins;
+  std::vector<Voxel>& theLattice;
 };
 
 

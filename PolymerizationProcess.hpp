@@ -60,14 +60,14 @@ public:
       DiffusionInfluencedReactionProcess::initialize();
     }
   virtual void initializeFourth();
-  virtual bool react(Voxel*, Voxel**);
+  virtual bool react(unsigned int, unsigned int);
   virtual bool isInterrupting(Process*);
   virtual void finalizeReaction();
   void resetSubunit(Subunit*);
   void removeContPoint(Subunit*,  Point*);
 protected:
   void initSubunits(Species*);
-  void initSubunit(Voxel*, Species*);
+  void initSubunit(unsigned int, Species*);
   void initJoinSubunit(Voxel*, Species*, Subunit*);
   void addContPoint(Subunit*,  Point*);
   void updateSharedLipidsID(Voxel*);

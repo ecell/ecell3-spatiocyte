@@ -113,10 +113,10 @@ public:
   void initializeProtofilaments();
   void normalize(Point&);
   bool isInsidePlane(Point&, Point&, Point&);
-  bool isOnPlane(Point&, Point&, Point&, Voxel*);
-  bool isOnLowerPlanes(Point&, Voxel*, Point&);
-  bool isOnUpperPlanes(Point&, Voxel*, Point&);
-  unsigned int getIntersectCount(Point&, Voxel*);
+  bool isOnPlane(Point&, Point&, Point&, unsigned int);
+  bool isOnLowerPlanes(Point&, unsigned int, Point&);
+  bool isOnUpperPlanes(Point&, unsigned int, Point&);
+  unsigned int getIntersectCount(Point&, unsigned int);
   void rotatePointAlongVector(Point&, Point&, Point&, double);
 protected:
   bool isCompartmentalized;
@@ -131,7 +131,7 @@ protected:
   Species* theVertexSpecies;
   Species* theSpectrinSpecies;
   Comp* theComp;
-  std::vector<Voxel*> filamentVoxels;
+  std::vector<unsigned int> filamentCoords;
 };
 
 #endif /* __ErythrocyteProcess_hpp */

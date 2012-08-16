@@ -90,8 +90,8 @@ typedef ProcessPriorityQueue::ID ProcessID;
 
 #define INNER     0
 #define OUTER     1
-#define IMMEDIATE 2
-#define EXTENDED  3
+#define IMMED     2
+#define EXTEND    3
 #define SHARED    4
 
 //Polymerization parameters
@@ -116,12 +116,12 @@ struct Voxel
   unsigned short diffuseSize;
   unsigned short adjoiningSize;
   unsigned int coord; //coord = theLattice[x] + theStartCoord
-  Voxel** adjoiningVoxels;
-  Voxel** initAdjoins;
+  unsigned int* adjoiningCoords;
+  unsigned int* initAdjoins;
   Subunit* subunit;
   Point* point;
   //Contains adjoining and extended surface voxels:
-  std::vector<std::vector<Voxel*> >* surfaceVoxels;
+  std::vector<std::vector<unsigned int> >* surfaceCoords;
 };
 
 struct Comp
@@ -194,16 +194,17 @@ struct Subunit
   //subunitPoint is the continuous point of the subunit. 
   //subunitPoint = surfacePoint if the voxel is the origin of the polymer:
   Point subunitPoint;
-  //voxel is the actual voxel occupied by the molecule. A shared lipid voxel's 
-  //subunit also points to the voxel occupied by the molecule. We need to 
+  //coord is the actual coordinate of the actual voxel occupied by the
+  //molecule. A shared lipid voxel's subunit also points to the voxel
+  //occupied by the molecule. We need to 
   //differentiate the shared and actual voxels:
-  Voxel* voxel;
+  unsigned int coord;
   Species* species;
-  std::vector<Voxel*> targetVoxels;
+  std::vector<unsigned int> targetCoords;
   std::vector<bool> boundBends;
-  std::vector<Voxel*> sourceVoxels;
-  std::vector<Voxel*> sharedLipids;
-  std::vector<Voxel*> tmpVoxels;
+  std::vector<unsigned int> sourceCoords;
+  std::vector<unsigned int> sharedLipids;
+  std::vector<unsigned int> tmpCoords;
   std::vector<Point> targetPoints;
   std::vector<Bend> targetBends;
   //contPoints are all the continuous points that are represented by the voxel

@@ -48,9 +48,9 @@ void ErythrocyteProcess::initializeThird()
 
 void ErythrocyteProcess::populateMolecules()
 {
-  for(unsigned int i(0); i != filamentVoxels.size(); ++i)
+  for(unsigned int i(0); i != filamentCoords.size(); ++i)
     {
-      theSpectrinSpecies->addMolecule(filamentVoxels[i]);
+      theSpectrinSpecies->addCoord(filamentCoords[i]);
     }
   theSpectrinSpecies->setIsPopulated();
   std::cout << "size of spectrin:" << theSpectrinSpecies->size() << std::endl;
@@ -121,51 +121,53 @@ void ErythrocyteProcess::initializeProtofilaments()
   Species* aVacant(theComp->vacantSpecies);
   for(unsigned int i(0); i != aVacant->size(); ++i)
     {
-      Voxel* aVoxel(aVacant->getMolecule(i));
-      Point aPoint(theSpatiocyteStepper->coord2point(aVoxel->coord));
-      unsigned int cnt(getIntersectCount(aPoint, aVoxel));
+      unsigned int aCoord(aVacant->getCoord(i));
+      Point aPoint(theSpatiocyteStepper->coord2point(aCoord));
+      unsigned int cnt(getIntersectCount(aPoint, aCoord));
       if(cnt == 1)
         {
-          theSpectrinSpecies->addMolecule(aVoxel);
+          theSpectrinSpecies->addCoord(aCoord);
         }
       else if(cnt > 1)
         {
-          theVertexSpecies->addMolecule(aVoxel);
+          theVertexSpecies->addCoord(aCoord);
         }
     }
 }
 
-unsigned int ErythrocyteProcess::getIntersectCount(Point& aPoint, Voxel* aVoxel)
+unsigned int ErythrocyteProcess::getIntersectCount(Point& aPoint,
+                                                   unsigned int aCoord)
 { 
   unsigned int cnt(0);
-  if(isOnUpperPlanes(aPoint, aVoxel, Y))
+  if(isOnUpperPlanes(aPoint, aCoord, Y))
     {
       ++cnt;
     } 
-  else if(isOnLowerPlanes(aPoint, aVoxel, Y))
+  else if(isOnLowerPlanes(aPoint, aCoord, Y))
     {
       ++cnt;
     }
-  if(isOnUpperPlanes(aPoint, aVoxel, R))
+  if(isOnUpperPlanes(aPoint, aCoord, R))
     {
       ++cnt;
     } 
-  else if(isOnLowerPlanes(aPoint, aVoxel, R))
+  else if(isOnLowerPlanes(aPoint, aCoord, R))
     {
       ++cnt;
     }
-  if(isOnUpperPlanes(aPoint, aVoxel, L))
+  if(isOnUpperPlanes(aPoint, aCoord, L))
     {
       ++cnt;
     } 
-  else if(isOnLowerPlanes(aPoint, aVoxel, L))
+  else if(isOnLowerPlanes(aPoint, aCoord, L))
     {
       ++cnt;
     }
   return cnt;
 }
 
-bool ErythrocyteProcess::isOnUpperPlanes(Point& aPoint, Voxel* aVoxel, Point& N)
+bool ErythrocyteProcess::isOnUpperPlanes(Point& aPoint, unsigned int aCoord,
+                                         Point& N)
 { 
   double currLength(0);
   while(currLength < theComp->lengthY/2)
@@ -174,7 +176,7 @@ bool ErythrocyteProcess::isOnUpperPlanes(Point& aPoint, Voxel* aVoxel, Point& N)
       A.x = C.x+currLength*N.x;
       A.y = C.y+currLength*N.y;
       A.z = C.z+currLength*N.z;
-      if(isOnPlane(N, A, aPoint, aVoxel)) 
+      if(isOnPlane(N, A, aPoint, aCoord)) 
         {
           return true;
         }
@@ -183,7 +185,8 @@ bool ErythrocyteProcess::isOnUpperPlanes(Point& aPoint, Voxel* aVoxel, Point& N)
   return false;
 }
 
-bool ErythrocyteProcess::isOnLowerPlanes(Point& aPoint, Voxel* aVoxel, Point& N)
+bool ErythrocyteProcess::isOnLowerPlanes(Point& aPoint, unsigned int aCoord,
+                                         Point& N)
 { 
   double currLength(-TriangleAltitude);
   while(currLength > -theComp->lengthY/2)
@@ -192,7 +195,7 @@ bool ErythrocyteProcess::isOnLowerPlanes(Point& aPoint, Voxel* aVoxel, Point& N)
       A.x = C.x+currLength*N.x;
       A.y = C.y+currLength*N.y;
       A.z = C.z+currLength*N.z;
-      if(isOnPlane(N, A, aPoint, aVoxel)) 
+      if(isOnPlane(N, A, aPoint, aCoord)) 
         {
           return true;
         }
@@ -204,14 +207,16 @@ bool ErythrocyteProcess::isOnLowerPlanes(Point& aPoint, Voxel* aVoxel, Point& N)
 //N = unit normal vector of the plane
 //P = a point on the plane
 //T = a target point
-bool ErythrocyteProcess::isOnPlane(Point& N, Point& P, Point& T, Voxel* aVoxel)
+bool ErythrocyteProcess::isOnPlane(Point& N, Point& P, Point& T,
+                                   unsigned int aCoord)
 {
   if(isInsidePlane(N, P, T))
     {
-      for(unsigned int j(0); j != aVoxel->adjoiningSize; ++j)
+      Voxel& aVoxel((*theLattice)[aCoord]);
+      for(unsigned int j(0); j != aVoxel.adjoiningSize; ++j)
         {
-          Voxel* adjoin(aVoxel->adjoiningVoxels[j]);
-          Point adPoint(theSpatiocyteStepper->coord2point(adjoin->coord));
+          Point adPoint(theSpatiocyteStepper->coord2point(
+                            aVoxel.adjoiningCoords[j]));
           if(!isInsidePlane(N, P, adPoint))
             {
               return true;

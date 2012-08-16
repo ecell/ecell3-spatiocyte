@@ -280,7 +280,7 @@ protected:
 };
 
 H5VisualizationLogProcess::H5VisualizationLogProcess()
-    :   SpatiocyteProcess(false),
+    :   SpatiocyteProcess(),
         Polymer(1),
         theLogMarker(UINT_MAX),
         LogInterval(0),
@@ -357,7 +357,7 @@ void H5VisualizationLogProcess::logMolecules(H5::DataSpace const& space, H5::Dat
     {
       if(aSpecies->getIsDiffusiveVacant() || aSpecies->getIsReactiveVacant())
         {
-          aSpecies->updateMolecules();
+          aSpecies->updateCoords();
         }
       else
         {
@@ -384,9 +384,8 @@ void H5VisualizationLogProcess::logMolecules(H5::DataSpace const& space, H5::Dat
     unsigned char* p = buf.get();
     for(int i(0); i != aSize; ++i)
     {
-        Voxel* const voxel(aSpecies->getMolecule(i));
-        BOOST_ASSERT(voxel->id == aSpecies->getID());
-        p = pack<ParticleDataPacker>(p, ParticleData(voxel->coord, aSpecies->getID(), aSpecies->getComp()->vacantSpecies->getID()));
+        unsigned int const coord(aSpecies->getCoord(i));
+        p = pack<ParticleDataPacker>(p, ParticleData(coord, aSpecies->getID(), aSpecies->getComp()->vacantSpecies->getID()));
     }
     dataSet.write(buf.get(), particleDataType, mem, slab);
 }

@@ -711,12 +711,12 @@ double PolymerizationProcess::setImmediateTargetVoxel(Subunit* aRefSubunit,
   Voxel* aRefVoxel(aRefSubunit->voxel);
   Point* aRefPoint(&aRefSubunit->targetPoints[aBendIndex]);
   double anImmediateDist(LARGE_DISTANCE);
-  std::vector<Voxel*>& immediateSurface((*aRefVoxel->surfaceVoxels)[IMMEDIATE]);
+  std::vector<unsigned int>& immedSurface((*aRefVoxel->surfaceCoords)[IMMED]);
   //Check the immediate 6 (usually) surface voxels adjoining the voxel of the
   //reference subunit:
-  for(unsigned int i(0); i!=immediateSurface.size(); ++i)
+  for(unsigned int i(0); i!=immedSurface.size(); ++i)
     {
-      Voxel* aVoxel(immediateSurface[i]);
+      Voxel* aVoxel(&(*theLattice)[immedSurface[i]]);
       Subunit* aSubunit(aVoxel->subunit);
       //If the voxel does not already occupy a protomer
       //(A protomer has at least one contPoint -- its subunitPoint)
@@ -751,13 +751,13 @@ bool PolymerizationProcess::setExtendedTargetVoxel(Subunit* aRefSubunit,
 {
   Voxel* aRefVoxel(aRefSubunit->voxel);
   Point* aRefPoint(&aRefSubunit->targetPoints[aBendIndex]);
-  std::vector<Voxel*>& extendedSurface((*aRefVoxel->surfaceVoxels)[EXTENDED]);
+  std::vector<unsigned int>& extendSurface((*aRefVoxel->surfaceCoords)[EXTEND]);
   int extIndex(-1);
   //Check the immediate surface voxels adjoining the immediate surface voxels
   //of the reference subunit, defined as the extended surface voxels:
-  for(unsigned int i(0); i != extendedSurface.size(); ++i)
+  for(unsigned int i(0); i != extendSurface.size(); ++i)
     { 
-      Voxel* aVoxel(extendedSurface[i]);
+      Voxel* aVoxel(&(*theLattice)[extendSurface[i]]);
       Subunit* aSubunit(aVoxel->subunit);
       //If the voxel does not already occupy a protomer
       //(A protomer has at least one contPoint -- its subunitPoint)
@@ -769,14 +769,14 @@ bool PolymerizationProcess::setExtendedTargetVoxel(Subunit* aRefSubunit,
             { 
               //Find the shared voxel which connects the reference voxel
               //to the extended voxel:
-              std::vector<Voxel*>& 
-                aSharedList((*aRefVoxel->surfaceVoxels)[SHARED+i]);
+              std::vector<unsigned int>& 
+                aSharedList((*aRefVoxel->surfaceCoords)[SHARED+i]);
               //Check if there is an existing shared voxel or a voxel
               //that is unoccupied by a protomer, which connects
               //the reference voxel to the extended voxel:
               for(unsigned int j(0); j!=aSharedList.size(); ++j)
                 { 
-                  Voxel* aSharedVoxel(aSharedList[j]);
+                  Voxel* aSharedVoxel(&(*theLattice)[aSharedList[j]]);
                   if(aSharedVoxel->subunit->contPoints.empty() ||
                      aSharedVoxel->subunit->voxel == aRefVoxel)
                     {
@@ -795,14 +795,14 @@ bool PolymerizationProcess::setExtendedTargetVoxel(Subunit* aRefSubunit,
       //If we found an extended voxel, let us select the best shared voxel:
       if(extIndex != -1)
         {
-          Voxel* aVoxel(extendedSurface[extIndex]);
-          std::vector<Voxel*>& 
-            aSharedList((*aRefVoxel->surfaceVoxels)[SHARED+extIndex]);
+          Voxel* aVoxel(&(*theLattice)[extendSurface[extIndex]]);
+          std::vector<unsigned int>& 
+            aSharedList((*aRefVoxel->surfaceCoords)[SHARED+extIndex]);
           double aSharedDist(LARGE_DISTANCE);
           Voxel* aSelectedSharedVoxel(NULL);
           for(unsigned int i(0); i!=aSharedList.size(); ++i)
             { 
-              Voxel* aSharedVoxel(aSharedList[i]);
+              Voxel* aSharedVoxel(&(*theLattice)[aSharedList[i]]);
               Subunit* aSubunit(aVoxel->subunit);
               //First find an existing shared voxel which connects
               //the reference voxel to the extended voxel:

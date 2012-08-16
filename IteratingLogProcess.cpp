@@ -190,7 +190,7 @@ void IteratingLogProcess::logValues()
               isSurviving = true;
             }
           theLogValues[timePointCnt][i] += aSpecies->getVariable()->getValue()/
-            aSpecies->getInitMoleculeSize();
+            aSpecies->getInitCoordSize();
         }
       else if(Displacement)
         {

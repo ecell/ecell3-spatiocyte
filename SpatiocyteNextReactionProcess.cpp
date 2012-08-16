@@ -38,24 +38,24 @@ void SpatiocyteNextReactionProcess::fire()
 {
   if(A)
     {
-      A->updateMolecules();
+      A->updateCoords();
     }
   if(B)
     {
-      B->updateMolecules();
+      B->updateCoords();
     }
 
   if(theOrder == 0)
     {
       if(C)
         { 
-          Voxel* moleculeC(C->getRandomCompVoxel(SearchVacant));
-          if(moleculeC == NULL)
+          unsigned int coordC(C->getRandomCompCoord(SearchVacant));
+          if(coordC == theNullCoord)
             {
               requeue();
               return;
             }
-          C->addMolecule(moleculeC);
+          C->addCoord(coordC);
         }
       else if(variableC)
         {
@@ -97,16 +97,16 @@ void SpatiocyteNextReactionProcess::fire()
       //nonHD_A -> HD_C + HD_D:
       else if(A && variableC && variableD)
         {
-          Voxel* moleculeA(A->getRandomMolecule());
-          A->removeMolecule(moleculeA);
+          unsigned int coordA(A->getRandomCoord());
+          A->removeCoord(coordA);
           variableC->addValue(1);
           variableD->addValue(1);
         }
       //nonHD_A -> HD_C:
       else if(A && variableC && !D && !variableD)
         {
-          Voxel* moleculeA(A->getRandomMolecule());
-          A->removeMolecule(moleculeA);
+          unsigned int coordA(A->getRandomCoord());
+          A->removeCoord(coordA);
           variableC->addValue(1);
         }
       //nonHD_A -> nonHD_C + HD_D:
@@ -132,8 +132,8 @@ void SpatiocyteNextReactionProcess::fire()
       //HD_A -> nonHD_C:
       else if(variableA && C && !D && !variableD)
         {
-          Voxel* moleculeC(reactvAC(variableA, C));
-          if(moleculeC == NULL)
+          unsigned int coordC(reactvAC(variableA, C));
+          if(coordC == theNullCoord)
             {
               requeue();
               return;
@@ -141,53 +141,53 @@ void SpatiocyteNextReactionProcess::fire()
           else
             {
               variableA->addValue(-1);
-              C->addMolecule(moleculeC);
+              C->addCoord(coordC);
             }
         }
       //HD_A -> nonHD_C + nonHD_D:
       else if(variableA && C && D)
         {
-          Voxel* moleculeC(NULL);
-          Voxel* moleculeD(NULL);
+          unsigned int coordC(theNullCoord);
+          unsigned int coordD(theNullCoord);
           Comp* compA(theSpatiocyteStepper->system2Comp(
                          variableA->getSuperSystem()));
           //Occupy C in a voxel of compartment C that adjoins compartment A
           //if A is a surface compartment:
           if(compA != C->getComp() && compA->dimension != 3)
             {
-              moleculeC = C->getRandomAdjoiningCompVoxel(compA, SearchVacant);
-              if(moleculeC)
+              coordC = C->getRandomAdjoiningCompCoord(compA, SearchVacant);
+              if(coordC != theNullCoord)
                 {
-                  moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC,
-                                                         SearchVacant);
+                  coordD = D->getRandomAdjoiningCoord(coordC, coordC,
+                                                      SearchVacant);
                 }
             }
           else if(compA != D->getComp() && compA->dimension != 3)
             {
-              moleculeD = D->getRandomAdjoiningCompVoxel(compA, SearchVacant);
-              if(moleculeD)
+              coordD = D->getRandomAdjoiningCompCoord(compA, SearchVacant);
+              if(coordD != theNullCoord)
                 {
-                  moleculeC = C->getRandomAdjoiningVoxel(moleculeD, moleculeD,
+                  coordC = C->getRandomAdjoiningCoord(coordD, coordD,
                                                          SearchVacant);
                 }
             }
           else
             {
-              moleculeC = C->getRandomCompVoxel(SearchVacant);
-              if(moleculeC)
+              coordC = C->getRandomCompCoord(SearchVacant);
+              if(coordC != theNullCoord)
                 {
-                  moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC,
+                  coordD = D->getRandomAdjoiningCoord(coordC, coordC,
                                                          SearchVacant);
                 }
             }
-          if(moleculeC == NULL || moleculeD == NULL)
+          if(coordC == theNullCoord || coordD == theNullCoord)
             {
               requeue();
               return;
             }
           variableA->addValue(-1);
-          C->addMolecule(moleculeC);
-          D->addMolecule(moleculeD);
+          C->addCoord(coordC);
+          D->addCoord(coordD);
         }
       //HD_A -> HD_C + HD_D:
       else if(variableA && variableC && variableD)
@@ -213,14 +213,14 @@ void SpatiocyteNextReactionProcess::fire()
               HD_p = variableD;
               nonHD_p = C;
             }
-          Voxel* molecule(reactvAC(variableA, nonHD_p));
-          if(molecule == NULL)
+          unsigned int coord(reactvAC(variableA, nonHD_p));
+          if(coord == theNullCoord)
             {
               requeue();
               return;
             }
           variableA->addValue(-1);
-          nonHD_p->addMolecule(molecule);
+          nonHD_p->addCoord(coord);
           HD_p->addValue(1);
         }
     }
@@ -240,15 +240,15 @@ void SpatiocyteNextReactionProcess::fire()
           //HD + HD -> nonHD: 
           else if(C && !variableD && !D)
             { 
-              Voxel* moleculeC(reactvAvBC(C));
-              if(moleculeC == NULL)
+              unsigned int coordC(reactvAvBC(C));
+              if(coordC == theNullCoord)
                 {
                   requeue();
                   return;
                 }
               variableA->addValue(-1);
               variableB->addValue(-1);
-              C->addMolecule(moleculeC);
+              C->addCoord(coordC);
             }
           //HD + HD -> HD + HD: 
           else if(variableC && variableD)
@@ -269,45 +269,45 @@ void SpatiocyteNextReactionProcess::fire()
                   HD_p = variableD;
                   nonHD_p = C;
                 }
-              Voxel* molecule(reactvAvBC(nonHD_p));
-              if(molecule == NULL)
+              unsigned int coord(reactvAvBC(nonHD_p));
+              if(coord == theNullCoord)
                 {
                   requeue();
                   return;
                 }
               variableA->addValue(-1);
               variableB->addValue(-1);
-              nonHD_p->addMolecule(molecule);
+              nonHD_p->addCoord(coord);
               HD_p->addValue(1);
             }
           //HD + HD -> nonHD + nonHD: 
           else if(C && D)
             {
-              Voxel* moleculeC(reactvAvBC(C));
-              Voxel* moleculeD(NULL);
-              if(moleculeC == NULL)
+              unsigned int coordC(reactvAvBC(C));
+              unsigned int coordD(theNullCoord);
+              if(coordC == theNullCoord)
                 {
-                  moleculeD = reactvAvBC(D);
-                  if(moleculeD)
+                  coordD = reactvAvBC(D);
+                  if(coordD != theNullCoord)
                     {
-                      moleculeC = C->getRandomAdjoiningVoxel(moleculeD,
-                                                     moleculeD, SearchVacant);
+                      coordC = C->getRandomAdjoiningCoord(coordD,
+                                                     coordD, SearchVacant);
                     }
                 }
               else
                 { 
-                  moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC,
+                  coordD = D->getRandomAdjoiningCoord(coordC, coordC,
                                                          SearchVacant);
                 }
-              if(moleculeC == NULL || moleculeD == NULL)
+              if(coordC == theNullCoord || coordD == theNullCoord)
                 {
                   requeue();
                   return;
                 }
               variableA->addValue(-1);
               variableB->addValue(-1);
-              C->addMolecule(moleculeC);
-              D->addMolecule(moleculeD);
+              C->addCoord(coordC);
+              D->addCoord(coordD);
             }
         }
       //HD + nonHD -> product(s)
@@ -345,8 +345,8 @@ void SpatiocyteNextReactionProcess::fire()
           //HD + nonHD -> HD:
           else if(variableC && !D && !variableD)
             {
-              Voxel* moleculeNonHD(nonHD->getRandomMolecule());
-              nonHD->removeMolecule(moleculeNonHD);
+              unsigned int coordNonHD(nonHD->getRandomCoord());
+              nonHD->removeCoord(coordNonHD);
               HD->addValue(-1);
               variableC->addValue(1);
             }
@@ -390,18 +390,18 @@ void SpatiocyteNextReactionProcess::fire()
 void SpatiocyteNextReactionProcess::reactABCD()
 {
   unsigned int rand(gsl_rng_uniform_int(getStepper()->getRng(),
-                                        moleculesA.size()));
-  Voxel* moleculeA(moleculesA[rand]);
-  Voxel* moleculeB(A->getRandomAdjoiningVoxel(moleculeA, B, SearchVacant));
+                                        theCoordsA.size()));
+  unsigned int coordA(theCoordsA[rand]);
+  unsigned int coordB(A->getRandomAdjoiningCoord(coordA, B, SearchVacant));
   if(A != C)
     {
-      A->removeMolecule(moleculeA);
-      C->addMolecule(moleculeA);
+      A->removeCoord(coordA);
+      C->addCoord(coordA);
     }
   if(B != D)
     { 
-      B->removeMolecule(moleculeB);
-      D->addMolecule(moleculeB);
+      B->removeCoord(coordB);
+      D->addCoord(coordB);
     }
 }
 
@@ -409,15 +409,14 @@ void SpatiocyteNextReactionProcess::reactABCD()
 //nonHD -> nonHD + nonHD
 bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
 {
-  Voxel* moleculeA(a->getRandomMolecule());
-  Voxel* moleculeC(NULL);
-  Voxel* moleculeD(NULL);
+  unsigned int coordA(a->getRandomCoord());
+  unsigned int coordC(theNullCoord);
+  unsigned int coordD(theNullCoord);
   if(a->getVacantID() == c->getVacantID() || a->getID() == c->getVacantID())
     {
-      moleculeC = moleculeA;
-      moleculeD = d->getRandomAdjoiningVoxel(moleculeC, moleculeC,
-                                             SearchVacant);
-      if(moleculeD == NULL)
+      coordC = coordA;
+      coordD = d->getRandomAdjoiningCoord(coordC, coordC, SearchVacant);
+      if(coordD == theNullCoord)
         {
           requeue();
           return false;
@@ -426,10 +425,9 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
   else if(a->getVacantID() == d->getVacantID() ||
           a->getID() == d->getVacantID())
     {
-      moleculeD = moleculeA;
-      moleculeC = c->getRandomAdjoiningVoxel(moleculeD, moleculeD,
-                                             SearchVacant);
-      if(moleculeC == NULL)
+      coordD = coordA;
+      coordC = c->getRandomAdjoiningCoord(coordD, coordD, SearchVacant);
+      if(coordC == theNullCoord)
         {
           requeue();
           return false;
@@ -437,41 +435,40 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
     }
   else
     {
-      moleculeC = c->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
-      if(moleculeC == NULL)
+      coordC = c->getRandomAdjoiningCoord(coordA, SearchVacant);
+      if(coordC == theNullCoord)
         {
           //Only proceed if we can find an adjoining vacant voxel
           //of nonND which can be occupied by C:
           requeue();
           return false;
         }
-      moleculeD = d->getRandomAdjoiningVoxel(moleculeC, moleculeC,
-                                             SearchVacant);
-      if(moleculeD == NULL)
+      coordD = d->getRandomAdjoiningCoord(coordC, coordC, SearchVacant);
+      if(coordD == theNullCoord)
         {
           requeue();
           return false;
         }
     }
-  a->removeMolecule(moleculeA);
-  c->addMolecule(moleculeC);
-  d->addMolecule(moleculeD);
+  a->removeCoord(coordA);
+  c->addCoord(coordC);
+  d->addCoord(coordD);
   return true;
 }
 
 //nonHD -> nonHD
 bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
 {
-  Voxel* moleculeA(a->getRandomMolecule());
-  Voxel* moleculeC(NULL);
+  unsigned int coordA(a->getRandomCoord());
+  unsigned int coordC(theNullCoord);
   if(a->getVacantID() == c->getVacantID() || a->getID() == c->getVacantID())
     {
-      moleculeC = moleculeA;
+      coordC = coordA;
     }
   else
     {
-      moleculeC = c->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
-      if(moleculeC == NULL)
+      coordC = c->getRandomAdjoiningCoord(coordA, SearchVacant);
+      if(coordC == theNullCoord)
         {
           //Only proceed if we can find an adjoining vacant voxel
           //of nonND which can be occupied by C:
@@ -479,46 +476,46 @@ bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
           return false;
         }
     }
-  a->removeMolecule(moleculeA);
-  c->addMolecule(moleculeC);
-  removeMoleculeE();
+  a->removeCoord(coordA);
+  c->addCoord(coordC);
+  removeCoordE();
   return true;
 }
 
 //zero-coefficient E
-//we remove a molecule E at random location in the compartment to allow
-//rebinding effect of the dissociated nonHD molecule while maintain the 
+//we remove a coord E at random location in the compartment to allow
+//rebinding effect of the dissociated nonHD coord while maintain the 
 //concentration of a substrate species even after the reaction:
-void SpatiocyteNextReactionProcess::removeMoleculeE()
+void SpatiocyteNextReactionProcess::removeCoordE()
 {
   if(!E)
     {
       return;
     }
-  Voxel* moleculeE(E->getRandomMolecule());
-  if(moleculeE == NULL)
+  unsigned int coordE(E->getRandomCoord());
+  if(coordE == theNullCoord)
     {
-      std::cout << getFullID().asString() << " unable to remove molecule E" <<
+      std::cout << getFullID().asString() << " unable to remove coord E" <<
         std::endl;
     }
-  E->removeMolecule(moleculeE);
+  E->removeCoord(coordE);
 }
 
 //nonHD (+Vacant[BindingSite]) -> nonHD[BindingSite]
 bool SpatiocyteNextReactionProcess::reactACbind(Species* a, Species* c)
 {
-  Voxel* moleculeA(a->getRandomMolecule());
-  Voxel* moleculeC(NULL);
-  moleculeC = c->getBindingSiteAdjoiningVoxel(moleculeA, BindingSite);
-  if(moleculeC == NULL)
+  unsigned int coordA(a->getRandomCoord());
+  unsigned int coordC(theNullCoord);
+  coordC = c->getBindingSiteAdjoiningCoord(coordA, BindingSite);
+  if(coordC == theNullCoord)
     {
       //Only proceed if we can find an adjoining vacant voxel
       //of nonND which can be occupied by C:
       requeue();
       return false;
     }
-  a->removeMolecule(moleculeA);
-  c->addMolecule(moleculeC);
+  a->removeCoord(coordA);
+  c->addCoord(coordC);
   return true;
 }
 
@@ -528,43 +525,43 @@ bool SpatiocyteNextReactionProcess::reactACbind(Species* a, Species* c)
 bool SpatiocyteNextReactionProcess::reactACDbind(Species* a, Species* c,
                                                  Species* d)
 {
-  Voxel* moleculeA(a->getRandomMolecule());
-  Voxel* moleculeC(NULL);
-  moleculeC = c->getBindingSiteAdjoiningVoxel(moleculeA, BindingSite);
-  if(moleculeC == NULL)
+  unsigned int coordA(a->getRandomCoord());
+  unsigned int coordC(theNullCoord);
+  coordC = c->getBindingSiteAdjoiningCoord(coordA, BindingSite);
+  if(coordC == theNullCoord)
     {
-      Voxel* moleculeD(NULL);
-      moleculeD = d->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
-      if(moleculeD == NULL)
+      unsigned int coordD(theNullCoord);
+      coordD = d->getRandomAdjoiningCoord(coordA, SearchVacant);
+      if(coordD == theNullCoord)
         {
           requeue();
           return false;
         }
-      a->removeMolecule(moleculeA);
-      d->addMolecule(moleculeD);
+      a->removeCoord(coordA);
+      d->addCoord(coordD);
       return true;
     }
-  a->removeMolecule(moleculeA);
-  c->addMolecule(moleculeC);
+  a->removeCoord(coordA);
+  c->addCoord(coordC);
   return true;
 }
 
 //HD -> nonHD
-Voxel* SpatiocyteNextReactionProcess::reactvAC(Variable* vA, Species* c)
+unsigned int SpatiocyteNextReactionProcess::reactvAC(Variable* vA, Species* c)
 {
-  Voxel* moleculeC(NULL);
+  unsigned int coordC(theNullCoord);
   Comp* compA(theSpatiocyteStepper->system2Comp(vA->getSuperSystem()));
   //Occupy C in a voxel of compartment C that adjoins compartment A
   //if A is a surface compartment:
   if(compA != c->getComp() && compA->dimension != 3)
     {
-      moleculeC = c->getRandomAdjoiningCompVoxel(compA, SearchVacant);
+      coordC = c->getRandomAdjoiningCompCoord(compA, SearchVacant);
     }
   else
     {
-      moleculeC = c->getRandomCompVoxel(SearchVacant);
+      coordC = c->getRandomCompCoord(SearchVacant);
     }
-  return moleculeC;
+  return coordC;
 }
 
 Comp* SpatiocyteNextReactionProcess::getComp2D(Species* c)
@@ -589,19 +586,19 @@ Comp* SpatiocyteNextReactionProcess::getComp2D(Species* c)
   return NULL;
 }
 
-Voxel* SpatiocyteNextReactionProcess::reactvAvBC(Species* c)
+unsigned int SpatiocyteNextReactionProcess::reactvAvBC(Species* c)
 {
-  Voxel* moleculeC(NULL);
+  unsigned int coordC(theNullCoord);
   Comp* aComp2D(getComp2D(c));
   if(aComp2D)
     {
-      moleculeC = C->getRandomAdjoiningCompVoxel(aComp2D, SearchVacant);
+      coordC = C->getRandomAdjoiningCompCoord(aComp2D, SearchVacant);
     }
   else
     {
-      moleculeC = C->getRandomCompVoxel(SearchVacant);
+      coordC = C->getRandomCompCoord(SearchVacant);
     }
-  return moleculeC;
+  return coordC;
 }
 
 
@@ -614,7 +611,7 @@ Real SpatiocyteNextReactionProcess::getPropensity_FirstOrder()
 {
   if(A)
     {
-      A->updateMoleculeSize();
+      A->updateCoordSize();
     }
   Real aValue(theVariableReferenceVector[0].getVariable()->getValue());
   if(aValue > 0.0)
@@ -633,11 +630,11 @@ Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_TwoSubstrates()
 {
   if(A)
     {
-      A->updateMoleculeSize();
+      A->updateCoordSize();
     }
   if(B)
     {
-      B->updateMoleculeSize();
+      B->updateCoordSize();
     }
   double sizeA(0);
   double sizeB(0);
@@ -645,7 +642,7 @@ Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_TwoSubstrates()
   if(A && B)
     {
       sizeB = updateImmobileSubstrates();
-      sizeA = moleculesA.size();
+      sizeA = theCoordsA.size();
     }
   else
     {
@@ -667,14 +664,14 @@ Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_TwoSubstrates()
 unsigned int SpatiocyteNextReactionProcess::updateImmobileSubstrates()
 {
   unsigned int sizeB(0);
-  moleculesA.resize(0);
+  theCoordsA.resize(0);
   for(unsigned int i(0); i != A->size(); ++i)
     {
-      Voxel* moleculeA(A->getMolecule(i));
-      unsigned int cnt(A->getAdjoiningMoleculeCnt(moleculeA, B));
+      unsigned int coordA(A->getCoord(i));
+      unsigned int cnt(A->getAdjoiningCoordCnt(coordA, B));
       if(cnt)
         {
-          moleculesA.push_back(moleculeA);
+          theCoordsA.push_back(coordA);
           sizeB += cnt;
         }
     }
@@ -685,10 +682,10 @@ Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_OneSubstrate()
 {
   if(A)
     {
-      A->updateMoleculeSize();
+      A->updateCoordSize();
     }
   Real aValue(theVariableReferenceVector[0].getVariable()->getValue());
-  //There must be two or more molecules:
+  //There must be two or more coords:
   if(aValue > 1.0)
     {
       return p*aValue*(aValue-1.0);

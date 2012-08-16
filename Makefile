@@ -19,10 +19,10 @@ CoordinateLogProcess\
 HistogramLogProcess\
 MoleculePopulateProcess\
 DiffusionProcess\
-PolymerFragmentationProcess\
-PolymerizationParameterProcess\
-PolymerizationProcess\
 PeriodicBoundaryDiffusionProcess
+#PolymerFragmentationProcess\
+#PolymerizationParameterProcess\
+#PolymerizationProcess
 
 ECELL3_DMC = ecell3-dmc
 CXX = g++

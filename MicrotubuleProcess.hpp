@@ -196,39 +196,23 @@ public:
       thePlusSpecies->setIsCompVacant();
     }
   virtual void initializeThird();
+  void addCompVoxel(unsigned int, unsigned int, Point&);
+  void initializeDirectionVector();
   void initializeProtofilaments();
   void elongateProtofilaments();
-  void connectProtofilaments();
-  double getWestPlaneDist(Voxel*);
-  void initializeDirectionVector();
-  Voxel* getNeighbor(Voxel*, Point&, Voxel*, double&);
-  bool notNeighbor(Voxel*, Voxel*);
-  bool notShared(Voxel*, Point, Voxel*);
-  bool isInsidePlane(Voxel*, Point&);
-  bool isLine(Voxel*, Point&);
-  bool checkStartVoxel(Voxel*);
-  void addCompVoxel(unsigned int, unsigned int, Point&);
-  void removeVacantVoxels(unsigned int);
-  void rotatePointAlongVector(Point&, double);
-  void connectLatticeVoxels();
-  void enlistLatticeVoxels();
-  bool addLatticeVoxel(Voxel*, Voxel*);
-  bool isValidVoxel(Voxel*);
-  bool isInsideVoxel(Voxel*);
-  void removeInsideAdjoins(Voxel*);
-  void connectLatticeVoxel(Voxel*, Voxel*);
-  void connectNorthSouth(unsigned int, unsigned int);
   void connectPeriodic(unsigned int);
+  void connectNorthSouth(unsigned int, unsigned int);
   void connectEastWest(unsigned int, unsigned int);
   void connectSeamEastWest(unsigned int);
   void connectNwSw(unsigned int);
-  bool notInNeighbors(Voxel*, Point&);
-  void addAdjoinVoxels(Voxel*, Voxel*);
+  void enlistLatticeVoxels();
+  void addDirect(Voxel&, Voxel&);
+  void addIndirect(Voxel&, Voxel&);
+  bool initAdjoins(Voxel&);
+  void updateAdjoinSize(Voxel&);
   bool inMTCylinder(Point&);
-  void addDirect(Voxel*, Voxel*);
-  void addIndirect(Voxel*, Voxel*);
-  bool initAdjoins(Voxel*);
-  void updateAdjoinSize(Voxel*);
+  void rotatePointAlongVector(Point&, double);
+  void connectProtofilaments();
 protected:
   bool isCompartmentalized;
   double DimerPitch;
@@ -245,26 +229,22 @@ protected:
   double RotateZ;
   double offLatticeRadius;
   double latticeRadius;
+  unsigned int endCoord;
   unsigned int Periodic;
+  unsigned int startCoord;
   unsigned int theDimerSize;
-  unsigned int theAdjoiningVoxelSize;
   int tempID;
   Comp* theComp;
-  Voxel* theNullVoxel;
   Point T; //Direction vector along the MT axis from Minus to Plus end
   Point M; //Minus end
   Point P; //Plus end
   Point C; //Center point
-  std::vector<Voxel*> startVoxels;
-  std::vector<std::vector<Voxel*> > vacantVoxels;
   Species* theVacantSpecies;
   Species* theMinusSpecies;
   Species* thePlusSpecies;
-  std::vector<Voxel> theLattice;
   std::vector<Point> thePoints;
   std::vector<Species*> theKinesinSpecies;
-  std::vector<Voxel*> latticeVoxels;
-  std::vector<Voxel*> occVoxels;
+  std::vector<unsigned int> occCoords;
 };
 
 #endif /* __MicrotubuleProcess_hpp */

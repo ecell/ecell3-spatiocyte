@@ -37,7 +37,7 @@ void VisualizationLogProcess::initializeLog()
   unsigned int aLatticeType(theSpatiocyteStepper->getLatticeType());
   theLogFile.write((char*)(&aLatticeType), sizeof(aLatticeType));
   theLogFile.write((char*)(&theMeanCount), sizeof(theMeanCount));
-  unsigned int aStartCoord(theSpatiocyteStepper->getStartCoord());
+  unsigned int aStartCoord(0);
   theLogFile.write((char*)(&aStartCoord), sizeof(aStartCoord));
   unsigned int aRowSize(theSpatiocyteStepper->getRowSize());
   theLogFile.write((char*)(&aRowSize), sizeof(aRowSize));
@@ -108,7 +108,7 @@ void VisualizationLogProcess::logMolecules(int anIndex)
   //them before logging their position:
   if(aSpecies->getIsVacant())
     {
-      aSpecies->updateMolecules();
+      aSpecies->updateCoords();
     }
   theLogFile.write((char*)(&anIndex), sizeof(anIndex));
   //The species molecule size:
@@ -128,7 +128,7 @@ void VisualizationLogProcess::logOffLattice(int anIndex)
     {
       if(aSpecies->getIsDiffusiveVacant() || aSpecies->getIsReactiveVacant())
         {
-          aSpecies->updateMolecules();
+          aSpecies->updateCoords();
         }
       else
         {
@@ -261,7 +261,7 @@ void VisualizationLogProcess::logCompVacant()
           theLogFile.write((char*)(&aSize), sizeof(aSize)); 
           for(unsigned int j(0); j != aSize; ++j)
             {
-              unsigned int aCoord(aVacantSpecies->getMolecule(j)->coord);
+              unsigned int aCoord(aVacantSpecies->getCoord(j));
               theLogFile.write((char*)(&aCoord), sizeof(aCoord));
             }  
         }

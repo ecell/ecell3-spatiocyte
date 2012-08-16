@@ -40,14 +40,13 @@ void MicroscopyTrackingProcess::incSpeciesLatticeCount()
       unsigned int aMoleculeSize(aSpecies->size());
       for(unsigned int j(0); j != aMoleculeSize; ++j)
         { 
-          Voxel* aMolecule(aSpecies->getMolecule(j));
-          ++theLattice[theLatticeSpeciesIndices[i][0]][
-            aMolecule->coord-theStartCoord];
+          unsigned int aCoord(aSpecies->getCoord(j));
+          Voxel& aMolecule((*theLattice)[aCoord]);
+          ++theFreqLattice[theLatticeSpeciesIndices[i][0]][aCoord];
           for(unsigned int k(1); k != theLatticeSpeciesIndices[i].size(); ++k)
             {
-              Voxel* anAdjoin(aMolecule->adjoiningVoxels[k-1]);
-              ++theLattice[theLatticeSpeciesIndices[i][k]][
-                anAdjoin->coord-theStartCoord];
+              ++theFreqLattice[theLatticeSpeciesIndices[i][k]][
+                aMolecule.adjoiningCoords[k-1]];
             }
         }
     }
@@ -56,11 +55,11 @@ void MicroscopyTrackingProcess::incSpeciesLatticeCount()
 void MicroscopyTrackingProcess::logFluorescentSpecies()
 {
   std::vector<int> coordList;
-  for(unsigned int i(0); i != theLatticeSize; ++i)
+  for(unsigned int i(0); i != theFreqLatticeSize; ++i)
     { 
       for(unsigned int j(0); j != theLatticeSpecies.size(); ++j)
         {
-          if(theLattice[j][i])
+          if(theFreqLattice[j][i])
             {
               coordList.push_back(i);
               break;
@@ -73,14 +72,14 @@ void MicroscopyTrackingProcess::logFluorescentSpecies()
   theLogFile.write((char*)(&coordSize), sizeof(coordSize));
   for(unsigned int i(0); i != coordSize; ++i)
     {
-      unsigned int aCoord(coordList[i]+theStartCoord);
+      unsigned int aCoord(coordList[i]);
       theLogFile.write((char*)(&aCoord), sizeof(aCoord));
     }
   for(unsigned int i(0); i != theLatticeSpecies.size(); ++i)
     {
       for(unsigned int j(0); j != coordSize; ++j)
         {
-          unsigned int frequency(theLattice[i][coordList[j]]);
+          unsigned int frequency(theFreqLattice[i][coordList[j]]);
           theLogFile.write((char*)(&frequency), sizeof(frequency));
         }
     }

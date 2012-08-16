@@ -48,7 +48,6 @@ public:
       PROPERTYSLOT_SET_GET(String, FileName);
     }
   VisualizationLogProcess():
-    SpatiocyteProcess(false),
     Polymer(1),
     theLogMarker(UINT_MAX),
     theMeanCount(0),

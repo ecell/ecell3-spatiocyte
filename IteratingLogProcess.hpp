@@ -69,7 +69,7 @@ public:
   SIMPLE_SET_GET_METHOD(Integer, Displacement);
   SIMPLE_SET_GET_METHOD(Integer, Diffusion);
   IteratingLogProcess():
-    SpatiocyteProcess(false),
+    SpatiocyteProcess(),
     Centered(0),
     Diffusion(0),
     Displacement(0),

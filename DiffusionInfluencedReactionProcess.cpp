@@ -86,17 +86,20 @@ void DiffusionInfluencedReactionProcess::initializeThird()
 //Similarly, if B and D belong to the same Comp, B <- D.
 //Otherwise, find a vacant adjoining voxel of C, Y which is the same Comp
 //as D and Y <- D.
-bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
-                                               Voxel* moleculeB)
+bool DiffusionInfluencedReactionProcess::react(unsigned int coordA,
+                                               unsigned int coordB)
 {
   //First let us make sure moleculeA and moleculeB belong to the
   //correct species.
-  if(moleculeA->id != A->getID())
+  if((*theLattice)[coordA].id != A->getID())
     {
-      Voxel* tempA(moleculeA);
-      moleculeA = moleculeB;
-      moleculeB = tempA;
+      unsigned int tempA(coordA);
+      coordA = coordB;
+      coordB = tempA;
     }
+  Voxel& moleculeA((*theLattice)[coordA]);
+  Voxel& moleculeB((*theLattice)[coordB]);
+
   //nonHD_A + nonHD_B -> nonHD_C + HD_D:
   //nonHD_A + nonHD_B -> HD_C + nonHD_D:
   if((variableC && D) || (C && variableD))
@@ -108,42 +111,41 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
           HD_p = variableD;
           nonHD_p = C;
         }
-      Voxel* moleculeP;
+      unsigned int coordP;
       if(A->getVacantID() == nonHD_p->getVacantID() ||
          A->getID() == nonHD_p->getVacantID())
         {
-          moleculeP = moleculeA;
+          coordP = coordA;
           //Hard remove the B molecule, since nonHD_p is in a different Comp:
-          moleculeB->id = B->getVacantID();
+          moleculeB.id = B->getVacantID();
         }
       else if(B->getVacantID() == nonHD_p->getVacantID() ||
               B->getID() == nonHD_p->getVacantID())
         {
-          moleculeP = moleculeB;
+          coordP = coordB;
           //Hard remove the A molecule, since nonHD_p is in a different Comp:
-          moleculeA->id = A->getVacantID();
+          moleculeA.id = A->getVacantID();
         }
       else
         { 
-          moleculeP = nonHD_p->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
+          coordP = nonHD_p->getRandomAdjoiningCoord(coordA, SearchVacant);
           //Only proceed if we can find an adjoining vacant voxel
           //of A which can be occupied by C:
-          if(moleculeP == NULL)
+          if(coordP == theNullCoord)
             {
-              moleculeP = nonHD_p->getRandomAdjoiningVoxel(moleculeB,
-                                                           SearchVacant);
-              if(moleculeP == NULL)
+              coordP = nonHD_p->getRandomAdjoiningCoord(coordB, SearchVacant);
+              if(coordP == theNullCoord)
                 {
                   return false;
                 }
             }
           //Hard remove the A molecule, since nonHD_p is in a different Comp:
-          moleculeA->id = A->getVacantID();
+          moleculeA.id = A->getVacantID();
           //Hard remove the B molecule, since nonHD_p is in a different Comp:
-          moleculeB->id = B->getVacantID();
+          moleculeB.id = B->getVacantID();
         }
       HD_p->addValue(1);
-      nonHD_p->addMolecule(moleculeP);
+      nonHD_p->addCoord(coordP);
       return true;
     }
   //nonHD_A + nonHD_B -> HD_C:
@@ -151,79 +153,76 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
     {
 
       //Hard remove the A molecule, since nonHD_p is in a different Comp:
-      moleculeA->id = A->getVacantID();
+      moleculeA.id = A->getVacantID();
       //Hard remove the B molecule, since nonHD_p is in a different Comp:
-      moleculeB->id = B->getVacantID();
+      moleculeB.id = B->getVacantID();
       variableC->addValue(1);
       return true;
     }
-
-  Voxel* moleculeC;
-  Voxel* moleculeD;
+  unsigned int coordC;
+  unsigned int coordD;
   if(A->getVacantID() == C->getVacantID() || A->getID() == C->getVacantID())
     {
-      moleculeC = moleculeA;
+      coordC = coordA;
       if(D)
         {
           if(B->getVacantID() == D->getVacantID() ||
              B->getID() == D->getVacantID())
             {
-              moleculeD = moleculeB;
+              coordD = coordB;
             }
           else
             {
-              moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC,
-                                                     SearchVacant);
-              if(moleculeD == NULL)
+              coordD = D->getRandomAdjoiningCoord(coordC, coordC, SearchVacant);
+              if(coordD == theNullCoord)
                 {
                   return false;
                 }
-              moleculeB->id = B->getVacantID();
+              moleculeB.id = B->getVacantID();
             }
-          D->addMolecule(moleculeD);
+          D->addCoord(coordD);
         }
       else
         {
           //Hard remove the B molecule since it is not used:
-          moleculeB->id = B->getVacantID();
+          moleculeB.id = B->getVacantID();
         }
     }
   else if(B->getVacantID() == C->getVacantID() ||
           B->getID() == C->getVacantID())
     {
-      moleculeC = moleculeB;
+      coordC = coordB;
       if(D)
         {
           if(A->getVacantID() == D->getVacantID() ||
              A->getID() == D->getVacantID())
             {
-              moleculeD = moleculeA;
+              coordD = coordA;
             }
           else
             {
-              moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC,
-                                                     SearchVacant);
-              if(moleculeD == NULL)
+              coordD = D->getRandomAdjoiningCoord(coordC, coordC, SearchVacant);
+              if(coordD == theNullCoord)
                 {
                   return false;
                 }
-              moleculeA->id = A->getVacantID();
+              moleculeA.id = A->getVacantID();
             }
-          D->addMolecule(moleculeD);
+          D->addCoord(coordD);
         }
       else
         {
           //Hard remove the A molecule since it is not used:
-          moleculeA->id = A->getVacantID();
+          moleculeA.id = A->getVacantID();
         }
     }
   else
     {
-      moleculeC = C->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
-      if(moleculeC == NULL)
+      coordC = C->getRandomAdjoiningCoord(coordA, SearchVacant);
+      if(coordC == theNullCoord)
         {
-          moleculeC = C->getRandomAdjoiningVoxel(moleculeB, SearchVacant);
-          if(moleculeC == NULL)
+          coordC = C->getRandomAdjoiningCoord(coordB, SearchVacant);
+          if(coordC == theNullCoord)
             {
               //Only proceed if we can find an adjoining vacant voxel
               //of A or B which can be occupied by C:
@@ -232,20 +231,19 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
         }
       if(D)
         {
-          moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC,
-                                                 SearchVacant);
-          if(moleculeD == NULL)
+          coordD = D->getRandomAdjoiningCoord(coordC, coordC, SearchVacant);
+          if(coordD == theNullCoord)
             {
               return false;
             }
-          D->addMolecule(moleculeD);
+          D->addCoord(coordD);
         }
       //Hard remove the A molecule since it is not used:
-      moleculeA->id = A->getVacantID();
+      moleculeA.id = A->getVacantID();
       //Hard remove the B molecule since it is not used:
-      moleculeB->id = B->getVacantID();
+      moleculeB.id = B->getVacantID();
     }
-  C->addMolecule(moleculeC);
+  C->addCoord(coordC);
   addMoleculeE();
   return true;
 }
@@ -260,13 +258,13 @@ void DiffusionInfluencedReactionProcess::addMoleculeE()
     {
       return;
     } 
-  Voxel* moleculeE(E->getRandomCompVoxel(1));
-  if(moleculeE == NULL)
+  unsigned int coordE(E->getRandomCompCoord(1));
+  if(coordE == theNullCoord)
     {
       std::cout << getFullID().asString() << " unable to add molecule E" <<
         std::endl;
     }
-  E->addMolecule(moleculeE);
+  E->addCoord(coordE);
 }
 
 

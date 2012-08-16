@@ -116,7 +116,7 @@ void MoleculePopulateProcess::fire()
   for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
       i != theProcessSpecies.end(); ++i)
     {
-      (*i)->removeMolecules();
+      (*i)->removeCoords();
       populateUniformSparse(*i);
     }
   theStepInterval = ResetTime;
@@ -139,8 +139,8 @@ void MoleculePopulateProcess::populateUniformOnDiffusiveVacant(Species*
          !OriginX && !OriginY && !OriginZ)
         {
           Species* aVacantSpecies(aSpecies->getVacantSpecies());
-          aVacantSpecies->updateMolecules();
-          unsigned int aSize(aSpecies->getPopulateMoleculeSize());
+          aVacantSpecies->updateCoords();
+          unsigned int aSize(aSpecies->getPopulateCoordSize());
           if(aVacantSpecies->size() < aSize)
             {
               THROW_EXCEPTION(ValueError, String(
@@ -156,8 +156,8 @@ void MoleculePopulateProcess::populateUniformOnDiffusiveVacant(Species*
             }
           for(unsigned int i(0); i != aSize; ++i)
             {
-              Voxel* aMolecule(aVacantSpecies->getRandomMolecule());
-              aSpecies->addMolecule(aMolecule);
+              unsigned int aMolecule(aVacantSpecies->getRandomCoord());
+              aSpecies->addCoord(aMolecule);
             }
         }
       else
@@ -180,16 +180,16 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
       if(UniformRadiusX == 1 && UniformRadiusY == 1 && UniformRadiusZ == 1 &&
          !OriginX && !OriginY && !OriginZ)
         {
-          unsigned int aSize(aSpecies->getPopulateMoleculeSize());
+          unsigned int aSize(aSpecies->getPopulateCoordSize());
           for(unsigned int j(0); j != aSize; ++j)
             {
-              Voxel* aVoxel;
+              unsigned int aCoord;
               do
                 {
-                  aVoxel = aVacantSpecies->getMolecule(aList[(*aCount)++]); 
+                  aCoord = aVacantSpecies->getCoord(aList[(*aCount)++]); 
                 }
-              while(aVoxel->id != aVacantSpecies->getID());
-              aSpecies->addMolecule(aVoxel);
+              while((*theLattice)[aCoord].id != aVacantSpecies->getID());
+              aSpecies->addCoord(aCoord);
             }
         }
       else
@@ -210,18 +210,18 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
       if(UniformRadiusX == 1 && UniformRadiusY == 1 && UniformRadiusZ == 1 &&
          !OriginX && !OriginY && !OriginZ)
         {
-          unsigned int aSize(aSpecies->getPopulateMoleculeSize());
+          unsigned int aSize(aSpecies->getPopulateCoordSize());
           int availableVoxelSize(aVacantSpecies->size());
           for(unsigned int j(0); j != aSize; ++j)
             {
-              Voxel* aVoxel;
+              unsigned int aCoord;
               do
                 {
-                  aVoxel = aVacantSpecies->getMolecule(gsl_rng_uniform_int(
+                  aCoord = aVacantSpecies->getCoord(gsl_rng_uniform_int(
                                 getStepper()->getRng(), availableVoxelSize));
                 }
-              while(aVoxel->id != aVacantSpecies->getID());
-              aSpecies->addMolecule(aVoxel);
+              while((*theLattice)[aCoord].id != aVacantSpecies->getID());
+              aSpecies->addCoord(aCoord);
             }
         }
       else
@@ -257,21 +257,21 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
   minY = aComp->centerPoint.y + minY*aComp->lengthY/2*(1+delta);
   maxZ = aComp->centerPoint.z + maxZ*aComp->lengthZ/2*(1+delta);
   minZ = aComp->centerPoint.z + minZ*aComp->lengthZ/2*(1+delta);
-  std::vector<Voxel*> aVoxels;
+  std::vector<unsigned int> aCoords;
   for(unsigned int i(0); i != aVacantSpecies->size(); ++i)
     {
-      Voxel* aVoxel(aVacantSpecies->getMolecule(i));
+      unsigned int aCoord(aVacantSpecies->getCoord(i));
       Point aPoint(aVacantSpecies->getPoint(i));
-      if(aVoxel->id == aSpecies->getVacantID() &&
+      if((*theLattice)[aCoord].id == aSpecies->getVacantID() &&
          aPoint.x < maxX && aPoint.x > minX &&
          aPoint.y < maxY && aPoint.y > minY &&
          aPoint.z < maxZ && aPoint.z > minZ)
         {
-          aVoxels.push_back(aVoxel);
+          aCoords.push_back(aCoord);
         }
     }
-  unsigned int aSize(aSpecies->getPopulateMoleculeSize());
-  if(aVoxels.size() < aSize)
+  unsigned int aSize(aSpecies->getPopulateCoordSize());
+  if(aCoords.size() < aSize)
     {
       THROW_EXCEPTION(ValueError, String(
                       getPropertyInterface().getClassName()) +
@@ -279,20 +279,14 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
                       int2str(aSize) + " " + getIDString(aSpecies) +
                       " molecules that must be uniformly populated in a " +
                       "given range,\n but there are only " +
-                      int2str(aVoxels.size()) + " vacant voxels of " +
+                      int2str(aCoords.size()) + " vacant voxels of " +
                       getIDString(aSpecies->getVacantSpecies()) +
                       " that can be populated.");
     }
-  Voxel* aVoxelsArray[aVoxels.size()]; 
-  for(unsigned int i(0); i != aVoxels.size(); ++i)
-    {
-      aVoxelsArray[i] = aVoxels[i];
-    }
-  gsl_ran_shuffle(getStepper()->getRng(), aVoxelsArray, aVoxels.size(),
-                  sizeof(Voxel*));
+  std::random_shuffle(aCoords.begin(), aCoords.end());
   for(unsigned int i(0); i != aSize; ++i)
     {
-      aSpecies->addMolecule(aVoxelsArray[i]);
+      aSpecies->addCoord(aCoords[i]);
     }
 }
 

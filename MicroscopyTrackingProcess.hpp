@@ -53,8 +53,7 @@ public:
   SIMPLE_SET_GET_METHOD(Real, ExposureTime);
   virtual void initializeFifth()
     {
-      theLatticeSize = theSpatiocyteStepper->getLatticeSize();
-      theStartCoord = theSpatiocyteStepper->getStartCoord();
+      theFreqLatticeSize = theLattice->size();
       theLatticeSpecies.resize(0);
       //Put all the unique negative species in the process species list:
       for(VariableReferenceVector::iterator 
@@ -110,10 +109,10 @@ public:
                 }
             }
         }
-      theLattice.resize(theLatticeSpecies.size());
-      for(unsigned int i(0); i != theLattice.size(); ++i)
+      theFreqLattice.resize(theLatticeSpecies.size());
+      for(unsigned int i(0); i != theFreqLattice.size(); ++i)
         {
-          theLattice[i].resize(theLatticeSize);
+          theFreqLattice[i].resize(theFreqLatticeSize);
         }
       resetLattice();
       if(MeanCount > 0)
@@ -168,22 +167,21 @@ protected:
   void logFluorescentSpecies();
   void resetLattice()
     {
-      for(unsigned int i(0); i != theLattice.size(); ++i)
+      for(unsigned int i(0); i != theFreqLattice.size(); ++i)
         {
-          for(unsigned int j(0); j != theLatticeSize; ++j)
+          for(unsigned int j(0); j != theFreqLatticeSize; ++j)
             {
-              theLattice[i][j] = 0;
+              theFreqLattice[i][j] = 0;
             }
         }
     }
 protected:
-  unsigned int theStartCoord;
-  unsigned int theLatticeSize;
+  unsigned int theFreqLatticeSize;
   int MeanCount;
   double ExposureTime;
   double theLastExposedTime;
   std::vector<Species*> thePositiveSpecies;
-  std::vector<std::vector<int> > theLattice;
+  std::vector<std::vector<int> > theFreqLattice;
   std::vector<std::vector<int> > theLatticeSpeciesIndices;
 };
 

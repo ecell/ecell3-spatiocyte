@@ -44,7 +44,7 @@ public:
     {
       INHERIT_PROPERTIES(Process);
     }
-  SpatiocyteProcess(bool aPriority=true):
+  SpatiocyteProcess():
     isInitialized(false),
     thePriority(0),
     theStepInterval(libecs::INF),
@@ -115,6 +115,14 @@ public:
     {
       thePriorityQueue = aPriorityQueue;
     }
+  virtual void setLatticeProperties(std::vector<Voxel>* aLattice,
+                                    unsigned int aCoord,
+                                    unsigned int anAdjoiningCoordSize)
+    {
+      theLattice = aLattice;
+      theNullCoord = aCoord;
+      theAdjoiningCoordSize = anAdjoiningCoordSize;
+    }
   Time getTime() const
     {
       return theTime;
@@ -159,6 +167,8 @@ protected:
 protected:
   bool isInitialized;
   int thePriority;
+  unsigned int theAdjoiningCoordSize;
+  unsigned int theNullCoord;
   double theStepInterval;
   Time theTime;
   ProcessID theQueueID;
@@ -166,6 +176,7 @@ protected:
   SpatiocyteStepper* theSpatiocyteStepper;
   std::vector<Species*> theSpecies;
   std::vector<Species*> theProcessSpecies;
+  std::vector<Voxel>* theLattice;
   VariableReferenceVector thePositiveVariableReferences;
   VariableReferenceVector theNegativeVariableReferences;
   VariableReferenceVector theZeroVariableReferences;
