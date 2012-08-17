@@ -70,8 +70,10 @@ for i in range(len(fileNames)):
     ax1.grid(True)
     ax2.grid(True)
     fileName = fileNames[i]+'.%03d.png'%l
+    #fileName = fileNames[i]+'.%03d.pdf'%l
     print 'Saving frame', fileName
     fig.savefig(fileName)
+    #fig.savefig(fileName, format='pdf')
     ax1.cla()
     ax2.cla()
 

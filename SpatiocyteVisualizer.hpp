@@ -261,6 +261,7 @@ protected:
   void plotGrid();
   void plot3DHCPMolecules();
   void plotMean3DHCPMolecules();
+  void plotMeanHCPPoints();
   void plotHCPPoints();
   void plot3DCubicMolecules();
   void plotMean3DCubicMolecules();

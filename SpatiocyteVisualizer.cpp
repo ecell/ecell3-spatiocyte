@@ -351,6 +351,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
       if(theMeanCount)
         {
           thePlot3DFunction = &GLScene::plotMean3DHCPMolecules;
+          thePlotFunction = &GLScene::plotMeanHCPPoints;
           theLoadCoordsFunction = &GLScene::loadMeanCoords;
         }
       else
@@ -625,7 +626,14 @@ bool GLScene::on_expose_event(GdkEventExpose* event)
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   if(theMeanCount)
     {
-      (this->*thePlot3DFunction)();
+      if(show3DMolecule)
+        {
+          (this->*thePlot3DFunction)();
+        }
+      else
+        {
+          (this->*thePlotFunction)();
+        }
     }
   else if(show3DMolecule)
     {
@@ -937,6 +945,38 @@ bool GLScene::loadMeanCoords(std::streampos& aStreamPos)
   return true;
 }
 
+
+void GLScene::plotMeanHCPPoints()
+{
+  glBegin(GL_POINTS);
+  unsigned int col, layer, row;
+  double x,y,z;
+  for(unsigned int k(0); k != theMeanPointSize; ++k)
+    {
+      y = theMeanPoints[k].y;
+      z = theMeanPoints[k].z;
+      x = theMeanPoints[k].x;
+      for(unsigned int j(0); j!=theLatticeSpSize; ++j)
+        {
+          if(theSpeciesVisibility[j])
+            {
+              Color clr(theSpeciesColor[j]);
+              double intensity((double)(theFrequency[j][k])/
+                               (double)(theMeanCount/4));
+              //glColor3f(clr.r*intensity, clr.g*intensity, clr.b*intensity); 
+              glColor4f(clr.r, clr.g, clr.b, intensity);
+              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                  z <= theZUpBound[j] && z >= theZLowBound[j]))
+                {
+                  glVertex3f(x, y, z);
+                }
+            }
+        }
+    }
+  glEnd();
+}
+
 void GLScene::plotMean3DHCPMolecules()
 {
   unsigned int col, layer, row;
@@ -957,34 +997,6 @@ void GLScene::plotMean3DHCPMolecules()
               glColor4f(clr.r, clr.g, clr.b, intensity);
               //glColor4f(clr.r*intensity, clr.g*intensity, clr.b*intensity,
                //         0.5f); 
-              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                  z <= theZUpBound[j] && z >= theZLowBound[j]))
-                {
-                  glPushMatrix();
-                  glTranslatef(x,y,z);
-                  glCallList(theGLIndex+j);
-                  glPopMatrix();
-                }
-            }
-        }
-    }
-  for(unsigned int j(theLatticeSpSize); j!=theTotalLatticeSpSize; ++j )
-    {
-      if(theSpeciesVisibility[j])
-        {
-          Color clr(theSpeciesColor[j]);
-          glColor3f(clr.r, clr.g, clr.b); 
-          for( unsigned int k(0); k!=theMoleculeSize[j]; ++k )
-            {
-              col = theCoords[j][k]/(theRowSize*theLayerSize)-theOriCol; 
-              layer =
-                (theCoords[j][k]%(theRowSize*theLayerSize))/theRowSize;
-              row =
-                (theCoords[j][k]%(theRowSize*theLayerSize))%theRowSize;
-              y = (col%2)*theHCPl + theHCPy*layer + theRadius;
-              z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
-              x = col*theHCPx + theRadius;
               if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
                   y <= theYUpBound[j] && y >= theYLowBound[j] &&
                   z <= theZUpBound[j] && z >= theZLowBound[j]))
