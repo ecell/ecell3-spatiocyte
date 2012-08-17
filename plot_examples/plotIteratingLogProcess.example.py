@@ -10,7 +10,7 @@ tickFontSize = 14
 legendFontSize = 14
 lineFontSize = 14
 
-fileNames = ['Log.csv']
+fileNames = ['IterateLog.csv']
 legendTitles = ['State 2', 'State 1']
 speciesList = ['E']
 lines = ['-', '--', '-', '-']

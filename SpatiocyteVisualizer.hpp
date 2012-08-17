@@ -298,7 +298,7 @@ protected:
   unsigned int theLayerSize;
   unsigned int theLogMarker;
   unsigned int theMeanCount;
-  unsigned int theMeanCoordSize;
+  unsigned int theMeanPointSize;
   unsigned int theOffLatticeSpSize;
   unsigned int theOriCol;
   unsigned int theOriLayer;
@@ -318,7 +318,6 @@ protected:
   unsigned int* theYUpBound;
   unsigned int* theZLowBound;
   unsigned int* theZUpBound;
-  unsigned int* theMeanCoords;
   unsigned int* theMoleculeSize;
   unsigned int* theOffLatticeMoleculeSize;
   unsigned int** theCoords;
@@ -356,6 +355,7 @@ protected:
   GLfloat Z;
   GLfloat Xtrans;
   GLfloat Ytrans;
+  Point* theMeanPoints;
   Point** thePoints;
   Color* theSpeciesColor;
   ControlBox* m_control;
@@ -365,6 +365,7 @@ protected:
   std::ifstream theFile;
   std::vector<unsigned int> thePolySpeciesList;
   std::vector<std::streampos> theStreamPosList;
+  std::map<unsigned int, Point> theCoordPoints;
 };
 
 class Rulers : public Gtk::Window

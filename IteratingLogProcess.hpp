@@ -81,7 +81,7 @@ public:
     LogEnd(libecs::INF),
     LogStart(0),
     LogInterval(0),
-    FileName("Log.csv") {}
+    FileName("IterateLog.csv") {}
   virtual ~IteratingLogProcess() {}
   virtual void initializeSecond()
     {

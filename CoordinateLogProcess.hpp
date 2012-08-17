@@ -47,7 +47,7 @@ public:
   CoordinateLogProcess():
     theMoleculeSize(0)
   {
-    FileName = "CoordLog.csv";
+    FileName = "CoordinateLog.csv";
   }
   virtual ~CoordinateLogProcess() {}
   virtual void initializeLastOnce()

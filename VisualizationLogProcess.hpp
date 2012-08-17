@@ -52,7 +52,7 @@ public:
     theLogMarker(UINT_MAX),
     theMeanCount(0),
     LogInterval(0),
-    FileName("visualLog0.dat") {}
+    FileName("VisualLog.dat") {}
   virtual ~VisualizationLogProcess() {}
   SIMPLE_SET_GET_METHOD(Integer, Polymer);
   SIMPLE_SET_GET_METHOD(Real, LogInterval);
@@ -81,7 +81,6 @@ public:
     }	
   virtual void initializeFourth()
     {
-      SpatiocyteProcess::initializeSecond();
       for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
         {
           Species* aSpecies(theProcessSpecies[i]);

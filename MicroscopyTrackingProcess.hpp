@@ -47,15 +47,17 @@ public:
   MicroscopyTrackingProcess():
     MeanCount(0),
     ExposureTime(0.5),
-    theLastExposedTime(0) {}
+    theLastExposedTime(0)
+  {
+    FileName = "MicroscopyLog.dat";
+  }
   virtual ~MicroscopyTrackingProcess() {}
   SIMPLE_SET_GET_METHOD(Integer, MeanCount);
   SIMPLE_SET_GET_METHOD(Real, ExposureTime);
-  virtual void initializeFifth()
+  virtual void initializeFourth()
     {
       theFreqLatticeSize = theLattice->size();
-      theLatticeSpecies.resize(0);
-      //Put all the unique negative species in the process species list:
+      //Put all the unique negative species in the lattice species list:
       for(VariableReferenceVector::iterator 
           i(theNegativeVariableReferences.begin());
           i != theNegativeVariableReferences.end(); ++i)
@@ -69,6 +71,10 @@ public:
               theLatticeSpecies.push_back(aSpecies);
             }
         }
+      thePriority = -1;
+    }
+  virtual void initializeFifth()
+    {
       VariableReferenceVector::iterator aNegativeVariableIter(
                                    theNegativeVariableReferences.begin());
       for(VariableReferenceVector::iterator
@@ -93,7 +99,8 @@ public:
                       Species* aNegativeSpecies(
                           theSpatiocyteStepper->getSpecies(aNegativeVariable));
                       int aProcessSpeciesIndex(
-                       std::find(theLatticeSpecies.begin(), theLatticeSpecies.end(), 
+                       std::find(theLatticeSpecies.begin(), 
+                                 theLatticeSpecies.end(), 
                             aNegativeSpecies) - theLatticeSpecies.begin());
                       while(aNegativeCoefficient)
                         {
@@ -121,8 +128,8 @@ public:
         }
       else
         {
-          for(std::vector<Species*>::const_iterator i(thePositiveSpecies.begin());
-              i != thePositiveSpecies.end(); ++i)
+          for(std::vector<Species*>::const_iterator
+              i(thePositiveSpecies.begin()); i != thePositiveSpecies.end(); ++i)
             {
               if((*i)->getDiffusionInterval() < theStepInterval)
                 {
@@ -146,9 +153,11 @@ public:
     {  
       std::ostringstream aFilename;
       aFilename << FileName << std::ends;
-      theLogFile.open(aFilename.str().c_str(), std::ios::binary | std::ios::trunc);
+      theLogFile.open(aFilename.str().c_str(), std::ios::binary |
+                      std::ios::trunc);
       initializeLog();
       logCompVacant();
+      theLogFile.flush();
     }
   virtual void fire()
     {

@@ -123,7 +123,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   showTime(true),
   startRecord(false),
   m_stepCnt(-1),
-  theMeanCoordSize(0),
+  theMeanPointSize(0),
   thePngNumber(1),
   theResetTime(0),
   xAngle(0),
@@ -247,7 +247,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   theZUpBound = new unsigned int[theTotalSpeciesSize];
   theZLowBound = new unsigned int[theTotalSpeciesSize];
   theCoords = new unsigned int*[theTotalLatticeSpSize];
-  theMeanCoords = new unsigned int[1];
+  theMeanPoints = new Point[1];
   theFrequency = new unsigned int*[theLatticeSpSize];
   theMoleculeSize = new unsigned int[theTotalLatticeSpSize];
   for(unsigned int j(0); j!=theTotalLatticeSpSize; ++j)
@@ -898,34 +898,33 @@ bool GLScene::loadMeanCoords(std::streampos& aStreamPos)
     {
       return false;
     }
-  unsigned int* aCoords(NULL);
+  Point* aPoints(NULL);
   if(aMoleculeSize)
     {
-      aCoords = new unsigned int[aMoleculeSize];
-      if(theFile.read((char*) (aCoords), 
-                      sizeof(unsigned int)*aMoleculeSize).fail())
+      aPoints = new Point[aMoleculeSize];
+      if(theFile.read((char*) (aPoints), sizeof(Point)*aMoleculeSize).fail())
         {
-          delete []aCoords;
+          delete []aPoints;
           return false;
         }
     }
-  delete []theMeanCoords;
-  theMeanCoordSize = aMoleculeSize;
-  theMeanCoords = new unsigned int[aMoleculeSize];
+  delete []theMeanPoints;
+  theMeanPointSize = aMoleculeSize;
+  theMeanPoints = new Point[aMoleculeSize];
   for(unsigned int j(0); j != aMoleculeSize; ++j)
     {
-      theMeanCoords[j] = aCoords[j];
+      theMeanPoints[j] = aPoints[j];
     }
   if(aMoleculeSize)
     {
-      delete []aCoords;
+      delete []aPoints;
     }
   for(unsigned int j(0); j != theLatticeSpSize; ++j)
     {
       delete []theFrequency[j];
-      theFrequency[j] = new unsigned int[theMeanCoordSize];
+      theFrequency[j] = new unsigned int[theMeanPointSize];
       if(theFile.read((char*) (theFrequency[j]), 
-                      sizeof(unsigned int)*theMeanCoordSize).fail())
+                      sizeof(unsigned int)*theMeanPointSize).fail())
         {
           return false;
         }
@@ -942,14 +941,11 @@ void GLScene::plotMean3DHCPMolecules()
 {
   unsigned int col, layer, row;
   double x,y,z;
-  for(unsigned int k(0); k != theMeanCoordSize; ++k)
+  for(unsigned int k(0); k != theMeanPointSize; ++k)
     {
-      col = theMeanCoords[k]/(theRowSize*theLayerSize)-theOriCol; 
-      layer = (theMeanCoords[k]%(theRowSize*theLayerSize))/theRowSize;
-      row = (theMeanCoords[k]%(theRowSize*theLayerSize))%theRowSize;
-      y = (col%2)*theHCPl + theHCPy*layer + theRadius;
-      z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
-      x = col*theHCPx + theRadius; 
+      y = theMeanPoints[k].y;
+      z = theMeanPoints[k].z;
+      x = theMeanPoints[k].x;
       for(unsigned int j(0); j!=theLatticeSpSize; ++j)
         {
           if(theSpeciesVisibility[j])
@@ -1007,14 +1003,11 @@ void GLScene::plotMean3DCubicMolecules()
 {
   unsigned int col, layer, row;
   double x,y,z;
-  for(unsigned int k(0); k != theMeanCoordSize; ++k)
+  for(unsigned int k(0); k != theMeanPointSize; ++k)
     {
-      col = theMeanCoords[k]/(theRowSize*theLayerSize)-theOriCol; 
-      layer = (theMeanCoords[k]%(theRowSize*theLayerSize))/theRowSize;
-      row = (theMeanCoords[k]%(theRowSize*theLayerSize))%theRowSize;
-      y = layer*2*theRadius + theRadius;
-      z = row*2*theRadius + theRadius;
-      x = col*2*theRadius + theRadius; 
+      y = theMeanPoints[k].y;
+      z = theMeanPoints[k].z;
+      x = theMeanPoints[k].x;
       for(unsigned int j(0); j!=theLatticeSpSize; ++j)
         {
           if(theSpeciesVisibility[j])
@@ -2333,7 +2326,7 @@ int main(int argc, char** argv)
   std::string aBaseName;
   if(argc == 1)
     {
-      aBaseName = "visualLog0.dat";
+      aBaseName = "VisualLog.dat";
     }
   else if(argc == 2)
     {

@@ -75,7 +75,7 @@ public:
     RotateY(0),
     RotateZ(0) 
   {
-    FileName = "HisLog.csv";
+    FileName = "HistogramLog.csv";
     LogStart = 1e-8;
   }
   virtual ~HistogramLogProcess() {}

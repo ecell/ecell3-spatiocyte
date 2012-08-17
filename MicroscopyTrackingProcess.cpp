@@ -54,32 +54,45 @@ void MicroscopyTrackingProcess::incSpeciesLatticeCount()
 
 void MicroscopyTrackingProcess::logFluorescentSpecies()
 {
-  std::vector<int> coordList;
+  std::vector<Point> aPoints;
+  std::vector<unsigned int> aCoords;
   for(unsigned int i(0); i != theFreqLatticeSize; ++i)
     { 
       for(unsigned int j(0); j != theLatticeSpecies.size(); ++j)
         {
           if(theFreqLattice[j][i])
             {
-              coordList.push_back(i);
+              aCoords.push_back(i);
+              if(theLatticeSpecies[j]->getIsOffLattice())
+                {
+                  aPoints.push_back(*(*theLattice)[i].point);
+                }
+              else if(theLatticeSpecies[j]->getIsPolymer())
+                {
+                  aPoints.push_back((*theLattice)[i].subunit->subunitPoint);
+                }
+              else
+                {
+                  aPoints.push_back(theSpatiocyteStepper->coord2point(i));
+                }
               break;
             }
         }
     }
   double aCurrentTime(theSpatiocyteStepper->getCurrentTime());
   theLogFile.write((char*)(&aCurrentTime), sizeof(aCurrentTime));
-  unsigned int coordSize(coordList.size());
-  theLogFile.write((char*)(&coordSize), sizeof(coordSize));
-  for(unsigned int i(0); i != coordSize; ++i)
+  unsigned int pointSize(aPoints.size());
+  theLogFile.write((char*)(&pointSize), sizeof(pointSize));
+  for(unsigned int i(0); i != pointSize; ++i)
     {
-      unsigned int aCoord(coordList[i]);
-      theLogFile.write((char*)(&aCoord), sizeof(aCoord));
+      Point aPoint(aPoints[i]);
+      theLogFile.write((char*)(&aPoint), sizeof(aPoint));
     }
   for(unsigned int i(0); i != theLatticeSpecies.size(); ++i)
     {
-      for(unsigned int j(0); j != coordSize; ++j)
+      for(unsigned int j(0); j != pointSize; ++j)
         {
-          unsigned int frequency(theFreqLattice[i][coordList[j]]);
+          unsigned int frequency(theFreqLattice[i][aCoords[j]]);
           theLogFile.write((char*)(&frequency), sizeof(frequency));
         }
     }
