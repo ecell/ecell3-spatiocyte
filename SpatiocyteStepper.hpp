@@ -112,6 +112,7 @@ private:
   void shuffleAdjoiningCoords();
   void setLatticeProperties();
   void checkModel();
+  void resizeProcessLattice();
   void initPriorityQueue();
   void initProcessSecond();
   void initProcessThird();

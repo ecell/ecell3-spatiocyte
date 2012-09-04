@@ -195,6 +195,7 @@ public:
       theMinusSpecies->setIsCompVacant();
       thePlusSpecies->setIsCompVacant();
     }
+  virtual unsigned int getLatticeResizeCoord(unsigned int);
   virtual void initializeThird();
   void addCompVoxel(unsigned int, unsigned int, Point&);
   void initializeDirectionVector();

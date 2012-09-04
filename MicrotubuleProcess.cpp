@@ -32,39 +32,39 @@
 
 LIBECS_DM_INIT(MicrotubuleProcess, Process); 
 
+unsigned int MicrotubuleProcess::getLatticeResizeCoord(unsigned int aStartCoord)
+{
+  theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
+  theVacantSpecies->setIsOffLattice();
+  theVacantSpecies->setRadius(DimerPitch*VoxelDiameter/2);
+  theMinusSpecies->setIsOffLattice();
+  theMinusSpecies->setRadius(DimerPitch*VoxelDiameter/2);
+  thePlusSpecies->setIsOffLattice();
+  thePlusSpecies->setRadius(DimerPitch*VoxelDiameter/2);
+  tempID = theSpecies.size();
+  C = theComp->centerPoint;
+  C.x += OriginX*theComp->lengthX/2;
+  C.y += OriginY*theComp->lengthY/2;
+  C.z += OriginZ*theComp->lengthZ/2;
+  for(unsigned int i(0); i != theKinesinSpecies.size(); ++i)
+    {
+      theKinesinSpecies[i]->setIsOffLattice();
+      theKinesinSpecies[i]->setDimension(1);
+      theKinesinSpecies[i]->setVacantSpecies(theVacantSpecies);
+      theKinesinSpecies[i]->setRadius(DimerPitch*VoxelDiameter/2);
+    }
+  offLatticeRadius = DimerPitch/2;
+  latticeRadius = 0.5;
+  theDimerSize = (unsigned int)rint(Length/DimerPitch);
+  startCoord = aStartCoord;
+  endCoord = startCoord+Protofilaments*theDimerSize;
+  return endCoord-startCoord;
+}
+
 void MicrotubuleProcess::initializeThird()
 {
   if(!isCompartmentalized)
     {
-      theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
-      theVacantSpecies->setIsOffLattice();
-      theVacantSpecies->setRadius(DimerPitch*VoxelDiameter/2);
-      theMinusSpecies->setIsOffLattice();
-      theMinusSpecies->setRadius(DimerPitch*VoxelDiameter/2);
-      thePlusSpecies->setIsOffLattice();
-      thePlusSpecies->setRadius(DimerPitch*VoxelDiameter/2);
-      tempID = theSpecies.size();
-      C = theComp->centerPoint;
-      C.x += OriginX*theComp->lengthX/2;
-      C.y += OriginY*theComp->lengthY/2;
-      C.z += OriginZ*theComp->lengthZ/2;
-      for(unsigned int i(0); i != theKinesinSpecies.size(); ++i)
-        {
-          theKinesinSpecies[i]->setIsOffLattice();
-          theKinesinSpecies[i]->setDimension(1);
-          theKinesinSpecies[i]->setVacantSpecies(theVacantSpecies);
-          theKinesinSpecies[i]->setRadius(DimerPitch*VoxelDiameter/2);
-        }
-      offLatticeRadius = DimerPitch/2;
-      latticeRadius = 0.5;
-      theDimerSize = (unsigned int)rint(Length/DimerPitch);
-      startCoord = theLattice->size();
-      endCoord = startCoord+Protofilaments*theDimerSize;
-      theLattice->resize(endCoord);
-      for(unsigned int i(startCoord); i != endCoord; ++i)
-        {
-          (*theLattice)[i].coord = i;
-        }
       thePoints.resize(Protofilaments*theDimerSize);
       initializeProtofilaments();
       elongateProtofilaments();

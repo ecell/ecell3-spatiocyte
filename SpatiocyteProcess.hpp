@@ -143,6 +143,10 @@ public:
     {
       return theSpatiocyteStepper->id2species(id);
     }
+  virtual unsigned int getLatticeResizeCoord(unsigned int)
+    {
+      return 0;
+    }
   virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
   virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
   virtual void substrateValueChanged(Time aCurrentTime)

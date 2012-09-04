@@ -84,6 +84,7 @@ void SpatiocyteStepper::initialize()
   compartmentalizeLattice();
   std::cout << "9. setting up compartment voxels properties..." << std::endl;
   setCompVoxelProperties();
+  resizeProcessLattice();
   std::cout << "10. initializing processes the third time..." << std::endl;
   initProcessThird();
   std::cout << "11. printing simulation parameters..." << std::endl;
@@ -495,6 +496,36 @@ void SpatiocyteStepper::printProcessParameters()
       aProcess->printParameters();
     }
   std::cout << std::endl;
+}
+
+void SpatiocyteStepper::resizeProcessLattice()
+{
+  unsigned int startCoord(theLattice.size());
+  unsigned int endCoord(startCoord);
+  for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
+      i != theProcessVector.end(); ++i)
+    {      
+      SpatiocyteProcessInterface*
+        aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
+      endCoord += aProcess->getLatticeResizeCoord(endCoord);
+    }
+  //Save the coords of molecules before resizing theLattice
+  //because the voxel address pointed by molecule list will become
+  //invalid once it is resized:
+  for(unsigned int i(0); i != theSpecies.size(); ++i)
+    {
+      theSpecies[i]->saveCoords();
+    }
+  theLattice.resize(endCoord);
+  for(unsigned int i(startCoord); i != endCoord; ++i)
+    {
+      theLattice[i].coord = i;
+    }
+  //Update the molecule list with the new voxel addresses:
+  for(unsigned int i(0); i != theSpecies.size(); ++i)
+    {
+      theSpecies[i]->updateMolecules();
+    }
 }
 
 void SpatiocyteStepper::initProcessThird()

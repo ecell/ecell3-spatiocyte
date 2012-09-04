@@ -55,6 +55,7 @@ public:
                                     unsigned int) = 0;
   virtual void substrateValueChanged(Time) = 0;
   virtual void fire() = 0;
+  virtual unsigned int getLatticeResizeCoord(unsigned int) = 0;
 };
 
 #endif /* __SPATIOCYTEPROCESSINTERFACE_HPP */
