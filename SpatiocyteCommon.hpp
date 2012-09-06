@@ -109,12 +109,12 @@ struct Point
 
 struct Voxel
 {
-  //We use short here to maintain the size of Voxel as 128 bytes which helps
-  //prefetching. Species ID:
   unsigned short id;
-  //Try to limit the adjoiningSize <= 6:
   unsigned short diffuseSize;
   unsigned short adjoiningSize;
+  //We use short here to maintain the size of Voxel as 128 bytes which helps
+  //prefetching. Species ID:
+  //Try to limit the adjoiningSize <= 6:
   unsigned int coord;
   unsigned int* adjoiningCoords;
   unsigned int* initAdjoins;

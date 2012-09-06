@@ -531,9 +531,8 @@ public:
             {
               size = source->diffuseSize;
             }
-          unsigned tarCoord(source->adjoiningCoords[
-                                gsl_rng_uniform_int(theRng, size)]);
-          Voxel* target(&theLattice[tarCoord]);
+          Voxel* target(&theLattice[source->adjoiningCoords[
+                        gsl_rng_uniform_int(theRng, size)]]);
           if(target->id == theVacantID)
             {
               if(theWalkProbability == 1 ||
@@ -585,10 +584,8 @@ public:
             {
               size = source->diffuseSize;
             }
-
-          unsigned tarCoord(source->adjoiningCoords[
-                        gsl_rng_uniform_int(theRng, size)]);
-          Voxel* target(&theLattice[tarCoord]);
+          Voxel* target(&theLattice[source->adjoiningCoords[
+                        gsl_rng_uniform_int(theRng, size)]]);
           if(target->id == theVacantID)
             {
               if(theWalkProbability == 1 ||
