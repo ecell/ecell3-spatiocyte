@@ -357,7 +357,7 @@ void H5VisualizationLogProcess::logMolecules(H5::DataSpace const& space, H5::Dat
     {
       if(aSpecies->getIsDiffusiveVacant() || aSpecies->getIsReactiveVacant())
         {
-          aSpecies->updateCoords();
+          aSpecies->updateMolecules();
         }
       else
         {

@@ -108,7 +108,7 @@ void VisualizationLogProcess::logMolecules(int anIndex)
   //them before logging their position:
   if(aSpecies->getIsVacant())
     {
-      aSpecies->updateCoords();
+      aSpecies->updateMolecules();
     }
   theLogFile.write((char*)(&anIndex), sizeof(anIndex));
   //The species molecule size:
@@ -128,7 +128,7 @@ void VisualizationLogProcess::logOffLattice(int anIndex)
     {
       if(aSpecies->getIsDiffusiveVacant() || aSpecies->getIsReactiveVacant())
         {
-          aSpecies->updateCoords();
+          aSpecies->updateMolecules();
         }
       else
         {

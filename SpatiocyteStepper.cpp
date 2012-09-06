@@ -524,7 +524,7 @@ void SpatiocyteStepper::resizeProcessLattice()
   //Update the molecule list with the new voxel addresses:
   for(unsigned int i(0); i != theSpecies.size(); ++i)
     {
-      theSpecies[i]->updateMolecules();
+      theSpecies[i]->updateMoleculePointers();
     }
 }
 
@@ -977,7 +977,6 @@ void SpatiocyteStepper::setLatticeProperties()
   //Initialize the null coord:
   theNullCoord = theRowSize*theLayerSize*theColSize;
   theLattice[theNullCoord].id = theNullID;
-  theLattice[theNullCoord].coord = theNullCoord;
 }
 
 void SpatiocyteStepper::storeSimulationParameters()
@@ -1211,6 +1210,7 @@ void SpatiocyteStepper::constructLattice()
   unsigned short rootID(aRootComp->vacantSpecies->getID());
   for(std::vector<Voxel>::iterator i(theLattice.begin()); a != aSize; ++i, ++a)
     { 
+      (*i).coord = a;
       (*i).adjoiningCoords = new unsigned int[theAdjoiningCoordSize];
       (*i).initAdjoins = NULL;
       (*i).diffuseSize = theAdjoiningCoordSize;
@@ -1218,7 +1218,6 @@ void SpatiocyteStepper::constructLattice()
       unsigned int aCol(a/(theRowSize*theLayerSize)); 
       unsigned int aLayer((a%(theRowSize*theLayerSize))/theRowSize); 
       unsigned int aRow((a%(theRowSize*theLayerSize))%theRowSize); 
-      (*i).coord = a; 
       if(aRootComp->geometry == CUBOID || isInsideCoord(a, aRootComp, 0))
         {
           //By default, the voxel is vacant and we set it to the root id:
@@ -1227,7 +1226,7 @@ void SpatiocyteStepper::constructLattice()
             { 
               // By default let the adjoining voxel pointer point to the 
               // source voxel (i.e., itself)
-              (*i).adjoiningCoords[j] = (*i).coord;
+              (*i).adjoiningCoords[j] = a;
             } 
           concatenateVoxel(*i, aRow, aLayer, aCol);
         }
@@ -1354,17 +1353,20 @@ void SpatiocyteStepper::concatenateVoxel(Voxel& aVoxel,
                                          unsigned int aLayer,
                                          unsigned int aCol)
 {
+  unsigned int aCoord(aRow+
+                      theRowSize*aLayer+
+                      theRowSize*theLayerSize*aCol);
   if(aRow > 0)
     { 
-      concatenateRows(aVoxel, aRow-1, aLayer, aCol); 
+      concatenateRows(aVoxel, aCoord, aRow-1, aLayer, aCol); 
     } 
   if(aLayer > 0)
     {
-      concatenateLayers(aVoxel, aRow, aLayer-1, aCol); 
+      concatenateLayers(aVoxel, aCoord, aRow, aLayer-1, aCol); 
     }
   if(aCol > 0)
     { 
-      concatenateCols(aVoxel, aRow, aLayer, aCol-1); 
+      concatenateCols(aVoxel, aCoord, aRow, aLayer, aCol-1); 
     }
 }
 
@@ -1739,62 +1741,65 @@ void SpatiocyteStepper::coord2global(unsigned int aCoord,
 }
 
 void SpatiocyteStepper::concatenateLayers(Voxel& aVoxel,
+                                          unsigned int a,
                                           unsigned int aRow,
                                           unsigned int aLayer,
                                           unsigned int aCol)
 {
-  Voxel& anAdjoiningVoxel(theLattice[
-                          aRow+
-                          theRowSize*aLayer+
-                          theRowSize*theLayerSize*aCol]);
+  unsigned int b(aRow+
+                 theRowSize*aLayer+
+                 theRowSize*theLayerSize*aCol);
+  Voxel& anAdjoiningVoxel(theLattice[b]);
   switch(LatticeType)
     {
     case HCP_LATTICE: 
       if((aLayer+1)%2+(aCol)%2 == 1)
         {
-          aVoxel.adjoiningCoords[VENTRALN] = anAdjoiningVoxel.coord;
-          anAdjoiningVoxel.adjoiningCoords[DORSALS] = aVoxel.coord;
+          aVoxel.adjoiningCoords[VENTRALN] = b;
+          anAdjoiningVoxel.adjoiningCoords[DORSALS] = a;
           if(aRow < theRowSize-1)
             {
-              Voxel& anAdjoiningVoxel(theLattice[
-                                      aRow+1+ 
-                                      theRowSize*aLayer+
-                                      theRowSize*theLayerSize*aCol]);
-              aVoxel.adjoiningCoords[VENTRALS] = anAdjoiningVoxel.coord;
-              anAdjoiningVoxel.adjoiningCoords[DORSALN] = aVoxel.coord;
+              unsigned int c(aRow+1+ 
+                             theRowSize*aLayer+
+                             theRowSize*theLayerSize*aCol);
+              Voxel& anAdjoiningVoxel(theLattice[c]);
+              aVoxel.adjoiningCoords[VENTRALS] = c;
+              anAdjoiningVoxel.adjoiningCoords[DORSALN] = a;
             }
         }
       else
         {
-          aVoxel.adjoiningCoords[VENTRALS] = anAdjoiningVoxel.coord;
-          anAdjoiningVoxel.adjoiningCoords[DORSALN] = aVoxel.coord;
+          aVoxel.adjoiningCoords[VENTRALS] = b;
+          anAdjoiningVoxel.adjoiningCoords[DORSALN] = a;
           if(aRow > 0)
             {
-              Voxel& anAdjoiningVoxel(theLattice[
-                                      aRow-1+ 
-                                      theRowSize*aLayer+
-                                      theRowSize*theLayerSize*aCol]);
-              aVoxel.adjoiningCoords[VENTRALN] = anAdjoiningVoxel.coord;
-              anAdjoiningVoxel.adjoiningCoords[DORSALS] = aVoxel.coord;
+              unsigned int c(aRow-1+ 
+                             theRowSize*aLayer+
+                             theRowSize*theLayerSize*aCol);
+              Voxel& anAdjoiningVoxel(theLattice[c]);
+              aVoxel.adjoiningCoords[VENTRALN] = c;
+              anAdjoiningVoxel.adjoiningCoords[DORSALS] = a;
             }
         }
       break;
     case CUBIC_LATTICE: 
-      aVoxel.adjoiningCoords[VENTRAL] = anAdjoiningVoxel.coord;
-      anAdjoiningVoxel.adjoiningCoords[DORSAL] = aVoxel.coord;
+      aVoxel.adjoiningCoords[VENTRAL] = b;
+      anAdjoiningVoxel.adjoiningCoords[DORSAL] = a;
       break;
     }
 }
 
 
 void SpatiocyteStepper::concatenateCols(Voxel& aVoxel,
+                                        unsigned int a,
                                         unsigned int aRow,
                                         unsigned int aLayer,
                                         unsigned int aCol)
 {
-  Voxel& anAdjoiningVoxel(theLattice[aRow+
-                                    theRowSize*aLayer+
-                                    theRowSize*theLayerSize*aCol]);
+  unsigned int b(aRow+
+                 theRowSize*aLayer+
+                 theRowSize*theLayerSize*aCol);
+  Voxel& anAdjoiningVoxel(theLattice[b]);
   switch(LatticeType)
     {
     case HCP_LATTICE: 
@@ -1802,48 +1807,48 @@ void SpatiocyteStepper::concatenateCols(Voxel& aVoxel,
         {
           if((aCol+1)%2 == 1)
             {
-              aVoxel.adjoiningCoords[NW] = anAdjoiningVoxel.coord;
-              anAdjoiningVoxel.adjoiningCoords[SE] = aVoxel.coord;
+              aVoxel.adjoiningCoords[NW] = b;
+              anAdjoiningVoxel.adjoiningCoords[SE] = a;
               if(aRow < theRowSize - 1)
                 {
-                  Voxel& anAdjoiningVoxel(theLattice[
-                                          aRow+1+ 
-                                          theRowSize*aLayer+
-                                          theRowSize*theLayerSize*aCol]);
-                  aVoxel.adjoiningCoords[SW] = anAdjoiningVoxel.coord;
-                  anAdjoiningVoxel.adjoiningCoords[NE] = aVoxel.coord;
+                  unsigned int c(aRow+1+ 
+                                 theRowSize*aLayer+
+                                 theRowSize*theLayerSize*aCol);
+                  Voxel& anAdjoiningVoxel(theLattice[c]);
+                  aVoxel.adjoiningCoords[SW] = c;
+                  anAdjoiningVoxel.adjoiningCoords[NE] = a;
                 }
               if(aLayer < theLayerSize-1)
                 {
-                  Voxel& anAdjoiningVoxel(theLattice[
-                                          aRow+ 
-                                          theRowSize*(aLayer+1)+
-                                          theRowSize*theLayerSize*aCol]);
-                  aVoxel.adjoiningCoords[WEST] = anAdjoiningVoxel.coord;
-                  anAdjoiningVoxel.adjoiningCoords[EAST] = aVoxel.coord;
+                  unsigned int c(aRow+ 
+                                 theRowSize*(aLayer+1)+
+                                 theRowSize*theLayerSize*aCol);
+                  Voxel& anAdjoiningVoxel(theLattice[c]);
+                  aVoxel.adjoiningCoords[WEST] = c;
+                  anAdjoiningVoxel.adjoiningCoords[EAST] = a;
                 }
             }
           else
             {
-              aVoxel.adjoiningCoords[SW] = anAdjoiningVoxel.coord;
-              anAdjoiningVoxel.adjoiningCoords[NE] = aVoxel.coord;
+              aVoxel.adjoiningCoords[SW] = b;
+              anAdjoiningVoxel.adjoiningCoords[NE] = a;
               if(aRow > 0)
                 {
-                  Voxel& anAdjoiningVoxel(theLattice[
-                                          aRow-1+ 
-                                          theRowSize*aLayer+
-                                          theRowSize*theLayerSize*aCol]);
-                  aVoxel.adjoiningCoords[NW] = anAdjoiningVoxel.coord;
-                  anAdjoiningVoxel.adjoiningCoords[SE] = aVoxel.coord;
+                  unsigned int c(aRow-1+ 
+                                 theRowSize*aLayer+
+                                 theRowSize*theLayerSize*aCol);
+                  Voxel& anAdjoiningVoxel(theLattice[c]);
+                  aVoxel.adjoiningCoords[NW] = c;
+                  anAdjoiningVoxel.adjoiningCoords[SE] = a;
                 }
               if(aLayer > 0)
                 {
-                  Voxel& anAdjoiningVoxel(theLattice[
-                                          aRow+ 
-                                          theRowSize*(aLayer-1)+
-                                          theRowSize*theLayerSize*aCol]);
-                  aVoxel.adjoiningCoords[WEST] = anAdjoiningVoxel.coord;
-                  anAdjoiningVoxel.adjoiningCoords[EAST] = aVoxel.coord;
+                  unsigned int c(aRow+ 
+                                 theRowSize*(aLayer-1)+
+                                 theRowSize*theLayerSize*aCol);
+                  Voxel& anAdjoiningVoxel(theLattice[c]);
+                  aVoxel.adjoiningCoords[WEST] = c;
+                  anAdjoiningVoxel.adjoiningCoords[EAST] = a;
                 }
             }
         }
@@ -1851,70 +1856,71 @@ void SpatiocyteStepper::concatenateCols(Voxel& aVoxel,
         {
           if((aCol+1)%2 == 1)
             {
-              aVoxel.adjoiningCoords[SW] = anAdjoiningVoxel.coord;
-              anAdjoiningVoxel.adjoiningCoords[NE] = aVoxel.coord;
+              aVoxel.adjoiningCoords[SW] = b;
+              anAdjoiningVoxel.adjoiningCoords[NE] = a;
               if(aRow > 0)
                 {
-                  Voxel& anAdjoiningVoxel(theLattice[
-                                          aRow-1+ 
-                                          theRowSize*aLayer+
-                                          theRowSize*theLayerSize*aCol]);
-                  aVoxel.adjoiningCoords[NW] = anAdjoiningVoxel.coord;
-                  anAdjoiningVoxel.adjoiningCoords[SE] = aVoxel.coord;
+                  unsigned int c(aRow-1+ 
+                                 theRowSize*aLayer+
+                                 theRowSize*theLayerSize*aCol);
+                  Voxel& anAdjoiningVoxel(theLattice[c]);
+                  aVoxel.adjoiningCoords[NW] = c;
+                  anAdjoiningVoxel.adjoiningCoords[SE] = a;
                 }
               if(aLayer < theLayerSize-1)
                 {
-                  Voxel& anAdjoiningVoxel(theLattice[
-                                          aRow+ 
-                                          theRowSize*(aLayer+1)+
-                                          theRowSize*theLayerSize*aCol]);
-                  aVoxel.adjoiningCoords[WEST] = anAdjoiningVoxel.coord;
-                  anAdjoiningVoxel.adjoiningCoords[EAST] = aVoxel.coord;
+                  unsigned int c(aRow+ 
+                                 theRowSize*(aLayer+1)+
+                                 theRowSize*theLayerSize*aCol);
+                  Voxel& anAdjoiningVoxel(theLattice[c]);
+                  aVoxel.adjoiningCoords[WEST] = c;
+                  anAdjoiningVoxel.adjoiningCoords[EAST] = a;
                 }
             }
           else
             {
-              aVoxel.adjoiningCoords[NW] = anAdjoiningVoxel.coord;
-              anAdjoiningVoxel.adjoiningCoords[SE] = aVoxel.coord;
+              aVoxel.adjoiningCoords[NW] = b;
+              anAdjoiningVoxel.adjoiningCoords[SE] = a;
               if(aRow < theRowSize - 1)
                 {
-                  Voxel& anAdjoiningVoxel(theLattice[
-                                          aRow+1+ 
-                                          theRowSize*aLayer+
-                                          theRowSize*theLayerSize*aCol]);
-                  aVoxel.adjoiningCoords[SW] = anAdjoiningVoxel.coord;
-                  anAdjoiningVoxel.adjoiningCoords[NE] = aVoxel.coord;
+                  unsigned int c(aRow+1+ 
+                                 theRowSize*aLayer+
+                                 theRowSize*theLayerSize*aCol);
+                  Voxel& anAdjoiningVoxel(theLattice[c]);
+                  aVoxel.adjoiningCoords[SW] = c;
+                  anAdjoiningVoxel.adjoiningCoords[NE] = a;
                 }
               if(aLayer > 0)
                 {
-                  Voxel& anAdjoiningVoxel(theLattice[
-                                          aRow+ 
-                                          theRowSize*(aLayer-1)+
-                                          theRowSize*theLayerSize*aCol]);
-                  aVoxel.adjoiningCoords[WEST] = anAdjoiningVoxel.coord;
-                  anAdjoiningVoxel.adjoiningCoords[EAST] = aVoxel.coord;
+                  unsigned int c(aRow+
+                                 theRowSize*(aLayer-1)+
+                                 theRowSize*theLayerSize*aCol);
+                  Voxel& anAdjoiningVoxel(theLattice[c]);
+                  aVoxel.adjoiningCoords[WEST] = c;
+                  anAdjoiningVoxel.adjoiningCoords[EAST] = a;
                 }
             }
         }
       break;
     case CUBIC_LATTICE:
-      aVoxel.adjoiningCoords[WEST] = anAdjoiningVoxel.coord;
-      anAdjoiningVoxel.adjoiningCoords[EAST] = aVoxel.coord;
+      aVoxel.adjoiningCoords[WEST] = b;
+      anAdjoiningVoxel.adjoiningCoords[EAST] = a;
       break;
     }
 }
 
 void SpatiocyteStepper::concatenateRows(Voxel& aVoxel,
+                                        unsigned int a,
                                         unsigned int aRow,
                                         unsigned int aLayer,
                                         unsigned int aCol)
 {
-  Voxel& anAdjoiningVoxel(theLattice[
-                          aRow+ 
-                          theRowSize*aLayer+ 
-                          theRowSize*theLayerSize*aCol]);
-  aVoxel.adjoiningCoords[NORTH] = anAdjoiningVoxel.coord;
-  anAdjoiningVoxel.adjoiningCoords[SOUTH] = aVoxel.coord;
+  unsigned int b(aRow+ 
+                 theRowSize*aLayer+ 
+                 theRowSize*theLayerSize*aCol);
+  Voxel& anAdjoiningVoxel(theLattice[b]);
+  aVoxel.adjoiningCoords[NORTH] = b;
+  anAdjoiningVoxel.adjoiningCoords[SOUTH] = a;
 }
 
 
@@ -1925,55 +1931,50 @@ void SpatiocyteStepper::concatenatePeriodicSurfaces()
       i+=theRowSize)
     {
       unsigned int j(i+theRowSize-1);
-      Voxel& aSrcVoxel(theLattice[
-                       coord2row(i)+ 
-                       theRowSize*coord2layer(i)+ 
-                       theRowSize*theLayerSize*coord2col(i)]); 
-      Voxel& aDestVoxel(theLattice[
-                        coord2row(j)+
-                        theRowSize*coord2layer(i)+
-                        theRowSize*theLayerSize*coord2col(i)]); 
+      unsigned int srcCoord(coord2row(i)+ 
+                            theRowSize*coord2layer(i)+ 
+                            theRowSize*theLayerSize*coord2col(i)); 
+      unsigned int destCoord(coord2row(j)+
+                             theRowSize*coord2layer(i)+
+                             theRowSize*theLayerSize*coord2col(i)); 
       if(aRootComp->xyPlane == UNIPERIODIC)
         { 
-          replaceUniVoxel(aSrcVoxel, aDestVoxel);
+          replaceUniVoxel(srcCoord, destCoord);
         }
       else if(aRootComp->xyPlane == PERIODIC)
         { 
-          replaceVoxel(aSrcVoxel, aDestVoxel);
+          replaceVoxel(srcCoord, destCoord);
         }
       else if(!isPeriodicEdge)
         {
           //We cannot have valid voxels pointing to itself it it is not periodic
           //to avoid incorrect homodimerization reaction. So we set such
           //molecules to null ID.
-          aSrcVoxel.id = theNullID;
-          aDestVoxel.id = theNullID;
+          theLattice[srcCoord].id = theNullID;
+          theLattice[destCoord].id = theNullID;
         }
     }
   for(unsigned int i(0); i<=theRowSize*theLayerSize*(theColSize-1)+theRowSize;)
     {
       unsigned int j(theRowSize*(theLayerSize-1)+i);
-      Voxel& aSrcVoxel(theLattice[
-                       coord2row(i)+
-                       theRowSize*coord2layer(i)+ 
-                       theRowSize*theLayerSize*coord2col(i)]); 
-      Voxel& aDestVoxel(theLattice[
-                        coord2row(i)+
-                        theRowSize*coord2layer(j)+ 
-                        theRowSize*theLayerSize*coord2col(i)]); 
-
+      unsigned int srcCoord(coord2row(i)+
+                            theRowSize*coord2layer(i)+ 
+                            theRowSize*theLayerSize*coord2col(i)); 
+      unsigned int destCoord(coord2row(i)+
+                             theRowSize*coord2layer(j)+ 
+                             theRowSize*theLayerSize*coord2col(i)); 
       if(aRootComp->xzPlane == UNIPERIODIC)
         { 
-          replaceUniVoxel(aSrcVoxel, aDestVoxel);
+          replaceUniVoxel(srcCoord, destCoord);
         }
       else if(aRootComp->xzPlane == PERIODIC)
         { 
-          replaceVoxel(aSrcVoxel, aDestVoxel);
+          replaceVoxel(srcCoord, destCoord);
         }
       else if(!isPeriodicEdge)
         {
-          aSrcVoxel.id = theNullID;
-          aDestVoxel.id = theNullID;
+          theLattice[srcCoord].id = theNullID;
+          theLattice[destCoord].id = theNullID;
         }
       ++i;
       if(coord2layer(i) != 0)
@@ -1983,26 +1984,24 @@ void SpatiocyteStepper::concatenatePeriodicSurfaces()
     }
   for(unsigned int i(0); i!=theRowSize*theLayerSize; ++i)
     {
-      Voxel& aSrcVoxel(theLattice[
-                       coord2row(i)+
-                       theRowSize*coord2layer(i)+ 
-                       theRowSize*theLayerSize*0]); 
-      Voxel& aDestVoxel(theLattice[
-                        coord2row(i)+
-                        theRowSize*coord2layer(i)+ 
-                        theRowSize*theLayerSize*(theColSize-1)]); 
+      unsigned int srcCoord(coord2row(i)+
+                            theRowSize*coord2layer(i)+ 
+                            theRowSize*theLayerSize*0); 
+      unsigned int destCoord(coord2row(i)+
+                             theRowSize*coord2layer(i)+ 
+                             theRowSize*theLayerSize*(theColSize-1)); 
       if(aRootComp->yzPlane == UNIPERIODIC)
         { 
-          replaceUniVoxel(aSrcVoxel, aDestVoxel);
+          replaceUniVoxel(srcCoord, destCoord);
         }
       else if(aRootComp->yzPlane == PERIODIC)
         { 
-          replaceVoxel(aSrcVoxel, aDestVoxel);
+          replaceVoxel(srcCoord, destCoord);
         }
       else if(!isPeriodicEdge)
         {
-          aSrcVoxel.id = theNullID;
-          aDestVoxel.id = theNullID;
+          theLattice[srcCoord].id = theNullID;
+          theLattice[destCoord].id = theNullID;
         }
     }
 }
@@ -2022,22 +2021,24 @@ unsigned int SpatiocyteStepper::coord2col(unsigned int aCoord)
   return aCoord/(theRowSize*theLayerSize);
 }
 
-void SpatiocyteStepper::replaceVoxel(Voxel& aSrcVoxel, Voxel& aDestVoxel)
+void SpatiocyteStepper::replaceVoxel(unsigned int src, unsigned int dest)
 {
+  Voxel& aSrcVoxel(theLattice[src]);
+  Voxel& aDestVoxel(theLattice[dest]);
   if(aSrcVoxel.id != theNullID && aDestVoxel.id != theNullID)
     {
       for(unsigned int j(0); j!=theAdjoiningCoordSize; ++j)
         {
-          if(aSrcVoxel.adjoiningCoords[j] == aSrcVoxel.coord &&
-              aDestVoxel.adjoiningCoords[j] != aDestVoxel.coord)
+          if(aSrcVoxel.adjoiningCoords[j] == src &&
+              aDestVoxel.adjoiningCoords[j] != dest)
             {
               aSrcVoxel.adjoiningCoords[j] = aDestVoxel.adjoiningCoords[j];
               for(unsigned int k(0); k!=theAdjoiningCoordSize; ++k)
                 {
                   Voxel& aVoxel(theLattice[aDestVoxel.adjoiningCoords[j]]);
-                  if(aVoxel.adjoiningCoords[k] == aDestVoxel.coord)
+                  if(aVoxel.adjoiningCoords[k] == dest)
                     {
-                      aVoxel.adjoiningCoords[k] = aSrcVoxel.coord;
+                      aVoxel.adjoiningCoords[k] = src;
                     }
                 }
             }
@@ -2046,20 +2047,22 @@ void SpatiocyteStepper::replaceVoxel(Voxel& aSrcVoxel, Voxel& aDestVoxel)
     }
 }
 
-void SpatiocyteStepper::replaceUniVoxel(Voxel& aSrcVoxel, Voxel& aDestVoxel)
+void SpatiocyteStepper::replaceUniVoxel(unsigned int src, unsigned int dest)
 {
+  Voxel& aSrcVoxel(theLattice[src]);
+  Voxel& aDestVoxel(theLattice[dest]);
   if(aSrcVoxel.id != theNullID && aDestVoxel.id != theNullID)
     {
       for(unsigned int j(0); j!=theAdjoiningCoordSize; ++j)
         {
-          if(aSrcVoxel.adjoiningCoords[j] == aSrcVoxel.coord)
+          if(aSrcVoxel.adjoiningCoords[j] == src)
             {
               for(unsigned int k(0); k!=theAdjoiningCoordSize; ++k)
                 {
                   Voxel& aVoxel(theLattice[aDestVoxel.adjoiningCoords[j]]);
-                  if(aVoxel.adjoiningCoords[k] == aDestVoxel.coord)
+                  if(aVoxel.adjoiningCoords[k] == dest)
                     {
-                      aVoxel.adjoiningCoords[k] = aSrcVoxel.coord;
+                      aVoxel.adjoiningCoords[k] = src;
                     }
                 }
             }
@@ -2070,7 +2073,8 @@ void SpatiocyteStepper::replaceUniVoxel(Voxel& aSrcVoxel, Voxel& aDestVoxel)
 
 void SpatiocyteStepper::shuffleAdjoiningCoords()
 {
-  for(std::vector<Voxel>::iterator i(theLattice.begin()); i != theLattice.end(); ++i)
+  for(std::vector<Voxel>::iterator i(theLattice.begin());
+      i != theLattice.end(); ++i)
     {
       if((*i).id != theNullID)
         { 
@@ -2114,7 +2118,7 @@ void SpatiocyteStepper::setLineVoxelProperties(Comp* aComp)
 
 void SpatiocyteStepper::setSurfaceCompProperties(Comp* aComp)
 {
-  aComp->vacantSpecies->removePeriodicEdgeCoords();
+  aComp->vacantSpecies->removePeriodicEdgeVoxels();
   aComp->vacantSpecies->removeSurfaces();
   setDiffusiveComp(aComp);
 }
@@ -2131,9 +2135,9 @@ void SpatiocyteStepper::setSurfaceVoxelProperties(Comp* aComp)
       Species* aVacantSpecies(aComp->vacantSpecies);
       for(unsigned int i(0); i != aVacantSpecies->size(); ++i)
         {
-          Voxel& aVoxel(theLattice[aVacantSpecies->getCoord(i)]);
-          optimizeSurfaceVoxel(aVoxel, aComp);
-          setSurfaceSubunit(aVoxel, aComp);
+          unsigned int aCoord(aVacantSpecies->getCoord(i));
+          optimizeSurfaceVoxel(aCoord, aComp);
+          setSurfaceSubunit(aCoord, aComp);
         }
     }
 }
@@ -2160,12 +2164,13 @@ void SpatiocyteStepper::setDiffusiveComp(Comp* aComp)
           unsigned int aCoord(aVacantSpecies->getCoord(i));
           aComp->diffusiveComp->vacantSpecies->addCompCoord(aCoord);
         }
-      aVacantSpecies->clearCoords();
+      aVacantSpecies->clearMolecules();
     }
 }
 
-void SpatiocyteStepper::optimizeSurfaceVoxel(Voxel& aVoxel, Comp* aComp)
+void SpatiocyteStepper::optimizeSurfaceVoxel(unsigned int aCoord, Comp* aComp)
 {
+  Voxel& aVoxel(theLattice[aCoord]);
   unsigned short surfaceID(aComp->vacantSpecies->getID());
   aComp->adjoinCount.resize(theAdjoiningCoordSize);
   aVoxel.surfaceCoords = new std::vector<std::vector<unsigned int> >;
@@ -2188,7 +2193,7 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(Voxel& aVoxel, Comp* aComp)
   for(std::vector<unsigned int>::iterator l(adjoiningCopy.begin());
       l != adjoiningCopy.end(); ++l)
     {
-      if((*l) != aVoxel.coord && theLattice[*l].id != theNullID 
+      if((*l) != aCoord && theLattice[*l].id != theNullID 
          && id2Comp(theLattice[*l].id)->dimension <= aComp->dimension)
         {
           ++aComp->adjoinCount[l-adjoiningCopy.begin()];
@@ -2204,7 +2209,7 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(Voxel& aVoxel, Comp* aComp)
               //and its adjoining voxels:
               unsigned int extendedCoord(theLattice[*l].adjoiningCoords[m]);
               if(theLattice[extendedCoord].id == surfaceID &&
-                 extendedCoord != aVoxel.coord &&
+                 extendedCoord != aCoord &&
                  std::find(adjoiningCopy.begin(), adjoiningCopy.end(),
                       extendedCoord) == adjoiningCopy.end())
                 {
@@ -2284,15 +2289,15 @@ Comp* SpatiocyteStepper::system2Comp(System* aSystem)
   return NULL;
 }
 
-void SpatiocyteStepper::setSurfaceSubunit(Voxel& aVoxel,
-                                          Comp* aComp)
+void SpatiocyteStepper::setSurfaceSubunit(unsigned int aCoord, Comp* aComp)
 {
+  Voxel& aVoxel(theLattice[aCoord]);
   // The subunit is only useful for a cylindrical surface
   // and for polymerization on it.
   aVoxel.subunit = new Subunit;
-  aVoxel.subunit->coord = aVoxel.coord;
+  aVoxel.subunit->coord = aCoord;
   Point& aPoint(aVoxel.subunit->surfacePoint);
-  aPoint = coord2point(aVoxel.coord);
+  aPoint = coord2point(aCoord);
   double aRadius(aComp->lengthY/2);
   Point aCenterPoint(aComp->centerPoint);
   Point aWestPoint(aComp->centerPoint);
@@ -2406,19 +2411,18 @@ void SpatiocyteStepper::setIntersectingParent()
 
 void SpatiocyteStepper::compartmentalizeLattice() 
 {
-  for(std::vector<Voxel>::iterator i(theLattice.begin());
-      i != theLattice.end(); ++i)
+  for(unsigned int i(0); i != theLattice.size(); ++i)
     {
-      if((*i).id != theNullID)
+      if(theLattice[i].id != theNullID)
         { 
-          compartmentalizeVoxel(*i, theComps[0]);
+          compartmentalizeVoxel(i, theComps[0]);
         }
     }
 }
 
-bool SpatiocyteStepper::compartmentalizeVoxel(Voxel& aVoxel, Comp* aComp)
+bool SpatiocyteStepper::compartmentalizeVoxel(unsigned int aCoord, Comp* aComp)
 {
-  unsigned int aCoord(aVoxel.coord);
+  Voxel& aVoxel(theLattice[aCoord]);
   if(aComp->dimension == 3)
     {
       if(aComp->system->isRootSystem() ||
@@ -2437,7 +2441,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel& aVoxel, Comp* aComp)
                 {
                   //Check if the voxel is neighbor of a peer voxel (either
                   //a future surface voxel)
-                  if(isEnclosedSurfaceVoxel(aVoxel, aComp))
+                  if(isEnclosedSurfaceVoxel(aVoxel, aCoord, aComp))
                     {
                       aComp->surfaceSub->vacantSpecies->addCompCoord(aCoord);
                       setMinMaxSurfaceDimensions(aCoord, aComp);
@@ -2450,12 +2454,12 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel& aVoxel, Comp* aComp)
               Comp* aRootComp(system2Comp(aComp->system->getSuperSystem())); 
               if(aRootComp->surfaceSub && 
                  aRootComp->surfaceSub->enclosed && 
-                 isRootSurfaceVoxel(aVoxel, aRootComp))
+                 isRootSurfaceVoxel(aVoxel, aCoord, aRootComp))
                 {
                   return false;
                 }
               if(aComp->surfaceSub && 
-                 isEnclosedRootSurfaceVoxel(aVoxel, aComp, aRootComp))
+                 isEnclosedRootSurfaceVoxel(aVoxel, aCoord, aComp, aRootComp))
                 {
                   aComp->surfaceSub->vacantSpecies->addCompCoord(aCoord);
                   setMinMaxSurfaceDimensions(aCoord, aComp);
@@ -2466,7 +2470,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel& aVoxel, Comp* aComp)
             {
               Comp* aParentComp(system2Comp(aComp->system->getSuperSystem())); 
               if(aComp->surfaceSub && aComp->surfaceSub->enclosed &&
-                 isParentSurfaceVoxel(aVoxel, aParentComp))
+                 isParentSurfaceVoxel(aVoxel, aCoord, aParentComp))
                 {
                   aComp->surfaceSub->vacantSpecies->addCompCoord(aCoord);
                   setMinMaxSurfaceDimensions(aCoord, aComp);
@@ -2475,7 +2479,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel& aVoxel, Comp* aComp)
             }
           for(unsigned int i(0); i != aComp->immediateSubs.size(); ++i)
             {
-              if(compartmentalizeVoxel(aVoxel, aComp->immediateSubs[i]))
+              if(compartmentalizeVoxel(aCoord, aComp->immediateSubs[i]))
                 {
                   return true;
                 }
@@ -2486,7 +2490,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel& aVoxel, Comp* aComp)
       if(aComp->surfaceSub)
         { 
           if(isInsideCoord(aCoord, aComp, 4) &&
-             isSurfaceVoxel(aVoxel, aComp))
+             isSurfaceVoxel(aVoxel, aCoord, aComp))
             {
               aComp->surfaceSub->vacantSpecies->addCompCoord(aCoord);
               setMinMaxSurfaceDimensions(aCoord, aComp);
@@ -2498,7 +2502,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel& aVoxel, Comp* aComp)
     {
       Comp* aRootComp(system2Comp(aComp->system->getSuperSystem())); 
       if(!isInsideCoord(aCoord, aRootComp, -4) &&
-         isRootSurfaceVoxel(aVoxel, aRootComp))
+         isRootSurfaceVoxel(aVoxel, aCoord, aRootComp))
         {
           aComp->vacantSpecies->addCompCoord(aCoord);
           setMinMaxSurfaceDimensions(aCoord, aRootComp);
@@ -2508,12 +2512,13 @@ bool SpatiocyteStepper::compartmentalizeVoxel(Voxel& aVoxel, Comp* aComp)
   return false;
 }
 
-bool SpatiocyteStepper::isRootSurfaceVoxel(Voxel& aVoxel, Comp* aComp)
+bool SpatiocyteStepper::isRootSurfaceVoxel(Voxel& aVoxel, unsigned int aCoord,
+                                           Comp* aComp)
 {
   for(unsigned int i(0); i != theAdjoiningCoordSize; ++i)
     {
       if(theLattice[aVoxel.adjoiningCoords[i]].id == theNullID ||
-         aVoxel.adjoiningCoords[i] == aVoxel.coord)
+         aVoxel.adjoiningCoords[i] == aCoord)
         {
           return true;
         }
@@ -2521,9 +2526,10 @@ bool SpatiocyteStepper::isRootSurfaceVoxel(Voxel& aVoxel, Comp* aComp)
   return false;
 }
 
-bool SpatiocyteStepper::isParentSurfaceVoxel(Voxel& aVoxel, Comp* aComp)
+bool SpatiocyteStepper::isParentSurfaceVoxel(Voxel& aVoxel, unsigned int aCoord,
+                                             Comp* aComp)
 {
-  if(!isInsideCoord(aVoxel.coord, aComp, -4))
+  if(!isInsideCoord(aCoord, aComp, -4))
     {
       for(unsigned int i(0); i != theAdjoiningCoordSize; ++i)
         {
@@ -2536,17 +2542,19 @@ bool SpatiocyteStepper::isParentSurfaceVoxel(Voxel& aVoxel, Comp* aComp)
   return false;
 }
 
-bool SpatiocyteStepper::isEnclosedRootSurfaceVoxel(Voxel& aVoxel, Comp* aComp,
+bool SpatiocyteStepper::isEnclosedRootSurfaceVoxel(Voxel& aVoxel, 
+                                                   unsigned int aCoord,
+                                                   Comp* aComp,
                                                    Comp* aRootComp)
 { 
   if(aComp->surfaceSub->enclosed || aRootComp->enclosed <= aComp->enclosed)
     { 
-      if(!isInsideCoord(aVoxel.coord, aRootComp, -4))
+      if(!isInsideCoord(aCoord, aRootComp, -4))
         {
           if(!aRootComp->surfaceSub || 
              (aRootComp->surfaceSub && !aRootComp->surfaceSub->enclosed))
             {
-              if(isRootSurfaceVoxel(aVoxel, aComp))
+              if(isRootSurfaceVoxel(aVoxel, aCoord, aComp))
                 {
                   return true;
                 }
@@ -2555,8 +2563,9 @@ bool SpatiocyteStepper::isEnclosedRootSurfaceVoxel(Voxel& aVoxel, Comp* aComp,
             {
               for(unsigned int i(0); i != theAdjoiningCoordSize; ++i)
                 {
-                  Voxel& adjoin(theLattice[aVoxel.adjoiningCoords[i]]);
-                  if(isRootSurfaceVoxel(adjoin, aComp))
+                  unsigned int adjoinCoord(aVoxel.adjoiningCoords[i]);
+                  Voxel& adjoin(theLattice[adjoinCoord]);
+                  if(isRootSurfaceVoxel(adjoin, adjoinCoord, aComp))
                     {
                       return true;
                     }
@@ -2567,14 +2576,15 @@ bool SpatiocyteStepper::isEnclosedRootSurfaceVoxel(Voxel& aVoxel, Comp* aComp,
   return false;
 }
 
-bool SpatiocyteStepper::isSurfaceVoxel(Voxel& aVoxel, Comp* aComp)
+bool SpatiocyteStepper::isSurfaceVoxel(Voxel& aVoxel, unsigned int aCoord,
+                                       Comp* aComp)
 {
-  if(isPeerCoord(aVoxel.coord, aComp))
+  if(isPeerCoord(aCoord, aComp))
     { 
       return false;
     }
   if(aComp->surfaceSub && !aComp->surfaceSub->enclosed &&
-     isLowerPeerCoord(aVoxel.coord, aComp))
+     isLowerPeerCoord(aCoord, aComp))
     {
       return false;
     }
@@ -2582,7 +2592,7 @@ bool SpatiocyteStepper::isSurfaceVoxel(Voxel& aVoxel, Comp* aComp)
     {
       Comp* aRootComp(system2Comp(aComp->system->getSuperSystem())); 
       if(aRootComp->surfaceSub && aRootComp->surfaceSub->enclosed && 
-         isRootSurfaceVoxel(aVoxel, aRootComp))
+         isRootSurfaceVoxel(aVoxel, aCoord, aRootComp))
         {
           return false;
         }
@@ -2597,7 +2607,9 @@ bool SpatiocyteStepper::isSurfaceVoxel(Voxel& aVoxel, Comp* aComp)
   return false;
 }
 
-bool SpatiocyteStepper::isEnclosedSurfaceVoxel(Voxel& aVoxel, Comp* aComp)
+bool SpatiocyteStepper::isEnclosedSurfaceVoxel(Voxel& aVoxel, 
+                                               unsigned int aCoord,
+                                               Comp* aComp)
 {
   for(unsigned int i(0); i != theAdjoiningCoordSize; ++i)
     {
@@ -2656,10 +2668,11 @@ bool SpatiocyteStepper::isPeerCoord(unsigned int aCoord, Comp* aComp)
   return false;
 }
 
-bool SpatiocyteStepper::isLineVoxel(Voxel& aVoxel, Comp* aComp)
+bool SpatiocyteStepper::isLineVoxel(Voxel& aVoxel, unsigned int aCoord,
+                                    Comp* aComp)
 {
     const double safety(2.0);
-    const Point aPoint(coord2point(aVoxel.coord));
+    const Point aPoint(coord2point(aCoord));
 
     double distance(aPoint.x - aComp->centerPoint.x);
     if (-safety < distance && distance <= 0)
@@ -3012,8 +3025,8 @@ void SpatiocyteStepper::clearComp(Comp* aComp)
   for(std::vector<Species*>::const_iterator i(aComp->species.begin());
       i != aComp->species.end(); ++i)
     {
-      (*i)->removeCoords();
-      (*i)->updateCoords();
+      (*i)->removeMolecules();
+      (*i)->updateMolecules();
     }
 }
 

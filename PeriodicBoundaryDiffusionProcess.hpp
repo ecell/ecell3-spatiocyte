@@ -67,7 +67,7 @@ public:
       for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
         {
-          (*i)->relocateBoundaryCoords();
+          (*i)->relocateBoundaryMolecules();
         }
     }
 };

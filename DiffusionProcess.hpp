@@ -163,7 +163,7 @@ public:
       //After initializeFourth, this process will be enqueued in the priority
       //queue, so we must update the number of molecules of the diffusion 
       //species if it is a diffusiveVacant species:
-      theDiffusionSpecies->updateCoordSize();
+      theDiffusionSpecies->updateMoleculeSize();
     }
   virtual void printParameters()
     {

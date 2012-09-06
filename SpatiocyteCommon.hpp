@@ -115,7 +115,7 @@ struct Voxel
   //Try to limit the adjoiningSize <= 6:
   unsigned short diffuseSize;
   unsigned short adjoiningSize;
-  unsigned int coord; //coord = theLattice[x] + theStartCoord
+  unsigned int coord;
   unsigned int* adjoiningCoords;
   unsigned int* initAdjoins;
   Subunit* subunit;

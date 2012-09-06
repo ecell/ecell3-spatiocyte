@@ -207,8 +207,8 @@ public:
   void connectSeamEastWest(unsigned int);
   void connectNwSw(unsigned int);
   void enlistLatticeVoxels();
-  void addDirect(Voxel&, Voxel&);
-  void addIndirect(Voxel&, Voxel&);
+  void addDirect(Voxel&, unsigned, Voxel&, unsigned);
+  void addIndirect(Voxel&, unsigned, Voxel&, unsigned);
   bool initAdjoins(Voxel&);
   void updateAdjoinSize(Voxel&);
   bool inMTCylinder(Point&);

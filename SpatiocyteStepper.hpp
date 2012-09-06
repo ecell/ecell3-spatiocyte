@@ -66,8 +66,8 @@ public:
   Species* getSpecies(Variable*);
   std::vector<Species*> getSpecies();
   Point coord2point(unsigned int);
-  void optimizeSurfaceVoxel(Voxel&, Comp*);
-  void setSurfaceSubunit(Voxel&, Comp*);
+  void optimizeSurfaceVoxel(unsigned int, Comp*);
+  void setSurfaceSubunit(unsigned int, Comp*);
   Species* id2species(unsigned short);
   Comp* id2Comp(unsigned short);
   void coord2global(unsigned int, unsigned int&, unsigned int&, unsigned int&);
@@ -148,22 +148,25 @@ private:
   void setSurfaceCompProperties(Comp*);
   void setVolumeCompProperties(Comp*);
   void concatenateVoxel(Voxel&, unsigned int, unsigned int, unsigned int);
-  void concatenateLayers(Voxel&, unsigned int, unsigned int, unsigned int);
-  void concatenateRows(Voxel&, unsigned int, unsigned int, unsigned int);
-  void concatenateCols(Voxel&, unsigned int, unsigned int, unsigned int);
-  void replaceVoxel(Voxel&, Voxel&);
-  void replaceUniVoxel(Voxel&, Voxel&);
+  void concatenateLayers(Voxel&, unsigned int, unsigned int, unsigned int,
+                         unsigned int);
+  void concatenateRows(Voxel&, unsigned int, unsigned int, unsigned int,
+                       unsigned int);
+  void concatenateCols(Voxel&, unsigned int, unsigned int, unsigned int,
+                       unsigned int);
+  void replaceVoxel(unsigned int, unsigned int);
+  void replaceUniVoxel(unsigned int, unsigned int);
   void setMinMaxSurfaceDimensions(unsigned int, Comp*);
   bool isInsideCoord(unsigned int, Comp*, double);
-  bool isSurfaceVoxel(Voxel&, Comp*);
-  bool isLineVoxel(Voxel&, Comp*);
-  bool isEnclosedSurfaceVoxel(Voxel&, Comp*);
-  bool isEnclosedRootSurfaceVoxel(Voxel&, Comp*, Comp*);
+  bool isSurfaceVoxel(Voxel&, unsigned int, Comp*);
+  bool isLineVoxel(Voxel&, unsigned int, Comp*);
+  bool isEnclosedSurfaceVoxel(Voxel&, unsigned int, Comp*);
+  bool isEnclosedRootSurfaceVoxel(Voxel&, unsigned int, Comp*, Comp*);
   bool isPeerCoord(unsigned int, Comp*);
   bool isLowerPeerCoord(unsigned int, Comp*);
-  bool isRootSurfaceVoxel(Voxel&, Comp*);
-  bool isParentSurfaceVoxel(Voxel&, Comp*);
-  bool compartmentalizeVoxel(Voxel&, Comp*);
+  bool isRootSurfaceVoxel(Voxel&, unsigned int, Comp*);
+  bool isParentSurfaceVoxel(Voxel&, unsigned int, Comp*);
+  bool compartmentalizeVoxel(unsigned int, Comp*);
   double getCuboidSpecArea(Comp*);
   unsigned int coord2row(unsigned int);
   unsigned int coord2col(unsigned int);

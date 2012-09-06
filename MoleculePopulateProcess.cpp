@@ -116,7 +116,7 @@ void MoleculePopulateProcess::fire()
   for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
       i != theProcessSpecies.end(); ++i)
     {
-      (*i)->removeCoords();
+      (*i)->removeMolecules();
       populateUniformSparse(*i);
     }
   theStepInterval = ResetTime;
@@ -139,7 +139,7 @@ void MoleculePopulateProcess::populateUniformOnDiffusiveVacant(Species*
          !OriginX && !OriginY && !OriginZ)
         {
           Species* aVacantSpecies(aSpecies->getVacantSpecies());
-          aVacantSpecies->updateCoords();
+          aVacantSpecies->updateMolecules();
           unsigned int aSize(aSpecies->getPopulateCoordSize());
           if(aVacantSpecies->size() < aSize)
             {
@@ -156,8 +156,8 @@ void MoleculePopulateProcess::populateUniformOnDiffusiveVacant(Species*
             }
           for(unsigned int i(0); i != aSize; ++i)
             {
-              unsigned int aMolecule(aVacantSpecies->getRandomCoord());
-              aSpecies->addCoord(aMolecule);
+              Voxel* aMolecule(aVacantSpecies->getRandomMolecule());
+              aSpecies->addMolecule(aMolecule);
             }
         }
       else
