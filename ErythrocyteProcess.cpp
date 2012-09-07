@@ -50,7 +50,7 @@ void ErythrocyteProcess::populateMolecules()
 {
   for(unsigned int i(0); i != filamentCoords.size(); ++i)
     {
-      theSpectrinSpecies->addCoord(filamentCoords[i]);
+      theSpectrinSpecies->addMolecule(&(*theLattice)[filamentCoords[i]]);
     }
   theSpectrinSpecies->setIsPopulated();
   std::cout << "size of spectrin:" << theSpectrinSpecies->size() << std::endl;
@@ -126,11 +126,11 @@ void ErythrocyteProcess::initializeProtofilaments()
       unsigned int cnt(getIntersectCount(aPoint, aCoord));
       if(cnt == 1)
         {
-          theSpectrinSpecies->addCoord(aCoord);
+          theSpectrinSpecies->addMolecule(&(*theLattice)[aCoord]);
         }
       else if(cnt > 1)
         {
-          theVertexSpecies->addCoord(aCoord);
+          theVertexSpecies->addMolecule(&(*theLattice)[aCoord]);
         }
     }
 }

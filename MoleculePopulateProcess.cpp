@@ -189,7 +189,7 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
                   aCoord = aVacantSpecies->getCoord(aList[(*aCount)++]); 
                 }
               while((*theLattice)[aCoord].id != aVacantSpecies->getID());
-              aSpecies->addCoord(aCoord);
+              aSpecies->addMolecule(&(*theLattice)[aCoord]);
             }
         }
       else
@@ -221,7 +221,7 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
                                 getStepper()->getRng(), availableVoxelSize));
                 }
               while((*theLattice)[aCoord].id != aVacantSpecies->getID());
-              aSpecies->addCoord(aCoord);
+              aSpecies->addMolecule(&(*theLattice)[aCoord]);
             }
         }
       else
@@ -286,7 +286,7 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
   std::random_shuffle(aCoords.begin(), aCoords.end());
   for(unsigned int i(0); i != aSize; ++i)
     {
-      aSpecies->addCoord(aCoords[i]);
+      aSpecies->addMolecule(&(*theLattice)[aCoords[i]]);
     }
 }
 

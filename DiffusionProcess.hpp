@@ -148,11 +148,7 @@ public:
           theStepInterval = alpha*r_v*r_v*WalkProbability/D;
         }
       theDiffusionSpecies->setDiffusionInterval(theStepInterval);
-      if(theDiffusionSpecies->getCollision())
-        {
-          theWalkMethod = &DiffusionProcess::collide;
-        }
-      else if(theDiffusionSpecies->getIsDiffusiveVacant())
+      if(theDiffusionSpecies->getIsDiffusiveVacant())
         {
           theWalkMethod = &DiffusionProcess::walkVacant;
         }
@@ -185,10 +181,6 @@ public:
       theDiffusionSpecies->resetFinalizeReactions();
       (this->*theWalkMethod)();
       theDiffusionSpecies->finalizeReactions();
-    }
-  void collide() const
-    {
-      theDiffusionSpecies->collide();
     }
   void walk() const
     {

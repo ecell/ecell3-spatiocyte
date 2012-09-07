@@ -92,15 +92,15 @@ void MicrotubuleProcess::addCompVoxel(unsigned int protoIndex,
     }
   if(!dimerIndex)
     {
-      theMinusSpecies->addCompCoord(aCoord);
+      theMinusSpecies->addCompVoxel(aCoord);
     }
   else if(dimerIndex == theDimerSize-1)
     { 
-      thePlusSpecies->addCompCoord(aCoord);
+      thePlusSpecies->addCompVoxel(aCoord);
     }
   else
     {
-      theVacantSpecies->addCompCoord(aCoord);
+      theVacantSpecies->addCompVoxel(aCoord);
     }
 }
 

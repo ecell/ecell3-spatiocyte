@@ -60,7 +60,13 @@ public:
     variableB(NULL),
     variableC(NULL),
     variableD(NULL), 
-    variableE(NULL) {}
+    variableE(NULL),
+    moleculeA(NULL),
+    moleculeB(NULL),
+    moleculeC(NULL),
+    moleculeD(NULL),
+    moleculeE(NULL),
+    moleculeP(NULL) {}
   virtual ~ReactionProcess() {}
   SIMPLE_SET_GET_METHOD(Real, k);
   SIMPLE_SET_GET_METHOD(Real, p);
@@ -126,25 +132,49 @@ public:
             }
         }
     }
-  const Species* getA() const
+  virtual Species* getA()
     {
       return A;
     }
-  const Species* getB() const
+  virtual Species* getB()
     {
       return B;
     }
-  const Species* getC() const
+  virtual Species* getC()
     {
       return C;
     }
-  const Species* getD() const
+  virtual Species* getD()
     {
       return D;
     }
-  const Species* getE() const
+  virtual Species* getE()
     {
       return E;
+    }
+  virtual Voxel* getMoleculeA()
+    {
+      return moleculeA;
+    }
+  virtual Voxel* getMoleculeB()
+    {
+      return moleculeB;
+    }
+  virtual Voxel* getMoleculeC()
+    {
+      return moleculeC;
+    }
+  virtual Voxel* getMoleculeD()
+    {
+      return moleculeD;
+    }
+  virtual Voxel* getMoleculeE()
+    {
+      return moleculeE;
+    }
+  virtual Voxel* getMoleculeP()
+    {
+      return moleculeP;
     }
   virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
   virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
@@ -167,21 +197,17 @@ protected:
   Variable* variableC;
   Variable* variableD;
   Variable* variableE;
+  Voxel* moleculeA;
+  Voxel* moleculeB;
+  Voxel* moleculeC;
+  Voxel* moleculeD;
+  Voxel* moleculeE;
+  Voxel* moleculeP;
   std::vector<SpatiocyteProcess*> theInterruptingProcesses;
 };
 
 inline void ReactionProcess::calculateOrder()
 { 
-  A = NULL;
-  B = NULL;
-  C = NULL;
-  D = NULL;
-  E = NULL;
-  variableA = NULL;
-  variableB = NULL;
-  variableC = NULL;
-  variableD = NULL;
-  variableE = NULL;
   theOrder = 0;
   for(VariableReferenceVector::iterator 
       i(theSortedVariableReferences.begin());

@@ -86,17 +86,10 @@ void DiffusionInfluencedReactionProcess::initializeThird()
 //Similarly, if B and D belong to the same Comp, B <- D.
 //Otherwise, find a vacant adjoining voxel of C, Y which is the same Comp
 //as D and Y <- D.
-bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
-                                               Voxel* moleculeB)
+bool DiffusionInfluencedReactionProcess::react(unsigned indexA, unsigned indexB)
 {
-  //First let us make sure moleculeA and moleculeB belong to the
-  //correct species.
-  if(moleculeA->id != A->getID())
-    {
-      Voxel* tempA(moleculeA);
-      moleculeA = moleculeB;
-      moleculeB = tempA;
-    }
+  Voxel* moleculeA(A->getMolecule(indexA));
+  Voxel* moleculeB(B->getMolecule(indexB));
   //nonHD_A + nonHD_B -> nonHD_C + HD_D:
   //nonHD_A + nonHD_B -> HD_C + nonHD_D:
   if((variableC && D) || (C && variableD))
@@ -143,7 +136,7 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
           moleculeB->id = B->getVacantID();
         }
       HD_p->addValue(1);
-      nonHD_p->addMolecule(moleculeP);
+      nonHD_p->addMolecule(moleculeP, A->getOrigin(indexA));
       return true;
     }
   //nonHD_A + nonHD_B -> HD_C:
@@ -180,7 +173,7 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
                 }
               moleculeB->id = B->getVacantID();
             }
-          D->addMolecule(moleculeD);
+          D->addMolecule(moleculeD, B->getOrigin(indexB));
         }
       else
         {
@@ -209,7 +202,7 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
                 }
               moleculeA->id = A->getVacantID();
             }
-          D->addMolecule(moleculeD);
+          D->addMolecule(moleculeD, B->getOrigin(indexB));
         }
       else
         {
@@ -238,14 +231,14 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* moleculeA,
             {
               return false;
             }
-          D->addMolecule(moleculeD);
+          D->addMolecule(moleculeD, B->getOrigin(indexB));
         }
       //Hard remove the A molecule since it is not used:
       moleculeA->id = A->getVacantID();
       //Hard remove the B molecule since it is not used:
       moleculeB->id = B->getVacantID();
     }
-  C->addMolecule(moleculeC);
+  C->addMolecule(moleculeC, A->getOrigin(indexA));
   addMoleculeE();
   return true;
 }

@@ -30,7 +30,7 @@
 #include "SpatiocyteCommon.hpp"
 #include "SpatiocyteStepper.hpp"
 #include "SpatiocyteProcessInterface.hpp"
-#include "DiffusionInfluencedReactionProcessInterface.hpp"
+#include "DiffusionInfluencedReactionProcess.hpp"
 #include "MoleculePopulateProcessInterface.hpp"
 
 // The size of Coord must be 128 bytes to avoid cacheline splits
@@ -72,7 +72,7 @@ String int2str(int anInt)
  *    also be isDiffusiveVacant and isReactiveVacant. Set during compartment
  *    registration. It also persistently stores all the compartment voxels.
  *    Referred to as theVacantSpecies. For isCompVacant, initially there
- *    are no molecules in its list. All voxels are stored in theCompMolecules. Only
+ *    are no molecules in its list. All voxels are stored in theCompVoxels. Only
  *    if it is updated before being called by VisualizationLogProcess, SNRP or
  *    DiffusionProcess, it will be theMolecules will be populated with the
  *    CompCoords.
@@ -99,6 +99,7 @@ public:
     isReactiveVacant(false),
     isSubunitInitialized(false),
     isVacant(false),
+    isWithOrigin(false),
     theID(anID),
     theCollision(0),
     theInitCoordSize(anInitCoordSize),
@@ -111,7 +112,7 @@ public:
     thePopulateProcess(NULL),
     theStepper(aStepper),
     theVariable(aVariable),
-    theCompMolecules(&theMolecules),
+    theCompVoxels(&theMolecules),
     theLattice(aLattice) {}
   ~Species() {}
   void initialize(int speciesSize, int anAdjoiningCoordSize)
@@ -132,7 +133,7 @@ public:
         }
     }
   void setDiffusionInfluencedReaction(
-                                    DiffusionInfluencedReactionProcessInterface*
+                                    DiffusionInfluencedReactionProcess*
                                       aReaction, int anID, double aProbability)
     {
       theDiffusionInfluencedReactions[anID] = aReaction;
@@ -171,6 +172,10 @@ public:
             theVariable->getFullID().asString() <<
             " not populated." << std::endl;
         }
+    }
+  void setIsWithOrigin()
+    {
+      isWithOrigin = true;
     }
   bool getIsPopulateSpecies()
     {
@@ -360,6 +365,13 @@ public:
                   break;
                 }
             }
+          if(isWithOrigin)
+            {
+              for(unsigned i(0); i != theMoleculeSize; ++i)
+                {
+                  theOrigins[i] = getCoord(i);
+                }
+            }
         }
     }
   unsigned getCollisionCnt(unsigned anIndex)
@@ -517,59 +529,6 @@ public:
         }
       std::cout << "error in species add collision" << std::endl;
     }
-  void collide()
-    {
-      for(unsigned i(0); i < theMoleculeSize; ++i)
-        {
-          Voxel* source(theMolecules[i]);
-          int size;
-          if(isFixedAdjoins)
-            {
-              size = theAdjoiningCoordSize;
-            }
-          else
-            {
-              size = source->diffuseSize;
-            }
-          Voxel* target(&theLattice[source->adjoiningCoords[
-                        gsl_rng_uniform_int(theRng, size)]]);
-          if(target->id == theVacantID)
-            {
-              if(theWalkProbability == 1 ||
-                 gsl_rng_uniform(theRng) < theWalkProbability)
-                {
-                  target->id = theID;
-                  source->id = theVacantID;
-                  theMolecules[i] = target;
-                }
-            }
-          else if(theDiffusionInfluencedReactions[target->id])
-            {
-              //If it meets the reaction probability:
-              if(gsl_rng_uniform(theRng) < theReactionProbabilities[target->id])
-                { 
-                  Species* targetSpecies(theStepper->id2species(target->id));
-                  ++collisionCnts[i];
-                  targetSpecies->addCollision(target);
-                  if(theCollision == 2)
-                    {
-                      DiffusionInfluencedReactionProcessInterface* aReaction(
-                                 theDiffusionInfluencedReactions[target->id]);
-                      if(aReaction->react(source, target))
-                        {
-                          //Soft remove the source molecule, i.e.,
-                          //keep the id intact:
-                          theMolecules[i--] = theMolecules[--theMoleculeSize];
-                          theVariable->setValue(theMoleculeSize);
-                          //Soft remove the target molecule:
-                          targetSpecies->softRemoveMolecule(target);
-                          theFinalizeReactions[targetSpecies->getID()] = true;
-                        }
-                    }
-                }
-            }
-        }
-    }
   void walk()
     {
       for(unsigned i(0); i < theMoleculeSize; ++i)
@@ -602,17 +561,23 @@ public:
               if(gsl_rng_uniform(theRng) < theReactionProbabilities[target->id])
                 { 
                   Species* targetSpecies(theStepper->id2species(target->id));
-                  DiffusionInfluencedReactionProcessInterface* aReaction(
-                             theDiffusionInfluencedReactions[target->id]);
-                  if(aReaction->react(source, target))
+                  unsigned targetIndex(targetSpecies->getIndex(target));
+                  if(theCollision)
+                    { 
+                      ++collisionCnts[i];
+                      targetSpecies->addCollision(target);
+                      if(theCollision != 2)
+                        {
+                          return;
+                        }
+                    }
+                  unsigned aMoleculeSize(theMoleculeSize);
+                  react(i, targetIndex, targetSpecies, target);
+                  //Only rewalk the current pointed molecule if it is an
+                  //unwalked molecule (not a product of the reaction):
+                  if(theMoleculeSize < aMoleculeSize)
                     {
-                      //Soft remove the source molecule, i.e.,
-                      //keep the id intact:
-                      theMolecules[i--] = theMolecules[--theMoleculeSize];
-                      theVariable->setValue(theMoleculeSize);
-                      //Soft remove the target molecule:
-                      targetSpecies->softRemoveMolecule(target);
-                      theFinalizeReactions[targetSpecies->getID()] = true;
+                      --i;
                     }
                 }
             }
@@ -647,6 +612,36 @@ public:
             }
         }
     }
+  void react(unsigned sourceIndex, unsigned targetIndex,
+             Species* targetSpecies, Voxel* target)
+    {
+      DiffusionInfluencedReactionProcess* aReaction(
+               theDiffusionInfluencedReactions[targetSpecies->getID()]);
+      unsigned indexA(sourceIndex);
+      unsigned indexB(targetIndex);
+      if(aReaction->getA() != this)
+        {
+          indexA = targetIndex; 
+          indexB = sourceIndex;
+        }
+      if(aReaction->react(indexA, indexB))
+        {
+          //Soft remove the source molecule, i.e., keep the id:
+          softRemoveMolecule(sourceIndex);
+          //Soft remove the target molecule:
+          //Make sure the targetIndex is valid:
+          //Target and Source are same species:
+          if(targetSpecies == this && theMolecules[sourceIndex] == target)
+            {
+              softRemoveMolecule(sourceIndex);
+            }
+          else
+            {
+              targetSpecies->softRemoveMolecule(targetIndex);
+            }
+          theFinalizeReactions[targetSpecies->getID()] = true;
+        }
+    }
   void setComp(Comp* aComp)
     {
       theComp = aComp;
@@ -673,7 +668,7 @@ public:
             {
               Comp* aSuperComp(
                  theStepper->system2Comp(theComp->system->getSuperSystem())); 
-              aSuperComp->vacantSpecies->addCompCoord(aCoord);
+              aSuperComp->vacantSpecies->addCompVoxel(aCoord);
             }
           else 
             { 
@@ -707,10 +702,10 @@ public:
     {
       if(isCompVacant && (isDiffusiveVacant || isReactiveVacant))
         {
-          theCompMolecules = new std::vector<Voxel*>;
+          theCompVoxels = new std::vector<Voxel*>;
           for(unsigned i(0); i != theMoleculeSize; ++i)
             { 
-              theCompMolecules->push_back(theMolecules[i]);
+              theCompVoxels->push_back(theMolecules[i]);
             }
         }
     }
@@ -775,85 +770,101 @@ public:
         }
       theVariable->setValue(theMoleculeSize);
     }
-  void addMolecule(Voxel* aVoxel)
+  unsigned getOrigin(unsigned anIndex)
+    {
+      if(isWithOrigin)
+        {
+          return theOrigins[anIndex];
+        }
+      return UINT_MAX;
+    }
+  void addMolecule(Voxel* aVoxel, unsigned anOrigin = UINT_MAX)
     {
       aVoxel->id = theID;
       if(!isVacant)
         {
-          ++theMoleculeSize;
+          ++theMoleculeSize; 
           if(theMoleculeSize > theMolecules.size())
             {
-              theMolecules.push_back(aVoxel);
+              theMolecules.resize(theMoleculeSize);
+              theOrigins.resize(theMoleculeSize);
             }
-          else
+          theMolecules[theMoleculeSize-1] = aVoxel;
+          if(isWithOrigin)
             {
-              theMolecules[theMoleculeSize-1] = aVoxel;
+              if(anOrigin == UINT_MAX)
+                {
+                  theOrigins[theMoleculeSize-1] = getCoord(theMoleculeSize-1);
+                }
+              else
+                {
+                  theOrigins[theMoleculeSize-1] = anOrigin;
+                }
             }
           theVariable->setValue(theMoleculeSize);
         }
     }
-  void addCoord(unsigned aCoord, Point* anOrigin = NULL)
+  void addCompVoxel(unsigned aCoord)
     {
       theLattice[aCoord].id = theID;
-      if(!isVacant)
-        {
-          ++theMoleculeSize;
-          if(theMoleculeSize > theMolecules.size())
-            {
-              theMolecules.push_back(&theLattice[aCoord]);
-            }
-          else
-            {
-              theMolecules[theMoleculeSize-1] = &theLattice[aCoord];
-            }
-          theVariable->setValue(theMoleculeSize);
-        }
-    }
-  void addCompCoord(unsigned aCoord)
-    {
-      theLattice[aCoord].id = theID;
-      theCompMolecules->push_back(&theLattice[aCoord]);
+      theCompVoxels->push_back(&theLattice[aCoord]);
       ++theMoleculeSize;
       theVariable->setValue(theMoleculeSize);
     }
   unsigned compVoxelSize()
     {
-      return theCompMolecules->size();
+      return theCompVoxels->size();
     }
   Voxel* getCompVoxel(unsigned index)
     {
-      return (*theCompMolecules)[index];
+      return (*theCompVoxels)[index];
+    }
+  unsigned getIndex(Voxel* aVoxel)
+    {
+      for(unsigned i(0); i < theMoleculeSize; ++i)
+        {
+          if(theMolecules[i] == aVoxel)
+            {
+              return i;
+            }
+        }
+      std::cout << "error in getting the index" << std::endl;
+      return 0;
     }
   //it is soft remove because the id of the molecule is not changed:
   void softRemoveMolecule(Voxel* aVoxel)
     {
       if(!isVacant)
         {
-          for(unsigned i(0); i < theMoleculeSize; ++i)
-            {
-              if(theMolecules[i] == aVoxel)
-                {
-                  theMolecules[i] = theMolecules[--theMoleculeSize];
-                  theVariable->setValue(theMoleculeSize);
-                  return;
-                }
-            }
+          softRemoveMolecule(getIndex(aVoxel));
         }
     }
   void removeMolecule(Voxel* aVoxel)
     {
       if(!isVacant)
         {
-          for(unsigned i(0); i < theMoleculeSize; ++i)
+          removeMolecule(getIndex(aVoxel));
+        }
+    }
+  void removeMolecule(unsigned anIndex)
+    {
+      if(!isVacant)
+        {
+          theMolecules[anIndex]->id = theVacantID;
+          softRemoveMolecule(anIndex);
+        }
+    }
+  void softRemoveMolecule(unsigned anIndex)
+    {
+      if(!isVacant)
+        {
+          theMolecules[anIndex] = theMolecules[--theMoleculeSize];
+          if(isWithOrigin)
             {
-              if(theMolecules[i] == aVoxel)
-                {
-                  aVoxel->id = theVacantID;
-                  theMolecules[i] = theMolecules[--theMoleculeSize];
-                  theVariable->setValue(theMoleculeSize);
-                  return;
-                }
+              theOrigins[anIndex] = theOrigins[theMoleculeSize];
             }
+          theVariable->setValue(theMoleculeSize);
+          return;
         }
     }
   //Used to remove all molecules and free memory used to store the molecules
@@ -1006,15 +1017,13 @@ public:
     {
       theDiffusionInterval = anInterval;
     }
+  unsigned getRandomIndex()
+    {
+      return gsl_rng_uniform_int(theRng, theMoleculeSize);
+    }
   Voxel* getRandomMolecule()
     {
-      if(theMoleculeSize == 0)
-        {
-          std::cout << theVariable->getFullID().asString() << std::endl;
-          std::cout << "Species size error:" <<
-            theVariable->getValue() << std::endl;
-        }
-      return theMolecules[gsl_rng_uniform_int(theRng, theMoleculeSize)];
+      return theMolecules[getRandomIndex()];
     }
   void addInterruptedProcess(SpatiocyteProcessInterface* aProcess)
     {
@@ -1276,6 +1285,7 @@ private:
   bool isReactiveVacant;
   bool isSubunitInitialized;
   bool isVacant;
+  bool isWithOrigin;
   const unsigned short theID;
   unsigned theCollision;
   unsigned theDimension;
@@ -1298,12 +1308,13 @@ private:
   std::vector<bool> theFinalizeReactions;
   std::vector<unsigned> collisionCnts;
   std::vector<unsigned> theCoords;
+  std::vector<unsigned> theOrigins;
   std::vector<double> theBendAngles;
   std::vector<double> theReactionProbabilities;
   std::vector<Voxel*> theMolecules;
-  std::vector<Voxel*>* theCompMolecules;
+  std::vector<Voxel*>* theCompVoxels;
   std::vector<Species*> theDiffusionInfluencedReactantPairs;
-  std::vector<DiffusionInfluencedReactionProcessInterface*> 
+  std::vector<DiffusionInfluencedReactionProcess*> 
     theDiffusionInfluencedReactions;
   std::vector<SpatiocyteProcessInterface*> theInterruptedProcesses;
   std::vector<Origin> theMoleculeOrigins;

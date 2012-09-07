@@ -69,7 +69,7 @@ public:
   virtual void checkSubstrates();
   virtual void initializeSecond();
   virtual void initializeThird();
-  virtual bool react(Voxel*, Voxel*);
+  virtual bool react(unsigned, unsigned);
   virtual void printParameters();
   virtual void finalizeReaction();
 protected:

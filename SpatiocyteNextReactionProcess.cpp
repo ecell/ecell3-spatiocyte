@@ -395,13 +395,17 @@ void SpatiocyteNextReactionProcess::reactABCD()
   Voxel* moleculeB(A->getRandomAdjoiningVoxel(moleculeA, B, SearchVacant));
   if(A != C)
     {
-      A->removeMolecule(moleculeA);
-      C->addMolecule(moleculeA);
+      unsigned indexA(A->getIndex(moleculeA));
+      unsigned originA(A->getOrigin(indexA));
+      A->removeMolecule(indexA);
+      C->addMolecule(moleculeA, originA);
     }
   if(B != D)
     { 
-      B->removeMolecule(moleculeB);
-      D->addMolecule(moleculeB);
+      unsigned indexB(B->getIndex(moleculeB));
+      unsigned originB(B->getOrigin(indexB));
+      B->removeMolecule(indexB);
+      D->addMolecule(moleculeB, originB);
     }
 }
 
@@ -409,7 +413,8 @@ void SpatiocyteNextReactionProcess::reactABCD()
 //nonHD -> nonHD + nonHD
 bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
 {
-  Voxel* moleculeA(a->getRandomMolecule());
+  unsigned indexA(a->getRandomIndex());
+  Voxel* moleculeA(a->getMolecule(indexA));
   Voxel* moleculeC(NULL);
   Voxel* moleculeD(NULL);
   if(a->getVacantID() == c->getVacantID() || a->getID() == c->getVacantID())
@@ -453,16 +458,18 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
           return false;
         }
     }
-  a->removeMolecule(moleculeA);
-  c->addMolecule(moleculeC);
+  unsigned originA(a->getOrigin(indexA));
+  a->removeMolecule(indexA);
+  c->addMolecule(moleculeC, originA);
   d->addMolecule(moleculeD);
   return true;
 }
 
-//nonHD -> nonHD
+//nonHD (+ E) -> nonHD
 bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
 {
-  Voxel* moleculeA(a->getRandomMolecule());
+  unsigned indexA(a->getRandomIndex());
+  Voxel* moleculeA(a->getMolecule(indexA));
   Voxel* moleculeC(NULL);
   if(a->getVacantID() == c->getVacantID() || a->getID() == c->getVacantID())
     {
@@ -479,8 +486,9 @@ bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
           return false;
         }
     }
-  a->removeMolecule(moleculeA);
-  c->addMolecule(moleculeC);
+  unsigned originA(a->getOrigin(indexA));
+  a->removeMolecule(indexA);
+  c->addMolecule(moleculeC, originA);
   removeMoleculeE();
   return true;
 }
@@ -507,7 +515,8 @@ void SpatiocyteNextReactionProcess::removeMoleculeE()
 //nonHD (+Vacant[BindingSite]) -> nonHD[BindingSite]
 bool SpatiocyteNextReactionProcess::reactACbind(Species* a, Species* c)
 {
-  Voxel* moleculeA(a->getRandomMolecule());
+  unsigned indexA(a->getRandomIndex());
+  Voxel* moleculeA(a->getMolecule(indexA));
   Voxel* moleculeC(NULL);
   moleculeC = c->getBindingSiteAdjoiningVoxel(moleculeA, BindingSite);
   if(moleculeC == NULL)
@@ -517,8 +526,9 @@ bool SpatiocyteNextReactionProcess::reactACbind(Species* a, Species* c)
       requeue();
       return false;
     }
-  a->removeMolecule(moleculeA);
-  c->addMolecule(moleculeC);
+  unsigned originA(a->getOrigin(indexA));
+  a->removeMolecule(indexA);
+  c->addMolecule(moleculeC, originA);
   return true;
 }
 
@@ -528,7 +538,8 @@ bool SpatiocyteNextReactionProcess::reactACbind(Species* a, Species* c)
 bool SpatiocyteNextReactionProcess::reactACDbind(Species* a, Species* c,
                                                  Species* d)
 {
-  Voxel* moleculeA(a->getRandomMolecule());
+  unsigned indexA(a->getRandomIndex());
+  Voxel* moleculeA(a->getMolecule(indexA));
   Voxel* moleculeC(NULL);
   moleculeC = c->getBindingSiteAdjoiningVoxel(moleculeA, BindingSite);
   if(moleculeC == NULL)
@@ -540,12 +551,14 @@ bool SpatiocyteNextReactionProcess::reactACDbind(Species* a, Species* c,
           requeue();
           return false;
         }
-      a->removeMolecule(moleculeA);
-      d->addMolecule(moleculeD);
+      unsigned originA(a->getOrigin(indexA));
+      a->removeMolecule(indexA);
+      d->addMolecule(moleculeD, originA);
       return true;
     }
-  a->removeMolecule(moleculeA);
-  c->addMolecule(moleculeC);
+  unsigned originA(a->getOrigin(indexA));
+  a->removeMolecule(indexA);
+  c->addMolecule(moleculeC, originA);
   return true;
 }
 

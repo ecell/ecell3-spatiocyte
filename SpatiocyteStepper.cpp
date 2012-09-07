@@ -1215,6 +1215,7 @@ void SpatiocyteStepper::constructLattice()
       (*i).initAdjoins = NULL;
       (*i).diffuseSize = theAdjoiningCoordSize;
       (*i).adjoiningSize = theAdjoiningCoordSize;
+      (*i).point = NULL;
       unsigned aCol(a/(theRowSize*theLayerSize)); 
       unsigned aLayer((a%(theRowSize*theLayerSize))/theRowSize); 
       unsigned aRow((a%(theRowSize*theLayerSize))%theRowSize); 
@@ -2162,7 +2163,7 @@ void SpatiocyteStepper::setDiffusiveComp(Comp* aComp)
       for(unsigned i(0); i != aVacantSpecies->size(); ++i)
         {
           unsigned aCoord(aVacantSpecies->getCoord(i));
-          aComp->diffusiveComp->vacantSpecies->addCompCoord(aCoord);
+          aComp->diffusiveComp->vacantSpecies->addCompVoxel(aCoord);
         }
       aVacantSpecies->clearMolecules();
     }
@@ -2443,7 +2444,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aCoord, Comp* aComp)
                   //a future surface voxel)
                   if(isEnclosedSurfaceVoxel(aVoxel, aCoord, aComp))
                     {
-                      aComp->surfaceSub->vacantSpecies->addCompCoord(aCoord);
+                      aComp->surfaceSub->vacantSpecies->addCompVoxel(aCoord);
                       setMinMaxSurfaceDimensions(aCoord, aComp);
                       return true;
                     }
@@ -2461,7 +2462,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aCoord, Comp* aComp)
               if(aComp->surfaceSub && 
                  isEnclosedRootSurfaceVoxel(aVoxel, aCoord, aComp, aRootComp))
                 {
-                  aComp->surfaceSub->vacantSpecies->addCompCoord(aCoord);
+                  aComp->surfaceSub->vacantSpecies->addCompVoxel(aCoord);
                   setMinMaxSurfaceDimensions(aCoord, aComp);
                   return true;
                 }
@@ -2472,7 +2473,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aCoord, Comp* aComp)
               if(aComp->surfaceSub && aComp->surfaceSub->enclosed &&
                  isParentSurfaceVoxel(aVoxel, aCoord, aParentComp))
                 {
-                  aComp->surfaceSub->vacantSpecies->addCompCoord(aCoord);
+                  aComp->surfaceSub->vacantSpecies->addCompVoxel(aCoord);
                   setMinMaxSurfaceDimensions(aCoord, aComp);
                   return true;
                 }
@@ -2484,7 +2485,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aCoord, Comp* aComp)
                   return true;
                 }
             }
-          aComp->vacantSpecies->addCompCoord(aCoord);
+          aComp->vacantSpecies->addCompVoxel(aCoord);
           return true;
         }
       if(aComp->surfaceSub)
@@ -2492,7 +2493,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aCoord, Comp* aComp)
           if(isInsideCoord(aCoord, aComp, 4) &&
              isSurfaceVoxel(aVoxel, aCoord, aComp))
             {
-              aComp->surfaceSub->vacantSpecies->addCompCoord(aCoord);
+              aComp->surfaceSub->vacantSpecies->addCompVoxel(aCoord);
               setMinMaxSurfaceDimensions(aCoord, aComp);
               return true;
             }
@@ -2504,7 +2505,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aCoord, Comp* aComp)
       if(!isInsideCoord(aCoord, aRootComp, -4) &&
          isRootSurfaceVoxel(aVoxel, aCoord, aRootComp))
         {
-          aComp->vacantSpecies->addCompCoord(aCoord);
+          aComp->vacantSpecies->addCompVoxel(aCoord);
           setMinMaxSurfaceDimensions(aCoord, aRootComp);
           return true;
         }

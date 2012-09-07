@@ -949,7 +949,6 @@ bool GLScene::loadMeanCoords(std::streampos& aStreamPos)
 void GLScene::plotMeanHCPPoints()
 {
   glBegin(GL_POINTS);
-  unsigned int col, layer, row;
   double x,y,z;
   for(unsigned int k(0); k != theMeanPointSize; ++k)
     {
@@ -979,7 +978,6 @@ void GLScene::plotMeanHCPPoints()
 
 void GLScene::plotMean3DHCPMolecules()
 {
-  unsigned int col, layer, row;
   double x,y,z;
   for(unsigned int k(0); k != theMeanPointSize; ++k)
     {
