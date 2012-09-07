@@ -49,7 +49,7 @@ void SpatiocyteNextReactionProcess::fire()
     {
       if(C)
         { 
-          Voxel* moleculeC(C->getRandomCompVoxel(SearchVacant));
+          moleculeC = C->getRandomCompVoxel(SearchVacant);
           if(moleculeC == NULL)
             {
               requeue();
@@ -97,7 +97,7 @@ void SpatiocyteNextReactionProcess::fire()
       //nonHD_A -> HD_C + HD_D:
       else if(A && variableC && variableD)
         {
-          Voxel* moleculeA(A->getRandomMolecule());
+          moleculeA = A->getRandomMolecule();
           A->removeMolecule(moleculeA);
           variableC->addValue(1);
           variableD->addValue(1);
@@ -105,7 +105,7 @@ void SpatiocyteNextReactionProcess::fire()
       //nonHD_A -> HD_C:
       else if(A && variableC && !D && !variableD)
         {
-          Voxel* moleculeA(A->getRandomMolecule());
+          moleculeA = A->getRandomMolecule();
           A->removeMolecule(moleculeA);
           variableC->addValue(1);
         }
@@ -132,7 +132,7 @@ void SpatiocyteNextReactionProcess::fire()
       //HD_A -> nonHD_C:
       else if(variableA && C && !D && !variableD)
         {
-          Voxel* moleculeC(reactvAC(variableA, C));
+          moleculeC = reactvAC(variableA, C);
           if(moleculeC == NULL)
             {
               requeue();
@@ -147,8 +147,8 @@ void SpatiocyteNextReactionProcess::fire()
       //HD_A -> nonHD_C + nonHD_D:
       else if(variableA && C && D)
         {
-          Voxel* moleculeC(NULL);
-          Voxel* moleculeD(NULL);
+          moleculeC = NULL;
+          moleculeD = NULL;
           Comp* compA(theSpatiocyteStepper->system2Comp(
                          variableA->getSuperSystem()));
           //Occupy C in a voxel of compartment C that adjoins compartment A
@@ -213,14 +213,14 @@ void SpatiocyteNextReactionProcess::fire()
               HD_p = variableD;
               nonHD_p = C;
             }
-          Voxel* molecule(reactvAC(variableA, nonHD_p));
-          if(molecule == NULL)
+          moleculeP = reactvAC(variableA, nonHD_p);
+          if(moleculeP == NULL)
             {
               requeue();
               return;
             }
           variableA->addValue(-1);
-          nonHD_p->addMolecule(molecule);
+          nonHD_p->addMolecule(moleculeP);
           HD_p->addValue(1);
         }
     }
@@ -240,7 +240,7 @@ void SpatiocyteNextReactionProcess::fire()
           //HD + HD -> nonHD: 
           else if(C && !variableD && !D)
             { 
-              Voxel* moleculeC(reactvAvBC(C));
+              moleculeC = reactvAvBC(C);
               if(moleculeC == NULL)
                 {
                   requeue();
@@ -269,22 +269,22 @@ void SpatiocyteNextReactionProcess::fire()
                   HD_p = variableD;
                   nonHD_p = C;
                 }
-              Voxel* molecule(reactvAvBC(nonHD_p));
-              if(molecule == NULL)
+              moleculeP = reactvAvBC(nonHD_p);
+              if(moleculeP == NULL)
                 {
                   requeue();
                   return;
                 }
               variableA->addValue(-1);
               variableB->addValue(-1);
-              nonHD_p->addMolecule(molecule);
+              nonHD_p->addMolecule(moleculeP);
               HD_p->addValue(1);
             }
           //HD + HD -> nonHD + nonHD: 
           else if(C && D)
             {
-              Voxel* moleculeC(reactvAvBC(C));
-              Voxel* moleculeD(NULL);
+              moleculeC = reactvAvBC(C);
+              moleculeD = NULL;
               if(moleculeC == NULL)
                 {
                   moleculeD = reactvAvBC(D);
@@ -345,8 +345,8 @@ void SpatiocyteNextReactionProcess::fire()
           //HD + nonHD -> HD:
           else if(variableC && !D && !variableD)
             {
-              Voxel* moleculeNonHD(nonHD->getRandomMolecule());
-              nonHD->removeMolecule(moleculeNonHD);
+              moleculeS = nonHD->getRandomMolecule();
+              nonHD->removeMolecule(moleculeS);
               HD->addValue(-1);
               variableC->addValue(1);
             }
@@ -391,8 +391,8 @@ void SpatiocyteNextReactionProcess::reactABCD()
 {
   unsigned int rand(gsl_rng_uniform_int(getStepper()->getRng(),
                                         moleculesA.size()));
-  Voxel* moleculeA(moleculesA[rand]);
-  Voxel* moleculeB(A->getRandomAdjoiningVoxel(moleculeA, B, SearchVacant));
+  moleculeA = moleculesA[rand];
+  moleculeB = A->getRandomAdjoiningVoxel(moleculeA, B, SearchVacant);
   if(A != C)
     {
       unsigned indexA(A->getIndex(moleculeA));
@@ -414,9 +414,9 @@ void SpatiocyteNextReactionProcess::reactABCD()
 bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
 {
   unsigned indexA(a->getRandomIndex());
-  Voxel* moleculeA(a->getMolecule(indexA));
-  Voxel* moleculeC(NULL);
-  Voxel* moleculeD(NULL);
+  moleculeA = a->getMolecule(indexA);
+  moleculeC = NULL;
+  moleculeD = NULL;
   if(a->getVacantID() == c->getVacantID() || a->getID() == c->getVacantID())
     {
       moleculeC = moleculeA;
@@ -469,8 +469,8 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
 bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
 {
   unsigned indexA(a->getRandomIndex());
-  Voxel* moleculeA(a->getMolecule(indexA));
-  Voxel* moleculeC(NULL);
+  moleculeA = a->getMolecule(indexA);
+  moleculeC = NULL;
   if(a->getVacantID() == c->getVacantID() || a->getID() == c->getVacantID())
     {
       moleculeC = moleculeA;
@@ -503,7 +503,7 @@ void SpatiocyteNextReactionProcess::removeMoleculeE()
     {
       return;
     }
-  Voxel* moleculeE(E->getRandomMolecule());
+  moleculeE = E->getRandomMolecule();
   if(moleculeE == NULL)
     {
       std::cout << getFullID().asString() << " unable to remove molecule E" <<
@@ -516,8 +516,7 @@ void SpatiocyteNextReactionProcess::removeMoleculeE()
 bool SpatiocyteNextReactionProcess::reactACbind(Species* a, Species* c)
 {
   unsigned indexA(a->getRandomIndex());
-  Voxel* moleculeA(a->getMolecule(indexA));
-  Voxel* moleculeC(NULL);
+  moleculeA = a->getMolecule(indexA);
   moleculeC = c->getBindingSiteAdjoiningVoxel(moleculeA, BindingSite);
   if(moleculeC == NULL)
     {
@@ -539,12 +538,11 @@ bool SpatiocyteNextReactionProcess::reactACDbind(Species* a, Species* c,
                                                  Species* d)
 {
   unsigned indexA(a->getRandomIndex());
-  Voxel* moleculeA(a->getMolecule(indexA));
-  Voxel* moleculeC(NULL);
+  moleculeA = a->getMolecule(indexA);
   moleculeC = c->getBindingSiteAdjoiningVoxel(moleculeA, BindingSite);
   if(moleculeC == NULL)
     {
-      Voxel* moleculeD(NULL);
+      moleculeD = NULL;
       moleculeD = d->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
       if(moleculeD == NULL)
         {
@@ -565,7 +563,7 @@ bool SpatiocyteNextReactionProcess::reactACDbind(Species* a, Species* c,
 //HD -> nonHD
 Voxel* SpatiocyteNextReactionProcess::reactvAC(Variable* vA, Species* c)
 {
-  Voxel* moleculeC(NULL);
+  moleculeC = NULL;
   Comp* compA(theSpatiocyteStepper->system2Comp(vA->getSuperSystem()));
   //Occupy C in a voxel of compartment C that adjoins compartment A
   //if A is a surface compartment:
@@ -604,7 +602,7 @@ Comp* SpatiocyteNextReactionProcess::getComp2D(Species* c)
 
 Voxel* SpatiocyteNextReactionProcess::reactvAvBC(Species* c)
 {
-  Voxel* moleculeC(NULL);
+  moleculeC = NULL;
   Comp* aComp2D(getComp2D(c));
   if(aComp2D)
     {
@@ -683,7 +681,7 @@ unsigned int SpatiocyteNextReactionProcess::updateImmobileSubstrates()
   moleculesA.resize(0);
   for(unsigned int i(0); i != A->size(); ++i)
     {
-      Voxel* moleculeA(A->getMolecule(i));
+      moleculeA = A->getMolecule(i);
       unsigned int cnt(A->getAdjoiningMoleculeCnt(moleculeA, B));
       if(cnt)
         {

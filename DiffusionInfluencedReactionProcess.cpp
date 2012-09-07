@@ -88,8 +88,8 @@ void DiffusionInfluencedReactionProcess::initializeThird()
 //as D and Y <- D.
 bool DiffusionInfluencedReactionProcess::react(unsigned indexA, unsigned indexB)
 {
-  Voxel* moleculeA(A->getMolecule(indexA));
-  Voxel* moleculeB(B->getMolecule(indexB));
+  moleculeA = A->getMolecule(indexA);
+  moleculeB = B->getMolecule(indexB);
   //nonHD_A + nonHD_B -> nonHD_C + HD_D:
   //nonHD_A + nonHD_B -> HD_C + nonHD_D:
   if((variableC && D) || (C && variableD))
@@ -101,7 +101,6 @@ bool DiffusionInfluencedReactionProcess::react(unsigned indexA, unsigned indexB)
           HD_p = variableD;
           nonHD_p = C;
         }
-      Voxel* moleculeP;
       if(A->getVacantID() == nonHD_p->getVacantID() ||
          A->getID() == nonHD_p->getVacantID())
         {
@@ -151,8 +150,6 @@ bool DiffusionInfluencedReactionProcess::react(unsigned indexA, unsigned indexB)
       return true;
     }
 
-  Voxel* moleculeC;
-  Voxel* moleculeD;
   if(A->getVacantID() == C->getVacantID() || A->getID() == C->getVacantID())
     {
       moleculeC = moleculeA;
@@ -253,7 +250,7 @@ void DiffusionInfluencedReactionProcess::addMoleculeE()
     {
       return;
     } 
-  Voxel* moleculeE(E->getRandomCompVoxel(1));
+  moleculeE = E->getRandomCompVoxel(1);
   if(moleculeE == NULL)
     {
       std::cout << getFullID().asString() << " unable to add molecule E" <<

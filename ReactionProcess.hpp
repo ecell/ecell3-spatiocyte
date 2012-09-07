@@ -66,7 +66,8 @@ public:
     moleculeC(NULL),
     moleculeD(NULL),
     moleculeE(NULL),
-    moleculeP(NULL) {}
+    moleculeP(NULL),
+    moleculeS(NULL) {}
   virtual ~ReactionProcess() {}
   SIMPLE_SET_GET_METHOD(Real, k);
   SIMPLE_SET_GET_METHOD(Real, p);
@@ -176,6 +177,10 @@ public:
     {
       return moleculeP;
     }
+  virtual Voxel* getMoleculeS()
+    {
+      return moleculeS;
+    }
   virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
   virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
 protected:
@@ -203,6 +208,7 @@ protected:
   Voxel* moleculeD;
   Voxel* moleculeE;
   Voxel* moleculeP;
+  Voxel* moleculeS;
   std::vector<SpatiocyteProcess*> theInterruptingProcesses;
 };
 
