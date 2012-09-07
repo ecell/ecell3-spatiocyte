@@ -102,6 +102,12 @@ public:
   void updateSpecies();
   void finalizeSpecies();
   unsigned getStartCoord();
+
+  virtual GET_METHOD(Real, TimeScale)
+  {
+      return 0.0;
+  }
+
 private:
   void setCompsCenterPoint();
   void setIntersectingCompartmentList();
