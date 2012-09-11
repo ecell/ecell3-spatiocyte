@@ -187,6 +187,13 @@ public:
       Length /= VoxelDiameter;
       MonomerPitch /= VoxelDiameter;
       Radius /= VoxelDiameter;
+      theVacantSpecies->setIsOffLattice();
+      theMinusSpecies->setIsOffLattice();
+      thePlusSpecies->setIsOffLattice();
+      for(unsigned int i(0); i != theKinesinSpecies.size(); ++i)
+        {
+          theKinesinSpecies[i]->setIsOffLattice();
+        }
     }
   virtual void initializeSecond()
     {

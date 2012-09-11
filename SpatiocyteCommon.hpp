@@ -170,6 +170,14 @@ struct Comp
   std::vector<unsigned int> adjoinCount;
 };
 
+//id by default is 0, it is only has non-zero value when a GFP is explicitly
+//tagged:
+struct Tag
+{
+  unsigned origin;
+  unsigned id;
+};
+
 struct Origin
 {
   Point point;

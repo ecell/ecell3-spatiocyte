@@ -98,8 +98,9 @@ public:
     isPolymer(false),
     isReactiveVacant(false),
     isSubunitInitialized(false),
+    isTag(false),
+    isTagged(false),
     isVacant(false),
-    isWithOrigin(false),
     theID(anID),
     theCollision(0),
     theInitCoordSize(anInitCoordSize),
@@ -115,9 +116,12 @@ public:
     theCompVoxels(&theMolecules),
     theLattice(aLattice) {}
   ~Species() {}
-  void initialize(int speciesSize, int anAdjoiningCoordSize)
+  void initialize(int speciesSize, int anAdjoiningCoordSize,
+                  unsigned aNullCoord, unsigned aNullID)
     {
       theAdjoiningCoordSize = anAdjoiningCoordSize;
+      theNullCoord = aNullCoord;
+      theNullID = aNullID;
       theReactionProbabilities.resize(speciesSize);
       theDiffusionInfluencedReactions.resize(speciesSize);
       theFinalizeReactions.resize(speciesSize);
@@ -131,6 +135,8 @@ public:
         {
           setVacantSpecies(theComp->vacantSpecies);
         }
+      theNullTag.origin = theNullCoord;
+      theNullTag.id = theNullID;
     }
   void setDiffusionInfluencedReaction(
                                     DiffusionInfluencedReactionProcess*
@@ -173,9 +179,32 @@ public:
             " not populated." << std::endl;
         }
     }
-  void setIsWithOrigin()
+  void addTaggedSpecies(Species* aSpecies)
     {
-      isWithOrigin = true;
+      isTag = true;
+      //If one of the tagged species is off-lattice then
+      //make the tag species off-lattice. The getPoint method
+      //will convert the coord of lattice species to point
+      //when logging:
+      if(aSpecies->getIsOffLattice())
+        {
+          isOffLattice = true;
+        }
+      theTaggedSpeciesList.push_back(aSpecies);
+    }
+  void addTagSpecies(Species* aSpecies)
+    {
+      isTagged = true;
+      theTagSpeciesList.push_back(aSpecies);
+      aSpecies->addTaggedSpecies(this);
+    }
+  bool getIsTagged()
+    {
+      return isTagged;
+    }
+  bool getIsTag()
+    {
+      return isTag;
     }
   bool getIsPopulateSpecies()
     {
@@ -284,7 +313,11 @@ public:
     {
       if(isOffLattice)
         {
-          return *theMolecules[anIndex]->point;
+          if(theMolecules[anIndex]->point)
+            {
+              return *theMolecules[anIndex]->point;
+            }
+          return theStepper->coord2point(getCoord(anIndex));
         }
       else if(isPolymer)
         {
@@ -365,11 +398,11 @@ public:
                   break;
                 }
             }
-          if(isWithOrigin)
+          if(isTagged)
             {
               for(unsigned i(0); i != theMoleculeSize; ++i)
                 {
-                  theOrigins[i] = getCoord(i);
+                  theTags[i].origin = getCoord(i);
                 }
             }
         }
@@ -395,6 +428,9 @@ public:
   void setIsOffLattice()
     {
       isOffLattice = true;
+    }
+  void resetFixedAdjoins()
+    {
       isFixedAdjoins = false;
       for(unsigned i(0); i != theComp->species.size(); ++i)
         {
@@ -718,6 +754,10 @@ public:
         {
           updateVacantMolecules();
         }
+      else if(isTag)
+        {
+          updateTagMolecules();
+        }
     }
   //If it isReactiveVacant it will only be called by SNRP when it is substrate:
   void updateMoleculeSize()
@@ -725,6 +765,30 @@ public:
       if(isDiffusiveVacant || isReactiveVacant)
         {
           updateVacantCoordSize();
+        }
+    }
+  void updateTagMolecules()
+    {
+      theMoleculeSize = 0;
+      for(unsigned i(0); i != theTaggedSpeciesList.size(); ++i)
+        {
+          Species* aSpecies(theTaggedSpeciesList[i]);
+          for(unsigned j(0); j != aSpecies->size(); ++j)
+            {
+              if(aSpecies->getTagID(j) == theID)
+                {
+                  Voxel* aVoxel(aSpecies->getMolecule(j));
+                  ++theMoleculeSize;
+                  if(theMoleculeSize > theMolecules.size())
+                    {
+                      theMolecules.push_back(aVoxel);
+                    }
+                  else
+                    {
+                      theMolecules[theMoleculeSize-1] = aVoxel;
+                    }
+                }
+            }
         }
     }
   //Even if it is a isCompVacant, this method will be called by
@@ -770,15 +834,23 @@ public:
         }
       theVariable->setValue(theMoleculeSize);
     }
-  unsigned getOrigin(unsigned anIndex)
+  void setTagID(unsigned anIndex, unsigned anID)
     {
-      if(isWithOrigin)
-        {
-          return theOrigins[anIndex];
-        }
-      return UINT_MAX;
+      theTags[anIndex].id = anID;
     }
-  void addMolecule(Voxel* aVoxel, unsigned anOrigin = UINT_MAX)
+  unsigned getTagID(unsigned anIndex)
+    {
+      return theTags[anIndex].id;
+    }
+  Tag& getTag(unsigned anIndex)
+    {
+      if(isTagged)
+        {
+          return theTags[anIndex];
+        }
+      return theNullTag;
+    }
+  void addMolecule(Voxel* aVoxel, Tag& aTag)
     {
       aVoxel->id = theID;
       if(!isVacant)
@@ -787,22 +859,28 @@ public:
           if(theMoleculeSize > theMolecules.size())
             {
               theMolecules.resize(theMoleculeSize);
-              theOrigins.resize(theMoleculeSize);
+              theTags.resize(theMoleculeSize);
             }
           theMolecules[theMoleculeSize-1] = aVoxel;
-          if(isWithOrigin)
+          if(isTagged)
             {
-              if(anOrigin == UINT_MAX)
+              //If it is theNullTag:
+              if(aTag.origin == theNullCoord)
                 {
-                  theOrigins[theMoleculeSize-1] = getCoord(theMoleculeSize-1);
+                  Tag aNewTag = {getCoord(theMoleculeSize-1), theNullID};
+                  theTags[theMoleculeSize-1] = aNewTag;
                 }
               else
                 {
-                  theOrigins[theMoleculeSize-1] = anOrigin;
+                  theTags[theMoleculeSize-1] = aTag;
                 }
             }
           theVariable->setValue(theMoleculeSize);
         }
+    }
+  void addMolecule(Voxel* aVoxel)
+    {
+      addMolecule(aVoxel, theNullTag);
     }
   void addCompVoxel(unsigned aCoord)
     {
@@ -859,9 +937,9 @@ public:
       if(!isVacant)
         {
           theMolecules[anIndex] = theMolecules[--theMoleculeSize];
-          if(isWithOrigin)
+          if(isTagged)
             {
-              theOrigins[anIndex] = theOrigins[theMoleculeSize];
+              theTags[anIndex] = theTags[theMoleculeSize];
             }
           theVariable->setValue(theMoleculeSize);
           return;
@@ -1249,10 +1327,6 @@ public:
       Voxel* aVoxel(theVacantSpecies->getMolecule(r));
       return getRandomAdjoiningVoxel(aVoxel, searchVacant);
     }
-  void setLatticeProperties(unsigned aNullCoord)
-    {
-      theNullCoord = aNullCoord;
-    }
   //We need to updateMolecules to set the valid address of voxels
   //since they may have been changed when theLattice is resized by 
   //processes:
@@ -1284,14 +1358,16 @@ private:
   bool isPolymer;
   bool isReactiveVacant;
   bool isSubunitInitialized;
+  bool isTag;
+  bool isTagged;
   bool isVacant;
-  bool isWithOrigin;
   const unsigned short theID;
   unsigned theCollision;
   unsigned theDimension;
   unsigned theInitCoordSize;
   unsigned theMoleculeSize;
   unsigned theNullCoord;
+  unsigned theNullID;
   unsigned theAdjoiningCoordSize;
   int thePolymerDirectionality;
   int theVacantID;
@@ -1305,15 +1381,18 @@ private:
   MoleculePopulateProcessInterface* thePopulateProcess;
   SpatiocyteStepper* theStepper;
   Variable* theVariable;
+  Tag theNullTag;
   std::vector<bool> theFinalizeReactions;
   std::vector<unsigned> collisionCnts;
   std::vector<unsigned> theCoords;
-  std::vector<unsigned> theOrigins;
+  std::vector<Tag> theTags;
   std::vector<double> theBendAngles;
   std::vector<double> theReactionProbabilities;
   std::vector<Voxel*> theMolecules;
   std::vector<Voxel*>* theCompVoxels;
   std::vector<Species*> theDiffusionInfluencedReactantPairs;
+  std::vector<Species*> theTaggedSpeciesList;
+  std::vector<Species*> theTagSpeciesList;
   std::vector<DiffusionInfluencedReactionProcess*> 
     theDiffusionInfluencedReactions;
   std::vector<SpatiocyteProcessInterface*> theInterruptedProcesses;

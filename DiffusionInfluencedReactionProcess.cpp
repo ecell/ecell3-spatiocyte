@@ -135,7 +135,7 @@ bool DiffusionInfluencedReactionProcess::react(unsigned indexA, unsigned indexB)
           moleculeB->id = B->getVacantID();
         }
       HD_p->addValue(1);
-      nonHD_p->addMolecule(moleculeP, A->getOrigin(indexA));
+      nonHD_p->addMolecule(moleculeP, A->getTag(indexA));
       return true;
     }
   //nonHD_A + nonHD_B -> HD_C:
@@ -170,7 +170,7 @@ bool DiffusionInfluencedReactionProcess::react(unsigned indexA, unsigned indexB)
                 }
               moleculeB->id = B->getVacantID();
             }
-          D->addMolecule(moleculeD, B->getOrigin(indexB));
+          D->addMolecule(moleculeD, B->getTag(indexB));
         }
       else
         {
@@ -199,7 +199,7 @@ bool DiffusionInfluencedReactionProcess::react(unsigned indexA, unsigned indexB)
                 }
               moleculeA->id = A->getVacantID();
             }
-          D->addMolecule(moleculeD, B->getOrigin(indexB));
+          D->addMolecule(moleculeD, B->getTag(indexB));
         }
       else
         {
@@ -228,14 +228,14 @@ bool DiffusionInfluencedReactionProcess::react(unsigned indexA, unsigned indexB)
             {
               return false;
             }
-          D->addMolecule(moleculeD, B->getOrigin(indexB));
+          D->addMolecule(moleculeD, B->getTag(indexB));
         }
       //Hard remove the A molecule since it is not used:
       moleculeA->id = A->getVacantID();
       //Hard remove the B molecule since it is not used:
       moleculeB->id = B->getVacantID();
     }
-  C->addMolecule(moleculeC, A->getOrigin(indexA));
+  C->addMolecule(moleculeC, A->getTag(indexA));
   addMoleculeE();
   return true;
 }

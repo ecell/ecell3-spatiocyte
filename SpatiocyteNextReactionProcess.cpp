@@ -396,16 +396,16 @@ void SpatiocyteNextReactionProcess::reactABCD()
   if(A != C)
     {
       unsigned indexA(A->getIndex(moleculeA));
-      unsigned originA(A->getOrigin(indexA));
+      Tag tagA(A->getTag(indexA));
       A->removeMolecule(indexA);
-      C->addMolecule(moleculeA, originA);
+      C->addMolecule(moleculeA, tagA);
     }
   if(B != D)
     { 
       unsigned indexB(B->getIndex(moleculeB));
-      unsigned originB(B->getOrigin(indexB));
+      Tag tagB(B->getTag(indexB));
       B->removeMolecule(indexB);
-      D->addMolecule(moleculeB, originB);
+      D->addMolecule(moleculeB, tagB);
     }
 }
 
@@ -458,9 +458,9 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
           return false;
         }
     }
-  unsigned originA(a->getOrigin(indexA));
+  Tag tagA(a->getTag(indexA));
   a->removeMolecule(indexA);
-  c->addMolecule(moleculeC, originA);
+  c->addMolecule(moleculeC, tagA);
   d->addMolecule(moleculeD);
   return true;
 }
@@ -486,9 +486,9 @@ bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
           return false;
         }
     }
-  unsigned originA(a->getOrigin(indexA));
+  Tag tagA(a->getTag(indexA));
   a->removeMolecule(indexA);
-  c->addMolecule(moleculeC, originA);
+  c->addMolecule(moleculeC, tagA);
   removeMoleculeE();
   return true;
 }
@@ -525,9 +525,9 @@ bool SpatiocyteNextReactionProcess::reactACbind(Species* a, Species* c)
       requeue();
       return false;
     }
-  unsigned originA(a->getOrigin(indexA));
+  Tag tagA(a->getTag(indexA));
   a->removeMolecule(indexA);
-  c->addMolecule(moleculeC, originA);
+  c->addMolecule(moleculeC, tagA);
   return true;
 }
 
@@ -549,14 +549,14 @@ bool SpatiocyteNextReactionProcess::reactACDbind(Species* a, Species* c,
           requeue();
           return false;
         }
-      unsigned originA(a->getOrigin(indexA));
+      Tag tagA(a->getTag(indexA));
       a->removeMolecule(indexA);
-      d->addMolecule(moleculeD, originA);
+      d->addMolecule(moleculeD, tagA);
       return true;
     }
-  unsigned originA(a->getOrigin(indexA));
+  Tag tagA(a->getTag(indexA));
   a->removeMolecule(indexA);
-  c->addMolecule(moleculeC, originA);
+  c->addMolecule(moleculeC, tagA);
   return true;
 }
 

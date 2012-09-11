@@ -35,11 +35,11 @@ LIBECS_DM_INIT(MicrotubuleProcess, Process);
 unsigned int MicrotubuleProcess::getLatticeResizeCoord(unsigned int aStartCoord)
 {
   theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
-  theVacantSpecies->setIsOffLattice();
+  theVacantSpecies->resetFixedAdjoins();
   theVacantSpecies->setRadius(DimerPitch*VoxelDiameter/2);
-  theMinusSpecies->setIsOffLattice();
+  theMinusSpecies->resetFixedAdjoins();
   theMinusSpecies->setRadius(DimerPitch*VoxelDiameter/2);
-  thePlusSpecies->setIsOffLattice();
+  thePlusSpecies->resetFixedAdjoins();
   thePlusSpecies->setRadius(DimerPitch*VoxelDiameter/2);
   tempID = theSpecies.size();
   C = theComp->centerPoint;

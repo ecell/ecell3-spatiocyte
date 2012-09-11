@@ -106,10 +106,8 @@ void VisualizationLogProcess::logMolecules(int anIndex)
     }
   //The remaining vacant molecules must be diffusive, so we need to update
   //them before logging their position:
-  if(aSpecies->getIsVacant())
-    {
-      aSpecies->updateMolecules();
-    }
+  //Also update the molecules of the tag species:
+  aSpecies->updateMolecules();
   theLogFile.write((char*)(&anIndex), sizeof(anIndex));
   //The species molecule size:
   int aSize(aSpecies->size());
@@ -124,17 +122,12 @@ void VisualizationLogProcess::logMolecules(int anIndex)
 void VisualizationLogProcess::logOffLattice(int anIndex)
 {
   Species* aSpecies(theOffLatticeSpecies[anIndex]);
-  if(aSpecies->getIsVacant())
+  if(aSpecies->getIsVacant() && !aSpecies->getIsDiffusiveVacant() &&
+     !aSpecies->getIsReactiveVacant())
     {
-      if(aSpecies->getIsDiffusiveVacant() || aSpecies->getIsReactiveVacant())
-        {
-          aSpecies->updateMolecules();
-        }
-      else
-        {
-          return;
-        }
+      return;
     }
+  aSpecies->updateMolecules();
   theLogFile.write((char*)(&anIndex), sizeof(anIndex));
   //The species molecule size:
   int aSize(aSpecies->size());

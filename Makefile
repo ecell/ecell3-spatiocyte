@@ -19,6 +19,7 @@ CoordinateLogProcess\
 HistogramLogProcess\
 MoleculePopulateProcess\
 DiffusionProcess\
+TagProcess\
 PeriodicBoundaryDiffusionProcess
 #PolymerFragmentationProcess\
 #PolymerizationParameterProcess\
@@ -72,6 +73,9 @@ OscillationAnalysisProcess.so: 	OscillationAnalysisProcess.cpp
 
 SpatiocyteNextReactionProcess.so: 	SpatiocyteNextReactionProcess.cpp
 	$(ECELL3_DMC) -o SpatiocyteNextReactionProcess.so --ldflags=ReactionProcess.so SpatiocyteNextReactionProcess.cpp
+
+TagProcess.so: 	TagProcess.cpp
+	$(ECELL3_DMC) -o TagProcess.so --ldflags="SpatiocyteProcess.so" TagProcess.cpp
 
 MoleculePopulateProcess.so: 	MoleculePopulateProcess.cpp
 	$(ECELL3_DMC) -o MoleculePopulateProcess.so --ldflags="SpatiocyteProcess.so DiffusionInfluencedReactionProcess.so" MoleculePopulateProcess.cpp

@@ -29,33 +29,27 @@
 //
 
 
-#ifndef __SPATIOCYTEPROCESSINTERFACE_HPP
-#define __SPATIOCYTEPROCESSINTERFACE_HPP
+#ifndef __TagProcess_hpp
+#define __TagProcess_hpp
 
-#include "SpatiocyteCommon.hpp"
+#include "SpatiocyteProcess.hpp"
 
-class SpatiocyteProcessInterface
+LIBECS_DM_CLASS(TagProcess, SpatiocyteProcess)
 { 
 public:
-  virtual ~SpatiocyteProcessInterface() {}
-  virtual void initializeSecond() = 0;
-  virtual void initializeThird() = 0;
-  virtual void initializeFourth() = 0;
-  virtual void initializeFifth() = 0;
-  virtual void initializeLastOnce() = 0;
-  virtual void printParameters() = 0;
-  virtual void setPriorityQueue(ProcessPriorityQueue*) = 0;
-  virtual void setTime(Time) = 0;
-  virtual Time getTime() const = 0;
-  virtual int getQueuePriority() const = 0;
-  virtual void setQueueID(ProcessID) = 0;
-  virtual void addSubstrateInterrupt(Species*, Voxel*) = 0;
-  virtual void removeSubstrateInterrupt(Species*, Voxel*) = 0;
-  virtual void setLatticeProperties(std::vector<Voxel>*, unsigned,
-                                    unsigned, unsigned) = 0;
-  virtual void substrateValueChanged(Time) = 0;
-  virtual void fire() = 0;
-  virtual unsigned getLatticeResizeCoord(unsigned) = 0;
+  LIBECS_DM_OBJECT(TagProcess, Process)
+    {
+      INHERIT_PROPERTIES(Process);
+    }
+  TagProcess() {}
+  virtual ~TagProcess() {}
+  virtual void initialize();
+  virtual void initializeSecond();
+  virtual void initializeFourth();
+protected:
+  Species* theTagSpecies;
+  std::vector<unsigned> theTaggedSizes;
+  std::vector<Species*> theTaggedSpeciesList;
 };
 
-#endif /* __SPATIOCYTEPROCESSINTERFACE_HPP */
+#endif /* __TagProcess_hpp */

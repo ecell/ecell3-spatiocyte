@@ -116,12 +116,13 @@ public:
       thePriorityQueue = aPriorityQueue;
     }
   virtual void setLatticeProperties(std::vector<Voxel>* aLattice,
-                                    unsigned int aCoord,
-                                    unsigned int anAdjoiningCoordSize)
+                                    unsigned anAdjoiningCoordSize,
+                                    unsigned aNullCoord, unsigned aNullID)
     {
       theLattice = aLattice;
-      theNullCoord = aCoord;
       theAdjoiningCoordSize = anAdjoiningCoordSize;
+      theNullCoord = aNullCoord;
+      theNullID = aNullID;
     }
   Time getTime() const
     {
@@ -143,7 +144,7 @@ public:
     {
       return theSpatiocyteStepper->id2species(id);
     }
-  virtual unsigned int getLatticeResizeCoord(unsigned int)
+  virtual unsigned getLatticeResizeCoord(unsigned)
     {
       return 0;
     }
@@ -167,12 +168,13 @@ protected:
   String getIDString(Species*) const;
   String getIDString(Variable*) const;
   String getIDString(Comp*) const;
-  String getIDString(unsigned int) const;
+  String getIDString(unsigned) const;
 protected:
   bool isInitialized;
   int thePriority;
-  unsigned int theAdjoiningCoordSize;
-  unsigned int theNullCoord;
+  unsigned theAdjoiningCoordSize;
+  unsigned theNullCoord;
+  unsigned theNullID;
   double theStepInterval;
   Time theTime;
   ProcessID theQueueID;

@@ -454,7 +454,8 @@ void SpatiocyteStepper::initSpecies()
   for(std::vector<Species*>::iterator i(theSpecies.begin());
       i != theSpecies.end(); ++i)
     {
-      (*i)->initialize(theSpecies.size(), theAdjoiningCoordSize);
+      (*i)->initialize(theSpecies.size(), theAdjoiningCoordSize, 
+                       theNullCoord, theNullID);
     }
 }
 
@@ -465,14 +466,9 @@ void SpatiocyteStepper::broadcastLatticeProperties()
     {      
       SpatiocyteProcessInterface*
         aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
-      aProcess->setLatticeProperties(&theLattice, theNullCoord,
-                                     theAdjoiningCoordSize);
+      aProcess->setLatticeProperties(&theLattice, theAdjoiningCoordSize,
+                                     theNullCoord, theNullID);
     }
- for(std::vector<Species*>::iterator i(theSpecies.begin());
-     i != theSpecies.end(); ++i)
-   {
-     (*i)->setLatticeProperties(theNullCoord);
-   }
 }
 
 void SpatiocyteStepper::initProcessSecond()
