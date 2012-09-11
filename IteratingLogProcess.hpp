@@ -83,6 +83,15 @@ public:
     LogInterval(0),
     FileName("IterateLog.csv") {}
   virtual ~IteratingLogProcess() {}
+  virtual void initialize()
+    {
+      if(isInitialized)
+        {
+          return;
+        }
+      SpatiocyteProcess::initialize();
+      isPriorityQueued = true;
+    }
   virtual void initializeSecond()
     {
       SpatiocyteProcess::initializeSecond(); 

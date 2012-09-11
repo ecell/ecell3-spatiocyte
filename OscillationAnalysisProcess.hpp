@@ -75,6 +75,15 @@ public:
   SIMPLE_SET_GET_METHOD(Real, AnalysisInterval);
   SIMPLE_SET_GET_METHOD(Real, Period);
   SIMPLE_SET_GET_METHOD(Integer, Status);
+  virtual void initialize()
+    {
+      if(isInitialized)
+        {
+          return;
+        }
+      SpatiocyteProcess::initialize();
+      isPriorityQueued = true;
+    }
   virtual void initializeLastOnce()
     {
       for(unsigned int i(0); i != theProcessSpecies.size(); ++i)

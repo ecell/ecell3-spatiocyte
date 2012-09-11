@@ -74,6 +74,8 @@ public:
           return;
         }
       ReactionProcess::initialize();
+      isPriorityQueued = true;
+      isExternInterrupted = true;
       if(!(getOrder() == 0 || getOrder() == 1 || getOrder() == 2))
         {
           THROW_EXCEPTION(ValueError, 

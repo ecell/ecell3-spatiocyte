@@ -207,6 +207,15 @@ public:
     SIMPLE_SET_GET_METHOD(Real, LogInterval);
     SIMPLE_SET_GET_METHOD(String, FileName);
 
+    virtual void initialize()
+      {
+        if(isInitialized)
+          {
+            return;
+          }
+        SpatiocyteProcess::initialize();
+        isPriorityQueued = true;
+    }
     virtual void initializeFifth()
     {
         if(LogInterval > 0)

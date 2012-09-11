@@ -200,7 +200,7 @@ private:
   std::vector<Species*> theSpecies;
   std::vector<Comp*> theComps;
   std::vector<Voxel> theLattice;
-  std::vector<Process*> theQueuedProcesses;
+  std::vector<Process*> theExternInterruptedProcesses;
 };
 
 #endif /* __SpatiocyteStepper_hpp */

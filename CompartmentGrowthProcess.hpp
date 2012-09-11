@@ -57,6 +57,7 @@ public:
           return;
         }
       SpatiocyteProcess::initialize();
+      isPriorityQueued = true;
     }
   virtual void initializeFifth()
     {

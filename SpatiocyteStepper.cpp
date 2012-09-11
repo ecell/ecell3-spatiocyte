@@ -112,8 +112,9 @@ void SpatiocyteStepper::initialize()
 void SpatiocyteStepper::interrupt(Time aTime)
 {
   setCurrentTime(aTime); 
-  for(std::vector<Process*>::const_iterator i(theQueuedProcesses.begin());
-      i != theQueuedProcesses.end(); ++i)
+  for(std::vector<Process*>::const_iterator 
+      i(theExternInterruptedProcesses.begin());
+      i != theExternInterruptedProcesses.end(); ++i)
     {      
       SpatiocyteProcessInterface*
         aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
@@ -583,29 +584,16 @@ void SpatiocyteStepper::initPriorityQueue()
         {
           aSpatiocyteProcess->setTime(aCurrentTime+aProcess->getStepInterval());
           aSpatiocyteProcess->setPriorityQueue(&thePriorityQueue);
-          String aClassName(aProcess->getPropertyInterface().getClassName());
           //Not all SpatiocyteProcesses are inserted into the priority queue.
           //Only the following processes are inserted in the PriorityQueue and
           //executed at simulation steps according to their execution times:
-          if(aClassName == "DiffusionProcess" ||
-             aClassName == "IteratingLogProcess" ||
-             aClassName == "HistogramLogProcess" ||
-             aClassName == "CompartmentGrowthProcess" ||
-             aClassName == "MoleculePopulateProcess" ||
-             aClassName == "CoordinateLogProcess" ||
-             aClassName == "VisualizationLogProcess" ||
-             aClassName == "H5VisualizationLogProcess" ||
-             aClassName == "MicroscopyTrackingProcess" ||
-             aClassName == "OscillationAnalysisProcess" ||
-             aClassName == "PeriodicBoundaryDiffusionProcess" ||
-             aClassName == "SpatiocyteNextReactionProcess" ||
-             aClassName == "PolymerFragmentationProcess")
+          if(aSpatiocyteProcess->getIsPriorityQueued())
             {
               aSpatiocyteProcess->setQueueID(
                                    thePriorityQueue.push(aSpatiocyteProcess));
-              if(aClassName == "SpatiocyteNextReactionProcess")
+              if(aSpatiocyteProcess->getIsExternInterrupted())
                 {
-                  theQueuedProcesses.push_back(aProcess);
+                  theExternInterruptedProcesses.push_back(aProcess);
                 }
             }
         }

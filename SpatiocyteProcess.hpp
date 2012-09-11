@@ -45,7 +45,9 @@ public:
       INHERIT_PROPERTIES(Process);
     }
   SpatiocyteProcess():
+    isExternInterrupted(false),
     isInitialized(false),
+    isPriorityQueued(false),
     thePriority(0),
     theStepInterval(libecs::INF),
     theTime(libecs::INF) {}
@@ -163,6 +165,14 @@ public:
           thePriorityQueue->moveUp(theQueueID);
         }          
     }
+  virtual bool getIsExternInterrupted()
+    {
+      return isExternInterrupted;
+    }
+  virtual bool getIsPriorityQueued()
+    {
+      return isPriorityQueued;
+    }
 protected:
   String getIDString(Voxel*) const;
   String getIDString(Species*) const;
@@ -170,7 +180,9 @@ protected:
   String getIDString(Comp*) const;
   String getIDString(unsigned) const;
 protected:
+  bool isExternInterrupted;
   bool isInitialized;
+  bool isPriorityQueued;
   int thePriority;
   unsigned theAdjoiningCoordSize;
   unsigned theNullCoord;

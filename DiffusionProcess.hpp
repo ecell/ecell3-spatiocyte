@@ -66,6 +66,7 @@ public:
           return;
         }
       SpatiocyteProcess::initialize();
+      isPriorityQueued = true;
       for(VariableReferenceVector::iterator
           i(theVariableReferenceVector.begin());
           i != theVariableReferenceVector.end(); ++i)

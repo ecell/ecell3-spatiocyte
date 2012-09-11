@@ -50,6 +50,7 @@ void MoleculePopulateProcess::initialize()
       return;
     }
   SpatiocyteProcess::initialize();
+  isPriorityQueued = true;
   for(VariableReferenceVector::const_iterator
 	i(theVariableReferenceVector.begin());
         i != theVariableReferenceVector.end(); ++i)

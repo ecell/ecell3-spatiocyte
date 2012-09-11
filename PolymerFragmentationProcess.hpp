@@ -59,6 +59,7 @@ public:
           return;
         }
       ReactionProcess::initialize();
+      isPriorityQueued = true;
       if(getOrder() != 1 && getOrder() != 2)
         {
           THROW_EXCEPTION(ValueError, 
