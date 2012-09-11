@@ -1093,7 +1093,14 @@ public:
     }
   void setDiffusionInterval(double anInterval)
     {
-      theDiffusionInterval = anInterval;
+      if(anInterval < theDiffusionInterval)
+        {
+          theDiffusionInterval = anInterval;
+        }
+      for(unsigned i(0); i != theTagSpeciesList.size(); ++i)
+        {
+          theTagSpeciesList[i]->setDiffusionInterval(theDiffusionInterval);
+        }
     }
   unsigned getRandomIndex()
     {

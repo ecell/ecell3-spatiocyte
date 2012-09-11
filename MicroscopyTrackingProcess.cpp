@@ -37,6 +37,7 @@ void MicroscopyTrackingProcess::incSpeciesLatticeCount()
   for(unsigned int i(0); i != thePositiveSpecies.size(); ++i)
     {
       Species* aSpecies(thePositiveSpecies[i]);
+      aSpecies->updateMolecules();
       unsigned int aMoleculeSize(aSpecies->size());
       for(unsigned int j(0); j != aMoleculeSize; ++j)
         { 
@@ -63,13 +64,13 @@ void MicroscopyTrackingProcess::logFluorescentSpecies()
           if(theFreqLattice[j][i])
             {
               aCoords.push_back(i);
-              if(theLatticeSpecies[j]->getIsOffLattice())
-                {
-                  aPoints.push_back(*(*theLattice)[i].point);
-                }
-              else if(theLatticeSpecies[j]->getIsPolymer())
+              if(theLatticeSpecies[j]->getIsPolymer())
                 {
                   aPoints.push_back((*theLattice)[i].subunit->subunitPoint);
+                }
+              else if((*theLattice)[i].point)
+                {
+                  aPoints.push_back(*(*theLattice)[i].point);
                 }
               else
                 {
