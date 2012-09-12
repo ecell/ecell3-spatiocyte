@@ -31,3 +31,83 @@
 #include "ReactionProcess.hpp"
 
 LIBECS_DM_INIT(ReactionProcess, Process);
+
+void ReactionProcess::calculateOrder()
+{ 
+  theOrder = 0;
+  for(VariableReferenceVector::iterator 
+      i(theSortedVariableReferences.begin());
+      i != theSortedVariableReferences.end(); ++i)
+    {
+      const int aCoefficient((*i).getCoefficient());
+      Variable* aVariable((*i).getVariable());
+      if(aCoefficient < 0)
+        {
+          theOrder -= aCoefficient; 
+          //The first reactant, A:
+          if(A == NULL && variableA == NULL)
+            {
+              if(aVariable->getName() == "HD")
+                {
+                  variableA = aVariable;
+                }
+              else
+                {
+                  A = theSpatiocyteStepper->getSpecies(aVariable);
+                }
+            }
+          //The second reactant, B:
+          else
+            {
+              if(aVariable->getName() == "HD")
+                {
+                  variableB = aVariable;
+                }
+              else
+                {
+                  B = theSpatiocyteStepper->getSpecies(aVariable);
+                }
+            }
+        }
+      else if(aCoefficient > 0)
+        {
+          //The first product, C:
+          if(C == NULL && variableC == NULL)
+            {
+              if(aVariable->getName() == "HD")
+                {
+                  variableC = aVariable;
+                }
+              else
+                {
+                  C = theSpatiocyteStepper->getSpecies(aVariable);
+                }
+            }
+          //The second product, D:
+          else
+            {
+              if(aVariable->getName() == "HD")
+                {
+                  variableD = aVariable;
+                }
+              else
+                {
+                  D = theSpatiocyteStepper->getSpecies(aVariable);
+                }
+            }
+        }
+      //aCoefficient == 0:
+      else
+        {
+          if(aVariable->getName() == "HD")
+            {
+              variableE = aVariable;
+            }
+          else
+            {
+              E = theSpatiocyteStepper->getSpecies(aVariable);
+            }
+        }
+    }
+} 
+

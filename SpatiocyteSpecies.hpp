@@ -667,7 +667,10 @@ public:
           //Soft remove the target molecule:
           //Make sure the targetIndex is valid:
           //Target and Source are same species:
-          if(targetSpecies == this && theMolecules[sourceIndex] == target)
+          //For some reason if I use theMolecules[sourceIndex] instead
+          //of getMolecules(sourceIndex) the walk method becomes
+          //much slower when it is only diffusing without reacting:
+          if(targetSpecies == this && getMolecule(sourceIndex) == target)
             {
               softRemoveMolecule(sourceIndex);
             }

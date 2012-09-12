@@ -136,6 +136,7 @@ public:
   virtual void fire();
   virtual void initializeFourth();
   virtual void printParameters();
+  virtual bool isInterrupting(Process*);
 protected:
   unsigned int updateImmobileSubstrates();
   virtual void calculateOrder();
@@ -165,45 +166,5 @@ protected:
   RealMethodProxy theGetPropensityMethodPtr;  
   std::vector<Voxel*> moleculesA;
 };
-
-inline void SpatiocyteNextReactionProcess::calculateOrder()
-{
-  ReactionProcess::calculateOrder();
-  // set theGetPropensityMethodPtr
-  if(getOrder() == 0) // no substrate
-    {
-      theGetPropensityMethodPtr = RealMethodProxy::create<
-        &SpatiocyteNextReactionProcess::getPropensity_ZerothOrder>();
-    }
-  else if(getOrder() == 1)   // one substrate, first order.
-    {
-      theGetPropensityMethodPtr = RealMethodProxy::create<
-        &SpatiocyteNextReactionProcess::getPropensity_FirstOrder>();
-    }
-  else if(getOrder() == 2)
-    { 
-      //Two unique substrate species, second order
-      //A + B -> products:
-      if(getZeroVariableReferenceOffset() == 2)
-        {  
-          theGetPropensityMethodPtr = RealMethodProxy::
-            create<&SpatiocyteNextReactionProcess::
-            getPropensity_SecondOrder_TwoSubstrates>();
-        }
-      //One substrate species, second order
-      //A + A -> products:
-      else
-        {
-          theGetPropensityMethodPtr = RealMethodProxy::
-            create<&SpatiocyteNextReactionProcess::
-            getPropensity_SecondOrder_OneSubstrate>();
-        }
-    }
-  else
-    {
-      std::cout << "theOrder:" << getOrder() << std::endl;
-      NEVER_GET_HERE;
-    }
-}
 
 #endif /* __SpatiocyteNextReactionProcess_hpp */

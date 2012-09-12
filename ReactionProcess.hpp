@@ -72,7 +72,10 @@ public:
   SIMPLE_SET_GET_METHOD(Real, k);
   SIMPLE_SET_GET_METHOD(Real, p);
   SIMPLE_SET_GET_METHOD(Integer, SearchVacant);
-  virtual bool isInterrupting(Process*);
+  virtual bool isInterrupting(Process*)
+    {
+      return false;
+    }
   virtual void fire()
     {
       const Time aCurrentTime(theTime); // do this only for the Processes in Q
@@ -117,8 +120,9 @@ public:
     {
       SpatiocyteProcess::initializeFourth();
     }
-  //This method is called whenever the substrate (-1 and 0 coefficients)
-  //value of the process listed in isInterrupting method has changed:
+  //This method is called to set the list of processes which will be
+  //interrupted by this process whenever the substrate (-1 and 0 coefficients)
+  //value of the listed processes is changed by this process:
   virtual void setInterrupt(std::vector<Process*> const &aProcessList,
                             Process* aProcess)
     {
@@ -211,161 +215,5 @@ protected:
   Voxel* moleculeS;
   std::vector<SpatiocyteProcess*> theInterruptingProcesses;
 };
-
-inline void ReactionProcess::calculateOrder()
-{ 
-  theOrder = 0;
-  for(VariableReferenceVector::iterator 
-      i(theSortedVariableReferences.begin());
-      i != theSortedVariableReferences.end(); ++i)
-    {
-      const int aCoefficient((*i).getCoefficient());
-      Variable* aVariable((*i).getVariable());
-      if(aCoefficient < 0)
-        {
-          theOrder -= aCoefficient; 
-          //The first reactant, A:
-          if(A == NULL && variableA == NULL)
-            {
-              if(aVariable->getName() == "HD")
-                {
-                  variableA = aVariable;
-                }
-              else
-                {
-                  A = theSpatiocyteStepper->getSpecies(aVariable);
-                }
-            }
-          //The second reactant, B:
-          else
-            {
-              if(aVariable->getName() == "HD")
-                {
-                  variableB = aVariable;
-                }
-              else
-                {
-                  B = theSpatiocyteStepper->getSpecies(aVariable);
-                }
-            }
-        }
-      else if(aCoefficient > 0)
-        {
-          //The first product, C:
-          if(C == NULL && variableC == NULL)
-            {
-              if(aVariable->getName() == "HD")
-                {
-                  variableC = aVariable;
-                }
-              else
-                {
-                  C = theSpatiocyteStepper->getSpecies(aVariable);
-                }
-            }
-          //The second product, D:
-          else
-            {
-              if(aVariable->getName() == "HD")
-                {
-                  variableD = aVariable;
-                }
-              else
-                {
-                  D = theSpatiocyteStepper->getSpecies(aVariable);
-                }
-            }
-        }
-      //aCoefficient == 0:
-      else
-        {
-          if(aVariable->getName() == "HD")
-            {
-              variableE = aVariable;
-            }
-          else
-            {
-              E = theSpatiocyteStepper->getSpecies(aVariable);
-            }
-        }
-    }
-} 
-
-bool ReactionProcess::isInterrupting(Process* aProcess)
-{
-  //List all the processes here that need to be notified when their
-  //substrateValueChanged:
-  if(aProcess->getPropertyInterface().getClassName() ==
-     "SpatiocyteNextReactionProcess" /* ||
-     aProcess->getPropertyInterface().getClassName() == "DiffusionProcess"*/) 
-    {
-      //First get the unique variable pointers of this process:
-      std::vector<Variable*> aVariableList;
-      for(VariableReferenceVector::iterator
-          i(theVariableReferenceVector.begin());
-          i != theVariableReferenceVector.end(); ++i)
-        {
-          std::vector<Variable*>::const_iterator j(aVariableList.begin());
-          while(j!=aVariableList.end())
-            {
-              if((*i).getVariable() == (*j))
-                {
-                  break;
-                }
-              ++j;
-            }
-          if(j == aVariableList.end())
-            {
-              aVariableList.push_back((*i).getVariable());
-            }
-        }
-      //Find out if the values of the unique variables will be changed
-      //by this process, i.e, netCoefficient != 0:
-      std::vector<int> aNetCoefficientList;
-      aNetCoefficientList.resize(aVariableList.size());
-      for(std::vector<int>::iterator i(aNetCoefficientList.begin());
-          i!=aNetCoefficientList.end(); ++i)
-        {
-          (*i) = 0;
-        }
-      for(VariableReferenceVector::iterator
-          i(theVariableReferenceVector.begin());
-          i != theVariableReferenceVector.end(); ++i)
-        {
-          for(std::vector<Variable*>::const_iterator j(aVariableList.begin());
-              j!=aVariableList.end(); ++j)
-            {
-              if((*i).getVariable() == (*j))
-                {
-                  aNetCoefficientList[j-aVariableList.begin()] +=
-                    (*i).getCoefficient();
-                }
-            }
-        }
-      //Check if any variable with netCoefficient != 0 is a substrate
-      //of aProcess:
-      VariableReferenceVector
-        aVariableReferenceVector(aProcess->getVariableReferenceVector()); 
-      for(VariableReferenceVector::iterator
-          i(aVariableReferenceVector.begin());
-          i != aVariableReferenceVector.end(); ++i)
-        {
-          if((*i).isAccessor())
-            {
-              for(std::vector<Variable*>::const_iterator j(aVariableList.begin());
-                  j!=aVariableList.end(); ++j)
-                {
-                  if((*i).getVariable() == (*j) && 
-                     aNetCoefficientList[j-aVariableList.begin()])
-                    {
-                      return true;
-                    }
-                }
-            }
-        }
-    }
-  return false;
-}
-
 
 #endif /* __ReactionProcess_hpp */

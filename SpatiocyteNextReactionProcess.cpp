@@ -1091,3 +1091,115 @@ GET_METHOD_DEF(Real, StepInterval, SpatiocyteNextReactionProcess)
   return step;
 }
 
+bool SpatiocyteNextReactionProcess::isInterrupting(Process* aProcess)
+{
+  //Use this method in the processes that need to be notified when their
+  //substrateValueChanged:
+  //First get the unique variable pointers of this process:
+  std::vector<Variable*> aVariableList;
+  for(VariableReferenceVector::iterator
+      i(theVariableReferenceVector.begin());
+      i != theVariableReferenceVector.end(); ++i)
+    {
+      std::vector<Variable*>::const_iterator j(aVariableList.begin());
+      while(j!=aVariableList.end())
+        {
+          if((*i).getVariable() == (*j))
+            {
+              break;
+            }
+          ++j;
+        }
+      if(j == aVariableList.end())
+        {
+          aVariableList.push_back((*i).getVariable());
+        }
+    }
+  //Find out if the values of the unique variables will be changed
+  //by this process, i.e, netCoefficient != 0:
+  std::vector<int> aNetCoefficientList;
+  aNetCoefficientList.resize(aVariableList.size());
+  for(std::vector<int>::iterator i(aNetCoefficientList.begin());
+      i!=aNetCoefficientList.end(); ++i)
+    {
+      (*i) = 0;
+    }
+  for(VariableReferenceVector::iterator
+      i(theVariableReferenceVector.begin());
+      i != theVariableReferenceVector.end(); ++i)
+    {
+      for(std::vector<Variable*>::const_iterator j(aVariableList.begin());
+          j!=aVariableList.end(); ++j)
+        {
+          if((*i).getVariable() == (*j))
+            {
+              aNetCoefficientList[j-aVariableList.begin()] +=
+                (*i).getCoefficient();
+            }
+        }
+    }
+  //Check if any variable with netCoefficient != 0 is a substrate
+  //of aProcess:
+  VariableReferenceVector
+    aVariableReferenceVector(aProcess->getVariableReferenceVector()); 
+  for(VariableReferenceVector::iterator
+      i(aVariableReferenceVector.begin());
+      i != aVariableReferenceVector.end(); ++i)
+    {
+      if((*i).isAccessor())
+        {
+          for(std::vector<Variable*>::const_iterator j(aVariableList.begin());
+              j!=aVariableList.end(); ++j)
+            {
+              if((*i).getVariable() == (*j) && 
+                 aNetCoefficientList[j-aVariableList.begin()])
+                {
+                  return true;
+                }
+            }
+        }
+    }
+  return false;
+}
+
+void SpatiocyteNextReactionProcess::calculateOrder()
+{
+  ReactionProcess::calculateOrder();
+  // set theGetPropensityMethodPtr
+  if(getOrder() == 0) // no substrate
+    {
+      theGetPropensityMethodPtr = RealMethodProxy::create<
+        &SpatiocyteNextReactionProcess::getPropensity_ZerothOrder>();
+    }
+  else if(getOrder() == 1)   // one substrate, first order.
+    {
+      theGetPropensityMethodPtr = RealMethodProxy::create<
+        &SpatiocyteNextReactionProcess::getPropensity_FirstOrder>();
+    }
+  else if(getOrder() == 2)
+    { 
+      //Two unique substrate species, second order
+      //A + B -> products:
+      if(getZeroVariableReferenceOffset() == 2)
+        {  
+          theGetPropensityMethodPtr = RealMethodProxy::
+            create<&SpatiocyteNextReactionProcess::
+            getPropensity_SecondOrder_TwoSubstrates>();
+        }
+      //One substrate species, second order
+      //A + A -> products:
+      else
+        {
+          theGetPropensityMethodPtr = RealMethodProxy::
+            create<&SpatiocyteNextReactionProcess::
+            getPropensity_SecondOrder_OneSubstrate>();
+        }
+    }
+  else
+    {
+      std::cout << "theOrder:" << getOrder() << std::endl;
+      NEVER_GET_HERE;
+    }
+}
+
+

@@ -580,7 +580,7 @@ void SpatiocyteStepper::initPriorityQueue()
       Process* const aProcess(*i);
       SpatiocyteProcessInterface*
         aSpatiocyteProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
-      if(aSpatiocyteProcess != NULL)
+      if(aSpatiocyteProcess)
         {
           aSpatiocyteProcess->setTime(aCurrentTime+aProcess->getStepInterval());
           aSpatiocyteProcess->setPriorityQueue(&thePriorityQueue);
@@ -603,11 +603,11 @@ void SpatiocyteStepper::initPriorityQueue()
       //the ReactionProcess as the base class.
       ReactionProcessInterface*
         aReactionProcess(dynamic_cast<ReactionProcessInterface*>(*i));
-      if(aReactionProcess != NULL)
+      if(aReactionProcess)
         {
           aReactionProcess->setInterrupt(theProcessVector, *i);
         }
-    } 
+    }
 }
 
 void SpatiocyteStepper::populateComps()
