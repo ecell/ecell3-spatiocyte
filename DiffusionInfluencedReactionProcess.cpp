@@ -237,7 +237,27 @@ bool DiffusionInfluencedReactionProcess::react(unsigned indexA, unsigned indexB)
     }
   C->addMolecule(moleculeC, A->getTag(indexA));
   addMoleculeE();
+  addMoleculeF();
   return true;
+}
+
+//positive-coefficient F
+void DiffusionInfluencedReactionProcess::addMoleculeF()
+{
+  if(!F)
+    {
+      return;
+    }
+  moleculeF = F->getRandomAdjoiningVoxel(moleculeC, SearchVacant);
+  if(moleculeF == NULL)
+    {
+      moleculeF = F->getRandomAdjoiningVoxel(moleculeD, SearchVacant);
+      if(moleculeF == NULL)
+        {
+          return;
+        }
+    }
+  F->addMolecule(moleculeF);
 }
 
 //zero-coefficient E
@@ -249,12 +269,13 @@ void DiffusionInfluencedReactionProcess::addMoleculeE()
   if(!E)
     {
       return;
-    } 
+    }
   moleculeE = E->getRandomCompVoxel(1);
   if(moleculeE == NULL)
     {
       std::cout << getFullID().asString() << " unable to add molecule E" <<
         std::endl;
+      return;
     }
   E->addMolecule(moleculeE);
 }

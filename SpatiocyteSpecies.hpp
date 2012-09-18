@@ -567,7 +567,8 @@ public:
     }
   void walk()
     {
-      for(unsigned i(0); i < theMoleculeSize; ++i)
+      unsigned beginMoleculeSize(theMoleculeSize);
+      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
           int size;

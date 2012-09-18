@@ -56,16 +56,19 @@ public:
     C(NULL),
     D(NULL),
     E(NULL),
+    F(NULL),
     variableA(NULL),
     variableB(NULL),
     variableC(NULL),
     variableD(NULL), 
     variableE(NULL),
+    variableF(NULL),
     moleculeA(NULL),
     moleculeB(NULL),
     moleculeC(NULL),
     moleculeD(NULL),
     moleculeE(NULL),
+    moleculeF(NULL),
     moleculeP(NULL),
     moleculeS(NULL) {}
   virtual ~ReactionProcess() {}
@@ -200,17 +203,20 @@ protected:
   Species* C;
   Species* D;
   Species* E;
+  Species* F;
   //Variables are for HD species:
   Variable* variableA;
   Variable* variableB;
   Variable* variableC;
   Variable* variableD;
   Variable* variableE;
+  Variable* variableF;
   Voxel* moleculeA;
   Voxel* moleculeB;
   Voxel* moleculeC;
   Voxel* moleculeD;
   Voxel* moleculeE;
+  Voxel* moleculeF;
   Voxel* moleculeP;
   Voxel* moleculeS;
   std::vector<SpatiocyteProcess*> theInterruptingProcesses;

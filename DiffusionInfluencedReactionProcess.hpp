@@ -75,6 +75,7 @@ public:
 protected:
   void calculateReactionProbability();
   void addMoleculeE();
+  void addMoleculeF();
 protected:
   unsigned int Collision;
   double D_A;

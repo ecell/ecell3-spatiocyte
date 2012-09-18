@@ -95,16 +95,16 @@ void ReactionProcess::calculateOrder()
                   D = theSpatiocyteStepper->getSpecies(aVariable);
                 }
             }
-          //The third product, E:
-          else if(E == NULL && variableE == NULL)
+          //The third product, F:
+          else if(F == NULL && variableF == NULL)
             {
               if(aVariable->getName() == "HD")
                 {
-                  variableE = aVariable;
+                  variableF = aVariable;
                 }
               else
                 {
-                  E = theSpatiocyteStepper->getSpecies(aVariable);
+                  F = theSpatiocyteStepper->getSpecies(aVariable);
                 }
             }
         }
