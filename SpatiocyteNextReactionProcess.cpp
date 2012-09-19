@@ -1091,68 +1091,58 @@ GET_METHOD_DEF(Real, StepInterval, SpatiocyteNextReactionProcess)
   return step;
 }
 
-bool SpatiocyteNextReactionProcess::isInterrupting(Process* aProcess)
+//Find out if this process is interrupted by the ReactionProcess aProcess
+//by checking if any of the modified variables of aProcess is a substrate
+//of this process:
+bool SpatiocyteNextReactionProcess::isInterrupted(Process* aProcess)
 {
-  //Use this method in the processes that need to be notified when their
-  //substrateValueChanged:
-  //First get the unique variable pointers of this process:
-  std::vector<Variable*> aVariableList;
-  for(VariableReferenceVector::iterator
-      i(theVariableReferenceVector.begin());
-      i != theVariableReferenceVector.end(); ++i)
+  //First get the unique Variables of the ReactionProcess aProcess:
+  std::vector<Variable*> aVariables;
+  VariableReferenceVector
+    aVariableReferences(aProcess->getVariableReferenceVector()); 
+  for(VariableReferenceVector::iterator i(aVariableReferences.begin());
+      i != aVariableReferences.end(); ++i)
     {
-      std::vector<Variable*>::const_iterator j(aVariableList.begin());
-      while(j!=aVariableList.end())
+      Variable* aVariable((*i).getVariable());
+      if(std::find(aVariables.begin(), aVariables.end(), aVariable) ==
+         aVariables.end())
         {
-          if((*i).getVariable() == (*j))
-            {
-              break;
-            }
-          ++j;
-        }
-      if(j == aVariableList.end())
-        {
-          aVariableList.push_back((*i).getVariable());
+          aVariables.push_back(aVariable);
         }
     }
   //Find out if the values of the unique variables will be changed
-  //by this process, i.e, netCoefficient != 0:
-  std::vector<int> aNetCoefficientList;
-  aNetCoefficientList.resize(aVariableList.size());
-  for(std::vector<int>::iterator i(aNetCoefficientList.begin());
-      i!=aNetCoefficientList.end(); ++i)
+  //by the ReactionProcess aProcess, i.e., netCoefficient != 0:
+  std::vector<int> aNetCoefficients;
+  aNetCoefficients.resize(aVariables.size());
+  for(std::vector<int>::iterator i(aNetCoefficients.begin());
+      i!=aNetCoefficients.end(); ++i)
     {
       (*i) = 0;
     }
-  for(VariableReferenceVector::iterator
-      i(theVariableReferenceVector.begin());
-      i != theVariableReferenceVector.end(); ++i)
+  for(VariableReferenceVector::iterator i(aVariableReferences.begin());
+      i != aVariableReferences.end(); ++i)
     {
-      for(std::vector<Variable*>::const_iterator j(aVariableList.begin());
-          j!=aVariableList.end(); ++j)
+      for(std::vector<Variable*>::const_iterator j(aVariables.begin());
+          j != aVariables.end(); ++j)
         {
           if((*i).getVariable() == (*j))
             {
-              aNetCoefficientList[j-aVariableList.begin()] +=
-                (*i).getCoefficient();
+              aNetCoefficients[j-aVariables.begin()] += (*i).getCoefficient();
             }
         }
     }
   //Check if any variable with netCoefficient != 0 is a substrate
-  //of aProcess:
-  VariableReferenceVector
-    aVariableReferenceVector(aProcess->getVariableReferenceVector()); 
-  for(VariableReferenceVector::iterator
-      i(aVariableReferenceVector.begin());
-      i != aVariableReferenceVector.end(); ++i)
+  //of this process:
+  for(VariableReferenceVector::iterator i(theVariableReferenceVector.begin());
+      i != theVariableReferenceVector.end(); ++i)
     {
       if((*i).isAccessor())
         {
-          for(std::vector<Variable*>::const_iterator j(aVariableList.begin());
-              j!=aVariableList.end(); ++j)
+          for(std::vector<Variable*>::const_iterator j(aVariables.begin());
+              j != aVariables.end(); ++j)
             {
               if((*i).getVariable() == (*j) && 
-                 aNetCoefficientList[j-aVariableList.begin()])
+                 aNetCoefficients[j-aVariables.begin()])
                 {
                   return true;
                 }

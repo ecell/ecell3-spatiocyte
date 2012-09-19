@@ -286,8 +286,8 @@ void DiffusionInfluencedReactionProcess::finalizeReaction()
   //species. We need to update SpatiocyteNextReactionProcesses which are
   //dependent on these species:
   for(std::vector<SpatiocyteProcess*>::const_iterator 
-      i(theInterruptingProcesses.begin());
-      i!=theInterruptingProcesses.end(); ++i)
+      i(theInterruptedProcesses.begin());
+      i!=theInterruptedProcesses.end(); ++i)
     {
       (*i)->substrateValueChanged(theSpatiocyteStepper->getCurrentTime());
     }

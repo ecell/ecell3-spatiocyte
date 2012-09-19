@@ -40,7 +40,7 @@ class ReactionProcessInterface
 { 
 public:
   virtual ~ReactionProcessInterface() {}
-  virtual void setInterrupt(std::vector<Process*> const &aProcessList, Process* aProcess) = 0;
+  virtual void setInterruption(std::vector<Process*> const &aProcessList) = 0;
   virtual Species* getA() = 0;
   virtual Species* getB() = 0;
   virtual Species* getC() = 0;

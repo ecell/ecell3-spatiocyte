@@ -591,21 +591,25 @@ void SpatiocyteStepper::initPriorityQueue()
             {
               aSpatiocyteProcess->setQueueID(
                                    thePriorityQueue.push(aSpatiocyteProcess));
+              //ExternInterrupted processes are processes which are
+              //interrupted by non SpatiocyteStepper processes such as
+              //ODE processes:
               if(aSpatiocyteProcess->getIsExternInterrupted())
                 {
                   theExternInterruptedProcesses.push_back(aProcess);
                 }
             }
         }
-      //The following processes never interrupt other Processes.
-      //We exclude them here and set up the interrupt for the remaining
-      //processes. All processes which interrupt other processes have
-      //the ReactionProcess as the base class.
+      //Interruption between SpatiocyteProcesses:
+      //Only ReactionProcesses can interrupt other processes because only 
+      //they can change the number of molecules. 
+      //This method is called to set the list of processes which will be
+      //interrupted by the current ReactionProcess:
       ReactionProcessInterface*
         aReactionProcess(dynamic_cast<ReactionProcessInterface*>(*i));
       if(aReactionProcess)
         {
-          aReactionProcess->setInterrupt(theProcessVector, *i);
+          aReactionProcess->setInterruption(theProcessVector);
         }
     }
 }

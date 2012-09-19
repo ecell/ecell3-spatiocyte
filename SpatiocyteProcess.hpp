@@ -109,6 +109,10 @@ public:
       theTime += getStepInterval(); // do this only for the Processes in Q
       thePriorityQueue->moveTop(); // do this only for the Processes in Q
     }
+  virtual bool isInterrupted(Process*)
+    {
+      return false;
+    }
   virtual GET_METHOD(Real, StepInterval)
     {
       return theStepInterval;

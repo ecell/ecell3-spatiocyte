@@ -75,7 +75,7 @@ public:
   SIMPLE_SET_GET_METHOD(Real, k);
   SIMPLE_SET_GET_METHOD(Real, p);
   SIMPLE_SET_GET_METHOD(Integer, SearchVacant);
-  virtual bool isInterrupting(Process*)
+  virtual bool isInterrupted(Process*)
     {
       return false;
     }
@@ -87,8 +87,8 @@ public:
       //So it is valid to call requeue, which only requeues theTop process, 
       //assuming it to be this process.
       for(std::vector<SpatiocyteProcess*>::const_iterator 
-          i(theInterruptingProcesses.begin());
-          i!=theInterruptingProcesses.end(); ++i)
+          i(theInterruptedProcesses.begin());
+          i!=theInterruptedProcesses.end(); ++i)
         {
           (*i)->substrateValueChanged(aCurrentTime);
         }
@@ -117,26 +117,31 @@ public:
   virtual void initializeSecond()
     {
       SpatiocyteProcess::initializeSecond();
-      theInterruptingProcesses.resize(0);
+      theInterruptedProcesses.resize(0);
     }
   virtual void initializeFourth()
     {
       SpatiocyteProcess::initializeFourth();
     }
+  //Only ReactionProcesses can interrupt other processes because only 
+  //they can change the number of molecules. 
   //This method is called to set the list of processes which will be
-  //interrupted by this process whenever the substrate (-1 and 0 coefficients)
-  //value of the listed processes is changed by this process:
-  virtual void setInterrupt(std::vector<Process*> const &aProcessList,
-                            Process* aProcess)
+  //interrupted by this process. To determine if this process
+  //needs to interrupt another process X, this process will call the
+  //isInterrupted method of X with this process as the argument:
+  virtual void setInterruption(std::vector<Process*> const &aProcessList)
     {
       for(std::vector<Process*>::const_iterator i(aProcessList.begin());
           i != aProcessList.end(); ++i)
         {
-          if(aProcess != (*i) && isInterrupting(*i))
+          ReactionProcess*
+            aReactionProcess(dynamic_cast<ReactionProcess*>(*i));
+          SpatiocyteProcess*
+            aSpatiocyteProcess(dynamic_cast<SpatiocyteProcess*>(*i));
+          if(this != aReactionProcess && 
+             aSpatiocyteProcess->isInterrupted(*i))
             {
-              theInterruptingProcesses.push_back(
-                                     dynamic_cast<SpatiocyteProcess*>(*i));
-
+              theInterruptedProcesses.push_back(aSpatiocyteProcess);
             }
         }
     }
@@ -219,7 +224,7 @@ protected:
   Voxel* moleculeF;
   Voxel* moleculeP;
   Voxel* moleculeS;
-  std::vector<SpatiocyteProcess*> theInterruptingProcesses;
+  std::vector<SpatiocyteProcess*> theInterruptedProcesses;
 };
 
 #endif /* __ReactionProcess_hpp */

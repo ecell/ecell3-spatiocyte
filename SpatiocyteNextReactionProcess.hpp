@@ -136,7 +136,7 @@ public:
   virtual void fire();
   virtual void initializeFourth();
   virtual void printParameters();
-  virtual bool isInterrupting(Process*);
+  virtual bool isInterrupted(Process*);
 protected:
   unsigned int updateImmobileSubstrates();
   virtual void calculateOrder();
