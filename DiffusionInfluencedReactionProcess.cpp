@@ -101,14 +101,14 @@ bool DiffusionInfluencedReactionProcess::react(unsigned indexA, unsigned indexB)
           HD_p = variableD;
           nonHD_p = C;
         }
-      if(A->getVacantID() == nonHD_p->getVacantID() ||
+      if(A->getComp() == nonHD_p->getComp() ||
          A->getID() == nonHD_p->getVacantID())
         {
           moleculeP = moleculeA;
           //Hard remove the B molecule, since nonHD_p is in a different Comp:
           moleculeB->id = B->getVacantID();
         }
-      else if(B->getVacantID() == nonHD_p->getVacantID() ||
+      else if(B->getComp() == nonHD_p->getComp() ||
               B->getID() == nonHD_p->getVacantID())
         {
           moleculeP = moleculeB;
@@ -150,12 +150,12 @@ bool DiffusionInfluencedReactionProcess::react(unsigned indexA, unsigned indexB)
       return true;
     }
 
-  if(A->getVacantID() == C->getVacantID() || A->getID() == C->getVacantID())
+  if(A->getComp() == C->getComp() || A->getID() == C->getVacantID())
     {
       moleculeC = moleculeA;
       if(D)
         {
-          if(B->getVacantID() == D->getVacantID() ||
+          if(B->getComp() == D->getComp() ||
              B->getID() == D->getVacantID())
             {
               moleculeD = moleculeB;
@@ -178,13 +178,13 @@ bool DiffusionInfluencedReactionProcess::react(unsigned indexA, unsigned indexB)
           moleculeB->id = B->getVacantID();
         }
     }
-  else if(B->getVacantID() == C->getVacantID() ||
+  else if(B->getComp() == C->getComp() ||
           B->getID() == C->getVacantID())
     {
       moleculeC = moleculeB;
       if(D)
         {
-          if(A->getVacantID() == D->getVacantID() ||
+          if(A->getComp() == D->getComp() ||
              A->getID() == D->getVacantID())
             {
               moleculeD = moleculeA;
