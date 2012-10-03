@@ -717,6 +717,8 @@ public:
             }
         }
       theMoleculeSize = newCoordSize;
+      //Must resize, otherwise compVoxelSize will be inaccurate:
+      theMolecules.resize(theMoleculeSize);
       theVariable->setValue(theMoleculeSize);
     }
   void removePeriodicEdgeVoxels()
@@ -736,6 +738,8 @@ public:
             }
         }
       theMoleculeSize = newCoordSize;
+      //Must resize, otherwise compVoxelSize will be inaccurate:
+      theMolecules.resize(theMoleculeSize);
       theVariable->setValue(theMoleculeSize);
     }
   void updateSpecies()
@@ -888,6 +892,7 @@ public:
     }
   void addCompVoxel(unsigned aCoord)
     {
+
       theLattice[aCoord].id = theID;
       theCompVoxels->push_back(&theLattice[aCoord]);
       ++theMoleculeSize;

@@ -157,7 +157,15 @@ void MoleculePopulateProcess::populateUniformOnDiffusiveVacant(Species*
             }
           for(unsigned int i(0); i != aSize; ++i)
             {
-              Voxel* aMolecule(aVacantSpecies->getRandomMolecule());
+              Voxel* aMolecule;
+              //After a molecule is added, the diffusive vacant species
+              //molecule list is not updated, so we need to check if
+              //it really is still vacant:
+              do
+                {
+                  aMolecule = aVacantSpecies->getRandomMolecule();
+                }
+              while(aMolecule->id != aVacantSpecies->getID());
               aSpecies->addMolecule(aMolecule);
             }
         }
@@ -231,6 +239,7 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
         }
       aSpecies->setIsPopulated();
     }
+  aSpecies->updateMolecules();
 }
 
 void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)

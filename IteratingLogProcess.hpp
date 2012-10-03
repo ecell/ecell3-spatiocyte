@@ -119,6 +119,10 @@ public:
   virtual void saveFile();
   virtual void saveBackup();
   virtual void logValues();
+  virtual bool isInterrupted(Process*) 
+    {
+      return false;
+    }
 protected:
   bool isSurviving;
   int Centered;

@@ -1078,7 +1078,12 @@ void SpatiocyteStepper::printSimulationParameters()
           int voxelCnt(aComp->vacantSpecies->size());
           for(unsigned j(0); j != aComp->allSubs.size(); ++j)
             {
-              voxelCnt += aComp->allSubs[j]->vacantSpecies->size();
+              //Don't include the comp surface voxels when you count the
+              //total volume voxels:
+              if(aComp->surfaceSub != aComp->allSubs[j])
+                {
+                  voxelCnt += aComp->allSubs[j]->vacantSpecies->size();
+                }
             }
           std::cout << "     [" << int(aSpecVolume/(4*sqrt(2)*pow(VoxelRadius, 3))) << 
             "] Specified volume voxels {n_v = V_specified/(4*2^0.5*r_v^3)}" <<
