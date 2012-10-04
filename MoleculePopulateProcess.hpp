@@ -47,6 +47,7 @@ public:
       PROPERTYSLOT_SET_GET(Real, OriginZ);
       PROPERTYSLOT_SET_GET(Real, GaussianSigma);
       PROPERTYSLOT_SET_GET(Real, ResetTime);
+      PROPERTYSLOT_SET_GET(Real, StartTime);
       PROPERTYSLOT_SET_GET(Real, UniformRadiusX);
       PROPERTYSLOT_SET_GET(Real, UniformRadiusY);
       PROPERTYSLOT_SET_GET(Real, UniformRadiusZ);
@@ -58,6 +59,7 @@ public:
     OriginY(0),
     OriginZ(0),
     ResetTime(libecs::INF),
+    StartTime(0),
     UniformRadiusX(1),
     UniformRadiusY(1),
     UniformRadiusZ(1) {}
@@ -68,6 +70,7 @@ public:
   SIMPLE_SET_GET_METHOD(Real, OriginZ);
   SIMPLE_SET_GET_METHOD(Real, GaussianSigma);
   SIMPLE_SET_GET_METHOD(Real, ResetTime);
+  SIMPLE_SET_GET_METHOD(Real, StartTime);
   SIMPLE_SET_GET_METHOD(Real, UniformRadiusX);
   SIMPLE_SET_GET_METHOD(Real, UniformRadiusY);
   SIMPLE_SET_GET_METHOD(Real, UniformRadiusZ);
@@ -82,7 +85,7 @@ public:
   virtual void initializeFifth()
     {
       theStepInterval = ResetTime;
-      theTime = theStepInterval; 
+      theTime = StartTime+theStepInterval; 
       thePriorityQueue->move(theQueueID);
     }
   virtual int getPriority()
@@ -97,6 +100,7 @@ protected:
   double OriginY;
   double OriginZ;
   double ResetTime;
+  double StartTime;
   double UniformRadiusX;
   double UniformRadiusY;
   double UniformRadiusZ;
