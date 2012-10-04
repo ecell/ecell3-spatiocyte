@@ -906,7 +906,7 @@ public:
     {
       return (*theCompVoxels)[index];
     }
-  unsigned getIndex(Voxel* aVoxel)
+  unsigned getIndexFast(Voxel* aVoxel)
     {
       for(unsigned i(0); i < theMoleculeSize; ++i)
         {
@@ -915,8 +915,26 @@ public:
               return i;
             }
         }
-      std::cout << "error in getting the index" << std::endl;
-      return 0;
+      return theMoleculeSize;
+    }
+  unsigned getIndex(Voxel* aVoxel)
+    {
+      unsigned index(getIndexFast(aVoxel));
+      if(index == theMoleculeSize)
+        { 
+          if(isDiffusiveVacant || isReactiveVacant)
+            {
+              updateVacantMolecules();
+            }
+          index = getIndexFast(aVoxel);
+          if(index == theMoleculeSize)
+            { 
+              std::cout << "error in getting the index:" << 
+                getVariable()->getFullID().asString() << std::endl;
+              return 0;
+            }
+        }
+      return index;
     }
   //it is soft remove because the id of the molecule is not changed:
   void softRemoveMolecule(Voxel* aVoxel)
