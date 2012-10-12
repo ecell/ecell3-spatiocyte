@@ -37,6 +37,8 @@
 #include "SpatiocyteStepper.hpp"
 #include "SpatiocyteProcessInterface.hpp"
 
+class ReactionProcess;
+
 LIBECS_DM_CLASS_EXTRA_1(SpatiocyteProcess, Process, virtual SpatiocyteProcessInterface)
 { 
 public:
@@ -109,7 +111,7 @@ public:
       theTime += getStepInterval(); // do this only for the Processes in Q
       thePriorityQueue->moveTop(); // do this only for the Processes in Q
     }
-  virtual bool isInterrupted(Process*)
+  virtual bool isInterrupted(ReactionProcess* aProcess)
     {
       return false;
     }

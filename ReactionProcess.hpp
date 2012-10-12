@@ -75,7 +75,7 @@ public:
   SIMPLE_SET_GET_METHOD(Real, k);
   SIMPLE_SET_GET_METHOD(Real, p);
   SIMPLE_SET_GET_METHOD(Integer, SearchVacant);
-  virtual bool isInterrupted(Process*)
+  virtual bool isInterrupted(ReactionProcess*)
     {
       return false;
     }
@@ -139,7 +139,7 @@ public:
           SpatiocyteProcess*
             aSpatiocyteProcess(dynamic_cast<SpatiocyteProcess*>(*i));
           if(this != aReactionProcess && 
-             aSpatiocyteProcess->isInterrupted(*i))
+             aSpatiocyteProcess->isInterrupted(this))
             {
               theInterruptedProcesses.push_back(aSpatiocyteProcess);
             }

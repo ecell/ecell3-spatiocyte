@@ -1091,15 +1091,16 @@ GET_METHOD_DEF(Real, StepInterval, SpatiocyteNextReactionProcess)
   return step;
 }
 
-//Find out if this process is interrupted by the ReactionProcess aProcess
-//by checking if any of the modified variables of aProcess is a substrate
-//of this process:
-bool SpatiocyteNextReactionProcess::isInterrupted(Process* aProcess)
+//Find out if this process is interrupted by the aReactionProcess
+//by checking if any of the modified variables of aReactionProcess is a
+//substrate of this process:
+bool SpatiocyteNextReactionProcess::isInterrupted(ReactionProcess*
+                                                  aReactionProcess)
 {
-  //First get the unique Variables of the ReactionProcess aProcess:
+  //First get the unique Variables of the aReactionProcess:
   std::vector<Variable*> aVariables;
   VariableReferenceVector
-    aVariableReferences(aProcess->getVariableReferenceVector()); 
+    aVariableReferences(aReactionProcess->getVariableReferenceVector()); 
   for(VariableReferenceVector::iterator i(aVariableReferences.begin());
       i != aVariableReferences.end(); ++i)
     {
@@ -1111,7 +1112,7 @@ bool SpatiocyteNextReactionProcess::isInterrupted(Process* aProcess)
         }
     }
   //Find out if the values of the unique variables will be changed
-  //by the ReactionProcess aProcess, i.e., netCoefficient != 0:
+  //by the ReactionProcess aReactionProcess, i.e., netCoefficient != 0:
   std::vector<int> aNetCoefficients;
   aNetCoefficients.resize(aVariables.size());
   for(std::vector<int>::iterator i(aNetCoefficients.begin());

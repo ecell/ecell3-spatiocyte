@@ -35,6 +35,7 @@
 #include <fstream> //provides ofstream
 #include <math.h>
 #include "SpatiocyteProcess.hpp"
+#include "ReactionProcess.hpp"
 #include "SpatiocyteSpecies.hpp"
 
 LIBECS_DM_CLASS(IteratingLogProcess, SpatiocyteProcess)
@@ -119,7 +120,7 @@ public:
   virtual void saveFile();
   virtual void saveBackup();
   virtual void logValues();
-  virtual bool isInterrupted(Process*) 
+  virtual bool isInterrupted(ReactionProcess*) 
     {
       return false;
     }
