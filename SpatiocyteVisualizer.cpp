@@ -389,7 +389,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   Xtrans=Ytrans=0;
   Near=-ViewSize/2.0;
   Aspect=1.0;
-  set_size_request((unsigned int) 400, 400);
+  set_size_request(1280, 720);
   std::cout << "done" << std::endl;
 }
 
@@ -525,6 +525,12 @@ void GLScene::setSpeciesColor(unsigned int id, Color aColor)
   queue_draw();
 }
 
+void GLScene::setBackgroundColor(Color aColor)
+{
+  glClearColor (aColor.r, aColor.g, aColor.b, 0);
+  queue_draw();
+}
+
 char* GLScene::getSpeciesName(unsigned int id)
 {
   return theSpeciesNameList[id];
@@ -558,9 +564,8 @@ void GLScene::on_realize()
   glEnable(GL_COLOR_MATERIAL);
   glMatrixMode(GL_MODELVIEW);
   glTranslatef(-ViewMidx,-ViewMidy,-ViewMidz); 
-  /*
   m_FontListBase = glGenLists(128); 
-  m_FontString = "Courier 8";
+  m_FontString = "Arial 12";
   Pango::FontDescription font_desc(m_FontString); 
   Glib::RefPtr<Pango::Font> font(Gdk::GL::Font::use_pango_font(
                                          font_desc, 0, 128, m_FontListBase));
@@ -568,7 +573,6 @@ void GLScene::on_realize()
   m_FontHeight = font_metrics.get_ascent() + font_metrics.get_descent();
   m_FontHeight = PANGO_PIXELS(m_FontHeight);
   m_FontWidth = PANGO_PIXELS(font_metrics.get_approximate_digit_width());
-  */
   if(theMeanCount)
     {
       //for GFP visualization:
@@ -648,7 +652,6 @@ bool GLScene::on_expose_event(GdkEventExpose* event)
     }
   if(showTime)
     {
-      /*
       glListBase(m_FontListBase);
       char buffer[50];
       sprintf(buffer, "t = %.1fs", theCurrentTime-theResetTime);
@@ -658,7 +661,6 @@ bool GLScene::on_expose_event(GdkEventExpose* event)
       glRasterPos3f(ViewMidx-(m_timeString.length()*m_FontWidth)/2.0, 0, 0);
       glCallLists(m_timeString.length(), GL_UNSIGNED_BYTE,
                   m_timeString.c_str());
-                  */
     }
   //glCallList(BOX);
   //glCallList(GRID);
@@ -1822,6 +1824,7 @@ ControlBox::ControlBox(GLScene *anArea) :
   theZLowBoundSpin.set_has_frame( false );
   theZLowBoundBox.pack_start( theZLowBoundSpin, false, false, 2 );
 
+  /*
   // Create a frame the will have the lattice depth adjuster
   // and background color selector
   theBoxCtrl.pack_start( theFrameLatticeAdj, false, false, 1 );
@@ -1829,6 +1832,7 @@ ControlBox::ControlBox(GLScene *anArea) :
   theFrameLatticeAdj.add( theBoxInLattice );
   theDepthBox.set_homogeneous( false );
   theBoxInLattice.pack_start( theDepthBox, false, false, 1 );
+  */
   theBoxInLattice.pack_start( the3DMoleculeBox, false, false, 1 );
   //theResetDepthButton.connect( 'clicked', resetDepth );
   the3DMoleculeBox.pack_start( theResetDepthButton ); 
@@ -1863,6 +1867,18 @@ ControlBox::ControlBox(GLScene *anArea) :
   m_stepBox.pack_start(m_steps, Gtk::PACK_SHRINK);
   m_table.attach(m_timeBox, 0, 1, 1, 2, Gtk::FILL,
                  Gtk::SHRINK | Gtk::FILL, 0, 0 );
+
+  m_bgColor.set_text("Background Color");
+  Gtk::EventBox* eventBox=Gtk::manage(new Gtk::EventBox);
+  eventBox->set_events(Gdk::BUTTON_PRESS_MASK);
+  eventBox->signal_button_press_event().connect(
+    sigc::mem_fun(*this, &ControlBox::on_background_clicked));
+  eventBox->add(m_bgColor);
+  eventBox->set_tooltip_text("Click to change background color");
+  m_table.attach(*eventBox, 0, 1, 2, 3, Gtk::FILL,
+                 Gtk::SHRINK | Gtk::FILL, 0, 0 );
+  theBgColor.set_rgb(0, 0, 0);
+
   m_timeLabel.set_text("Time:");
   m_sizeGroup->add_widget(m_timeLabel);
   m_timeBox.pack_start(m_timeLabel, Gtk::PACK_SHRINK);
@@ -1890,10 +1906,11 @@ ControlBox::ControlBox(GLScene *anArea) :
       m_EventBox->signal_button_release_event().connect(sigc::bind( 
               sigc::mem_fun(*this, &ControlBox::on_checkbutton_clicked), i ) );
       m_EventBox->add(*theLabelList[i]);
+      m_EventBox->set_tooltip_text("Right click to change species color");
       theButtonList[i]->set_active(m_area->getSpeciesVisibility(i));
       aHBox->pack_start(*theButtonList[i], false, false, 2);
       aHBox->pack_start(*m_EventBox, false, false, 2);
-      m_table.attach(*aHBox, 0, 1, i+2, i + 3, Gtk::FILL,
+      m_table.attach(*aHBox, 0, 1, i+3, i+4, Gtk::FILL,
                      Gtk::SHRINK | Gtk::FILL, 0, 0 );
     }
   std::cout << "theSpeciesSize:" << theSpeciesSize << std::endl;
@@ -1903,6 +1920,37 @@ void
 ControlBox::on_checkbutton_toggled(unsigned int id)
 {
   m_area->setSpeciesVisibility(id, theButtonList[id]->get_active());
+}
+
+bool ControlBox::on_background_clicked(GdkEventButton* event)
+{
+  if(event)
+    {
+      Gtk::ColorSelectionDialog dlg("Select a color"); 
+      Gtk::ColorSelection* colorSel(dlg.get_colorsel());
+      colorSel->set_current_color(theBgColor);
+      colorSel->signal_color_changed().connect(sigc::bind( 
+        sigc::mem_fun(*this, &ControlBox::update_background_color), colorSel));
+      if(dlg.run() == Gtk::RESPONSE_CANCEL)
+        {
+          Color clr;
+          clr.r = theBgColor.get_red()/65535.0;
+          clr.g = theBgColor.get_green()/65535.0;
+          clr.b = theBgColor.get_blue()/65535.0;
+          m_area->setBackgroundColor(clr);
+          m_bgColor.modify_fg(Gtk::STATE_NORMAL, theBgColor);
+          m_bgColor.modify_fg(Gtk::STATE_ACTIVE, theBgColor);
+          m_bgColor.modify_fg(Gtk::STATE_PRELIGHT, theBgColor);
+          m_bgColor.modify_fg(Gtk::STATE_SELECTED, theBgColor);
+        }
+      else
+        {
+          theBgColor = colorSel->get_current_color();
+          update_background_color(colorSel);
+        }
+      return true;
+    }
+  return false;
 }
 
 bool ControlBox::on_checkbutton_clicked(GdkEventButton* event, unsigned int id)
@@ -1945,8 +1993,8 @@ bool ControlBox::on_checkbutton_clicked(GdkEventButton* event, unsigned int id)
   return false;
 }
 
-void 
-ControlBox::update_species_color(unsigned int id, Gtk::ColorSelection* colorSel)
+void ControlBox::update_species_color(unsigned int id,
+                                      Gtk::ColorSelection* colorSel)
 {
   Gdk::Color aColor(colorSel->get_current_color());
   Color clr;
@@ -1958,6 +2006,20 @@ ControlBox::update_species_color(unsigned int id, Gtk::ColorSelection* colorSel)
   theLabelList[id]->modify_fg(Gtk::STATE_ACTIVE, aColor);
   theLabelList[id]->modify_fg(Gtk::STATE_PRELIGHT, aColor);
   theLabelList[id]->modify_fg(Gtk::STATE_SELECTED, aColor);
+}
+
+void ControlBox::update_background_color(Gtk::ColorSelection* colorSel)
+{
+  Gdk::Color aColor(colorSel->get_current_color());
+  Color clr;
+  clr.r = aColor.get_red()/65535.0;
+  clr.g = aColor.get_green()/65535.0;
+  clr.b = aColor.get_blue()/65535.0;
+  m_area->setBackgroundColor(clr);
+  m_bgColor.modify_fg(Gtk::STATE_NORMAL, aColor);
+  m_bgColor.modify_fg(Gtk::STATE_ACTIVE, aColor);
+  m_bgColor.modify_fg(Gtk::STATE_PRELIGHT, aColor);
+  m_bgColor.modify_fg(Gtk::STATE_SELECTED, aColor);
 }
 
 void
@@ -2105,6 +2167,7 @@ Rulers::Rulers(const Glib::RefPtr<const Gdk::GL::Config>& config,
   m_table.attach(m_area, 1,2,1,2,
 		 Gtk::EXPAND | Gtk::FILL , Gtk::FILL, 0, 0);
   
+  /*
   m_area.set_events(Gdk::POINTER_MOTION_MASK | Gdk::BUTTON_PRESS_MASK );
 
   //Connect a signal handler for the DrawingArea's
@@ -2127,6 +2190,7 @@ Rulers::Rulers(const Glib::RefPtr<const Gdk::GL::Config>& config,
 
   m_table.attach(m_vrule, 0, 1, 1, 2,
 		 Gtk::FILL, Gtk::EXPAND | Gtk::SHRINK | Gtk::FILL, 0, 0 );
+     */
 
   show_all_children();
 }

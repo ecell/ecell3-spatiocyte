@@ -71,7 +71,9 @@ public:
 protected:
   void on_checkbutton_toggled(unsigned int id);
   bool on_checkbutton_clicked(GdkEventButton*, unsigned int);
+  bool on_background_clicked(GdkEventButton*);
   void update_species_color(unsigned int, Gtk::ColorSelection*);
+  void update_background_color(Gtk::ColorSelection*);
   void on_3DMolecule_toggled();
   void on_showTime_toggled();
   void on_record_toggled();
@@ -131,6 +133,7 @@ private:
   Gtk::HBox theZUpBoundBox;
   Gtk::HBox theZLowBoundBox;
   Gtk::HBox theBoxBoundFixReset;
+  Gtk::Label m_bgColor;
   Gtk::CheckButton theCheckFixBound;
   Gtk::Button theResetBoundButton;
   Gtk::Label theXUpBoundLabel;
@@ -170,6 +173,7 @@ private:
   Gtk::HScale theDepthScale;
   Gtk::SpinButton theDepthSpin;
   Gtk::ToggleButton theButtonRecord;
+  Gdk::Color theBgColor;
   Glib::RefPtr<Gtk::SizeGroup> m_sizeGroup;
   Gtk::ColorButton m_Button;
 protected:
@@ -217,6 +221,7 @@ public:
   void setControlBox(ControlBox* aControl);
   Color getSpeciesColor(unsigned int id);
   void setSpeciesColor(unsigned int id, Color);
+  void setBackgroundColor(Color);
   char* getSpeciesName(unsigned int id);
   void invalidate() {
     get_window()->invalidate_rect(get_allocation(), false);
