@@ -120,7 +120,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   m_Run(false),
   m_RunReverse(false),
   show3DMolecule(false),
-  showTime(true),
+  showTime(false),
   startRecord(false),
   m_stepCnt(-1),
   theMeanPointSize(0),
@@ -1838,7 +1838,7 @@ ControlBox::ControlBox(GLScene *anArea) :
   the3DMoleculeBox.pack_start( theResetDepthButton ); 
   theCheckShowTime.signal_toggled().connect( sigc::mem_fun(*this,
                             &ControlBox::on_showTime_toggled) );
-  theCheckShowTime.set_active();
+  //theCheckShowTime.set_active();
   theBoxCtrl.pack_start( theCheckShowTime, false, false, 2 );
   theCheck3DMolecule.signal_toggled().connect( sigc::mem_fun(*this,
                             &ControlBox::on_3DMolecule_toggled) );
