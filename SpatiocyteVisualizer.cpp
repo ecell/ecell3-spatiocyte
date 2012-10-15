@@ -58,6 +58,8 @@
 #define MAX_COLORS 20
 #define PNG_NUM_MAX 9999999
 const unsigned int GLScene::TIMEOUT_INTERVAL = 10;
+const unsigned int SCREEN_WIDTH = 853;
+const unsigned int SCREEN_HEIGHT = 480;
 
 double hue2rgb( double a, double b, double h )
 {
@@ -120,12 +122,14 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   m_Run(false),
   m_RunReverse(false),
   show3DMolecule(false),
-  showTime(false),
+  showTime(true),
   startRecord(false),
   m_stepCnt(-1),
   theMeanPointSize(0),
   thePngNumber(1),
   theResetTime(0),
+  theScreenWidth(SCREEN_WIDTH),
+  theScreenHeight(SCREEN_HEIGHT),
   xAngle(0),
   yAngle(0),
   zAngle(0),
@@ -389,12 +393,26 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   Xtrans=Ytrans=0;
   Near=-ViewSize/2.0;
   Aspect=1.0;
-  set_size_request(1280, 720);
+  set_size_request(theScreenWidth, theScreenHeight);
   std::cout << "done" << std::endl;
 }
 
 GLScene::~GLScene()
 {
+}
+
+void GLScene::setScreenWidth(unsigned int aWidth )
+{
+  theScreenWidth = aWidth;
+  set_size_request(theScreenWidth, theScreenHeight);
+  queue_draw();
+}
+
+void GLScene::setScreenHeight(unsigned int aHeight )
+{
+  theScreenHeight = aHeight;
+  set_size_request(theScreenWidth, theScreenHeight);
+  queue_draw();
 }
 
 void GLScene::setXUpBound(unsigned int aBound )
@@ -565,7 +583,7 @@ void GLScene::on_realize()
   glMatrixMode(GL_MODELVIEW);
   glTranslatef(-ViewMidx,-ViewMidy,-ViewMidz); 
   m_FontListBase = glGenLists(128); 
-  m_FontString = "Arial 12";
+  m_FontString = "Arial 10";
   Pango::FontDescription font_desc(m_FontString); 
   Glib::RefPtr<Pango::Font> font(Gdk::GL::Font::use_pango_font(
                                          font_desc, 0, 128, m_FontListBase));
@@ -646,27 +664,63 @@ bool GLScene::on_expose_event(GdkEventExpose* event)
       (this->*thePlot3DFunction)();
     }
   else
-    { 
+    {
       glDisable(GL_LIGHTING);
       (this->*thePlotFunction)();
     }
   if(showTime)
     {
-      glListBase(m_FontListBase);
-      char buffer[50];
-      sprintf(buffer, "t = %.1fs", theCurrentTime-theResetTime);
-      m_timeString = buffer;
-      //glColor3f(0.2, 0.5, 0.8);
-      glColor3f(1.0, 1.0, 1.0);
-      glRasterPos3f(ViewMidx-(m_timeString.length()*m_FontWidth)/2.0, 0, 0);
-      glCallLists(m_timeString.length(), GL_UNSIGNED_BYTE,
-                  m_timeString.c_str());
+      drawTime();
     }
   //glCallList(BOX);
   //glCallList(GRID);
   glwindow->swap_buffers();
   glwindow->gl_end();
   return true;
+}
+
+void GLScene::drawTime()
+{
+  GLfloat w(get_width());
+  GLfloat h(get_height());
+  unsigned int screenWidth(static_cast<GLsizei>(w));
+  unsigned int screenHeight(static_cast<GLsizei>(h));
+
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  glLoadIdentity(); 
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glLoadIdentity(); 
+
+  char buffer[50];
+  sprintf(buffer, "t = %.1f s", theCurrentTime-theResetTime);
+  m_timeString = buffer;
+  glOrtho( 0, screenWidth, 0, screenHeight, 0, 1 );
+  glDisable(GL_LIGHTING);
+  glListBase(m_FontListBase);
+  glColor3f(0, 0, 0);
+  glRasterPos2i(20,screenHeight-m_FontHeight-3);
+  glCallLists(m_timeString.length(), GL_UNSIGNED_BYTE,
+              m_timeString.c_str());
+  glColor3f(1.0, 1.0, 1.0);
+  unsigned x1(10);
+  unsigned x2(m_timeString.length()*m_FontWidth-10);
+  unsigned y1(screenHeight-10);
+  unsigned y2(screenHeight-m_FontHeight-10);
+  glBegin(GL_QUADS);
+  glVertex2f(x1, y1);
+  glVertex2f(x2, y1);
+  glVertex2f(x2, y2);
+  glVertex2f(x1, y2);
+  glEnd();
+
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+  glMatrixMode(GL_MODELVIEW);
+
 }
 
 bool GLScene::writePng()
@@ -1608,7 +1662,7 @@ void GLScene::play()
   timeout_add();
 }
 
-ControlBox::ControlBox(GLScene *anArea) :
+ControlBox::ControlBox(GLScene *anArea, Gtk::Table *aTable) :
   m_table(10, 10),
   theFrameRotAdj( "Rotation" ),
   theResetRotButton( "Reset" ),
@@ -1626,8 +1680,17 @@ ControlBox::ControlBox(GLScene *anArea) :
   theZScale( theZAdj ),
   theZSpin( theZAdj, 0, 0  ),
   theFrameBoundAdj("Bounding"),
+  theFrameScreen("Screen"),
   theCheckFixBound( "Fix bounding" ),
   theResetBoundButton( "Reset" ),
+  theHeightLabel( "H" ),
+  theHeightAdj( SCREEN_HEIGHT, 0, 1080, 1, 0, 0 ),
+  theHeightScale( theHeightAdj ),
+  theHeightSpin( theHeightAdj, 0, 0  ),
+  theWidthLabel( "W" ),
+  theWidthAdj( SCREEN_WIDTH, 0, 1920, 1, 0, 0 ),
+  theWidthScale( theWidthAdj ),
+  theWidthSpin( theWidthAdj, 0, 0  ),
   theXUpBoundLabel( "+x" ),
   theXUpBoundAdj( 100, 0, 0, 1, 0, 0 ),
   theXUpBoundScale( theXUpBoundAdj ),
@@ -1662,10 +1725,11 @@ ControlBox::ControlBox(GLScene *anArea) :
   theDepthScale( theDepthAdj ),
   theDepthSpin( theDepthAdj, 0, 0  ),
   theButtonRecord( "Record Frames" ),
-  m_area(anArea)
+  m_area(anArea),
+  m_areaTable(aTable)
 {
   set_border_width(2);
-  set_size_request(500, 300);
+  set_size_request(470, SCREEN_HEIGHT);
   set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
   add(m_rightBox);
   m_table.set_row_spacings(1);
@@ -1726,6 +1790,38 @@ ControlBox::ControlBox(GLScene *anArea) :
   theZBox.pack_start( theZSpin, false, false, 2 );
   theZAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
                            &ControlBox::zRotateChanged ) );
+
+  theBoxCtrl.pack_start( theFrameScreen, false, false, 1 );
+  theBoxInScreen.set_border_width( 3 );
+  theFrameScreen.add(theBoxInScreen);
+  theBoxInScreen.pack_start( theHeightBox, false, false, 1 ); 
+  theBoxInScreen.pack_start( theWidthBox, false, false, 1 ); 
+
+  theHeightLabel.set_width_chars( 2 );
+  theHeightBox.pack_start( theHeightLabel, false, false, 2 );
+  theHeightAdj.set_value( SCREEN_HEIGHT );
+  theHeightAdj.set_upper( 1080 );
+  theHeightAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
+                           &ControlBox::screenChanged ) );
+  theHeightScale.set_draw_value( false );
+  theHeightBox.pack_start( theHeightScale );
+  theHeightSpin.set_width_chars( 4 );
+  theHeightSpin.set_has_frame( false );
+  theHeightSpin.set_editable( true );
+  theHeightBox.pack_start( theHeightSpin, false, false, 2 );
+
+  theWidthLabel.set_width_chars( 2 );
+  theWidthBox.pack_start( theWidthLabel, false, false, 2 );
+  theWidthAdj.set_value( SCREEN_WIDTH );
+  theWidthAdj.set_upper( 1920 );
+  theWidthAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
+                           &ControlBox::screenChanged ) );
+  theWidthScale.set_draw_value( false );
+  theWidthBox.pack_start( theWidthScale );
+  theWidthSpin.set_width_chars( 4 );
+  theWidthSpin.set_has_frame( false );
+  theWidthSpin.set_editable( true );
+  theWidthBox.pack_start( theWidthSpin, false, false, 2 );
 
   // Create a frame the will have the lattice boundary adjusters
   // and the Fix and Reset buttons.
@@ -1838,7 +1934,7 @@ ControlBox::ControlBox(GLScene *anArea) :
   the3DMoleculeBox.pack_start( theResetDepthButton ); 
   theCheckShowTime.signal_toggled().connect( sigc::mem_fun(*this,
                             &ControlBox::on_showTime_toggled) );
-  //theCheckShowTime.set_active();
+  theCheckShowTime.set_active();
   theBoxCtrl.pack_start( theCheckShowTime, false, false, 2 );
   theCheck3DMolecule.signal_toggled().connect( sigc::mem_fun(*this,
                             &ControlBox::on_3DMolecule_toggled) );
@@ -2094,6 +2190,40 @@ ControlBox::zRotateChanged()
   m_area->rotateMidAxisAbs(theZAdj.get_value(), 0, 0, 1);
 }
 
+void ControlBox::resizeScreen(unsigned aWidth, unsigned aHeight)
+{
+  if(theHeightAdj.get_upper() < aHeight)
+    {
+      theHeightAdj.set_upper(aHeight);
+    }
+  if(theWidthAdj.get_upper() < aWidth)
+    {
+      theWidthAdj.set_upper(aWidth);
+    }
+  /*
+  unsigned oldHeight(theHeightAdj.get_value());
+  unsigned oldWidth(theWidthAdj.get_value());
+  if(theHeightAdj.get_upper() < aHeight)
+    {
+      theHeightAdj.set_upper(aHeight);
+    }
+  //theHeightAdj.set_value(aHeight);
+  if(theWidthAdj.get_upper() < aWidth)
+    {
+      theWidthAdj.set_upper(aWidth);
+    }
+  //theWidthAdj.set_value(aWidth);
+  //*/
+}
+
+void ControlBox::screenChanged()
+{
+  m_areaTable->set_size_request((unsigned int)theWidthAdj.get_value(),
+                                (unsigned int)theHeightAdj.get_value());
+  m_area->setScreenHeight((unsigned int)theHeightAdj.get_value());
+  m_area->setScreenWidth((unsigned int)theWidthAdj.get_value());
+}
+
 void
 ControlBox::xUpBoundChanged()
 {
@@ -2152,7 +2282,7 @@ Rulers::Rulers(const Glib::RefPtr<const Gdk::GL::Config>& config,
   m_area(config, aFileName),
   m_table(3, 2, false),
   m_hbox(),
-  m_control(&m_area),
+  m_control(&m_area, &m_table),
   isRecord(false)
 {
   m_area.setControlBox(&m_control);
@@ -2164,8 +2294,20 @@ Rulers::Rulers(const Glib::RefPtr<const Gdk::GL::Config>& config,
   m_hbox.pack1(m_table, Gtk::PACK_EXPAND_WIDGET, 5);
   m_hbox.pack2(m_control, Gtk::PACK_SHRINK, 5);
   //m_area.set_size_request(XSIZE, YSIZE); 
-  m_table.attach(m_area, 1,2,1,2,
-		 Gtk::EXPAND | Gtk::FILL , Gtk::FILL, 0, 0);
+  m_table.attach(m_area, 1,2,1,2,  Gtk::FILL,
+                Gtk::FILL, 0, 0);
+  signal_expose_event().connect (sigc::mem_fun (*this, &Rulers::on_expose));
+  /*
+
+      if (event)
+    {
+        // clip to the area indicated by the expose event so that we only
+        // redraw the portion of the window that needs to be redrawn
+        cr->rectangle(event->area.x, event->area.y,
+                event->area.width, event->area.height);
+        cr->clip();
+    }
+    */
   
   /*
   m_area.set_events(Gdk::POINTER_MOTION_MASK | Gdk::BUTTON_PRESS_MASK );
@@ -2194,6 +2336,31 @@ Rulers::Rulers(const Glib::RefPtr<const Gdk::GL::Config>& config,
 
   show_all_children();
 }
+bool Rulers::on_expose(GdkEventExpose* event)
+{
+  unsigned width(m_table.get_allocation().get_width());
+  unsigned height(m_table.get_allocation().get_height());
+  m_control.resizeScreen(width, height);
+  /*
+  //m_area.set_size_request(0,0);
+  unsigned width(m_table.get_allocation().get_width());
+  unsigned height(m_table.get_allocation().get_height());
+  if(width != m_area.get_allocation().get_width())
+    {
+      m_control.resizeScreen(width, height);
+    }
+    */
+  return false;
+}
+
+/*
+bool Rulers::on_configure_event(GdkEventConfigure* event)
+{
+  std::cout << "configureii" << std::endl;
+  return true;
+}
+*/
+
 
 bool Rulers::on_area_motion_notify_event(GdkEventMotion* event)
 {

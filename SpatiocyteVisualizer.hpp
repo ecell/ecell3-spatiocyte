@@ -61,13 +61,14 @@ class GLScene;
 class ControlBox : public Gtk::ScrolledWindow
 {
 public:
-  ControlBox(GLScene *anArea);
+  ControlBox(GLScene*, Gtk::Table*);
   virtual ~ControlBox();
   void setStep(char* buffer);
   void setTime(char* buffer);
   void setXangle(double);
   void setYangle(double);
   void setZangle(double);
+  void resizeScreen(unsigned, unsigned);
 protected:
   void on_checkbutton_toggled(unsigned int id);
   bool on_checkbutton_clicked(GdkEventButton*, unsigned int);
@@ -83,6 +84,7 @@ protected:
   void xRotateChanged();
   void yRotateChanged();
   void zRotateChanged();
+  void screenChanged();
   void xUpBoundChanged();
   void xLowBoundChanged();
   void yUpBoundChanged();
@@ -125,6 +127,18 @@ private:
   Gtk::HScale theZScale;
   Gtk::SpinButton theZSpin;
   Gtk::Frame theFrameBoundAdj;
+  Gtk::Frame theFrameScreen;
+  Gtk::VBox theBoxInScreen;
+  Gtk::HBox theHeightBox;
+  Gtk::Label theHeightLabel;
+  Gtk::Adjustment theHeightAdj;
+  Gtk::HScale theHeightScale;
+  Gtk::SpinButton theHeightSpin;
+  Gtk::HBox theWidthBox;
+  Gtk::Label theWidthLabel;
+  Gtk::Adjustment theWidthAdj;
+  Gtk::HScale theWidthScale;
+  Gtk::SpinButton theWidthSpin;
   Gtk::VBox theBoxInBound;
   Gtk::HBox theXUpBoundBox;
   Gtk::HBox theXLowBoundBox;
@@ -177,7 +191,8 @@ private:
   Glib::RefPtr<Gtk::SizeGroup> m_sizeGroup;
   Gtk::ColorButton m_Button;
 protected:
-  GLScene *m_area;
+  GLScene* m_area;
+  Gtk::Table* m_areaTable;
 };
 
 class GLScene : public Gtk::GL::DrawingArea
@@ -210,6 +225,7 @@ public:
   void zoomIn();
   void zoomOut();
   bool writePng();
+  void drawTime();
   void step();
   void setReverse(bool isReverse);
   void setSpeciesVisibility(unsigned int id, bool isVisible);
@@ -237,6 +253,8 @@ public:
   void setYLowBound( unsigned int aBound );
   void setZUpBound( unsigned int aBound );
   void setZLowBound( unsigned int aBound );
+  void setScreenWidth( unsigned int );
+  void setScreenHeight( unsigned int );
   unsigned int getSpeciesSize()
     {
       return theTotalSpeciesSize;
@@ -313,6 +331,8 @@ protected:
   unsigned int thePolymerSize;
   unsigned int theReservedSize;
   unsigned int theRowSize;
+  unsigned int theScreenHeight;
+  unsigned int theScreenWidth;
   unsigned int theStartCoord;
   unsigned int theThreadSize;
   unsigned int theTotalLatticeSpSize;
@@ -385,6 +405,7 @@ protected:
   //signal handlers:
   virtual bool on_area_motion_notify_event(GdkEventMotion* event); //override
   virtual bool on_key_press_event(GdkEventKey* event);
+  virtual bool on_expose(GdkEventExpose* event);
 
   GLScene m_area;
   Gtk::Table m_table;
