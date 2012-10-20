@@ -582,6 +582,7 @@ void GLScene::on_realize()
   glEnable(GL_COLOR_MATERIAL);
   glMatrixMode(GL_MODELVIEW);
   glTranslatef(-ViewMidx,-ViewMidy,-ViewMidz); 
+  /*
   m_FontListBase = glGenLists(128); 
   m_FontString = "Arial 10";
   Pango::FontDescription font_desc(m_FontString); 
@@ -591,6 +592,7 @@ void GLScene::on_realize()
   m_FontHeight = font_metrics.get_ascent() + font_metrics.get_descent();
   m_FontHeight = PANGO_PIXELS(m_FontHeight);
   m_FontWidth = PANGO_PIXELS(font_metrics.get_approximate_digit_width());
+  */
   if(theMeanCount)
     {
       //for GFP visualization:
@@ -670,7 +672,7 @@ bool GLScene::on_expose_event(GdkEventExpose* event)
     }
   if(showTime)
     {
-      drawTime();
+      //drawTime();
     }
   //glCallList(BOX);
   //glCallList(GRID);
