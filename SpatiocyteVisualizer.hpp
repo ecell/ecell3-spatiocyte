@@ -226,6 +226,7 @@ public:
   void zoomOut();
   bool writePng();
   void drawTime();
+  void renderLayout(Glib::RefPtr<Pango::Layout>);
   void step();
   void setReverse(bool isReverse);
   void setSpeciesVisibility(unsigned int id, bool isVisible);
@@ -392,6 +393,12 @@ protected:
   std::vector<unsigned int> thePolySpeciesList;
   std::vector<std::streampos> theStreamPosList;
   std::map<unsigned int, Point> theCoordPoints;
+  Glib::RefPtr<Pango::Context> ft2_context;
+  std::size_t font_size;
+  std::size_t pixel_extent_width;
+  std::size_t pixel_extent_height;
+  std::size_t tex_width;
+  std::size_t tex_height;
 };
 
 class Rulers : public Gtk::Window

@@ -30,12 +30,14 @@
 
 
 #include <iostream>
+#include <limits>
 #include <cstdlib>
 #include <cmath>
 #include <fstream>
 #include <sstream>
 #include <gtkmm.h>
 #include <gtkglmm.h>
+#include <pango/pangoft2.h>
 
 #ifdef G_OS_WIN32
 #define WIN32_LEAN_AND_MEAN 1
@@ -133,7 +135,8 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   xAngle(0),
   yAngle(0),
   zAngle(0),
-  theRotateAngle(5.0)
+  theRotateAngle(5.0),
+  font_size(24)
 {
   add_events(Gdk::VISIBILITY_NOTIFY_MASK); 
   std::ostringstream aFileName;
@@ -582,17 +585,6 @@ void GLScene::on_realize()
   glEnable(GL_COLOR_MATERIAL);
   glMatrixMode(GL_MODELVIEW);
   glTranslatef(-ViewMidx,-ViewMidy,-ViewMidz); 
-  /*
-  m_FontListBase = glGenLists(128); 
-  m_FontString = "Arial 10";
-  Pango::FontDescription font_desc(m_FontString); 
-  Glib::RefPtr<Pango::Font> font(Gdk::GL::Font::use_pango_font(
-                                         font_desc, 0, 128, m_FontListBase));
-  Pango::FontMetrics font_metrics(font->get_metrics()); 
-  m_FontHeight = font_metrics.get_ascent() + font_metrics.get_descent();
-  m_FontHeight = PANGO_PIXELS(m_FontHeight);
-  m_FontWidth = PANGO_PIXELS(font_metrics.get_approximate_digit_width());
-  */
   if(theMeanCount)
     {
       //for GFP visualization:
@@ -632,6 +624,7 @@ void GLScene::on_realize()
         }
       glEndList();
     }
+  ft2_context = Glib::wrap(pango_ft2_get_context( 72, 72));
   /*
   glNewList(BOX, GL_COMPILE);
   //drawBox(0,theRealColSize,0,theRealLayerSize,0,theRealRowSize);
@@ -640,6 +633,41 @@ void GLScene::on_realize()
   glwindow->gl_end();
 }
 
+
+void GLScene::renderLayout(Glib::RefPtr<Pango::Layout> layout)
+{
+	unsigned char* begin_bitmap_buffer;
+  Pango::Rectangle pango_extents = layout->get_pixel_logical_extents();
+  pixel_extent_width = pango_extents.get_width();
+  pixel_extent_height = pango_extents.get_height(); 
+
+  FT_Bitmap bitmap;
+  bitmap.rows = pixel_extent_height;
+  bitmap.width = pixel_extent_width;
+  bitmap.pitch = -bitmap.width;
+  begin_bitmap_buffer = new unsigned char[bitmap.rows*bitmap.width];
+  memset(begin_bitmap_buffer, 0, bitmap.rows * bitmap.width );
+  bitmap.buffer = begin_bitmap_buffer + ( bitmap.rows - 1 ) * bitmap.width;
+  bitmap.num_grays = 256;
+  bitmap.pixel_mode = ft_pixel_mode_grays; 
+  pango_ft2_render_layout_subpixel( &bitmap, layout->gobj(), 
+                                    -pango_extents.get_x(), 0); 
+
+  GLfloat bg[4];
+  glGetFloatv(GL_COLOR_CLEAR_VALUE, bg); 
+  glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+  glEnable( GL_BLEND );
+  glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+  glPixelTransferf( GL_RED_BIAS,  (1.0-bg[0]));
+  glPixelTransferf( GL_GREEN_BIAS,  (1.0-bg[1]));
+  glPixelTransferf( GL_BLUE_BIAS, (1.0-bg[2]));
+  glPixelTransferf( GL_ALPHA_SCALE, 1 );
+  glDrawPixels( bitmap.width, bitmap.rows,
+                GL_ALPHA, GL_UNSIGNED_BYTE, begin_bitmap_buffer );
+  delete[] begin_bitmap_buffer;
+}
+
+
 bool GLScene::on_expose_event(GdkEventExpose* event)
 {
   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
@@ -647,6 +675,7 @@ bool GLScene::on_expose_event(GdkEventExpose* event)
     {
       return false;
     }
+
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   if(theMeanCount)
     {
@@ -672,10 +701,9 @@ bool GLScene::on_expose_event(GdkEventExpose* event)
     }
   if(showTime)
     {
-      //drawTime();
+      drawTime();
     }
-  //glCallList(BOX);
-  //glCallList(GRID);
+
   glwindow->swap_buffers();
   glwindow->gl_end();
   return true;
@@ -683,6 +711,29 @@ bool GLScene::on_expose_event(GdkEventExpose* event)
 
 void GLScene::drawTime()
 {
+ // Get the right font
+  Glib::RefPtr<Pango::Context> widget_context = get_pango_context();
+  Pango::FontDescription font_desc = widget_context->get_font_description();
+  font_desc.set_size( font_size * PANGO_SCALE);
+  ft2_context->set_font_description( font_desc); 
+  
+  // Compute the layout
+  Glib::RefPtr<Pango::Layout> layout = Pango::Layout::create(ft2_context);
+  layout->set_width(PANGO_SCALE*get_allocation().get_width());
+  layout->set_alignment(Pango::ALIGN_LEFT);
+  char buffer[50];
+  sprintf(buffer, "t = %.1f s", theCurrentTime-theResetTime);
+  layout->set_text(buffer);
+
+  Pango::Rectangle pango_extents = layout->get_pixel_logical_extents();
+  pixel_extent_width = pango_extents.get_width();
+  pixel_extent_height = pango_extents.get_height(); 
+  GLfloat text_w, text_h, tangent_h;
+
+  /* Text position */
+  text_w = pixel_extent_width;
+  text_h = pixel_extent_height;
+
   GLfloat w(get_width());
   GLfloat h(get_height());
   unsigned int screenWidth(static_cast<GLsizei>(w));
@@ -695,34 +746,19 @@ void GLScene::drawTime()
   glPushMatrix();
   glLoadIdentity(); 
 
-  char buffer[50];
-  sprintf(buffer, "t = %.1f s", theCurrentTime-theResetTime);
-  m_timeString = buffer;
   glOrtho( 0, screenWidth, 0, screenHeight, 0, 1 );
   glDisable(GL_LIGHTING);
-  glListBase(m_FontListBase);
-  glColor3f(0, 0, 0);
-  glRasterPos2i(20,screenHeight-m_FontHeight-3);
-  glCallLists(m_timeString.length(), GL_UNSIGNED_BYTE,
-              m_timeString.c_str());
-  glColor3f(1.0, 1.0, 1.0);
-  unsigned x1(10);
-  unsigned x2(m_timeString.length()*m_FontWidth-10);
-  unsigned y1(screenHeight-10);
-  unsigned y2(screenHeight-m_FontHeight-10);
-  glBegin(GL_QUADS);
-  glVertex2f(x1, y1);
-  glVertex2f(x2, y1);
-  glVertex2f(x2, y2);
-  glVertex2f(x1, y2);
-  glEnd();
+
+  glColor3f(1, 1, 1);
+  glRasterPos2i(10,screenHeight-text_h-3);
+  renderLayout(layout);
 
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
   glMatrixMode(GL_MODELVIEW);
-
+  glEnable(GL_LIGHTING);
 }
 
 bool GLScene::writePng()
@@ -2637,6 +2673,7 @@ int main(int argc, char** argv)
   Gtk::Main::run(aRuler);
   return 0;
 }
+
 
 
 
