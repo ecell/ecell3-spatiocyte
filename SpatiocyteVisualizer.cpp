@@ -1779,56 +1779,8 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table *aTable) :
   m_rightBox.pack_start(theBoxCtrl, Gtk::PACK_SHRINK); 
   // Create a frame the will have the rotation adjusters
   // and the Fix and Reset buttons.
-  theBoxCtrl.pack_start( theFrameRotAdj, false, false, 1 );
-  theBoxInFrame.set_border_width( 3 );
-  theFrameRotAdj.add( theBoxInFrame );
-  theXBox.set_homogeneous( false );
-  theBoxInFrame.pack_start( theXBox, false, false, 1 );
-  theBoxInFrame.pack_start( theYBox, false, false, 1 );
-  theBoxInFrame.pack_start( theZBox, false, false, 1 );
-  theBoxInFrame.pack_start( theBoxRotFixReset, false, false, 1 );
-  //theCheckFix.connect( 'toggled', fixRotToggled );
-  theBoxRotFixReset.pack_start( theCheckFix );
-  theResetRotButton.signal_clicked().connect( sigc::mem_fun(*this,
-                            &ControlBox::onResetRotation) );
-  theBoxRotFixReset.pack_start( theResetRotButton );
 
-  // X
-  theXLabel.set_width_chars( 1 );
-  theXBox.pack_start( theXLabel, false, false, 2 ); 
-  theXScale.set_draw_value( false );
-  theXBox.pack_start( theXScale );
-  theXSpin.set_width_chars( 3 );
-  theXSpin.set_wrap( true );
-  theXSpin.set_has_frame( false );
-  theXBox.pack_start( theXSpin, false, false, 2 );
-  theXAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
-                           &ControlBox::xRotateChanged ) );
-
-  // Y
-  theYLabel.set_width_chars( 1 );
-  theYBox.pack_start( theYLabel, false, false, 2 ); 
-  theYScale.set_draw_value( false );
-  theYBox.pack_start( theYScale );
-  theYSpin.set_width_chars( 3 );
-  theYSpin.set_wrap( true );
-  theYSpin.set_has_frame( false );
-  theYBox.pack_start( theYSpin, false, false, 2 );
-  theYAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
-                           &ControlBox::yRotateChanged ) );
-
-  // Z
-  theZLabel.set_width_chars( 1 );
-  theZBox.pack_start( theZLabel, false, false, 2 ); 
-  theZScale.set_draw_value( false );
-  theZBox.pack_start( theZScale );
-  theZSpin.set_width_chars( 3 );
-  theZSpin.set_wrap( true );
-  theZSpin.set_has_frame( false );
-  theZBox.pack_start( theZSpin, false, false, 2 );
-  theZAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
-                           &ControlBox::zRotateChanged ) );
-
+  // screen resolution adjuster
   theBoxCtrl.pack_start( theFrameScreen, false, false, 1 );
   theBoxInScreen.set_border_width( 3 );
   theFrameScreen.add(theBoxInScreen);
@@ -1860,6 +1812,42 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table *aTable) :
   theWidthSpin.set_has_frame( false );
   theWidthSpin.set_editable( true );
   theWidthBox.pack_start( theWidthSpin, false, false, 2 );
+
+  /*
+  // Create a frame the will have the lattice depth adjuster
+  // and background color selector
+  theBoxCtrl.pack_start( theFrameLatticeAdj, false, false, 1 );
+  theBoxInLattice.set_border_width( 3 );
+  theFrameLatticeAdj.add( theBoxInLattice );
+  theDepthBox.set_homogeneous( false );
+  theBoxInLattice.pack_start( theDepthBox, false, false, 1 );
+  */
+  theBoxInLattice.pack_start( the3DMoleculeBox, false, false, 1 );
+  //theResetDepthButton.connect( 'clicked', resetDepth );
+  the3DMoleculeBox.pack_start( theResetDepthButton ); 
+  theCheckShowTime.signal_toggled().connect( sigc::mem_fun(*this,
+                            &ControlBox::on_showTime_toggled) );
+  theCheckShowTime.set_active();
+  theBoxCtrl.pack_start( theCheckShowTime, false, false, 2 );
+  theCheck3DMolecule.signal_toggled().connect( sigc::mem_fun(*this,
+                            &ControlBox::on_3DMolecule_toggled) );
+  //theCheck3DMolecule.set_active();
+  theCheck3DMolecule.set_active(false);
+  theBoxCtrl.pack_start( theCheck3DMolecule, false, false, 2 );
+  theButtonResetTime.signal_clicked().connect( sigc::mem_fun(*this,
+                            &ControlBox::on_resetTime_clicked) );
+  theBoxCtrl.pack_start( theButtonResetTime, false, false, 2 );
+  theButtonRecord.signal_toggled().connect( sigc::mem_fun(*this,
+                            &ControlBox::on_record_toggled) );
+  theBoxCtrl.pack_start( theButtonRecord, false, false, 2 );
+  theDepthLabel.set_width_chars( 1 );
+  theDepthBox.pack_start( theDepthLabel, false, false, 2 );
+  //theDepthAdj.connect( 'value_changed', depthChanged );
+  theDepthScale.set_draw_value( false );
+  theDepthBox.pack_start( theDepthScale );
+  theDepthSpin.set_width_chars( 3 );
+  theDepthSpin.set_has_frame( false );
+  theDepthBox.pack_start( theDepthSpin, false, false, 2 );
 
   // Create a frame the will have the lattice boundary adjusters
   // and the Fix and Reset buttons.
@@ -1958,42 +1946,58 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table *aTable) :
   theZLowBoundSpin.set_has_frame( false );
   theZLowBoundBox.pack_start( theZLowBoundSpin, false, false, 2 );
 
-  /*
-  // Create a frame the will have the lattice depth adjuster
-  // and background color selector
-  theBoxCtrl.pack_start( theFrameLatticeAdj, false, false, 1 );
-  theBoxInLattice.set_border_width( 3 );
-  theFrameLatticeAdj.add( theBoxInLattice );
-  theDepthBox.set_homogeneous( false );
-  theBoxInLattice.pack_start( theDepthBox, false, false, 1 );
-  */
-  theBoxInLattice.pack_start( the3DMoleculeBox, false, false, 1 );
-  //theResetDepthButton.connect( 'clicked', resetDepth );
-  the3DMoleculeBox.pack_start( theResetDepthButton ); 
-  theCheckShowTime.signal_toggled().connect( sigc::mem_fun(*this,
-                            &ControlBox::on_showTime_toggled) );
-  theCheckShowTime.set_active();
-  theBoxCtrl.pack_start( theCheckShowTime, false, false, 2 );
-  theCheck3DMolecule.signal_toggled().connect( sigc::mem_fun(*this,
-                            &ControlBox::on_3DMolecule_toggled) );
-  //theCheck3DMolecule.set_active();
-  theCheck3DMolecule.set_active(false);
-  theBoxCtrl.pack_start( theCheck3DMolecule, false, false, 2 );
-  theButtonResetTime.signal_clicked().connect( sigc::mem_fun(*this,
-                            &ControlBox::on_resetTime_clicked) );
-  theBoxCtrl.pack_start( theButtonResetTime, false, false, 2 );
-  theButtonRecord.signal_toggled().connect( sigc::mem_fun(*this,
-                            &ControlBox::on_record_toggled) );
-  theBoxCtrl.pack_start( theButtonRecord, false, false, 2 );
-  theDepthLabel.set_width_chars( 1 );
-  theDepthBox.pack_start( theDepthLabel, false, false, 2 );
-  //theDepthAdj.connect( 'value_changed', depthChanged );
-  theDepthScale.set_draw_value( false );
-  theDepthBox.pack_start( theDepthScale );
-  theDepthSpin.set_width_chars( 3 );
-  theDepthSpin.set_has_frame( false );
-  theDepthBox.pack_start( theDepthSpin, false, false, 2 );
+  // rotation adjusters
+  theBoxCtrl.pack_start( theFrameRotAdj, false, false, 1 );
+  theBoxInFrame.set_border_width( 3 );
+  theFrameRotAdj.add( theBoxInFrame );
+  theXBox.set_homogeneous( false );
+  theBoxInFrame.pack_start( theXBox, false, false, 1 );
+  theBoxInFrame.pack_start( theYBox, false, false, 1 );
+  theBoxInFrame.pack_start( theZBox, false, false, 1 );
+  theBoxInFrame.pack_start( theBoxRotFixReset, false, false, 1 );
+  //theCheckFix.connect( 'toggled', fixRotToggled );
+  theBoxRotFixReset.pack_start( theCheckFix );
+  theResetRotButton.signal_clicked().connect( sigc::mem_fun(*this,
+                            &ControlBox::onResetRotation) );
+  theBoxRotFixReset.pack_start( theResetRotButton );
 
+  // X
+  theXLabel.set_width_chars( 1 );
+  theXBox.pack_start( theXLabel, false, false, 2 ); 
+  theXScale.set_draw_value( false );
+  theXBox.pack_start( theXScale );
+  theXSpin.set_width_chars( 3 );
+  theXSpin.set_wrap( true );
+  theXSpin.set_has_frame( false );
+  theXBox.pack_start( theXSpin, false, false, 2 );
+  theXAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
+                           &ControlBox::xRotateChanged ) );
+
+  // Y
+  theYLabel.set_width_chars( 1 );
+  theYBox.pack_start( theYLabel, false, false, 2 ); 
+  theYScale.set_draw_value( false );
+  theYBox.pack_start( theYScale );
+  theYSpin.set_width_chars( 3 );
+  theYSpin.set_wrap( true );
+  theYSpin.set_has_frame( false );
+  theYBox.pack_start( theYSpin, false, false, 2 );
+  theYAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
+                           &ControlBox::yRotateChanged ) );
+
+  // Z
+  theZLabel.set_width_chars( 1 );
+  theZBox.pack_start( theZLabel, false, false, 2 ); 
+  theZScale.set_draw_value( false );
+  theZBox.pack_start( theZScale );
+  theZSpin.set_width_chars( 3 );
+  theZSpin.set_wrap( true );
+  theZSpin.set_has_frame( false );
+  theZBox.pack_start( theZSpin, false, false, 2 );
+  theZAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
+                           &ControlBox::zRotateChanged ) );
+
+  // Time and step counts
   m_stepLabel.set_text("Step:");
   m_sizeGroup = Gtk::SizeGroup::create(Gtk::SIZE_GROUP_HORIZONTAL);
   m_sizeGroup->add_widget(m_stepLabel);
