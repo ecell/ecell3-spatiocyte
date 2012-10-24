@@ -248,12 +248,19 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
     getIDString(aSpecies) << std::endl;
   Comp* aComp(aSpecies->getComp());
   Species* aVacantSpecies(aComp->vacantSpecies);
-  double delta(0);
+  double deltaX(0);
+  double deltaY(0);
+  double deltaZ(0);
   // Increase the compartment dimensions by delta if it is a surface 
   // compartment:
   if(aComp->dimension == 2)
     {
-      delta = 0.1;
+      deltaX = theSpatiocyteStepper->getNormalizedVoxelRadius()*4/
+        aComp->lengthX;
+      deltaY = theSpatiocyteStepper->getNormalizedVoxelRadius()*4/
+        aComp->lengthY;
+      deltaZ = theSpatiocyteStepper->getNormalizedVoxelRadius()*4/
+        aComp->lengthZ;
     }
   double maxX(std::min(1.0, OriginX+UniformRadiusX));
   double minX(std::max(-1.0, OriginX-UniformRadiusX));
@@ -261,12 +268,12 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
   double minY(std::max(-1.0, OriginY-UniformRadiusY));
   double maxZ(std::min(1.0, OriginZ+UniformRadiusZ));
   double minZ(std::max(-1.0, OriginZ-UniformRadiusZ)); 
-  maxX = aComp->centerPoint.x + maxX*aComp->lengthX/2*(1+delta);
-  minX = aComp->centerPoint.x + minX*aComp->lengthX/2*(1+delta);
-  maxY = aComp->centerPoint.y + maxY*aComp->lengthY/2*(1+delta);
-  minY = aComp->centerPoint.y + minY*aComp->lengthY/2*(1+delta);
-  maxZ = aComp->centerPoint.z + maxZ*aComp->lengthZ/2*(1+delta);
-  minZ = aComp->centerPoint.z + minZ*aComp->lengthZ/2*(1+delta);
+  maxX = aComp->centerPoint.x + maxX*aComp->lengthX/2*(1+deltaX);
+  minX = aComp->centerPoint.x + minX*aComp->lengthX/2*(1+deltaX);
+  maxY = aComp->centerPoint.y + maxY*aComp->lengthY/2*(1+deltaY);
+  minY = aComp->centerPoint.y + minY*aComp->lengthY/2*(1+deltaY);
+  maxZ = aComp->centerPoint.z + maxZ*aComp->lengthZ/2*(1+deltaZ);
+  minZ = aComp->centerPoint.z + minZ*aComp->lengthZ/2*(1+deltaZ);
   std::vector<unsigned int> aCoords;
   for(unsigned int i(0); i != aVacantSpecies->size(); ++i)
     {
