@@ -255,11 +255,11 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
   // compartment:
   if(aComp->dimension == 2)
     {
-      deltaX = theSpatiocyteStepper->getNormalizedVoxelRadius()*4/
+      deltaX = theSpatiocyteStepper->getNormalizedVoxelRadius()*6/
         aComp->lengthX;
-      deltaY = theSpatiocyteStepper->getNormalizedVoxelRadius()*4/
+      deltaY = theSpatiocyteStepper->getNormalizedVoxelRadius()*6/
         aComp->lengthY;
-      deltaZ = theSpatiocyteStepper->getNormalizedVoxelRadius()*4/
+      deltaZ = theSpatiocyteStepper->getNormalizedVoxelRadius()*6/
         aComp->lengthZ;
     }
   double maxX(std::min(1.0, OriginX+UniformRadiusX));

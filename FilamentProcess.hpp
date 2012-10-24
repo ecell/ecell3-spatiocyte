@@ -64,7 +64,7 @@ public:
     RotateY(0),
     RotateZ(0),
     Periodic(0),
-    Protofilaments(1),
+    Protofilaments(5),
     theVacantSpecies(NULL) {}
   virtual ~FilamentProcess() {}
   SIMPLE_SET_GET_METHOD(Integer, Periodic);

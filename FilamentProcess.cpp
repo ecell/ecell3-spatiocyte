@@ -160,17 +160,21 @@ void FilamentProcess::initializeProtofilaments()
   S.z = M.z;
   //std::cout << "S.x:" << S.x << " y:" << S.y << " z:" << S.z << std::endl;
   addCompVoxel(0, 0, S);
-  /*
-  for(int i(1); i != Protofilaments; ++i)
+  for(unsigned int i(1); i != Protofilaments; ++i)
     {
-      double angle(2*M_PI/Protofilaments);
-      rotatePointAlongVector(S, angle);
-      S.x += MonomerPitch/(Protofilaments-1)*T.x;
-      S.y += MonomerPitch/(Protofilaments-1)*T.y;
-      S.z += MonomerPitch/(Protofilaments-1)*T.z;
-      addCompVoxel(i, 0, S);
+      Point U(S);
+      U.x += i*normVoxelRadius*sqrt(3)*D.x;
+      U.y += i*normVoxelRadius*sqrt(3)*D.y;
+      U.z += i*normVoxelRadius*sqrt(3)*D.z;
+      if(i%2 == 1)
+        {
+          std::cout << "here" << std::endl;
+          U.x += normVoxelRadius*T.x;
+          U.y += normVoxelRadius*T.y;
+          U.z += normVoxelRadius*T.z;
+        }
+      addCompVoxel(i, 0, U);
     }
-    */
 }
 
 void FilamentProcess::elongateProtofilaments()
@@ -203,23 +207,21 @@ void FilamentProcess::connectProtofilaments()
             {
               connectPeriodic(j);
             }
-          /*
           if(j > 0)
             {
               connectEastWest(i, j);
             }
-            */
         }
       /*
       if(Protofilaments > 2)
         {
           connectSeamEastWest(i);
         }
+        */
       if(i > 0)
         {
           connectNwSw(i);
         }
-        */
     }
 }
 
