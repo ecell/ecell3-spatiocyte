@@ -722,7 +722,7 @@ void GLScene::drawTime()
   layout->set_width(PANGO_SCALE*get_allocation().get_width());
   layout->set_alignment(Pango::ALIGN_LEFT);
   char buffer[50];
-  sprintf(buffer, "t = %.1f s", theCurrentTime-theResetTime);
+  sprintf(buffer, "t = %g s", theCurrentTime-theResetTime);
   layout->set_text(buffer);
 
   Pango::Rectangle pango_extents = layout->get_pixel_logical_extents();

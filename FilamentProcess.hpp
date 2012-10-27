@@ -43,8 +43,9 @@ public:
   LIBECS_DM_OBJECT(FilamentProcess, Process)
     {
       INHERIT_PROPERTIES(Process);
+      PROPERTYSLOT_SET_GET(Integer, Filaments);
       PROPERTYSLOT_SET_GET(Integer, Periodic);
-      PROPERTYSLOT_SET_GET(Real, VoxelRadius);
+      PROPERTYSLOT_SET_GET(Integer, Subunits);
       PROPERTYSLOT_SET_GET(Real, Length);
       PROPERTYSLOT_SET_GET(Real, OriginX);
       PROPERTYSLOT_SET_GET(Real, OriginY);
@@ -52,23 +53,29 @@ public:
       PROPERTYSLOT_SET_GET(Real, RotateX);
       PROPERTYSLOT_SET_GET(Real, RotateY);
       PROPERTYSLOT_SET_GET(Real, RotateZ);
+      PROPERTYSLOT_SET_GET(Real, SubunitRadius);
+      PROPERTYSLOT_SET_GET(Real, Width);
     }
   FilamentProcess():
     isCompartmentalized(false),
-    VoxelRadius(0),
-    Length(100e-9),
+    Filaments(1),
+    Periodic(0),
+    Subunits(1),
+    Length(0),
+    normVoxelRadius(0.5),
     OriginX(0),
     OriginY(0),
     OriginZ(0),
     RotateX(0),
     RotateY(0),
     RotateZ(0),
-    Periodic(0),
-    Protofilaments(5),
+    SubunitRadius(0),
+    Width(0),
     theVacantSpecies(NULL) {}
   virtual ~FilamentProcess() {}
+  SIMPLE_SET_GET_METHOD(Integer, Filaments);
   SIMPLE_SET_GET_METHOD(Integer, Periodic);
-  SIMPLE_SET_GET_METHOD(Real, VoxelRadius);
+  SIMPLE_SET_GET_METHOD(Integer, Subunits);
   SIMPLE_SET_GET_METHOD(Real, Length);
   SIMPLE_SET_GET_METHOD(Real, OriginX);
   SIMPLE_SET_GET_METHOD(Real, OriginY);
@@ -76,6 +83,8 @@ public:
   SIMPLE_SET_GET_METHOD(Real, RotateX);
   SIMPLE_SET_GET_METHOD(Real, RotateY);
   SIMPLE_SET_GET_METHOD(Real, RotateZ);
+  SIMPLE_SET_GET_METHOD(Real, SubunitRadius);
+  SIMPLE_SET_GET_METHOD(Real, Width);
   virtual void initialize()
     {
       if(isInitialized)
@@ -132,16 +141,15 @@ public:
                           "coefficient as the vacant species, " +
                           "but none is given."); 
         }
-      if(!VoxelRadius)
+      if(!SubunitRadius)
         {
-          VoxelRadius = theSpatiocyteStepper->getVoxelRadius();
+          SubunitRadius = theSpatiocyteStepper->getVoxelRadius();
         }
-      //Actual lattice voxel radius:
-      latVoxelRadius = theSpatiocyteStepper->getVoxelRadius();
+      //Lattice voxel radius:
+      VoxelRadius = theSpatiocyteStepper->getVoxelRadius();
       //Normalized off-lattice voxel radius:
-      normVoxelRadius = VoxelRadius/(latVoxelRadius*2);
-      //Normalized filament Length
-      normLength = Length/(latVoxelRadius*2);
+      normSubunitRadius = SubunitRadius/(VoxelRadius*2);
+
       theVacantSpecies->setIsOffLattice();
       for(unsigned int i(0); i != theFilamentSpecies.size(); ++i)
         {
@@ -157,8 +165,8 @@ public:
   virtual void initializeThird();
   void addCompVoxel(unsigned int, unsigned int, Point&);
   void initializeDirectionVector();
-  void initializeProtofilaments();
-  void elongateProtofilaments();
+  void initializeFilaments();
+  void elongateFilaments();
   void connectPeriodic(unsigned int);
   void connectNorthSouth(unsigned int, unsigned int);
   void connectEastWest(unsigned int, unsigned int);
@@ -171,27 +179,29 @@ public:
   void updateAdjoinSize(Voxel&);
   bool inMTCylinder(Point&);
   void rotatePointAlongVector(Point&, double);
-  void connectProtofilaments();
+  void connectFilaments();
 protected:
   bool isCompartmentalized;
-  double VoxelRadius;
-  double normVoxelRadius;
+  int tempID;
+  unsigned int endCoord;
+  unsigned int Filaments;
+  unsigned int Periodic;
+  unsigned int startCoord;
+  unsigned int Subunits;
   double Length;
   double normLength;
-  double latVoxelRadius;
-  double normLatVoxelRadius;
+  double normSubunitRadius;
+  double normVoxelRadius;
+  double normWidth;
   double OriginX;
   double OriginY;
   double OriginZ;
   double RotateX;
   double RotateY;
   double RotateZ;
-  unsigned int endCoord;
-  unsigned int Periodic;
-  unsigned int startCoord;
-  unsigned int theVoxelSize;
-  unsigned int Protofilaments;
-  int tempID;
+  double SubunitRadius;
+  double VoxelRadius;
+  double Width;
   Comp* theComp;
   Point T; //Direction vector along the MT axis from Minus to Plus end
   Point M; //Minus end

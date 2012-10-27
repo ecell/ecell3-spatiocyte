@@ -36,7 +36,7 @@ unsigned int FilamentProcess::getLatticeResizeCoord(unsigned int aStartCoord)
 {
   theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
   theVacantSpecies->resetFixedAdjoins();
-  theVacantSpecies->setRadius(VoxelRadius);
+  theVacantSpecies->setRadius(SubunitRadius);
   tempID = theSpecies.size();
   C = theComp->centerPoint;
   C.x += OriginX*theComp->lengthX/2;
@@ -47,13 +47,34 @@ unsigned int FilamentProcess::getLatticeResizeCoord(unsigned int aStartCoord)
       theFilamentSpecies[i]->setIsOffLattice();
       theFilamentSpecies[i]->setDimension(1);
       theFilamentSpecies[i]->setVacantSpecies(theVacantSpecies);
-      theFilamentSpecies[i]->setRadius(VoxelRadius);
+      theFilamentSpecies[i]->setRadius(SubunitRadius);
     }
-  //Normalized lattice voxel radius:
-  normLatVoxelRadius = 0.5;
-  theVoxelSize = (unsigned int)rint(Length/(VoxelRadius*2));
+  if(Length)
+    {
+      Subunits = (unsigned int)rint(Length/(SubunitRadius*2));
+      std::cout << "Subunits:" << Subunits << std::endl;
+      std::cout << "Length:" << Subunits*SubunitRadius*2 << std::endl;
+    }
+  else
+    {
+      Length = Subunits*SubunitRadius*2;
+    }
+  if(Width)
+    {
+      //Surface with hexagonally packed circles:
+      Filaments = (unsigned int)rint(Width/(SubunitRadius*sqrt(3)));
+      std::cout << "filament:" << Filaments << std::endl;
+      std::cout << "Width:" << Filaments*SubunitRadius*2 << std::endl;
+    }
+  else
+    {
+      Width = Filaments*SubunitRadius*2;
+    }
+  //Normalized compartment lengths in terms of lattice voxel radius:
+  normLength = Length/(VoxelRadius*2);
+  normWidth = Width/(VoxelRadius*2);
   startCoord = aStartCoord;
-  endCoord = startCoord+Protofilaments*theVoxelSize;
+  endCoord = startCoord+Filaments*Subunits;
   return endCoord-startCoord;
 }
 
@@ -61,22 +82,22 @@ void FilamentProcess::initializeThird()
 {
   if(!isCompartmentalized)
     {
-      thePoints.resize(Protofilaments*theVoxelSize);
-      initializeProtofilaments();
-      elongateProtofilaments();
-      connectProtofilaments();
+      thePoints.resize(Filaments*Subunits);
+      initializeFilaments();
+      elongateFilaments();
+      connectFilaments();
       //enlistLatticeVoxels();
       isCompartmentalized = true;
     }
   theVacantSpecies->setIsPopulated();
 }
 
-void FilamentProcess::addCompVoxel(unsigned int protoIndex, 
-                                   unsigned int voxelIndex, Point& aPoint)
+void FilamentProcess::addCompVoxel(unsigned int filamentIndex, 
+                                   unsigned int subunitIndex, Point& aPoint)
 {
-  unsigned int aCoord(startCoord+protoIndex*theVoxelSize+voxelIndex);
+  unsigned int aCoord(startCoord+filamentIndex*Subunits+subunitIndex);
   Voxel& aVoxel((*theLattice)[aCoord]);
-  aVoxel.point = &thePoints[protoIndex*theVoxelSize+voxelIndex];
+  aVoxel.point = &thePoints[filamentIndex*Subunits+subunitIndex];
   *aVoxel.point = aPoint;
   aVoxel.adjoiningCoords = new unsigned int[theAdjoiningCoordSize];
   aVoxel.diffuseSize = 2;
@@ -121,7 +142,7 @@ void FilamentProcess::initializeDirectionVector()
   P.z = M.z+Length*T.z;
 }
 
-void FilamentProcess::initializeProtofilaments()
+void FilamentProcess::initializeFilaments()
 {
   initializeDirectionVector();
   Point R; //Initialize a random point on the plane attached at the minus end
@@ -160,44 +181,43 @@ void FilamentProcess::initializeProtofilaments()
   S.z = M.z;
   //std::cout << "S.x:" << S.x << " y:" << S.y << " z:" << S.z << std::endl;
   addCompVoxel(0, 0, S);
-  for(unsigned int i(1); i != Protofilaments; ++i)
+  for(unsigned int i(1); i != Filaments; ++i)
     {
       Point U(S);
-      U.x += i*normVoxelRadius*sqrt(3)*D.x;
-      U.y += i*normVoxelRadius*sqrt(3)*D.y;
-      U.z += i*normVoxelRadius*sqrt(3)*D.z;
+      U.x += i*normSubunitRadius*sqrt(3)*D.x;
+      U.y += i*normSubunitRadius*sqrt(3)*D.y;
+      U.z += i*normSubunitRadius*sqrt(3)*D.z;
       if(i%2 == 1)
         {
-          std::cout << "here" << std::endl;
-          U.x += normVoxelRadius*T.x;
-          U.y += normVoxelRadius*T.y;
-          U.z += normVoxelRadius*T.z;
+          U.x += normSubunitRadius*T.x;
+          U.y += normSubunitRadius*T.y;
+          U.z += normSubunitRadius*T.z;
         }
       addCompVoxel(i, 0, U);
     }
 }
 
-void FilamentProcess::elongateProtofilaments()
+void FilamentProcess::elongateFilaments()
 {
-  for(unsigned int i(0); i != Protofilaments; ++i)
+  for(unsigned int i(0); i != Filaments; ++i)
     {
-      Voxel* startVoxel(&(*theLattice)[startCoord+i*theVoxelSize]);
+      Voxel* startVoxel(&(*theLattice)[startCoord+i*Subunits]);
       Point A(*startVoxel->point);
-      for(unsigned int j(1); j != theVoxelSize; ++j)
+      for(unsigned int j(1); j != Subunits; ++j)
         {
-          A.x += (normVoxelRadius*2)*T.x;
-          A.y += (normVoxelRadius*2)*T.y;
-          A.z += (normVoxelRadius*2)*T.z;
+          A.x += (normSubunitRadius*2)*T.x;
+          A.y += (normSubunitRadius*2)*T.y;
+          A.z += (normSubunitRadius*2)*T.z;
           addCompVoxel(i, j, A);
         }
     }
 }
 
-void FilamentProcess::connectProtofilaments()
+void FilamentProcess::connectFilaments()
 {
-  for(unsigned int i(0); i != theVoxelSize; ++i)
+  for(unsigned int i(0); i != Subunits; ++i)
     {
-      for(unsigned int j(0); j != Protofilaments; ++j)
+      for(unsigned int j(0); j != Filaments; ++j)
         { 
           if(i > 0)
             { 
@@ -213,7 +233,7 @@ void FilamentProcess::connectProtofilaments()
             }
         }
       /*
-      if(Protofilaments > 2)
+      if(Filaments > 2)
         {
           connectSeamEastWest(i);
         }
@@ -227,9 +247,9 @@ void FilamentProcess::connectProtofilaments()
 
 void FilamentProcess::connectPeriodic(unsigned int j)
 {
-  unsigned int a(startCoord+j*theVoxelSize+theVoxelSize-1);
+  unsigned int a(startCoord+j*Subunits+Subunits-1);
   Voxel& aVoxel((*theLattice)[a]);
-  unsigned int b(startCoord+j*theVoxelSize); 
+  unsigned int b(startCoord+j*Subunits); 
   Voxel& adjoin((*theLattice)[b]);
   aVoxel.adjoiningCoords[NORTH] = b;
   adjoin.adjoiningCoords[SOUTH] = a;
@@ -239,9 +259,9 @@ void FilamentProcess::connectPeriodic(unsigned int j)
 
 void FilamentProcess::connectNorthSouth(unsigned int i, unsigned int j)
 {
-  unsigned int a(startCoord+j*theVoxelSize+(i-1));
+  unsigned int a(startCoord+j*Subunits+(i-1));
   Voxel& aVoxel((*theLattice)[a]);
-  unsigned int b(startCoord+j*theVoxelSize+i);
+  unsigned int b(startCoord+j*Subunits+i);
   Voxel& adjoin((*theLattice)[b]);
   aVoxel.adjoiningCoords[NORTH] = b;
   adjoin.adjoiningCoords[SOUTH] = a;
@@ -251,9 +271,9 @@ void FilamentProcess::connectNorthSouth(unsigned int i, unsigned int j)
 
 void FilamentProcess::connectEastWest(unsigned int i, unsigned int j)
 {
-  unsigned int a(startCoord+j*theVoxelSize+i);
+  unsigned int a(startCoord+j*Subunits+i);
   Voxel& aVoxel((*theLattice)[a]);
-  unsigned int b(startCoord+(j-1)*theVoxelSize+i); 
+  unsigned int b(startCoord+(j-1)*Subunits+i); 
   Voxel& adjoin((*theLattice)[b]);
   aVoxel.adjoiningCoords[aVoxel.adjoiningSize++] = b;
   adjoin.adjoiningCoords[adjoin.adjoiningSize++] = a;
@@ -263,7 +283,7 @@ void FilamentProcess::connectSeamEastWest(unsigned int i)
 {
   unsigned int a(startCoord+i);
   Voxel& aVoxel((*theLattice)[a]);
-  unsigned int b(startCoord+(Protofilaments-1)*theVoxelSize+i); 
+  unsigned int b(startCoord+(Filaments-1)*Subunits+i); 
   Voxel& adjoin((*theLattice)[b]);
   aVoxel.adjoiningCoords[aVoxel.adjoiningSize++] = b;
   adjoin.adjoiningCoords[adjoin.adjoiningSize++] = a;
@@ -273,7 +293,7 @@ void FilamentProcess::connectNwSw(unsigned int i)
 {
   unsigned int a(startCoord+i);
   Voxel& aVoxel((*theLattice)[a]);
-  unsigned int b(startCoord+(Protofilaments-1)*theVoxelSize+(i-1)); 
+  unsigned int b(startCoord+(Filaments-1)*Subunits+(i-1)); 
   Voxel& adjoin((*theLattice)[b]);
   aVoxel.adjoiningCoords[aVoxel.adjoiningSize++] = b;
   adjoin.adjoiningCoords[adjoin.adjoiningSize++] = a;
@@ -286,9 +306,9 @@ void FilamentProcess::enlistLatticeVoxels()
       Voxel& offVoxel((*theLattice)[n]);
       offVoxel.diffuseSize = offVoxel.adjoiningSize;
       double rA(theSpatiocyteStepper->getMinLatticeSpace());
-      if(rA < normVoxelRadius)
+      if(rA < normSubunitRadius)
         {
-         rA = normVoxelRadius;
+         rA = normSubunitRadius;
         } 
       Point center(*offVoxel.point);
       unsigned int aCoord(theSpatiocyteStepper->point2coord(center));
@@ -391,7 +411,7 @@ void FilamentProcess::addDirect(Voxel& offVoxel, unsigned a,
           occCoords.push_back(b);
         }
       double dist(getDistance(&aPoint, &adPoint)); 
-      if(dist <= normLatVoxelRadius+normVoxelRadius)
+      if(dist <= normVoxelRadius+normSubunitRadius)
         {
           offVoxel.adjoiningCoords[offVoxel.adjoiningSize++] = b;
           updateAdjoinSize(adjoin);
@@ -416,7 +436,7 @@ void FilamentProcess::addIndirect(Voxel& offVoxel, unsigned a,
         {
           Point adPoint(theSpatiocyteStepper->coord2point(aCoord));
           double dist(getDistance(&aPoint, &adPoint)); 
-          if(dist <= normVoxelRadius && inMTCylinder(adPoint))
+          if(dist <= normSubunitRadius && inMTCylinder(adPoint))
             { 
               offVoxel.adjoiningCoords[offVoxel.adjoiningSize++] = b; 
               initAdjoins(latVoxel);
