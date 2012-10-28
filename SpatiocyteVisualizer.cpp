@@ -2234,13 +2234,14 @@ ControlBox::zRotateChanged()
 
 void ControlBox::resizeScreen(unsigned aWidth, unsigned aHeight)
 {
-  if(theHeightAdj.get_upper() < aHeight)
+  if(theHeightAdj.get_upper() < aHeight || theWidthAdj.get_upper() < aWidth)
     {
       theHeightAdj.set_upper(aHeight);
-    }
-  if(theWidthAdj.get_upper() < aWidth)
-    {
+      theHeightAdj.set_value(aHeight);
       theWidthAdj.set_upper(aWidth);
+      theWidthAdj.set_value(aWidth);
+      screenChanged();
+      theCheck3DMolecule.set_active();
     }
   /*
   unsigned oldHeight(theHeightAdj.get_value());

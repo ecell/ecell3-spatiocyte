@@ -193,6 +193,7 @@ private:
 protected:
   GLScene* m_area;
   Gtk::Table* m_areaTable;
+  bool isChanging;
 };
 
 class GLScene : public Gtk::GL::DrawingArea
