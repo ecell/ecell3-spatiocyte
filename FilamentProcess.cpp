@@ -86,7 +86,7 @@ void FilamentProcess::initializeThird()
       initializeFilaments();
       elongateFilaments();
       connectFilaments();
-      //enlistLatticeVoxels();
+      enlistLatticeVoxels();
       isCompartmentalized = true;
     }
   theVacantSpecies->setIsPopulated();
@@ -339,9 +339,10 @@ void FilamentProcess::enlistLatticeVoxels()
                 {
                   unsigned int lat(theSpatiocyteStepper->global2coord(i, j, k));
                   Voxel& latVoxel((*theLattice)[lat]);
-                  if(latVoxel.id != theSpatiocyteStepper->getNullID())
+                  if(latVoxel.id == 4)
                     {
-                      //theSpecies[3]->addMolecule(latVoxel);
+                      theSpecies[6]->addMolecule(&latVoxel);
+                      /*
                       Point aPoint(theSpatiocyteStepper->coord2point(lat));
                       if(inMTCylinder(aPoint))
                         {
@@ -357,6 +358,7 @@ void FilamentProcess::enlistLatticeVoxels()
                                 }
                             }
                         }
+                        */
                     }
                 }
             }
@@ -396,6 +398,8 @@ void FilamentProcess::enlistLatticeVoxels()
             }
         }
     }
+  std::cout << getIDString(theSpecies[6]) << " size:" << theSpecies[6]->size() << std::endl;
+  theSpecies[6]->setIsPopulated();
 }
 
 void FilamentProcess::addDirect(Voxel& offVoxel, unsigned a,

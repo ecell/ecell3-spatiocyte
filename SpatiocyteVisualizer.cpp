@@ -125,6 +125,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   m_RunReverse(false),
   show3DMolecule(false),
   showTime(true),
+  showSurface(false),
   startRecord(false),
   m_stepCnt(-1),
   theMeanPointSize(0),
@@ -502,6 +503,12 @@ void GLScene::setShowTime(bool isShowTime)
   queue_draw();
 }
 
+void GLScene::setShowSurface(bool isShowSurface)
+{
+  showSurface = isShowSurface;
+  queue_draw();
+}
+
 void GLScene::setRecord(bool isRecord)
 {
   std::cout << "starting to record frames..." << std::endl;
@@ -698,6 +705,10 @@ bool GLScene::on_expose_event(GdkEventExpose* event)
     {
       glDisable(GL_LIGHTING);
       (this->*thePlotFunction)();
+    }
+  if(showSurface)
+    {
+      rotateMidAxisAbs(90, 0, 1, 0);
     }
   if(showTime)
     {
@@ -1757,6 +1768,7 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table *aTable) :
   theResetDepthButton( "Reset" ),
   theCheck3DMolecule( "Show 3D Molecules" ),
   theCheckShowTime( "Show Time" ),
+  theCheckShowSurface( "Show Surface" ),
   theButtonResetTime( "Reset Time" ),
   theDepthLabel( "Depth" ),
   theDepthAdj( 0, -200, 130, 5, 0, 0 ),
@@ -1825,6 +1837,12 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table *aTable) :
   theBoxInLattice.pack_start( the3DMoleculeBox, false, false, 1 );
   //theResetDepthButton.connect( 'clicked', resetDepth );
   the3DMoleculeBox.pack_start( theResetDepthButton ); 
+
+  theCheckShowSurface.signal_toggled().connect( sigc::mem_fun(*this,
+                            &ControlBox::on_showSurface_toggled) );
+  //theCheckShowSurface.set_active();
+  theBoxCtrl.pack_start( theCheckShowSurface, false, false, 2 );
+
   theCheckShowTime.signal_toggled().connect( sigc::mem_fun(*this,
                             &ControlBox::on_showTime_toggled) );
   theCheckShowTime.set_active();
@@ -2160,74 +2178,67 @@ void ControlBox::update_background_color(Gtk::ColorSelection* colorSel)
   m_bgColor.modify_fg(Gtk::STATE_SELECTED, aColor);
 }
 
-void
-ControlBox::on_3DMolecule_toggled()
+void ControlBox::on_3DMolecule_toggled()
 {
   m_area->set3DMolecule(theCheck3DMolecule.get_active());
 }
 
-void
-ControlBox::on_showTime_toggled()
+void ControlBox::on_showTime_toggled()
 {
   m_area->setShowTime(theCheckShowTime.get_active());
 }
 
-void
-ControlBox::on_resetTime_clicked()
+void ControlBox::on_showSurface_toggled()
+{
+  m_area->setShowSurface(theCheckShowSurface.get_active());
+}
+
+void ControlBox::on_resetTime_clicked()
 {
   m_area->resetTime();
 }
 
-void
-ControlBox::onResetRotation()
+void ControlBox::onResetRotation()
 {
   m_area->resetView();
 }
 
-void
-ControlBox::onResetBound()
+void ControlBox::onResetBound()
 {
   m_area->resetBound();
 }
 
-void
-ControlBox::on_record_toggled()
+void ControlBox::on_record_toggled()
 {
   m_area->setRecord(theButtonRecord.get_active());
 }
 
-void
-ControlBox::setXangle(double angle)
+void ControlBox::setXangle(double angle)
 {
   theXAdj.set_value(angle);
 }
 
-void
-ControlBox::setYangle(double angle)
+void ControlBox::setYangle(double angle)
 {
   theYAdj.set_value(angle);
 }
 
-void
-ControlBox::setZangle(double angle)
+void ControlBox::setZangle(double angle)
 {
   theZAdj.set_value(angle);
 }
 
-void
-ControlBox::xRotateChanged()
+void ControlBox::xRotateChanged()
 {
   m_area->rotateMidAxisAbs(theXAdj.get_value(), 1, 0, 0);
 }
 
-void
-ControlBox::yRotateChanged()
+void ControlBox::yRotateChanged()
 {
   m_area->rotateMidAxisAbs(theYAdj.get_value(), 0, 1, 0);
 }
 
-void
-ControlBox::zRotateChanged()
+void ControlBox::zRotateChanged()
 {
   m_area->rotateMidAxisAbs(theZAdj.get_value(), 0, 0, 1);
 }

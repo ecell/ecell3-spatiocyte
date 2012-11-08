@@ -133,7 +133,8 @@ void MoleculePopulateProcess::populateUniformOnDiffusiveVacant(Species*
                                                                aSpecies)
 {
   std::cout << "    Populating uniformly on diffusive vacant:" <<
-    getIDString(aSpecies) << std::endl;
+    getIDString(aSpecies) << " current size:" << aSpecies->size() <<
+    ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
   if(!aSpecies->getIsPopulated())
     {
       if(UniformRadiusX == 1 && UniformRadiusY == 1 && UniformRadiusZ == 1 &&
@@ -182,7 +183,8 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
                                               unsigned int* aCount)
 {
   std::cout << "    Populating densely:" <<
-    getIDString(aSpecies) << std::endl;
+    getIDString(aSpecies) << " current size:" << aSpecies->size() <<
+    ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
   Species* aVacantSpecies(aSpecies->getVacantSpecies());
   if(!aSpecies->getIsPopulated())
     {
@@ -212,7 +214,8 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
 void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
 {
   std::cout << "    Populating sparsely:" <<
-    getIDString(aSpecies) << std::endl;
+    getIDString(aSpecies) << " current size:" << aSpecies->size() <<
+    ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
   Species* aVacantSpecies(aSpecies->getVacantSpecies());
   if(!aSpecies->getIsPopulated())
     {
@@ -245,7 +248,8 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
 void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
 {
   std::cout << "    Populating uniformly ranged:" <<
-    getIDString(aSpecies) << std::endl;
+    getIDString(aSpecies) << " current size:" << aSpecies->size() <<
+    ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
   Comp* aComp(aSpecies->getComp());
   Species* aVacantSpecies(aComp->vacantSpecies);
   double deltaX(0);

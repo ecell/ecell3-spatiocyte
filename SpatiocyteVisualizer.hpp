@@ -77,6 +77,7 @@ protected:
   void update_background_color(Gtk::ColorSelection*);
   void on_3DMolecule_toggled();
   void on_showTime_toggled();
+  void on_showSurface_toggled();
   void on_record_toggled();
   void on_resetTime_clicked();
   void onResetRotation();
@@ -106,6 +107,7 @@ private:
   Gtk::VBox theBoxInFrame;
   Gtk::ToggleButton m_3d;
   Gtk::ToggleButton m_showTime;
+  Gtk::ToggleButton m_showSurface;
   Gtk::Label m_stepLabel;
   Gtk::Label m_timeLabel;
   Gtk::HBox theXBox;
@@ -181,6 +183,7 @@ private:
   Gtk::Button theResetDepthButton;
   Gtk::CheckButton theCheck3DMolecule;
   Gtk::CheckButton theCheckShowTime;
+  Gtk::CheckButton theCheckShowSurface;
   Gtk::Button theButtonResetTime;
   Gtk::Label theDepthLabel;
   Gtk::Adjustment theDepthAdj;
@@ -233,7 +236,8 @@ public:
   void setSpeciesVisibility(unsigned int id, bool isVisible);
   bool getSpeciesVisibility(unsigned int id);
   void set3DMolecule(bool is3D);
-  void setShowTime(bool isShowTime);
+  void setShowTime(bool);
+  void setShowSurface(bool);
   void setRecord(bool isRecord);
   void resetTime();
   void setControlBox(ControlBox* aControl);
@@ -308,6 +312,7 @@ protected:
   bool m_RunReverse;
   bool show3DMolecule;
   bool showTime;
+  bool showSurface;
   bool startRecord;
   bool *theSpeciesVisibility;
   int m_FontHeight;
