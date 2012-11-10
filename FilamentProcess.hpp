@@ -180,6 +180,7 @@ public:
   bool inMTCylinder(Point&);
   void rotatePointAlongVector(Point&, double);
   void connectFilaments();
+  void setDirectAndInterface(unsigned, unsigned);
 protected:
   bool isCompartmentalized;
   int tempID;
@@ -211,6 +212,8 @@ protected:
   std::vector<Point> thePoints;
   std::vector<Species*> theFilamentSpecies;
   std::vector<unsigned int> occCoords;
+  std::vector<std::vector<unsigned> > interfaceVoxels;
+  std::vector<std::vector<unsigned> > directVoxels;
 };
 
 #endif /* __FilamentProcess_hpp */

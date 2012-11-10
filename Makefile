@@ -37,7 +37,7 @@ SPATIOCYTE = spatiocyte
 OBJECTS=${OBJS:=.o}
 SOS=${DMS:=.so}
 
-all:	$(SOS) $(SPATIOCYTE)
+all:	$(SPATIOCYTE) $(SOS) 
 
 VisualizationLogProcess.so: 	VisualizationLogProcess.cpp
 	$(ECELL3_DMC) -o VisualizationLogProcess.so --ldflags=SpatiocyteProcess.so VisualizationLogProcess.cpp

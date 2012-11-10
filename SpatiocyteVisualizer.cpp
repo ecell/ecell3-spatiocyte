@@ -688,10 +688,13 @@ bool GLScene::on_expose_event(GdkEventExpose* event)
     {
       if(show3DMolecule)
         {
+          glEnable(GL_LIGHTING);
+          glEnable(GL_LIGHT0);
           (this->*thePlot3DFunction)();
         }
       else
         {
+          glDisable(GL_LIGHTING);
           (this->*thePlotFunction)();
         }
     }

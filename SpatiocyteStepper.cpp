@@ -1683,42 +1683,48 @@ void SpatiocyteStepper::point2global(Point aPoint,
                                      unsigned& aGlobalLayer,
                                      unsigned& aGlobalCol)
 {
+  double row(0);
+  double layer(0);
+  double col(0);
   switch(LatticeType)
     {
     case HCP_LATTICE: 
-      aGlobalCol = (unsigned)rint(aPoint.x/theHCPx);
-      aGlobalLayer = (unsigned)rint((aPoint.y-(aGlobalCol%2)*theHCPl)/
+      col = rint(aPoint.x/theHCPx);
+      layer = rint((aPoint.y-(aGlobalCol%2)*theHCPl)/
                                         theHCPy);
-      aGlobalRow = (unsigned)rint((aPoint.z-((aGlobalLayer+aGlobalCol)%2)*
+      row = rint((aPoint.z-((aGlobalLayer+aGlobalCol)%2)*
           theNormalizedVoxelRadius)/(2*theNormalizedVoxelRadius));
       break;
     case CUBIC_LATTICE:
-      aGlobalCol = (unsigned)rint(aPoint.x/(2*theNormalizedVoxelRadius));
-      aGlobalLayer = (unsigned)rint(aPoint.y/(2*theNormalizedVoxelRadius));
-      aGlobalRow = (unsigned)rint(aPoint.z/(2*theNormalizedVoxelRadius));
+      col = rint(aPoint.x/(2*theNormalizedVoxelRadius));
+      layer = rint(aPoint.y/(2*theNormalizedVoxelRadius));
+      row = rint(aPoint.z/(2*theNormalizedVoxelRadius));
       break;
     }
-  if(aGlobalCol < 0)
+  if(row < 0)
     {
-      aGlobalCol = 0;
+      row = 0;
     }
-  else if(aGlobalCol >= theColSize)
+  if(layer < 0)
+    {
+      layer = 0;
+    }
+  if(col < 0)
+    {
+      col = 0;
+    }
+  aGlobalRow = (unsigned)row;
+  aGlobalLayer = (unsigned)layer;
+  aGlobalCol = (unsigned)col;
+  if(aGlobalCol >= theColSize)
     {
       aGlobalCol = theColSize-1;
     }
-  if(aGlobalRow < 0)
-    {
-      aGlobalRow = 0;
-    }
-  else if(aGlobalRow >= theRowSize)
+  if(aGlobalRow >= theRowSize)
     {
       aGlobalRow = theRowSize-1;
     }
-  if(aGlobalLayer < 0)
-    {
-      aGlobalLayer = 0;
-    }
-  else if(aGlobalLayer >= theLayerSize)
+  if(aGlobalLayer >= theLayerSize)
     {
       aGlobalLayer = theLayerSize-1;
     }
