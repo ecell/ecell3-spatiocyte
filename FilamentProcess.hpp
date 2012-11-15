@@ -58,6 +58,7 @@ public:
     }
   FilamentProcess():
     isCompartmentalized(false),
+    dimension(1),
     Filaments(1),
     Periodic(0),
     Subunits(1),
@@ -92,6 +93,8 @@ public:
           return;
         }
       SpatiocyteProcess::initialize();
+      theInterfaceSpecies = 
+        theSpatiocyteStepper->createSpecies(getSuperSystem(), "Interface");
       for(VariableReferenceVector::iterator
           i(theVariableReferenceVector.begin());
           i != theVariableReferenceVector.end(); ++i)
@@ -151,7 +154,7 @@ public:
       normSubunitRadius = SubunitRadius/(VoxelRadius*2);
 
       theVacantSpecies->setIsOffLattice();
-      for(unsigned int i(0); i != theFilamentSpecies.size(); ++i)
+      for(unsigned i(0); i != theFilamentSpecies.size(); ++i)
         {
           theFilamentSpecies[i]->setIsOffLattice();
         }
@@ -161,18 +164,17 @@ public:
       SpatiocyteProcess::initializeSecond();
       theVacantSpecies->setIsCompVacant();
     }
-  virtual unsigned int getLatticeResizeCoord(unsigned int);
+  virtual unsigned getLatticeResizeCoord(unsigned);
   virtual void initializeThird();
-  void addCompVoxel(unsigned int, unsigned int, Point&);
+  void addCompVoxel(unsigned, unsigned, Point&);
   void initializeDirectionVector();
   void initializeFilaments();
   void elongateFilaments();
-  void connectPeriodic(unsigned int);
-  void connectNorthSouth(unsigned int, unsigned int);
-  void connectEastWest(unsigned int, unsigned int);
-  void connectSeamEastWest(unsigned int);
-  void connectNwSw(unsigned int);
-  void enlistLatticeVoxels();
+  void connectPeriodic(unsigned);
+  void connectNorthSouth(unsigned, unsigned);
+  void connectEastWest(unsigned, unsigned);
+  void connectSeamEastWest(unsigned);
+  void connectNwSw(unsigned);
   void addDirect(Voxel&, unsigned, Voxel&, unsigned);
   void addIndirect(Voxel&, unsigned, Voxel&, unsigned);
   bool initAdjoins(Voxel&);
@@ -180,15 +182,22 @@ public:
   bool inMTCylinder(Point&);
   void rotatePointAlongVector(Point&, double);
   void connectFilaments();
-  void setDirectAndInterface(unsigned, unsigned);
+  void addInterfaceVoxel(unsigned, unsigned);
+  void setCompartmentDimension();
+  void setCompartmentVectors();
+  void interfaceSubunits();
+  void enlistInterfaceVoxels();
+  void enlistNonIntersectInterfaceVoxels();
+  void addNonIntersectInterfaceVoxel(Voxel&);
 protected:
   bool isCompartmentalized;
   int tempID;
-  unsigned int endCoord;
-  unsigned int Filaments;
-  unsigned int Periodic;
-  unsigned int startCoord;
-  unsigned int Subunits;
+  unsigned dimension;
+  unsigned endCoord;
+  unsigned Filaments;
+  unsigned Periodic;
+  unsigned startCoord;
+  unsigned Subunits;
   double Length;
   double normLength;
   double normSubunitRadius;
@@ -201,6 +210,7 @@ protected:
   double RotateY;
   double RotateZ;
   double SubunitRadius;
+  double surfaceDisplacement;
   double VoxelRadius;
   double Width;
   Comp* theComp;
@@ -208,12 +218,15 @@ protected:
   Point M; //Minus end
   Point P; //Plus end
   Point C; //Center point
+  Point subunitVector;
+  Point filamentVector;
+  Point surfaceNormal;
   Species* theVacantSpecies;
+  Species* theInterfaceSpecies;
   std::vector<Point> thePoints;
   std::vector<Species*> theFilamentSpecies;
-  std::vector<unsigned int> occCoords;
-  std::vector<std::vector<unsigned> > interfaceVoxels;
-  std::vector<std::vector<unsigned> > directVoxels;
+  std::vector<unsigned> occCoords;
+  std::vector<std::vector<unsigned> > subunitInterfaces;
 };
 
 #endif /* __FilamentProcess_hpp */

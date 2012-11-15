@@ -63,6 +63,8 @@ public:
   virtual void step();
   void createSpecies();
   Species* addSpecies(Variable*);
+  Species* createSpecies(System*, String);
+  Variable* createVariable(System*, String);
   Species* getSpecies(Variable*);
   std::vector<Species*> getSpecies();
   Point coord2point(unsigned);
