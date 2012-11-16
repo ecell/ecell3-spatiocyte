@@ -442,13 +442,13 @@ void FilamentProcess::addNonIntersectInterfaceVoxel(Voxel& aVoxel)
             {
               if(abs(distA) < abs(distB))
                 { 
-                  theSpecies[5]->addMolecule(&aVoxel);
+                  theSpecies[6]->addMolecule(&aVoxel);
                   theInterfaceSpecies->addMolecule(&aVoxel);
                   return;
                 }
               else
                 {
-                  theSpecies[5]->addMolecule(&adjoin);
+                  theSpecies[6]->addMolecule(&adjoin);
                   theInterfaceSpecies->addMolecule(&adjoin);
                 }
             }

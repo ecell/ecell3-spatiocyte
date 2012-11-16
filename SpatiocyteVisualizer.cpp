@@ -671,6 +671,11 @@ void GLScene::renderLayout(Glib::RefPtr<Pango::Layout> layout)
   glPixelTransferf( GL_ALPHA_SCALE, 1 );
   glDrawPixels( bitmap.width, bitmap.rows,
                 GL_ALPHA, GL_UNSIGNED_BYTE, begin_bitmap_buffer );
+  //reset
+  glDisable(GL_BLEND);
+  glPixelTransferf(GL_RED_BIAS, 0.0f);
+  glPixelTransferf(GL_GREEN_BIAS, 0.0f);
+  glPixelTransferf(GL_BLUE_BIAS, 0.0f);
   delete[] begin_bitmap_buffer;
 }
 
