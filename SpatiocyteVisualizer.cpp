@@ -662,15 +662,15 @@ void GLScene::renderLayout(Glib::RefPtr<Pango::Layout> layout)
 
   GLfloat bg[4];
   glGetFloatv(GL_COLOR_CLEAR_VALUE, bg); 
-  glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
-  glEnable( GL_BLEND );
-  glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-  glPixelTransferf( GL_RED_BIAS,  (1.0-bg[0]));
-  glPixelTransferf( GL_GREEN_BIAS,  (1.0-bg[1]));
-  glPixelTransferf( GL_BLUE_BIAS, (1.0-bg[2]));
-  glPixelTransferf( GL_ALPHA_SCALE, 1 );
-  glDrawPixels( bitmap.width, bitmap.rows,
-                GL_ALPHA, GL_UNSIGNED_BYTE, begin_bitmap_buffer );
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glPixelTransferf(GL_RED_BIAS,  (1.0-bg[0]));
+  glPixelTransferf(GL_GREEN_BIAS,  (1.0-bg[1]));
+  glPixelTransferf(GL_BLUE_BIAS, (1.0-bg[2]));
+  glPixelTransferf(GL_ALPHA_SCALE, 1 );
+  glDrawPixels(bitmap.width, bitmap.rows,
+               GL_ALPHA, GL_UNSIGNED_BYTE, begin_bitmap_buffer);
   //reset
   glDisable(GL_BLEND);
   glPixelTransferf(GL_RED_BIAS, 0.0f);
