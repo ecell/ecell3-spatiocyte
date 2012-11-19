@@ -8,7 +8,7 @@ MassActionProcess\
 ReactionProcess\
 VisualizationLogProcess\
 MicrotubuleProcess\
-FilamentProcess\
+CompartmentProcess\
 ErythrocyteProcess\
 H5VisualizationLogProcess\
 IteratingLogProcess\
@@ -63,8 +63,8 @@ DiffusionInfluencedReactionProcess.so: 	DiffusionInfluencedReactionProcess.cpp
 MicrotubuleProcess.so: 	MicrotubuleProcess.cpp
 	$(ECELL3_DMC) -o MicrotubuleProcess.so --ldflags="SpatiocyteProcess.so" MicrotubuleProcess.cpp
 
-FilamentProcess.so: 	FilamentProcess.cpp
-	$(ECELL3_DMC) -o FilamentProcess.so --ldflags="SpatiocyteProcess.so" FilamentProcess.cpp
+CompartmentProcess.so: 	CompartmentProcess.cpp
+	$(ECELL3_DMC) -o CompartmentProcess.so --ldflags="SpatiocyteProcess.so" CompartmentProcess.cpp
 
 ErythrocyteProcess.so: 	ErythrocyteProcess.cpp
 	$(ECELL3_DMC) -o ErythrocyteProcess.so --ldflags="SpatiocyteProcess.so" ErythrocyteProcess.cpp
