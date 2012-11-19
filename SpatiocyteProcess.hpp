@@ -33,6 +33,7 @@
 #define __SpatiocyteProcess_hpp
 
 #include <Process.hpp>
+#include <Model.hpp>
 #include "SpatiocyteCommon.hpp"
 #include "SpatiocyteStepper.hpp"
 #include "SpatiocyteProcessInterface.hpp"
@@ -64,6 +65,10 @@ public:
   virtual void initializeFifth() {}
   virtual void initializeLastOnce() {}
   virtual void printParameters() {}
+  virtual void prepreinitialize()
+    {
+      Process::prepreinitialize();
+    }
   virtual void initialize()
     {
       if(isInitialized)
@@ -178,6 +183,17 @@ public:
   virtual bool getIsPriorityQueued()
     {
       return isPriorityQueued;
+    }
+  Variable* createVariable(String anID)
+    {
+      String anEntityType("Variable");
+      SystemPath aSystemPath(getSuperSystem()->getSystemPath());
+      aSystemPath.push_back(getSuperSystem()->getID());
+      FullID aFullID(anEntityType, aSystemPath, anID);
+      Variable* aVariable(reinterpret_cast<Variable*>(
+                              getModel()->createEntity("Variable", aFullID)));
+      aVariable->setValue(0);
+      return aVariable;
     }
 protected:
   String getIDString(Voxel*) const;

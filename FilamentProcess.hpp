@@ -86,6 +86,11 @@ public:
   SIMPLE_SET_GET_METHOD(Real, RotateZ);
   SIMPLE_SET_GET_METHOD(Real, SubunitRadius);
   SIMPLE_SET_GET_METHOD(Real, Width);
+  virtual void prepreinitialize()
+    {
+      SpatiocyteProcess::prepreinitialize();
+      theInterfaceVariable = createVariable("Interface");
+    }
   virtual void initialize()
     {
       if(isInitialized)
@@ -93,8 +98,8 @@ public:
           return;
         }
       SpatiocyteProcess::initialize();
-      theInterfaceSpecies = 
-        theSpatiocyteStepper->createSpecies(getSuperSystem(), "Interface");
+      theInterfaceSpecies = theSpatiocyteStepper->addSpecies(
+                                                       theInterfaceVariable);
       for(VariableReferenceVector::iterator
           i(theVariableReferenceVector.begin());
           i != theVariableReferenceVector.end(); ++i)
@@ -231,6 +236,7 @@ protected:
   Point surfaceNormal;
   Species* theVacantSpecies;
   Species* theInterfaceSpecies;
+  Variable* theInterfaceVariable;
   std::vector<Point> thePoints;
   std::vector<Species*> theFilamentSpecies;
   std::vector<unsigned> occCoords;
