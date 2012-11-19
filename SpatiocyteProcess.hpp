@@ -65,9 +65,9 @@ public:
   virtual void initializeFifth() {}
   virtual void initializeLastOnce() {}
   virtual void printParameters() {}
-  virtual void preinitialize()
+  virtual void prepreinitialize()
     {
-      Process::preinitialize();
+      Process::prepreinitialize();
     }
   virtual void initialize()
     {

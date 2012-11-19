@@ -86,9 +86,9 @@ public:
   SIMPLE_SET_GET_METHOD(Real, RotateZ);
   SIMPLE_SET_GET_METHOD(Real, SubunitRadius);
   SIMPLE_SET_GET_METHOD(Real, Width);
-  virtual void preinitialize()
+  virtual void prepreinitialize()
     {
-      SpatiocyteProcess::preinitialize();
+      SpatiocyteProcess::prepreinitialize();
       theInterfaceVariable = createVariable("Interface");
     }
   virtual void initialize()
