@@ -47,6 +47,7 @@ public:
       PROPERTYSLOT_SET_GET(Integer, Periodic);
       PROPERTYSLOT_SET_GET(Integer, Subunits);
       PROPERTYSLOT_SET_GET(Real, Length);
+      PROPERTYSLOT_SET_GET(Real, LipidRadius);
       PROPERTYSLOT_SET_GET(Real, OriginX);
       PROPERTYSLOT_SET_GET(Real, OriginY);
       PROPERTYSLOT_SET_GET(Real, OriginZ);
@@ -63,6 +64,7 @@ public:
     Periodic(0),
     Subunits(1),
     Length(0),
+    LipidRadius(0),
     nVoxelRadius(0.5),
     OriginX(0),
     OriginY(0),
@@ -78,6 +80,7 @@ public:
   SIMPLE_SET_GET_METHOD(Integer, Periodic);
   SIMPLE_SET_GET_METHOD(Integer, Subunits);
   SIMPLE_SET_GET_METHOD(Real, Length);
+  SIMPLE_SET_GET_METHOD(Real, LipidRadius);
   SIMPLE_SET_GET_METHOD(Real, OriginX);
   SIMPLE_SET_GET_METHOD(Real, OriginY);
   SIMPLE_SET_GET_METHOD(Real, OriginZ);
@@ -90,6 +93,18 @@ public:
     {
       SpatiocyteProcess::prepreinitialize();
       theInterfaceVariable = createVariable("Interface");
+      theVacantVariable = createVariable("Vacant");
+      if(LipidRadius)
+        {
+          if(LipidRadius < 0)
+            {
+              LipidRadius = 0;
+            }
+          else
+            {
+              theLipidVariable = createVariable("Lipid");
+            }
+        }
     }
   virtual void initialize()
     {
@@ -100,54 +115,19 @@ public:
       SpatiocyteProcess::initialize();
       theInterfaceSpecies = theSpatiocyteStepper->addSpecies(
                                                        theInterfaceVariable);
+      theVacantSpecies = theSpatiocyteStepper->addSpecies(theVacantVariable);
+      if(LipidRadius)
+        {
+          theLipidSpecies = theSpatiocyteStepper->addSpecies(
+                                                       theLipidVariable);
+        }
       for(VariableReferenceVector::iterator
           i(theVariableReferenceVector.begin());
           i != theVariableReferenceVector.end(); ++i)
         {
           Species* aSpecies(theSpatiocyteStepper->variable2species(
                                    (*i).getVariable())); 
-          if((*i).getCoefficient())
-            {
-              if((*i).getCoefficient() == -1)
-                {
-                  if(theVacantSpecies)
-                    {
-                      THROW_EXCEPTION(ValueError, String(
-                                      getPropertyInterface().getClassName()) +
-                                      "[" + getFullID().asString() + 
-                                      "]: A CompartmentProcess requires only " +
-                                      "one vacant variable reference with -1 " +
-                                      "coefficient as the vacant species of " +
-                                      "the filament compartment, but " +
-                                      getIDString(theVacantSpecies) + " and " +
-                                      getIDString(aSpecies) + " are given."); 
-                    }
-                  theVacantSpecies = aSpecies;
-                }
-            }
-          else
-            {
-              theCompartmentSpecies.push_back(aSpecies);
-            }
-        }
-      if(!theCompartmentSpecies.size())
-        {
-          THROW_EXCEPTION(ValueError, String(
-                          getPropertyInterface().getClassName()) +
-                          "[" + getFullID().asString() + 
-                          "]: A CompartmentProcess requires at least one " +
-                          "nonHD variable reference with zero coefficient " +
-                          "as the filament species, but none is given."); 
-        }
-      if(!theVacantSpecies)
-        {
-          THROW_EXCEPTION(ValueError, String(
-                          getPropertyInterface().getClassName()) +
-                          "[" + getFullID().asString() + 
-                          "]: A CompartmentProcess requires one " +
-                          "nonHD variable reference with negative " +
-                          "coefficient as the vacant species, " +
-                          "but none is given."); 
+          theCompartmentSpecies.push_back(aSpecies);
         }
       if(!SubunitRadius)
         {
@@ -157,8 +137,13 @@ public:
       VoxelRadius = theSpatiocyteStepper->getVoxelRadius();
       //Normalized off-lattice voxel radius:
       nSubunitRadius = SubunitRadius/(VoxelRadius*2);
-
+      //Normalized lipid voxel radius:
+      nLipidRadius = LipidRadius/(VoxelRadius*2);
       theVacantSpecies->setIsOffLattice();
+      if(LipidRadius)
+        {
+          theLipidSpecies->setIsOffLattice();
+        }
       for(unsigned i(0); i != theCompartmentSpecies.size(); ++i)
         {
           theCompartmentSpecies[i]->setIsOffLattice();
@@ -180,12 +165,6 @@ public:
   void connectEastWest(unsigned, unsigned);
   void connectSeamEastWest(unsigned);
   void connectNwSw(unsigned);
-  void addDirect(Voxel&, unsigned, Voxel&, unsigned);
-  void addIndirect(Voxel&, unsigned, Voxel&, unsigned);
-  bool initAdjoins(Voxel&);
-  void updateAdjoinSize(Voxel&);
-  bool inMTCylinder(Point&);
-  void rotatePointAlongVector(Point&, double);
   void connectFilaments();
   void addInterfaceVoxel(unsigned, unsigned);
   void setCompartmentDimension();
@@ -197,7 +176,6 @@ public:
   bool isInside(Point&);
 protected:
   bool isCompartmentalized;
-  int tempID;
   unsigned dimension;
   unsigned endCoord;
   unsigned Filaments;
@@ -207,7 +185,9 @@ protected:
   double filamentDisplace;
   double filamentDisplaceOpp;
   double Length;
+  double LipidRadius;
   double nLength;
+  double nLipidRadius;
   double nSubunitRadius;
   double nVoxelRadius;
   double nWidth;
@@ -234,9 +214,12 @@ protected:
   Point subunitVector;
   Point surfaceEnd;
   Point surfaceNormal;
-  Species* theVacantSpecies;
+  Species* theLipidSpecies;
   Species* theInterfaceSpecies;
+  Species* theVacantSpecies;
   Variable* theInterfaceVariable;
+  Variable* theLipidVariable;
+  Variable* theVacantVariable;
   std::vector<Point> thePoints;
   std::vector<Species*> theCompartmentSpecies;
   std::vector<unsigned> occCoords;

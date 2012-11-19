@@ -38,7 +38,6 @@ unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
   theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
   theVacantSpecies->resetFixedAdjoins();
   theVacantSpecies->setRadius(SubunitRadius);
-  tempID = theSpecies.size();
   //The compartment center point (origin):
   C = theComp->centerPoint;
   C.x += OriginX*theComp->lengthX/2;
@@ -133,34 +132,19 @@ void CompartmentProcess::initializeFilaments()
       R.y = 30;
       R.z = (M.x*T.x-R.x*T.x+M.y*T.y-R.y*T.y+M.z*T.z)/T.z;
     }
-  Point D; //The direction vector from the minus end to the random point, R
-  D.x = R.x-M.x;
-  D.y = R.y-M.y;
-  D.z = R.z-M.z;
-  double NormD(sqrt(D.x*D.x+D.y*D.y+D.z*D.z));
-  D.x /= NormD;
-  D.y /= NormD;
-  D.z /= NormD;
-  //std::cout << "D.x:" << D.x << " y:" << D.y << " z:" << D.z << std::endl;
-  //std::cout << "T.x:" << T.x << " y:" << T.y << " z:" << T.z << std::endl;
+  //The direction vector from the minus end to the random point, R
+  Point D(sub(R, M)); 
+  D = norm(D);
   //The start point of the first protofilament:
-  Point S; 
-  S.x = M.x;
-  S.y = M.y;
-  S.z = M.z;
-  //std::cout << "S.x:" << S.x << " y:" << S.y << " z:" << S.z << std::endl;
+  Point S(M); 
   addCompVoxel(0, 0, S);
   for(unsigned i(1); i != Filaments; ++i)
     {
       Point U(S);
-      U.x += i*nSubunitRadius*sqrt(3)*D.x;
-      U.y += i*nSubunitRadius*sqrt(3)*D.y;
-      U.z += i*nSubunitRadius*sqrt(3)*D.z;
+      disp_(U, D, i*nSubunitRadius*sqrt(3)); 
       if(i%2 == 1)
         {
-          U.x += nSubunitRadius*T.x;
-          U.y += nSubunitRadius*T.y;
-          U.z += nSubunitRadius*T.z;
+          disp_(U, T, nSubunitRadius); 
         }
       addCompVoxel(i, 0, U);
     }
@@ -182,22 +166,13 @@ void CompartmentProcess::initializeDirectionVector()
   theSpatiocyteStepper->rotateX(RotateX, &M, -1);
   theSpatiocyteStepper->rotateY(RotateY, &M, -1);
   theSpatiocyteStepper->rotateZ(RotateZ, &M, -1);
-  M.x += C.x;
-  M.y += C.y;
-  M.z += C.z;
+  M = add(M, C);
   //Direction vector from the Minus end to center
-  T.x = C.x-M.x;
-  T.y = C.y-M.y;
-  T.z = C.z-M.z;
+  T = sub(C, M);
   //Make T a unit vector
-  double NormT(sqrt(T.x*T.x+T.y*T.y+T.z*T.z));
-  T.x /= NormT;
-  T.y /= NormT;
-  T.z /= NormT;
+  T = norm(T);
   //Rotated Plus end
-  P.x = M.x+Length*T.x;
-  P.y = M.y+Length*T.y;
-  P.z = M.z+Length*T.z;
+  P = disp(M, T, Length);
 }
 
 void CompartmentProcess::addCompVoxel(unsigned filamentIndex, 
@@ -224,9 +199,7 @@ void CompartmentProcess::elongateFilaments()
       Point A(*startVoxel->point);
       for(unsigned j(1); j != Subunits; ++j)
         {
-          A.x += (nSubunitRadius*2)*T.x;
-          A.y += (nSubunitRadius*2)*T.y;
-          A.z += (nSubunitRadius*2)*T.z;
+          disp_(A, T, nSubunitRadius*2);
           addCompVoxel(i, j, A);
         }
     }
@@ -349,9 +322,8 @@ void CompartmentProcess::interfaceSubunits()
 {
   enlistInterfaceVoxels();
   enlistNonIntersectInterfaceVoxels();
-  theSpecies[5]->setIsPopulated();
-  theSpecies[6]->setIsPopulated();
-  std::cout << "interface size:" << theInterfaceSpecies->size() << std::endl;
+  theVacantSpecies->setIsPopulated();
+  theInterfaceSpecies->setIsPopulated();
 }
 
 void CompartmentProcess::enlistInterfaceVoxels()
@@ -360,7 +332,6 @@ void CompartmentProcess::enlistInterfaceVoxels()
   for(unsigned i(startCoord); i != endCoord; ++i)
     {
       Voxel& subunit((*theLattice)[i]);
-      //theSpecies[1]->addMolecule(&subunit);
       subunit.diffuseSize = subunit.adjoiningSize;
       Point center(*subunit.point);
       Point bottomLeft(*subunit.point);
@@ -375,10 +346,6 @@ void CompartmentProcess::enlistInterfaceVoxels()
       unsigned blLayer(0);
       unsigned blCol(0);
       theSpatiocyteStepper->point2global(bottomLeft, blRow, blLayer, blCol);
-      //unsigned aCoord(theSpatiocyteStepper->point2coord(bottomLeft));
-      //theSpecies[5]->addMolecule(&(*theLattice)[aCoord]);
-      //unsigned bCoord(theSpatiocyteStepper->point2coord(topRight));
-      //theSpecies[5]->addMolecule(&(*theLattice)[bCoord]);
       unsigned trRow(0);
       unsigned trLayer(0);
       unsigned trCol(0);
@@ -412,7 +379,7 @@ void CompartmentProcess::addInterfaceVoxel(unsigned subunitCoord,
       //if(voxel.id == theComp->vacantSpecies->getID())
       if(voxel.id != theInterfaceSpecies->getID())
         {
-          theSpecies[5]->addMolecule(&voxel);
+          //theSpecies[5]->addMolecule(&voxel);
           theInterfaceSpecies->addMolecule(&voxel);
         }
       subunitInterfaces[subunitCoord-startCoord].push_back(voxelCoord);
@@ -478,227 +445,17 @@ void CompartmentProcess::addNonIntersectInterfaceVoxel(Voxel& aVoxel,
             {
               if(abs(distA) < abs(distB))
                 { 
-                  theSpecies[6]->addMolecule(&aVoxel);
+                  //theSpecies[6]->addMolecule(&aVoxel);
                   theInterfaceSpecies->addMolecule(&aVoxel);
                   return;
                 }
               else
                 {
-                  theSpecies[6]->addMolecule(&adjoin);
+                  //theSpecies[6]->addMolecule(&adjoin);
                   theInterfaceSpecies->addMolecule(&adjoin);
                 }
             }
         }
     }
 }
-
-void CompartmentProcess::addDirect(Voxel& subunit, unsigned a,
-                                   Voxel& adjoin, unsigned b)
-{
-  Point aPoint(*subunit.point);
-  adjoin.id = tempID;
-  Point adPoint(theSpatiocyteStepper->coord2point(b));
-  if(!inMTCylinder(adPoint))
-    { 
-      if(initAdjoins(adjoin)) 
-        {
-          occCoords.push_back(b);
-        }
-      double dist(getDistance(&aPoint, &adPoint)); 
-      if(dist <= nVoxelRadius+nSubunitRadius)
-        {
-          subunit.adjoiningCoords[subunit.adjoiningSize++] = b;
-          updateAdjoinSize(adjoin);
-          adjoin.initAdjoins[adjoin.adjoiningSize++] = a;
-        }
-      else
-        { 
-          addIndirect(subunit, a, adjoin, b);
-        }
-    }
-}
-
-void CompartmentProcess::addIndirect(Voxel& subunit, unsigned a,
-                                     Voxel& latVoxel, unsigned b)
-{
-  Point aPoint(*subunit.point);
-  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
-    {
-      unsigned aCoord(latVoxel.adjoiningCoords[i]);
-      Voxel& adjoin((*theLattice)[aCoord]);
-      if(adjoin.id == theComp->vacantSpecies->getID() || adjoin.id == tempID)
-        {
-          Point adPoint(theSpatiocyteStepper->coord2point(aCoord));
-          double dist(getDistance(&aPoint, &adPoint)); 
-          if(dist <= nSubunitRadius && inMTCylinder(adPoint))
-            { 
-              subunit.adjoiningCoords[subunit.adjoiningSize++] = b; 
-              initAdjoins(latVoxel);
-              updateAdjoinSize(latVoxel);
-              latVoxel.initAdjoins[latVoxel.adjoiningSize++] = a;
-            }
-        }
-    }
-}
-
-bool CompartmentProcess::initAdjoins(Voxel& aVoxel)
-{
-  if(aVoxel.initAdjoins == NULL)
-    {
-      aVoxel.adjoiningSize = 0;
-      aVoxel.initAdjoins = new unsigned[theAdjoiningCoordSize];
-      for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
-        {
-          unsigned aCoord(aVoxel.adjoiningCoords[i]);
-          Point aPoint(theSpatiocyteStepper->coord2point(aCoord));
-          if(!inMTCylinder(aPoint))
-            {
-              aVoxel.initAdjoins[aVoxel.adjoiningSize++] = aCoord;
-            }
-        }
-      return true;
-    }
-  return false;
-}
-
-void CompartmentProcess::updateAdjoinSize(Voxel& aVoxel)
-{
- if(aVoxel.adjoiningSize >= theAdjoiningCoordSize)
-    {
-      unsigned* temp(new unsigned[aVoxel.adjoiningSize+1]);
-      for(unsigned i(0); i != aVoxel.adjoiningSize; ++i)
-        {
-          temp[i] = aVoxel.initAdjoins[i];
-        }
-      delete[] aVoxel.initAdjoins;
-      aVoxel.initAdjoins = temp;
-    }
-}
-
-
-bool CompartmentProcess::inMTCylinder(Point& N)
-{
-  /*
-  Point E(M);
-  Point W(P);
-  Point S(M);
-  double t((-E.x*N.x-E.y*N.y-E.z*N.z+E.x*S.x+E.y*S.y+E.z*S.z+N.x*W.x-S.x*W.x+N.y*W.y-S.y*W.y+N.z*W.z-S.z*W.z)/(E.x*E.x+E.y*E.y+E.z*E.z-2*E.x*W.x+W.x*W.x-2*E.y*W.y+W.y*W.y-2*E.z*W.z+W.z*W.z));
-  double dist(sqrt(pow(-N.x+S.x+t*(-E.x+W.x),2)+pow(-N.y+S.y+t*(-E.y+W.y),2)+pow(-N.z+S.z+t*(-E.z+W.z),2)));
-  if(dist < Radius)
-    {
-      return true;
-    }
-  */
-  return false;
-}
-
-
-// The function returns the result when the point (x,y,z) is rotated about
-// the line through (a,b,c) with unit direction vector ⟨u,v,w⟩ by the angle.
-void CompartmentProcess::rotatePointAlongVector(Point& S, double angle)
-{
-  double x(S.x);
-  double y(S.y);
-  double z(S.z);
-  double a(M.x);
-  double b(M.y);
-  double c(M.z);
-  double u(T.x);
-  double v(T.y);
-  double w(T.z);
-  double u2(u*u);
-  double v2(v*v);
-  double w2(w*w);
-  double cosT(cos(angle));
-  double oneMinusCosT(1-cosT);
-  double sinT(sin(angle));
-  double xx((a*(v2 + w2) - u*(b*v + c*w - u*x - v*y - w*z)) * oneMinusCosT
-                + x*cosT + (-c*v + b*w - w*y + v*z)*sinT);
-  double yy((b*(u2 + w2) - v*(a*u + c*w - u*x - v*y - w*z)) * oneMinusCosT
-                + y*cosT + (c*u - a*w + w*x - u*z)*sinT);
-  double zz((c*(u2 + v2) - w*(a*u + b*v - u*x - v*y - w*z)) * oneMinusCosT
-                + z*cosT + (-b*u + a*v - v*x + u*y)*sinT);
-  S.x = xx;
-  S.y = yy;
-  S.z = zz;
-}
-
-
-/*
-void CompartmentProcess::enlistLatticeVoxels()
-{
-  interfaceVoxels.resize(Filaments*Subunits);
-  directVoxels.resize(Filaments*Subunits);
-  for(unsigned n(startCoord); n != endCoord; ++n)
-    {
-      if(n != startCoord+(Subunits*5)+2)
-        {
-          continue;
-        }
-      std::cout << "n:" << n << " subs:" << Subunits << " Fils:" << Filaments << std::endl;
-      Voxel& subunit((*theLattice)[n]);
-      theSpecies[1]->addMolecule(&subunit);
-      subunit.diffuseSize = subunit.adjoiningSize;
-      Point center(*subunit.point);
-      Point bottomLeft(*subunit.point);
-      Point topRight(*subunit.point);
-      bottomLeft.x -= nSubunitRadius+theSpatiocyteStepper->getColLength();
-      bottomLeft.y -= nSubunitRadius+theSpatiocyteStepper->getLayerLength();
-      bottomLeft.z -= nSubunitRadius+theSpatiocyteStepper->getRowLength();
-      topRight.x += nSubunitRadius+theSpatiocyteStepper->getColLength();
-      topRight.y += nSubunitRadius+theSpatiocyteStepper->getLayerLength();
-      topRight.z += nSubunitRadius+theSpatiocyteStepper->getRowLength();
-      unsigned blRow(0);
-      unsigned blLayer(0);
-      unsigned blCol(0);
-      theSpatiocyteStepper->point2global(bottomLeft, blRow, blLayer, blCol);
-      std::cout << "brow:" << blRow << " blayer:" << blLayer << " bCol:" << blCol << std::endl;
-      unsigned aCoord(theSpatiocyteStepper->point2coord(bottomLeft));
-      //theSpatiocyteStepper->coord2global(aCoord, blRow, blLayer, blCol);
-      std::cout << "brow:" << blRow << " blayer:" << blLayer << " bCol:" << blCol << std::endl;
-      if(blRow > 0)
-        {
-          ++blRow;
-        }
-      if(blCol > 0)
-        {
-          ++blCol;
-        }
-      if(blLayer > 0)
-        {
-          ++blLayer;
-        }
-      theSpecies[5]->addMolecule(&(*theLattice)[aCoord]);
-      unsigned bCoord(theSpatiocyteStepper->point2coord(topRight));
-      theSpecies[5]->addMolecule(&(*theLattice)[bCoord]);
-      unsigned trRow(0);
-      unsigned trLayer(0);
-      unsigned trCol(0);
-      theSpatiocyteStepper->point2global(topRight, trRow, trLayer, trCol);
-      std::cout << "trow:" << trRow << " tlayer:" << trLayer << " tCol:" << trCol << std::endl;
-      theSpatiocyteStepper->coord2global(bCoord, trRow, trLayer, trCol);
-      std::cout << "trow:" << trRow << " tlayer:" << trLayer << " tCol:" << trCol << std::endl;
-      std::vector<unsigned> checkedAdjoins;
-      for(unsigned i(0); i < startCoord; ++i)
-        {
-          setDirectAndInterface(n, i);
-        }
-      for(unsigned i(blRow); i < trRow; ++i)
-        {
-          for(unsigned j(blLayer); j < trLayer; ++j)
-            {
-              for(unsigned k(blCol); k < trCol; ++k)
-                {
-                  unsigned lat(theSpatiocyteStepper->global2coord(i, j, k));
-                  setDirectAndInterface(n, lat);
-                }
-            }
-        }
-    }
-  //connectInterfaceVoxels();
-  theSpecies[4]->setIsPopulated();
-  theSpecies[5]->setIsPopulated();
-  theSpecies[1]->setIsPopulated();
-}
-        */
 
