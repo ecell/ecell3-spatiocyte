@@ -29,18 +29,18 @@
 //
 
 
-#ifndef __FilamentProcess_hpp
-#define __FilamentProcess_hpp
+#ifndef __CompartmentProcess_hpp
+#define __CompartmentProcess_hpp
 
 #include <sstream>
 #include <MethodProxy.hpp>
 #include "SpatiocyteProcess.hpp"
 #include "SpatiocyteSpecies.hpp"
 
-LIBECS_DM_CLASS(FilamentProcess, SpatiocyteProcess)
+LIBECS_DM_CLASS(CompartmentProcess, SpatiocyteProcess)
 { 
 public:
-  LIBECS_DM_OBJECT(FilamentProcess, Process)
+  LIBECS_DM_OBJECT(CompartmentProcess, Process)
     {
       INHERIT_PROPERTIES(Process);
       PROPERTYSLOT_SET_GET(Integer, Filaments);
@@ -56,7 +56,7 @@ public:
       PROPERTYSLOT_SET_GET(Real, SubunitRadius);
       PROPERTYSLOT_SET_GET(Real, Width);
     }
-  FilamentProcess():
+  CompartmentProcess():
     isCompartmentalized(false),
     dimension(1),
     Filaments(1),
@@ -73,7 +73,7 @@ public:
     SubunitRadius(0),
     Width(0),
     theVacantSpecies(NULL) {}
-  virtual ~FilamentProcess() {}
+  virtual ~CompartmentProcess() {}
   SIMPLE_SET_GET_METHOD(Integer, Filaments);
   SIMPLE_SET_GET_METHOD(Integer, Periodic);
   SIMPLE_SET_GET_METHOD(Integer, Subunits);
@@ -115,7 +115,7 @@ public:
                       THROW_EXCEPTION(ValueError, String(
                                       getPropertyInterface().getClassName()) +
                                       "[" + getFullID().asString() + 
-                                      "]: A FilamentProcess requires only " +
+                                      "]: A CompartmentProcess requires only " +
                                       "one vacant variable reference with -1 " +
                                       "coefficient as the vacant species of " +
                                       "the filament compartment, but " +
@@ -127,15 +127,15 @@ public:
             }
           else
             {
-              theFilamentSpecies.push_back(aSpecies);
+              theCompartmentSpecies.push_back(aSpecies);
             }
         }
-      if(!theFilamentSpecies.size())
+      if(!theCompartmentSpecies.size())
         {
           THROW_EXCEPTION(ValueError, String(
                           getPropertyInterface().getClassName()) +
                           "[" + getFullID().asString() + 
-                          "]: A FilamentProcess requires at least one " +
+                          "]: A CompartmentProcess requires at least one " +
                           "nonHD variable reference with zero coefficient " +
                           "as the filament species, but none is given."); 
         }
@@ -144,7 +144,7 @@ public:
           THROW_EXCEPTION(ValueError, String(
                           getPropertyInterface().getClassName()) +
                           "[" + getFullID().asString() + 
-                          "]: A FilamentProcess requires one " +
+                          "]: A CompartmentProcess requires one " +
                           "nonHD variable reference with negative " +
                           "coefficient as the vacant species, " +
                           "but none is given."); 
@@ -159,9 +159,9 @@ public:
       nSubunitRadius = SubunitRadius/(VoxelRadius*2);
 
       theVacantSpecies->setIsOffLattice();
-      for(unsigned i(0); i != theFilamentSpecies.size(); ++i)
+      for(unsigned i(0); i != theCompartmentSpecies.size(); ++i)
         {
-          theFilamentSpecies[i]->setIsOffLattice();
+          theCompartmentSpecies[i]->setIsOffLattice();
         }
     }
   virtual void initializeSecond()
@@ -238,12 +238,12 @@ protected:
   Species* theInterfaceSpecies;
   Variable* theInterfaceVariable;
   std::vector<Point> thePoints;
-  std::vector<Species*> theFilamentSpecies;
+  std::vector<Species*> theCompartmentSpecies;
   std::vector<unsigned> occCoords;
   std::vector<std::vector<unsigned> > subunitInterfaces;
 };
 
-#endif /* __FilamentProcess_hpp */
+#endif /* __CompartmentProcess_hpp */
 
 
 

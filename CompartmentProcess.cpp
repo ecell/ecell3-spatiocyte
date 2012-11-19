@@ -28,12 +28,12 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
-#include "FilamentProcess.hpp"
+#include "CompartmentProcess.hpp"
 #include "Vector.hpp"
 
-LIBECS_DM_INIT(FilamentProcess, Process); 
+LIBECS_DM_INIT(CompartmentProcess, Process); 
 
-unsigned FilamentProcess::getLatticeResizeCoord(unsigned aStartCoord)
+unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
 {
   theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
   theVacantSpecies->resetFixedAdjoins();
@@ -45,12 +45,12 @@ unsigned FilamentProcess::getLatticeResizeCoord(unsigned aStartCoord)
   C.y += OriginY*theComp->lengthY/2;
   C.z += OriginZ*theComp->lengthZ/2;
   setCompartmentDimension();
-  for(unsigned i(0); i != theFilamentSpecies.size(); ++i)
+  for(unsigned i(0); i != theCompartmentSpecies.size(); ++i)
     {
-      theFilamentSpecies[i]->setIsOffLattice();
-      theFilamentSpecies[i]->setDimension(dimension);
-      theFilamentSpecies[i]->setVacantSpecies(theVacantSpecies);
-      theFilamentSpecies[i]->setRadius(SubunitRadius);
+      theCompartmentSpecies[i]->setIsOffLattice();
+      theCompartmentSpecies[i]->setDimension(dimension);
+      theCompartmentSpecies[i]->setVacantSpecies(theVacantSpecies);
+      theCompartmentSpecies[i]->setRadius(SubunitRadius);
     }
   //Normalized compartment lengths in terms of lattice voxel radius:
   nLength = Length/(VoxelRadius*2);
@@ -60,7 +60,7 @@ unsigned FilamentProcess::getLatticeResizeCoord(unsigned aStartCoord)
   return endCoord-startCoord;
 }
 
-void FilamentProcess::setCompartmentDimension()
+void CompartmentProcess::setCompartmentDimension()
 {
   if(Length)
     {
@@ -96,7 +96,7 @@ void FilamentProcess::setCompartmentDimension()
     }
 }
 
-void FilamentProcess::initializeThird()
+void CompartmentProcess::initializeThird()
 {
   if(!isCompartmentalized)
     {
@@ -111,7 +111,7 @@ void FilamentProcess::initializeThird()
   theVacantSpecies->setIsPopulated();
 }
 
-void FilamentProcess::initializeFilaments()
+void CompartmentProcess::initializeFilaments()
 {
   initializeDirectionVector();
   Point R; //Initialize a random point on the plane attached at the minus end
@@ -166,7 +166,7 @@ void FilamentProcess::initializeFilaments()
     }
 }
 
-void FilamentProcess::initializeDirectionVector()
+void CompartmentProcess::initializeDirectionVector()
 { 
   /*
    * MEnd = {Mx, My, Mz};(*minus end*) 
@@ -200,7 +200,7 @@ void FilamentProcess::initializeDirectionVector()
   P.z = M.z+Length*T.z;
 }
 
-void FilamentProcess::addCompVoxel(unsigned filamentIndex, 
+void CompartmentProcess::addCompVoxel(unsigned filamentIndex, 
                                    unsigned subunitIndex, Point& aPoint)
 {
   unsigned aCoord(startCoord+filamentIndex*Subunits+subunitIndex);
@@ -216,7 +216,7 @@ void FilamentProcess::addCompVoxel(unsigned filamentIndex,
   theVacantSpecies->addCompVoxel(aCoord);
 }
 
-void FilamentProcess::elongateFilaments()
+void CompartmentProcess::elongateFilaments()
 {
   for(unsigned i(0); i != Filaments; ++i)
     {
@@ -232,7 +232,7 @@ void FilamentProcess::elongateFilaments()
     }
 }
 
-void FilamentProcess::connectFilaments()
+void CompartmentProcess::connectFilaments()
 {
   for(unsigned i(0); i != Subunits; ++i)
     {
@@ -264,7 +264,7 @@ void FilamentProcess::connectFilaments()
     }
 }
 
-void FilamentProcess::connectPeriodic(unsigned j)
+void CompartmentProcess::connectPeriodic(unsigned j)
 {
   unsigned a(startCoord+j*Subunits+Subunits-1);
   Voxel& aVoxel((*theLattice)[a]);
@@ -276,7 +276,7 @@ void FilamentProcess::connectPeriodic(unsigned j)
   adjoin.adjoiningSize = 2;
 }
 
-void FilamentProcess::connectNorthSouth(unsigned i, unsigned j)
+void CompartmentProcess::connectNorthSouth(unsigned i, unsigned j)
 {
   unsigned a(startCoord+j*Subunits+(i-1));
   Voxel& aVoxel((*theLattice)[a]);
@@ -288,7 +288,7 @@ void FilamentProcess::connectNorthSouth(unsigned i, unsigned j)
   adjoin.adjoiningSize = 2;
 }
 
-void FilamentProcess::connectEastWest(unsigned i, unsigned j)
+void CompartmentProcess::connectEastWest(unsigned i, unsigned j)
 {
   unsigned a(startCoord+j*Subunits+i);
   Voxel& aVoxel((*theLattice)[a]);
@@ -298,7 +298,7 @@ void FilamentProcess::connectEastWest(unsigned i, unsigned j)
   adjoin.adjoiningCoords[adjoin.adjoiningSize++] = a;
 }
 
-void FilamentProcess::connectSeamEastWest(unsigned i)
+void CompartmentProcess::connectSeamEastWest(unsigned i)
 {
   unsigned a(startCoord+i);
   Voxel& aVoxel((*theLattice)[a]);
@@ -308,7 +308,7 @@ void FilamentProcess::connectSeamEastWest(unsigned i)
   adjoin.adjoiningCoords[adjoin.adjoiningSize++] = a;
 }
 
-void FilamentProcess::connectNwSw(unsigned i)
+void CompartmentProcess::connectNwSw(unsigned i)
 {
   unsigned a(startCoord+i);
   Voxel& aVoxel((*theLattice)[a]);
@@ -318,7 +318,7 @@ void FilamentProcess::connectNwSw(unsigned i)
   adjoin.adjoiningCoords[adjoin.adjoiningSize++] = a;
 }
 
-void FilamentProcess::setCompartmentVectors()
+void CompartmentProcess::setCompartmentVectors()
 {
   filamentStart = *(*theLattice)[startCoord].point;
   filamentEnd = *(*theLattice)[startCoord+Subunits-1].point;
@@ -345,7 +345,7 @@ void FilamentProcess::setCompartmentVectors()
     }
 }
 
-void FilamentProcess::interfaceSubunits()
+void CompartmentProcess::interfaceSubunits()
 {
   enlistInterfaceVoxels();
   enlistNonIntersectInterfaceVoxels();
@@ -354,7 +354,7 @@ void FilamentProcess::interfaceSubunits()
   std::cout << "interface size:" << theInterfaceSpecies->size() << std::endl;
 }
 
-void FilamentProcess::enlistInterfaceVoxels()
+void CompartmentProcess::enlistInterfaceVoxels()
 {
   subunitInterfaces.resize(Filaments*Subunits);
   for(unsigned i(startCoord); i != endCoord; ++i)
@@ -397,7 +397,7 @@ void FilamentProcess::enlistInterfaceVoxels()
     }
 }
 
-void FilamentProcess::addInterfaceVoxel(unsigned subunitCoord,
+void CompartmentProcess::addInterfaceVoxel(unsigned subunitCoord,
                                         unsigned voxelCoord)
 { 
   Voxel& subunit((*theLattice)[subunitCoord]);
@@ -419,7 +419,7 @@ void FilamentProcess::addInterfaceVoxel(unsigned subunitCoord,
     }
 }
 
-void FilamentProcess::enlistNonIntersectInterfaceVoxels()
+void CompartmentProcess::enlistNonIntersectInterfaceVoxels()
 {
   for(unsigned i(0); i != theInterfaceSpecies->size(); ++i)
     {
@@ -440,7 +440,7 @@ void FilamentProcess::enlistNonIntersectInterfaceVoxels()
     }
 }
 
-bool FilamentProcess::isInside(Point& aPoint)
+bool CompartmentProcess::isInside(Point& aPoint)
 {
   double dist(point2planeDist(aPoint, subunitVector, subunitDisplace));
   if(dist >= 0)
@@ -462,7 +462,7 @@ bool FilamentProcess::isInside(Point& aPoint)
   return false;
 }
 
-void FilamentProcess::addNonIntersectInterfaceVoxel(Voxel& aVoxel,
+void CompartmentProcess::addNonIntersectInterfaceVoxel(Voxel& aVoxel,
                                                     Point& aPoint)
 {
   double distA(point2planeDist(aPoint, surfaceNormal, surfaceDisplace));
@@ -492,7 +492,7 @@ void FilamentProcess::addNonIntersectInterfaceVoxel(Voxel& aVoxel,
     }
 }
 
-void FilamentProcess::addDirect(Voxel& subunit, unsigned a,
+void CompartmentProcess::addDirect(Voxel& subunit, unsigned a,
                                    Voxel& adjoin, unsigned b)
 {
   Point aPoint(*subunit.point);
@@ -518,7 +518,7 @@ void FilamentProcess::addDirect(Voxel& subunit, unsigned a,
     }
 }
 
-void FilamentProcess::addIndirect(Voxel& subunit, unsigned a,
+void CompartmentProcess::addIndirect(Voxel& subunit, unsigned a,
                                      Voxel& latVoxel, unsigned b)
 {
   Point aPoint(*subunit.point);
@@ -541,7 +541,7 @@ void FilamentProcess::addIndirect(Voxel& subunit, unsigned a,
     }
 }
 
-bool FilamentProcess::initAdjoins(Voxel& aVoxel)
+bool CompartmentProcess::initAdjoins(Voxel& aVoxel)
 {
   if(aVoxel.initAdjoins == NULL)
     {
@@ -561,7 +561,7 @@ bool FilamentProcess::initAdjoins(Voxel& aVoxel)
   return false;
 }
 
-void FilamentProcess::updateAdjoinSize(Voxel& aVoxel)
+void CompartmentProcess::updateAdjoinSize(Voxel& aVoxel)
 {
  if(aVoxel.adjoiningSize >= theAdjoiningCoordSize)
     {
@@ -576,7 +576,7 @@ void FilamentProcess::updateAdjoinSize(Voxel& aVoxel)
 }
 
 
-bool FilamentProcess::inMTCylinder(Point& N)
+bool CompartmentProcess::inMTCylinder(Point& N)
 {
   /*
   Point E(M);
@@ -595,7 +595,7 @@ bool FilamentProcess::inMTCylinder(Point& N)
 
 // The function returns the result when the point (x,y,z) is rotated about
 // the line through (a,b,c) with unit direction vector ⟨u,v,w⟩ by the angle.
-void FilamentProcess::rotatePointAlongVector(Point& S, double angle)
+void CompartmentProcess::rotatePointAlongVector(Point& S, double angle)
 {
   double x(S.x);
   double y(S.y);
@@ -625,7 +625,7 @@ void FilamentProcess::rotatePointAlongVector(Point& S, double angle)
 
 
 /*
-void FilamentProcess::enlistLatticeVoxels()
+void CompartmentProcess::enlistLatticeVoxels()
 {
   interfaceVoxels.resize(Filaments*Subunits);
   directVoxels.resize(Filaments*Subunits);
