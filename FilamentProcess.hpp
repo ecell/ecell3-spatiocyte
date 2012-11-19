@@ -63,7 +63,7 @@ public:
     Periodic(0),
     Subunits(1),
     Length(0),
-    normVoxelRadius(0.5),
+    nVoxelRadius(0.5),
     OriginX(0),
     OriginY(0),
     OriginZ(0),
@@ -151,7 +151,7 @@ public:
       //Lattice voxel radius:
       VoxelRadius = theSpatiocyteStepper->getVoxelRadius();
       //Normalized off-lattice voxel radius:
-      normSubunitRadius = SubunitRadius/(VoxelRadius*2);
+      nSubunitRadius = SubunitRadius/(VoxelRadius*2);
 
       theVacantSpecies->setIsOffLattice();
       for(unsigned i(0); i != theFilamentSpecies.size(); ++i)
@@ -188,7 +188,8 @@ public:
   void interfaceSubunits();
   void enlistInterfaceVoxels();
   void enlistNonIntersectInterfaceVoxels();
-  void addNonIntersectInterfaceVoxel(Voxel&);
+  void addNonIntersectInterfaceVoxel(Voxel&, Point&);
+  bool isInside(Point&);
 protected:
   bool isCompartmentalized;
   int tempID;
@@ -198,11 +199,13 @@ protected:
   unsigned Periodic;
   unsigned startCoord;
   unsigned Subunits;
+  double filamentDisplace;
+  double filamentDisplaceOpp;
   double Length;
-  double normLength;
-  double normSubunitRadius;
-  double normVoxelRadius;
-  double normWidth;
+  double nLength;
+  double nSubunitRadius;
+  double nVoxelRadius;
+  double nWidth;
   double OriginX;
   double OriginY;
   double OriginZ;
@@ -210,7 +213,9 @@ protected:
   double RotateY;
   double RotateZ;
   double SubunitRadius;
-  double surfaceDisplacement;
+  double subunitDisplace;
+  double subunitDisplaceOpp;
+  double surfaceDisplace;
   double VoxelRadius;
   double Width;
   Comp* theComp;
@@ -218,8 +223,11 @@ protected:
   Point M; //Minus end
   Point P; //Plus end
   Point C; //Center point
-  Point subunitVector;
+  Point filamentEnd;
+  Point filamentStart;
   Point filamentVector;
+  Point subunitVector;
+  Point surfaceEnd;
   Point surfaceNormal;
   Species* theVacantSpecies;
   Species* theInterfaceSpecies;

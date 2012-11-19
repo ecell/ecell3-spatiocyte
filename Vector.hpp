@@ -55,6 +55,25 @@ Point sub(Point& L, Point& R)
   return V;
 }
 
+Point norm(Point& P)
+{
+  double denom(sqrt(P.x*P.x+P.y*P.y+P.z*P.z));
+  Point V;
+  V.x = P.x/denom;
+  V.y = P.y/denom;
+  V.z = P.z/denom;
+  return V;
+}
+
+Point disp(Point& P, Point& V, double dist)
+{
+  Point A;
+  A.x = P.x + V.x*dist;
+  A.y = P.y + V.y*dist;
+  A.z = P.z + V.z*dist;
+  return A;
+}
+
 double dot(Point& L, Point& R)
 {
   return L.x*R.x + L.y*R.y + L.z*R.z;

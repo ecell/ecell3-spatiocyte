@@ -53,8 +53,8 @@ unsigned FilamentProcess::getLatticeResizeCoord(unsigned aStartCoord)
       theFilamentSpecies[i]->setRadius(SubunitRadius);
     }
   //Normalized compartment lengths in terms of lattice voxel radius:
-  normLength = Length/(VoxelRadius*2);
-  normWidth = Width/(VoxelRadius*2);
+  nLength = Length/(VoxelRadius*2);
+  nWidth = Width/(VoxelRadius*2);
   startCoord = aStartCoord;
   endCoord = startCoord+Filaments*Subunits;
   return endCoord-startCoord;
@@ -153,14 +153,14 @@ void FilamentProcess::initializeFilaments()
   for(unsigned i(1); i != Filaments; ++i)
     {
       Point U(S);
-      U.x += i*normSubunitRadius*sqrt(3)*D.x;
-      U.y += i*normSubunitRadius*sqrt(3)*D.y;
-      U.z += i*normSubunitRadius*sqrt(3)*D.z;
+      U.x += i*nSubunitRadius*sqrt(3)*D.x;
+      U.y += i*nSubunitRadius*sqrt(3)*D.y;
+      U.z += i*nSubunitRadius*sqrt(3)*D.z;
       if(i%2 == 1)
         {
-          U.x += normSubunitRadius*T.x;
-          U.y += normSubunitRadius*T.y;
-          U.z += normSubunitRadius*T.z;
+          U.x += nSubunitRadius*T.x;
+          U.y += nSubunitRadius*T.y;
+          U.z += nSubunitRadius*T.z;
         }
       addCompVoxel(i, 0, U);
     }
@@ -224,9 +224,9 @@ void FilamentProcess::elongateFilaments()
       Point A(*startVoxel->point);
       for(unsigned j(1); j != Subunits; ++j)
         {
-          A.x += (normSubunitRadius*2)*T.x;
-          A.y += (normSubunitRadius*2)*T.y;
-          A.z += (normSubunitRadius*2)*T.z;
+          A.x += (nSubunitRadius*2)*T.x;
+          A.y += (nSubunitRadius*2)*T.y;
+          A.z += (nSubunitRadius*2)*T.z;
           addCompVoxel(i, j, A);
         }
     }
@@ -320,18 +320,28 @@ void FilamentProcess::connectNwSw(unsigned i)
 
 void FilamentProcess::setCompartmentVectors()
 {
-  Point FilamentStart(*(*theLattice)[startCoord].point);
-  //FilamentStart = sub(FilamentStart, C);
-  Point FilamentEnd(*(*theLattice)[startCoord+Subunits-1].point);
-  //FilamentEnd = sub(FilamentEnd, C);
-  subunitVector = sub(FilamentEnd, FilamentStart);
+  filamentStart = *(*theLattice)[startCoord].point;
+  filamentEnd = *(*theLattice)[startCoord+Subunits-1].point;
+  subunitVector = sub(filamentEnd, filamentStart);
+  subunitVector = norm(subunitVector);
+  filamentStart = disp(filamentStart, subunitVector, -nSubunitRadius);
+  filamentEnd = disp(filamentEnd, subunitVector, nSubunitRadius*(1+sqrt(3)));
   if(dimension == 2)
     {
-      Point SurfaceEnd(*(*theLattice)[startCoord+(Filaments-1)*Subunits].point);
-      //SurfaceEnd = sub(SurfaceEnd, C);
-      filamentVector = sub(SurfaceEnd, FilamentStart);
+      surfaceEnd = *(*theLattice)[startCoord+
+        (Filaments-1)*Subunits+Subunits-1].point;
+      surfaceEnd = disp(surfaceEnd, subunitVector, nSubunitRadius*(1+sqrt(3)));
+      filamentVector = sub(filamentEnd, surfaceEnd);
+      filamentVector = norm(filamentVector);
+      surfaceEnd = disp(surfaceEnd, filamentVector, -nSubunitRadius);
+      filamentEnd = disp(filamentEnd, filamentVector, nSubunitRadius);
       surfaceNormal = cross(subunitVector, filamentVector);
-      surfaceDisplacement = dot(surfaceNormal, SurfaceEnd);
+      surfaceNormal = norm(surfaceNormal);
+      surfaceDisplace = dot(surfaceNormal, surfaceEnd);
+      subunitDisplace = dot(subunitVector, filamentStart);
+      subunitDisplaceOpp = dot(subunitVector, filamentEnd);
+      filamentDisplace = dot(filamentVector, surfaceEnd);
+      filamentDisplaceOpp = dot(filamentVector, filamentEnd);
     }
 }
 
@@ -355,12 +365,12 @@ void FilamentProcess::enlistInterfaceVoxels()
       Point center(*subunit.point);
       Point bottomLeft(*subunit.point);
       Point topRight(*subunit.point);
-      bottomLeft.x -= normSubunitRadius+theSpatiocyteStepper->getColLength();
-      bottomLeft.y -= normSubunitRadius+theSpatiocyteStepper->getLayerLength();
-      bottomLeft.z -= normSubunitRadius+theSpatiocyteStepper->getRowLength();
-      topRight.x += normSubunitRadius+theSpatiocyteStepper->getColLength();
-      topRight.y += normSubunitRadius+theSpatiocyteStepper->getLayerLength();
-      topRight.z += normSubunitRadius+theSpatiocyteStepper->getRowLength();
+      bottomLeft.x -= nSubunitRadius+theSpatiocyteStepper->getColLength();
+      bottomLeft.y -= nSubunitRadius+theSpatiocyteStepper->getLayerLength();
+      bottomLeft.z -= nSubunitRadius+theSpatiocyteStepper->getRowLength();
+      topRight.x += nSubunitRadius+theSpatiocyteStepper->getColLength();
+      topRight.y += nSubunitRadius+theSpatiocyteStepper->getLayerLength();
+      topRight.z += nSubunitRadius+theSpatiocyteStepper->getRowLength();
       unsigned blRow(0);
       unsigned blLayer(0);
       unsigned blCol(0);
@@ -394,7 +404,7 @@ void FilamentProcess::addInterfaceVoxel(unsigned subunitCoord,
   Point subunitPoint(*subunit.point);
   Point voxelPoint(theSpatiocyteStepper->coord2point(voxelCoord));
   double dist(getDistance(&subunitPoint, &voxelPoint));
-  if(dist <= normSubunitRadius+normVoxelRadius) 
+  if(dist <= nSubunitRadius+nVoxelRadius) 
     {
       Voxel& voxel((*theLattice)[voxelCoord]);
       //theSpecies[6]->addMolecule(&voxel);
@@ -420,24 +430,50 @@ void FilamentProcess::enlistNonIntersectInterfaceVoxels()
           Voxel& adjoin((*theLattice)[anInterface.adjoiningCoords[j]]);
           if(adjoin.id != theInterfaceSpecies->getID())
             {
-              addNonIntersectInterfaceVoxel(adjoin);
+              Point aPoint(theSpatiocyteStepper->coord2point(adjoin.coord));
+              if(isInside(aPoint))
+                {
+                  addNonIntersectInterfaceVoxel(adjoin, aPoint);
+                }
             }
         }
     }
 }
 
-void FilamentProcess::addNonIntersectInterfaceVoxel(Voxel& aVoxel)
+bool FilamentProcess::isInside(Point& aPoint)
 {
-  Point pointA(theSpatiocyteStepper->coord2point(aVoxel.coord));
-  double distA(point2planeDist(pointA, surfaceNormal, surfaceDisplacement));
+  double dist(point2planeDist(aPoint, subunitVector, subunitDisplace));
+  if(dist >= 0)
+    {
+      dist = point2planeDist(aPoint, subunitVector, subunitDisplaceOpp);
+      if(dist <= 0)
+        {
+          dist = point2planeDist(aPoint, filamentVector, filamentDisplaceOpp);
+          if(dist <=0)
+            {
+              dist = point2planeDist(aPoint, filamentVector, filamentDisplace);
+              if(dist >= 0)
+                {
+                  return true;
+                }
+            }
+        }
+    }
+  return false;
+}
+
+void FilamentProcess::addNonIntersectInterfaceVoxel(Voxel& aVoxel,
+                                                    Point& aPoint)
+{
+  double distA(point2planeDist(aPoint, surfaceNormal, surfaceDisplace));
   for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
     {
       Voxel& adjoin((*theLattice)[aVoxel.adjoiningCoords[i]]);
       if(adjoin.id != theInterfaceSpecies->getID())
         {
           Point pointB(theSpatiocyteStepper->coord2point(adjoin.coord));
-          double distB(point2planeDist(pointB, surfaceNormal,
-                                       surfaceDisplacement));
+          double distB(point2planeDist(pointB, surfaceNormal, surfaceDisplace));
+          //if not on the same side of the plane:
           if((distA < 0) != (distB < 0))
             {
               if(abs(distA) < abs(distB))
@@ -469,7 +505,7 @@ void FilamentProcess::addDirect(Voxel& subunit, unsigned a,
           occCoords.push_back(b);
         }
       double dist(getDistance(&aPoint, &adPoint)); 
-      if(dist <= normVoxelRadius+normSubunitRadius)
+      if(dist <= nVoxelRadius+nSubunitRadius)
         {
           subunit.adjoiningCoords[subunit.adjoiningSize++] = b;
           updateAdjoinSize(adjoin);
@@ -494,7 +530,7 @@ void FilamentProcess::addIndirect(Voxel& subunit, unsigned a,
         {
           Point adPoint(theSpatiocyteStepper->coord2point(aCoord));
           double dist(getDistance(&aPoint, &adPoint)); 
-          if(dist <= normSubunitRadius && inMTCylinder(adPoint))
+          if(dist <= nSubunitRadius && inMTCylinder(adPoint))
             { 
               subunit.adjoiningCoords[subunit.adjoiningSize++] = b; 
               initAdjoins(latVoxel);
@@ -606,12 +642,12 @@ void FilamentProcess::enlistLatticeVoxels()
       Point center(*subunit.point);
       Point bottomLeft(*subunit.point);
       Point topRight(*subunit.point);
-      bottomLeft.x -= normSubunitRadius+theSpatiocyteStepper->getColLength();
-      bottomLeft.y -= normSubunitRadius+theSpatiocyteStepper->getLayerLength();
-      bottomLeft.z -= normSubunitRadius+theSpatiocyteStepper->getRowLength();
-      topRight.x += normSubunitRadius+theSpatiocyteStepper->getColLength();
-      topRight.y += normSubunitRadius+theSpatiocyteStepper->getLayerLength();
-      topRight.z += normSubunitRadius+theSpatiocyteStepper->getRowLength();
+      bottomLeft.x -= nSubunitRadius+theSpatiocyteStepper->getColLength();
+      bottomLeft.y -= nSubunitRadius+theSpatiocyteStepper->getLayerLength();
+      bottomLeft.z -= nSubunitRadius+theSpatiocyteStepper->getRowLength();
+      topRight.x += nSubunitRadius+theSpatiocyteStepper->getColLength();
+      topRight.y += nSubunitRadius+theSpatiocyteStepper->getLayerLength();
+      topRight.z += nSubunitRadius+theSpatiocyteStepper->getRowLength();
       unsigned blRow(0);
       unsigned blLayer(0);
       unsigned blCol(0);
