@@ -39,10 +39,10 @@ unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
   theVacantSpecies->resetFixedAdjoins();
   theVacantSpecies->setRadius(SubunitRadius);
   //The compartment center point (origin):
-  C = theComp->centerPoint;
-  C.x += OriginX*theComp->lengthX/2;
-  C.y += OriginY*theComp->lengthY/2;
-  C.z += OriginZ*theComp->lengthZ/2;
+  Origin = theComp->centerPoint;
+  Origin.x += OriginX*theComp->lengthX/2;
+  Origin.y += OriginY*theComp->lengthY/2;
+  Origin.z += OriginZ*theComp->lengthZ/2;
   setCompartmentDimension();
   for(unsigned i(0); i != theCompartmentSpecies.size(); ++i)
     {
@@ -65,34 +65,25 @@ void CompartmentProcess::setCompartmentDimension()
     {
       Subunits = (unsigned)rint(Length/(SubunitRadius*2));
     }
-  else
-    {
-      Length = Subunits*SubunitRadius*2;
-    }
   if(Width)
     {
-      //Surface with hexagonally packed circles:
-      Filaments = (unsigned)rint(Width/(SubunitRadius*sqrt(3)));
-      if(Subunits > 1)
-        {
-          if(Filaments == 1)
-            {
-              dimension = 1;
-            }
-          else
-            {
-              dimension = 2;
-            }
-        }
-      else
-        {
-          dimension = 0;
-        }
+      Filaments = (unsigned)rint((Width-2*SubunitRadius)/
+                                 (SubunitRadius*sqrt(3)))+1;
+    }
+  Width = 2*SubunitRadius+(Filaments-1)*SubunitRadius*sqrt(3); 
+  Height = 2*SubunitRadius;
+  if(Filaments == 1)
+    {
+      dimension = 1;
+      Length = Subunits*SubunitRadius*2;
     }
   else
     {
-      Width = Filaments*SubunitRadius*2;
+      dimension = 2;
+      //Add SubunitRadius for the protrusion from hexagonal arrangement:
+      Length = Subunits*SubunitRadius*2+SubunitRadius;
     }
+  //Actual surface area = Width*Length
 }
 
 void CompartmentProcess::initializeThird()
@@ -100,79 +91,86 @@ void CompartmentProcess::initializeThird()
   if(!isCompartmentalized)
     {
       thePoints.resize(Filaments*Subunits);
+      initializeVectors();
       initializeFilaments();
       elongateFilaments();
       connectFilaments();
-      setCompartmentVectors();
       interfaceSubunits();
       isCompartmentalized = true;
     }
   theVacantSpecies->setIsPopulated();
 }
 
+void CompartmentProcess::initializeVectors()
+{
+  lengthStart.x = -Length/2;
+  lengthStart.y = 0;
+  lengthStart.z = 0;
+  rotate(lengthStart);
+  //Translate the origin to the compartment's origin:
+  lengthStart = add(lengthStart, Origin);
+  //Direction vector along the compartment length:
+  lengthVector = sub(Origin, lengthStart);
+  lengthVector = norm(lengthVector);
+  lengthEnd = disp(lengthStart, lengthVector, Length);
+
+  widthEnd.x = 0;
+  widthEnd.y = Width/2; 
+  widthEnd.z = 0;
+  rotate(widthEnd);
+  widthEnd = add(widthEnd, Origin);
+  //Direction vector along the compartment width:
+  widthVector = sub(lengthEnd, widthEnd); 
+  widthVector = norm(widthVector);
+
+  heightEnd.x = 0;
+  heightEnd.y = 0;
+  heightEnd.z = Height/2;
+  rotate(heightEnd);
+  heightEnd = add(heightEnd, Origin);
+  //Direction vector along the compartment height:
+  heightVector = sub(widthEnd, heightEnd);
+  heightVector = norm(heightVector); 
+
+  /*
+  //The point of the first subunit:
+  subunitStart = disp(lengthStart, lengthVector, nSubunitRadius);
+  disp_(subunitStart, widthVector, nSubunitRadius);
+  disp_(subunitStart, heightVector, nSubunitRadius);
+  */
+  subunitStart = lengthStart;
+  
+  //Set up surface vectors:
+  surfaceNormal = cross(lengthVector, widthVector);
+  surfaceNormal = norm(surfaceNormal);
+  surfaceDisplace = dot(surfaceNormal, widthEnd);
+  lengthDisplace = dot(lengthVector, lengthStart);
+  lengthDisplaceOpp = dot(lengthVector, lengthEnd);
+  widthDisplace = dot(widthVector, widthEnd);
+  widthDisplaceOpp = dot(widthVector, lengthEnd);
+
+}
+
+void CompartmentProcess::rotate(Point& V)
+{
+  theSpatiocyteStepper->rotateX(RotateX, &V, -1);
+  theSpatiocyteStepper->rotateY(RotateY, &V, -1);
+  theSpatiocyteStepper->rotateZ(RotateZ, &V, -1);
+}
+
 void CompartmentProcess::initializeFilaments()
 {
-  initializeDirectionVector();
-  Point R; //Initialize a random point on the plane attached at the minus end
-  if(M.x != P.x)
-    {
-      R.y = 10;
-      R.z = 30; 
-      R.x = (M.x*T.x+M.y*T.y-R.y*T.y+M.z*T.z-R.z*T.z)/T.x;
-    }
-  else if(M.y != P.y)
-    {
-      R.x = 10; 
-      R.z = 30;
-      R.y = (M.x*T.x-R.x*T.x+M.y*T.y+M.z*T.z-R.z*T.z)/T.y;
-    }
-  else
-    {
-      R.x = 10; 
-      R.y = 30;
-      R.z = (M.x*T.x-R.x*T.x+M.y*T.y-R.y*T.y+M.z*T.z)/T.z;
-    }
-  //The direction vector from the minus end to the random point, R
-  Point D(sub(R, M)); 
-  D = norm(D);
-  //The start point of the first protofilament:
-  Point S(M); 
-  addCompVoxel(0, 0, S);
+  addCompVoxel(0, 0, subunitStart);
   for(unsigned i(1); i != Filaments; ++i)
     {
-      Point U(S);
-      disp_(U, D, i*nSubunitRadius*sqrt(3)); 
+      Point U(subunitStart);
+      disp_(U, widthVector, i*nSubunitRadius*sqrt(3)); 
       if(i%2 == 1)
         {
-          disp_(U, T, nSubunitRadius); 
+          disp_(U, lengthVector, nSubunitRadius); 
         }
       addCompVoxel(i, 0, U);
     }
-}
-
-void CompartmentProcess::initializeDirectionVector()
-{ 
-  /*
-   * MEnd = {Mx, My, Mz};(*minus end*) 
-   * PEnd = {Px, Py, Pz};(*plus end*)
-   * MTAxis = (PEnd - MEnd)/Norm[PEnd - MEnd] (*direction vector along the MT
-   * long axis*)
-   */
-  //Minus end
-  M.x = -Length/2;
-  M.y = 0;
-  M.z = 0;
-  //Rotated Minus end
-  theSpatiocyteStepper->rotateX(RotateX, &M, -1);
-  theSpatiocyteStepper->rotateY(RotateY, &M, -1);
-  theSpatiocyteStepper->rotateZ(RotateZ, &M, -1);
-  M = add(M, C);
-  //Direction vector from the Minus end to center
-  T = sub(C, M);
-  //Make T a unit vector
-  T = norm(T);
-  //Rotated Plus end
-  P = disp(M, T, Length);
 }
 
 void CompartmentProcess::addCompVoxel(unsigned filamentIndex, 
@@ -199,7 +197,7 @@ void CompartmentProcess::elongateFilaments()
       Point A(*startVoxel->point);
       for(unsigned j(1); j != Subunits; ++j)
         {
-          disp_(A, T, nSubunitRadius*2);
+          disp_(A, lengthVector, nSubunitRadius*2);
           addCompVoxel(i, j, A);
         }
     }
@@ -289,33 +287,6 @@ void CompartmentProcess::connectNwSw(unsigned i)
   Voxel& adjoin((*theLattice)[b]);
   aVoxel.adjoiningCoords[aVoxel.adjoiningSize++] = b;
   adjoin.adjoiningCoords[adjoin.adjoiningSize++] = a;
-}
-
-void CompartmentProcess::setCompartmentVectors()
-{
-  filamentStart = *(*theLattice)[startCoord].point;
-  filamentEnd = *(*theLattice)[startCoord+Subunits-1].point;
-  subunitVector = sub(filamentEnd, filamentStart);
-  subunitVector = norm(subunitVector);
-  filamentStart = disp(filamentStart, subunitVector, -nSubunitRadius);
-  filamentEnd = disp(filamentEnd, subunitVector, nSubunitRadius*(1+sqrt(3)));
-  if(dimension == 2)
-    {
-      surfaceEnd = *(*theLattice)[startCoord+
-        (Filaments-1)*Subunits+Subunits-1].point;
-      surfaceEnd = disp(surfaceEnd, subunitVector, nSubunitRadius*(1+sqrt(3)));
-      filamentVector = sub(filamentEnd, surfaceEnd);
-      filamentVector = norm(filamentVector);
-      surfaceEnd = disp(surfaceEnd, filamentVector, -nSubunitRadius);
-      filamentEnd = disp(filamentEnd, filamentVector, nSubunitRadius);
-      surfaceNormal = cross(subunitVector, filamentVector);
-      surfaceNormal = norm(surfaceNormal);
-      surfaceDisplace = dot(surfaceNormal, surfaceEnd);
-      subunitDisplace = dot(subunitVector, filamentStart);
-      subunitDisplaceOpp = dot(subunitVector, filamentEnd);
-      filamentDisplace = dot(filamentVector, surfaceEnd);
-      filamentDisplaceOpp = dot(filamentVector, filamentEnd);
-    }
 }
 
 void CompartmentProcess::interfaceSubunits()
@@ -409,16 +380,16 @@ void CompartmentProcess::enlistNonIntersectInterfaceVoxels()
 
 bool CompartmentProcess::isInside(Point& aPoint)
 {
-  double dist(point2planeDist(aPoint, subunitVector, subunitDisplace));
+  double dist(point2planeDist(aPoint, lengthVector, lengthDisplace));
   if(dist >= 0)
     {
-      dist = point2planeDist(aPoint, subunitVector, subunitDisplaceOpp);
+      dist = point2planeDist(aPoint, lengthVector, lengthDisplaceOpp);
       if(dist <= 0)
         {
-          dist = point2planeDist(aPoint, filamentVector, filamentDisplaceOpp);
+          dist = point2planeDist(aPoint, widthVector, widthDisplaceOpp);
           if(dist <=0)
             {
-              dist = point2planeDist(aPoint, filamentVector, filamentDisplace);
+              dist = point2planeDist(aPoint, widthVector, widthDisplace);
               if(dist >= 0)
                 {
                   return true;

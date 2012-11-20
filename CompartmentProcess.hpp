@@ -157,7 +157,7 @@ public:
   virtual unsigned getLatticeResizeCoord(unsigned);
   virtual void initializeThird();
   void addCompVoxel(unsigned, unsigned, Point&);
-  void initializeDirectionVector();
+  void initializeVectors();
   void initializeFilaments();
   void elongateFilaments();
   void connectPeriodic(unsigned);
@@ -168,11 +168,11 @@ public:
   void connectFilaments();
   void addInterfaceVoxel(unsigned, unsigned);
   void setCompartmentDimension();
-  void setCompartmentVectors();
   void interfaceSubunits();
   void enlistInterfaceVoxels();
   void enlistNonIntersectInterfaceVoxels();
   void addNonIntersectInterfaceVoxel(Voxel&, Point&);
+  void rotate(Point&);
   bool isInside(Point&);
 protected:
   bool isCompartmentalized;
@@ -182,9 +182,10 @@ protected:
   unsigned Periodic;
   unsigned startCoord;
   unsigned Subunits;
-  double filamentDisplace;
-  double filamentDisplaceOpp;
+  double Height;
   double Length;
+  double lengthDisplace;
+  double lengthDisplaceOpp;
   double LipidRadius;
   double nLength;
   double nLipidRadius;
@@ -198,22 +199,22 @@ protected:
   double RotateY;
   double RotateZ;
   double SubunitRadius;
-  double subunitDisplace;
-  double subunitDisplaceOpp;
   double surfaceDisplace;
   double VoxelRadius;
   double Width;
+  double widthDisplace;
+  double widthDisplaceOpp;
   Comp* theComp;
-  Point T; //Direction vector along the MT axis from Minus to Plus end
-  Point M; //Minus end
-  Point P; //Plus end
-  Point C; //Center point
-  Point filamentEnd;
-  Point filamentStart;
-  Point filamentVector;
-  Point subunitVector;
-  Point surfaceEnd;
+  Point heightEnd;
+  Point heightVector;
+  Point lengthEnd;
+  Point lengthStart;
+  Point lengthVector;
+  Point Origin;
+  Point subunitStart;
   Point surfaceNormal;
+  Point widthEnd;
+  Point widthVector;
   Species* theLipidSpecies;
   Species* theInterfaceSpecies;
   Species* theVacantSpecies;

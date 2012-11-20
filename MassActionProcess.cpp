@@ -63,7 +63,21 @@ void MassActionProcess::fire()
           velocity *= aVariableReference.getVariable()->getValue()/theSpace;
         }
       while(aCoefficient != 0); 
+      if(velocity < 0)
+        {
+          velocity = 0;
+        }
     } 
   setFlux(velocity);
+  for(VariableReferenceVector::iterator
+      s(theVariableReferenceVector.begin());
+      s != theZeroVariableReferenceIterator; ++s)
+    {
+      VariableReference aVariableReference(*s);
+      if(aVariableReference.getVariable()->getValue() < 0)
+        {
+          aVariableReference.getVariable()->setValue(0);
+        }
+    } 
 }
 
