@@ -50,6 +50,7 @@ void ReactionProcess::calculateOrder()
               if(aVariable->getName() == "HD")
                 {
                   variableA = aVariable;
+                  coefficientA = aCoefficient;
                 }
               else
                 {
@@ -62,6 +63,7 @@ void ReactionProcess::calculateOrder()
               if(aVariable->getName() == "HD")
                 {
                   variableB = aVariable;
+                  coefficientB = aCoefficient;
                 }
               else
                 {
@@ -77,6 +79,7 @@ void ReactionProcess::calculateOrder()
               if(aVariable->getName() == "HD")
                 {
                   variableC = aVariable;
+                  coefficientC = aCoefficient;
                 }
               else
                 {
@@ -89,6 +92,7 @@ void ReactionProcess::calculateOrder()
               if(aVariable->getName() == "HD")
                 {
                   variableD = aVariable;
+                  coefficientC = aCoefficient;
                 }
               else
                 {
@@ -101,6 +105,7 @@ void ReactionProcess::calculateOrder()
               if(aVariable->getName() == "HD")
                 {
                   variableF = aVariable;
+                  coefficientF = aCoefficient;
                 }
               else
                 {
@@ -114,6 +119,7 @@ void ReactionProcess::calculateOrder()
           if(aVariable->getName() == "HD")
             {
               variableE = aVariable;
+              coefficientE = aCoefficient;
             }
           else
             {

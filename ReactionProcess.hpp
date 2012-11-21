@@ -47,6 +47,12 @@ public:
       PROPERTYSLOT_GET_NO_LOAD_SAVE(Integer, Order);
     }
   ReactionProcess():
+    coefficientA(0),
+    coefficientB(0),
+    coefficientC(0),
+    coefficientD(0),
+    coefficientE(0),
+    coefficientF(0),
     SearchVacant(-1),
     theOrder(0),
     k(-1),
@@ -198,6 +204,12 @@ public:
 protected:
   virtual void calculateOrder();
 protected:
+  int coefficientA;
+  int coefficientB;
+  int coefficientC;
+  int coefficientD;
+  int coefficientE;
+  int coefficientF;
   int SearchVacant;
   int theOrder;
   double k;

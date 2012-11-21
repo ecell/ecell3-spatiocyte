@@ -55,6 +55,13 @@ Point sub(Point& L, Point& R)
   return V;
 }
 
+void sub_(Point& L, Point& R)
+{
+  L.x -= R.x;
+  L.y -= R.y;
+  L.z -= R.z;
+}
+
 Point add(Point& L, Point& R)
 {
   Point V;
@@ -62,6 +69,13 @@ Point add(Point& L, Point& R)
   V.y = L.y + R.y;
   V.z = L.z + R.z;
   return V;
+}
+
+void add_(Point& L, Point& R)
+{
+  L.x += R.x;
+  L.y += R.y;
+  L.z += R.z;
 }
 
 Point norm(Point& P)

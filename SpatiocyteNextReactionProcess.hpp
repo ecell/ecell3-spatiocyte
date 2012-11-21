@@ -78,11 +78,14 @@ public:
       isExternInterrupted = true;
       if(!(getOrder() == 0 || getOrder() == 1 || getOrder() == 2))
         {
-          THROW_EXCEPTION(ValueError, 
-                          String(getPropertyInterface().getClassName()) + 
-                          "[" + getFullID().asString() + 
-                          "]: Only zeroth, first or second order scheme " + 
-                          "is allowed.");
+          if(getZeroVariableReferenceOffset() > 2)
+            {
+              THROW_EXCEPTION(ValueError, 
+                              String(getPropertyInterface().getClassName()) + 
+                              "[" + getFullID().asString() + 
+                              "]: Only zeroth, first or second order scheme " + 
+                              "is allowed.");
+            }
         }
       if(variableA)
         {

@@ -59,10 +59,10 @@ void SpatiocyteNextReactionProcess::fire()
         }
       else if(variableC)
         {
-          variableC->addValue(1);
+          variableC->addValue(coefficientC);
         }
     }
-  else if(theOrder == 1)
+  else if(getZeroVariableReferenceOffset() == 1)
     { 
       //nonHD_A -> nonHD_C + nonHD_D:
       if(A && C && D)
@@ -99,30 +99,32 @@ void SpatiocyteNextReactionProcess::fire()
         {
           moleculeA = A->getRandomMolecule();
           A->removeMolecule(moleculeA);
-          variableC->addValue(1);
-          variableD->addValue(1);
+          variableC->addValue(coefficientC);
+          variableD->addValue(coefficientD);
         }
       //nonHD_A -> HD_C:
       else if(A && variableC && !D && !variableD)
         {
           moleculeA = A->getRandomMolecule();
           A->removeMolecule(moleculeA);
-          variableC->addValue(1);
+          variableC->addValue(coefficientC);
         }
       //nonHD_A -> nonHD_C + HD_D:
       //nonHD_A -> HD_C + nonHD_D:
       else if(A && ((variableC && D) || (C && variableD)))
         {
           Variable* HD_p(variableC);
+          int coefficient(coefficientC);
           Species* nonHD_p(D);
           if(variableD)
             {
               HD_p = variableD;
+              coefficient = coefficientD;
               nonHD_p = C;
             }
           if(reactAC(A, nonHD_p))
              {
-               HD_p->addValue(1);
+               HD_p->addValue(coefficient);
              }
           else
             {
@@ -140,7 +142,7 @@ void SpatiocyteNextReactionProcess::fire()
             }
           else
             {
-              variableA->addValue(-1);
+              variableA->addValue(coefficientA);
               C->addMolecule(moleculeC);
             }
         }
@@ -185,32 +187,34 @@ void SpatiocyteNextReactionProcess::fire()
               requeue();
               return;
             }
-          variableA->addValue(-1);
+          variableA->addValue(coefficientA);
           C->addMolecule(moleculeC);
           D->addMolecule(moleculeD);
         }
       //HD_A -> HD_C + HD_D:
       else if(variableA && variableC && variableD)
         {
-          variableA->addValue(-1);
-          variableC->addValue(1);
-          variableD->addValue(1);
+          variableA->addValue(coefficientA);
+          variableC->addValue(coefficientC);
+          variableD->addValue(coefficientD);
         }
       //HD_A -> HD_C:
       else if(variableA && variableC && !D && !variableD)
         {
-          variableA->addValue(-1);
-          variableC->addValue(1);
+          variableA->addValue(coefficientA);
+          variableC->addValue(coefficientC);
         }
       //HD_A -> nonHD_C + HD_D:
       //HD_A -> HD_C + nonHD_D:
       else if(variableA && ((variableC && D) || (C && variableD)))
         {
           Variable* HD_p(variableC);
+          int coefficient(coefficientC);
           Species* nonHD_p(D);
           if(variableD)
             {
               HD_p = variableD;
+              coefficient = coefficientD;
               nonHD_p = C;
             }
           moleculeP = reactvAC(variableA, nonHD_p);
@@ -219,12 +223,12 @@ void SpatiocyteNextReactionProcess::fire()
               requeue();
               return;
             }
-          variableA->addValue(-1);
+          variableA->addValue(coefficientA);
           nonHD_p->addMolecule(moleculeP);
-          HD_p->addValue(1);
+          HD_p->addValue(coefficient);
         }
     }
-  //theOrder = 2
+  //number of substrate species = 2:
   else
     {
       //HD + HD -> product(s)
@@ -233,9 +237,9 @@ void SpatiocyteNextReactionProcess::fire()
           //HD + HD -> HD: 
           if(variableC && !variableD && !D)
             {
-              variableA->addValue(-1);
-              variableB->addValue(-1);
-              variableC->addValue(1);
+              variableA->addValue(coefficientA);
+              variableB->addValue(coefficientB);
+              variableC->addValue(coefficientC);
             }
           //HD + HD -> nonHD: 
           else if(C && !variableD && !D)
@@ -246,27 +250,29 @@ void SpatiocyteNextReactionProcess::fire()
                   requeue();
                   return;
                 }
-              variableA->addValue(-1);
-              variableB->addValue(-1);
+              variableA->addValue(coefficientA);
+              variableB->addValue(coefficientB);
               C->addMolecule(moleculeC);
             }
           //HD + HD -> HD + HD: 
           else if(variableC && variableD)
             {
-              variableA->addValue(-1);
-              variableB->addValue(-1);
-              variableC->addValue(1);
-              variableD->addValue(1);
+              variableA->addValue(coefficientA);
+              variableB->addValue(coefficientB);
+              variableC->addValue(coefficientC);
+              variableD->addValue(coefficientD);
             }
           //HD + HD -> HD + nonHD: 
           //HD + HD -> nonHD + HD: 
           else if((variableC && D) || (C && variableD))
             {
               Variable* HD_p(variableC);
+              int coefficient(coefficientC);
               Species* nonHD_p(D);
               if(variableD)
                 {
                   HD_p = variableD;
+                  coefficient = coefficientD;
                   nonHD_p = C;
                 }
               moleculeP = reactvAvBC(nonHD_p);
@@ -275,10 +281,10 @@ void SpatiocyteNextReactionProcess::fire()
                   requeue();
                   return;
                 }
-              variableA->addValue(-1);
-              variableB->addValue(-1);
+              variableA->addValue(coefficientA);
+              variableB->addValue(coefficientB);
               nonHD_p->addMolecule(moleculeP);
-              HD_p->addValue(1);
+              HD_p->addValue(coefficient);
             }
           //HD + HD -> nonHD + nonHD: 
           else if(C && D)
@@ -304,8 +310,8 @@ void SpatiocyteNextReactionProcess::fire()
                   requeue();
                   return;
                 }
-              variableA->addValue(-1);
-              variableB->addValue(-1);
+              variableA->addValue(coefficientA);
+              variableB->addValue(coefficientB);
               C->addMolecule(moleculeC);
               D->addMolecule(moleculeD);
             }
@@ -316,10 +322,12 @@ void SpatiocyteNextReactionProcess::fire()
         {
           Species* nonHD(A);
           Variable* HD(variableB);
+          int coefficient(coefficientB);
           if(B)
             {
               nonHD = B;
               HD = variableA;
+              coefficient = coefficientA;
             }
           //nonHD + HD -> nonHD + nonHD: 
           //HD + nonHD -> nonHD + nonHD: 
@@ -329,7 +337,7 @@ void SpatiocyteNextReactionProcess::fire()
                 {
                   return;
                 }
-              HD->addValue(-1);
+              HD->addValue(coefficient);
             }
           //nonHD + HD -> nonHD:
           //HD + nonHD -> nonHD:
@@ -339,7 +347,7 @@ void SpatiocyteNextReactionProcess::fire()
                 {
                   return;
                 }
-              HD->addValue(-1);
+              HD->addValue(coefficient);
             }
           //nonHD + HD -> HD:
           //HD + nonHD -> HD:
@@ -347,8 +355,8 @@ void SpatiocyteNextReactionProcess::fire()
             {
               moleculeS = nonHD->getRandomMolecule();
               nonHD->removeMolecule(moleculeS);
-              HD->addValue(-1);
-              variableC->addValue(1);
+              HD->addValue(coefficient);
+              variableC->addValue(coefficientC);
             }
           //HD + nonHD -> HD + nonHD:
           //HD + nonHD -> nonHD + HD:
@@ -357,18 +365,20 @@ void SpatiocyteNextReactionProcess::fire()
           else if((variableC && D) || (C && variableD))
             {
               Variable* HD_p(variableC);
+              int coefficient_p(coefficientC);
               Species* nonHD_p(D);
               if(variableD)
                 {
                   HD_p = variableD;
+                  coefficient_p = coefficientD;
                   nonHD_p = C;
                 }
               if(!reactAC(nonHD, nonHD_p))
                 {
                   return;
                 }
-              HD->addValue(-1);
-              HD_p->addValue(1);
+              HD->addValue(coefficient);
+              HD_p->addValue(coefficient_p);
             }
         }
       //nonHD + nonHD -> product(s)
@@ -383,7 +393,6 @@ void SpatiocyteNextReactionProcess::fire()
     }
   ReactionProcess::fire();
 }
-
 
 //nonHD + nonHD -> nonHD + nonHD
 //Both A and B are immobile nonHD
@@ -408,7 +417,6 @@ void SpatiocyteNextReactionProcess::reactABCD()
       D->addMolecule(moleculeB, tagB);
     }
 }
-
 
 //nonHD -> nonHD + nonHD
 bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
@@ -640,18 +648,22 @@ Real SpatiocyteNextReactionProcess::getPropensity_FirstOrder()
     }
 }
 
+
+//Need to solve homodimerization reaction of two substrate species (Size-1):
 Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_TwoSubstrates() 
 {
+  double sizeA(0);
+  double sizeB(0);
   if(A)
     {
       A->updateMoleculeSize();
+      sizeA = A->size(); 
     }
   if(B)
     {
       B->updateMoleculeSize();
+      sizeB = B->size(); 
     }
-  double sizeA(0);
-  double sizeB(0);
   //for zero-diffusion nonHD A and B substrates:
   if(A && B)
     {
@@ -660,8 +672,16 @@ Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_TwoSubstrates()
     }
   else
     {
-      sizeA = theVariableReferenceVector[0].getVariable()->getValue();
-      sizeB = theVariableReferenceVector[1].getVariable()->getValue();
+      if(variableA)
+        {
+          sizeA = pow(theVariableReferenceVector[0].getVariable()->getValue(),
+                      sqrt(coefficientA*coefficientA));
+        }
+      if(variableB)
+        {
+          sizeB = pow(theVariableReferenceVector[1].getVariable()->getValue(),
+                      sqrt(coefficientB*coefficientB));
+        }
     }
   if(sizeA > 0.0 && sizeB > 0.0)
     {
@@ -854,6 +874,8 @@ void SpatiocyteNextReactionProcess::initializeFourth()
     }
   double aVolume(0);
   double anArea(0);
+  std::cout << "zeroooooo:" << getZeroVariableReferenceOffset() << std::endl;
+  std::cout << "theOrder:" << theOrder << std::endl;
   if(theOrder == 0)
     {
       double aSpace(0);
@@ -875,7 +897,7 @@ void SpatiocyteNextReactionProcess::initializeFourth()
       p = k*aSpace;
       pFormula << "[k*aSpace:" << k << "*" << aSpace << "]";
     }
-  else if(theOrder == 1) 
+  else if(getZeroVariableReferenceOffset() == 1) 
     {
       //Convert the unit m/s of k to 1/s for p if the reaction is a surface
       //adsorption reaction:
@@ -909,7 +931,7 @@ void SpatiocyteNextReactionProcess::initializeFourth()
       p = k;
       pFormula << "[k:" << k << "]";
     }
-  else if(theOrder == 2)
+  else
     {
       //If there are two products that don't belong to the same compartment,
       //the reactants must also belong to different compartments:
@@ -1014,17 +1036,15 @@ void SpatiocyteNextReactionProcess::initializeFourth()
         {
           NEVER_GET_HERE;
         }
+      /*
       //A + A -> products
       if(getZeroVariableReferenceOffset() == 1)
         {
           p = k;
           pFormula << "[k:" << k << "]";
         }
+        */
     }
-  else
-    {
-      NEVER_GET_HERE;
-    } 
 }
 
 void SpatiocyteNextReactionProcess::printParameters()
@@ -1167,9 +1187,9 @@ void SpatiocyteNextReactionProcess::calculateOrder()
       theGetPropensityMethodPtr = RealMethodProxy::create<
         &SpatiocyteNextReactionProcess::getPropensity_FirstOrder>();
     }
-  else if(getOrder() == 2)
+  else
     { 
-      //Two unique substrate species, second order
+      //Two unique substrate species:
       //A + B -> products:
       if(getZeroVariableReferenceOffset() == 2)
         {  
@@ -1185,11 +1205,6 @@ void SpatiocyteNextReactionProcess::calculateOrder()
             create<&SpatiocyteNextReactionProcess::
             getPropensity_SecondOrder_OneSubstrate>();
         }
-    }
-  else
-    {
-      std::cout << "theOrder:" << getOrder() << std::endl;
-      NEVER_GET_HERE;
     }
 }
 
