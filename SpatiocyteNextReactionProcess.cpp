@@ -652,18 +652,16 @@ Real SpatiocyteNextReactionProcess::getPropensity_FirstOrder()
 //Need to solve homodimerization reaction of two substrate species (Size-1):
 Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_TwoSubstrates() 
 {
-  double sizeA(0);
-  double sizeB(0);
   if(A)
     {
       A->updateMoleculeSize();
-      sizeA = A->size(); 
     }
   if(B)
     {
       B->updateMoleculeSize();
-      sizeB = B->size(); 
     }
+  double sizeA(0);
+  double sizeB(0);
   //for zero-diffusion nonHD A and B substrates:
   if(A && B)
     {
@@ -672,15 +670,15 @@ Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_TwoSubstrates()
     }
   else
     {
+      sizeA = theVariableReferenceVector[0].getVariable()->getValue();
+      sizeB = theVariableReferenceVector[1].getVariable()->getValue();
       if(variableA)
         {
-          sizeA = pow(theVariableReferenceVector[0].getVariable()->getValue(),
-                      sqrt(coefficientA*coefficientA));
+          sizeA = pow(sizeA, sqrt(coefficientA*coefficientA));
         }
       if(variableB)
         {
-          sizeB = pow(theVariableReferenceVector[1].getVariable()->getValue(),
-                      sqrt(coefficientB*coefficientB));
+          sizeB = pow(sizeB, sqrt(coefficientB*coefficientB));
         }
     }
   if(sizeA > 0.0 && sizeB > 0.0)
@@ -874,8 +872,6 @@ void SpatiocyteNextReactionProcess::initializeFourth()
     }
   double aVolume(0);
   double anArea(0);
-  std::cout << "zeroooooo:" << getZeroVariableReferenceOffset() << std::endl;
-  std::cout << "theOrder:" << theOrder << std::endl;
   if(theOrder == 0)
     {
       double aSpace(0);
