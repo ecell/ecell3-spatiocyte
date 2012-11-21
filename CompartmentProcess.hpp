@@ -183,6 +183,7 @@ protected:
   unsigned startCoord;
   unsigned Subunits;
   double Height;
+  double nHeight;
   double Length;
   double lengthDisplace;
   double lengthDisplaceOpp;

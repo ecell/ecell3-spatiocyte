@@ -51,9 +51,6 @@ unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
       theCompartmentSpecies[i]->setVacantSpecies(theVacantSpecies);
       theCompartmentSpecies[i]->setRadius(SubunitRadius);
     }
-  //Normalized compartment lengths in terms of lattice voxel radius:
-  nLength = Length/(VoxelRadius*2);
-  nWidth = Width/(VoxelRadius*2);
   startCoord = aStartCoord;
   endCoord = startCoord+Filaments*Subunits;
   return endCoord-startCoord;
@@ -83,6 +80,11 @@ void CompartmentProcess::setCompartmentDimension()
       //Add SubunitRadius for the protrusion from hexagonal arrangement:
       Length = Subunits*SubunitRadius*2+SubunitRadius;
     }
+  //Normalized compartment lengths in terms of lattice voxel radius:
+  nLength = Length/(VoxelRadius*2);
+  nWidth = Width/(VoxelRadius*2);
+  nHeight = Height/(VoxelRadius*2);
+
   //Actual surface area = Width*Length
 }
 
@@ -103,35 +105,51 @@ void CompartmentProcess::initializeThird()
 
 void CompartmentProcess::initializeVectors()
 {
-  lengthStart.x = -Length/2;
-  lengthStart.y = 0;
-  lengthStart.z = 0;
+  std::cout << "Length:" << nLength << std::endl;
+  std::cout << "Width:" << nWidth << std::endl;
+  std::cout << "Height:" << nHeight << std::endl;
+  lengthStart.x = -nLength/2;
+  lengthStart.y = -nWidth/2;
+  lengthStart.z = -nHeight/2;
   rotate(lengthStart);
   //Translate the origin to the compartment's origin:
   lengthStart = add(lengthStart, Origin);
+  lengthEnd.x = nLength/2;
+  lengthEnd.y = -nWidth/2;
+  lengthEnd.z = -nHeight/2;
+  rotate(lengthEnd);
+  //Translate the origin to the compartment's origin:
+  lengthEnd = add(lengthEnd, Origin);
   //Direction vector along the compartment length:
-  lengthVector = sub(Origin, lengthStart);
+  lengthVector = sub(lengthEnd, lengthStart);
   lengthVector = norm(lengthVector);
-  lengthEnd = disp(lengthStart, lengthVector, Length);
 
-  widthEnd.x = 0;
-  widthEnd.y = Width/2; 
-  widthEnd.z = 0;
+  widthEnd.x = nLength/2;
+  widthEnd.y = nWidth/2; 
+  widthEnd.z = -nHeight/2;
   rotate(widthEnd);
   widthEnd = add(widthEnd, Origin);
   //Direction vector along the compartment width:
   widthVector = sub(lengthEnd, widthEnd); 
   widthVector = norm(widthVector);
 
-  heightEnd.x = 0;
-  heightEnd.y = 0;
-  heightEnd.z = Height/2;
+  heightEnd.x = nLength/2;
+  heightEnd.y = nWidth/2;
+  heightEnd.z = nHeight/2;
   rotate(heightEnd);
   heightEnd = add(heightEnd, Origin);
   //Direction vector along the compartment height:
   heightVector = sub(widthEnd, heightEnd);
   heightVector = norm(heightVector); 
 
+  Point center(theComp->centerPoint);
+  std::cout << "compCenter:" << " x:" << center.x << " y:" << center.y << " z:" << center.z << std::endl;
+  std::cout << "origin:" << " x:" << Origin.x << " y:" << Origin.y << " z:" << Origin.z << std::endl;
+
+  std::cout << "lengthStart:" << " x:" << lengthStart.x << " y:" << lengthStart.y << " z:" << lengthStart.z << std::endl;
+  std::cout << "lengthEnd:" << " x:" << lengthEnd.x << " y:" << lengthEnd.y << " z:" << lengthEnd.z << std::endl;
+  std::cout << "widthEnd:" << " x:" << widthEnd.x << " y:" << widthEnd.y << " z:" << widthEnd.z << std::endl;
+  std::cout << "heightEnd:" << " x:" << heightEnd.x << " y:" << heightEnd.y << " z:" << heightEnd.z << std::endl;
   /*
   //The point of the first subunit:
   subunitStart = disp(lengthStart, lengthVector, nSubunitRadius);
