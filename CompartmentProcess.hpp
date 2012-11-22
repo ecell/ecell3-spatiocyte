@@ -174,6 +174,7 @@ public:
   void addNonIntersectInterfaceVoxel(Voxel&, Point&);
   void rotate(Point&);
   bool isInside(Point&);
+  Point getStartVoxelPoint();
 protected:
   bool isCompartmentalized;
   unsigned dimension;

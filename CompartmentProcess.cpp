@@ -103,6 +103,33 @@ void CompartmentProcess::initializeThird()
   theVacantSpecies->setIsPopulated();
 }
 
+Point CompartmentProcess::getStartVoxelPoint()
+{
+  Species* surface(theComp->surfaceSub->vacantSpecies);
+  Point nearest;
+  Point origin;
+  origin.x = 0;
+  origin.y = 0;
+  origin.z = 0;
+  double dist;
+  if(surface->size())
+    {
+      nearest = theSpatiocyteStepper->coord2point(surface->getCoord(0));
+      dist = getDistance(&nearest, &origin);
+    }
+  for(unsigned i(1); i < surface->size(); ++i)
+    {
+      Point aPoint(theSpatiocyteStepper->coord2point(surface->getCoord(i)));
+      double aDist(getDistance(&aPoint, &origin));
+      if(aDist < dist)
+        {
+          dist = aDist;
+          nearest = aPoint;
+        }
+    }
+  return nearest;
+}
+/*
 void CompartmentProcess::initializeVectors()
 {
   std::cout << "Length:" << nLength << std::endl;
@@ -150,12 +177,10 @@ void CompartmentProcess::initializeVectors()
   std::cout << "lengthEnd:" << " x:" << lengthEnd.x << " y:" << lengthEnd.y << " z:" << lengthEnd.z << std::endl;
   std::cout << "widthEnd:" << " x:" << widthEnd.x << " y:" << widthEnd.y << " z:" << widthEnd.z << std::endl;
   std::cout << "heightEnd:" << " x:" << heightEnd.x << " y:" << heightEnd.y << " z:" << heightEnd.z << std::endl;
-  /*
   //The point of the first subunit:
   subunitStart = disp(lengthStart, lengthVector, nSubunitRadius);
   disp_(subunitStart, widthVector, nSubunitRadius);
   disp_(subunitStart, heightVector, nSubunitRadius);
-  */
   subunitStart = lengthStart;
   
   //Set up surface vectors:
@@ -167,6 +192,37 @@ void CompartmentProcess::initializeVectors()
   widthDisplace = dot(widthVector, widthEnd);
   widthDisplaceOpp = dot(widthVector, lengthEnd);
 
+}
+*/
+
+void CompartmentProcess::initializeVectors()
+{
+  subunitStart = getStartVoxelPoint();
+  lengthStart = subunitStart;
+
+  lengthVector.x = 0;
+  lengthVector.y = 0;
+  lengthVector.z = 1;
+  lengthEnd = disp(lengthStart, lengthVector, nLength);
+
+  widthVector.x = 0;
+  widthVector.y = 1;
+  widthVector.x = 0;
+  widthEnd = disp(lengthEnd, widthVector, nWidth);
+
+  heightVector.x = 1;
+  heightVector.y = 0;
+  heightVector.z = 0;
+  heightEnd = disp(widthEnd, heightVector, nHeight);
+
+  //Set up surface vectors:
+  surfaceNormal = cross(lengthVector, widthVector);
+  surfaceNormal = norm(surfaceNormal);
+  surfaceDisplace = dot(surfaceNormal, widthEnd);
+  lengthDisplace = dot(lengthVector, lengthStart);
+  lengthDisplaceOpp = dot(lengthVector, lengthEnd);
+  widthDisplace = dot(widthVector, widthEnd);
+  widthDisplaceOpp = dot(widthVector, lengthEnd);
 }
 
 void CompartmentProcess::rotate(Point& V)
@@ -185,7 +241,7 @@ void CompartmentProcess::initializeFilaments()
       disp_(U, widthVector, i*nSubunitRadius*sqrt(3)); 
       if(i%2 == 1)
         {
-          disp_(U, lengthVector, nSubunitRadius); 
+          disp_(U, lengthVector, -nSubunitRadius); 
         }
       addCompVoxel(i, 0, U);
     }
@@ -360,7 +416,7 @@ void CompartmentProcess::addInterfaceVoxel(unsigned subunitCoord,
   Point subunitPoint(*subunit.point);
   Point voxelPoint(theSpatiocyteStepper->coord2point(voxelCoord));
   double dist(getDistance(&subunitPoint, &voxelPoint));
-  if(dist <= nSubunitRadius+nVoxelRadius) 
+  if(dist <= (nSubunitRadius+nVoxelRadius)*1.0001) 
     {
       Voxel& voxel((*theLattice)[voxelCoord]);
       //theSpecies[6]->addMolecule(&voxel);
