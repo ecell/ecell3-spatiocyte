@@ -156,16 +156,17 @@ public:
     }
   virtual unsigned getLatticeResizeCoord(unsigned);
   virtual void initializeThird();
-  void addCompVoxel(unsigned, unsigned, Point&);
+  void addCompVoxel(unsigned, unsigned, Point&, Species*, unsigned, unsigned);
   void initializeVectors();
-  void initializeFilaments();
-  void elongateFilaments();
-  void connectPeriodic(unsigned);
-  void connectNorthSouth(unsigned, unsigned);
-  void connectEastWest(unsigned, unsigned);
-  void connectSeamEastWest(unsigned);
-  void connectNwSw(unsigned);
-  void connectFilaments();
+  void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
+                           unsigned);
+  void elongateFilaments(Species*, unsigned, unsigned, unsigned, double);
+  void connectPeriodic(unsigned, unsigned, unsigned);
+  void connectNorthSouth(unsigned, unsigned, unsigned, unsigned);
+  void connectEastWest(unsigned, unsigned, unsigned, unsigned);
+  void connectSeamEastWest(unsigned, unsigned, unsigned, unsigned);
+  void connectNwSw(unsigned, unsigned, unsigned, unsigned);
+  void connectFilaments(unsigned, unsigned, unsigned);
   void addInterfaceVoxel(unsigned, unsigned);
   void setCompartmentDimension();
   void interfaceSubunits();
@@ -181,7 +182,10 @@ protected:
   unsigned endCoord;
   unsigned Filaments;
   unsigned Periodic;
-  unsigned startCoord;
+  unsigned LipidRows;
+  unsigned LipidCols;
+  unsigned lipStartCoord;
+  unsigned subStartCoord;
   unsigned Subunits;
   double Height;
   double nHeight;
@@ -212,6 +216,7 @@ protected:
   Point lengthEnd;
   Point lengthStart;
   Point lengthVector;
+  Point lipidStart;
   Point Origin;
   Point subunitStart;
   Point surfaceNormal;
@@ -225,7 +230,6 @@ protected:
   Variable* theVacantVariable;
   std::vector<Point> thePoints;
   std::vector<Species*> theCompartmentSpecies;
-  std::vector<unsigned> occCoords;
   std::vector<std::vector<unsigned> > subunitInterfaces;
 };
 
