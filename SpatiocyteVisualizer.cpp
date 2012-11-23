@@ -421,7 +421,7 @@ void GLScene::setScreenHeight(unsigned int aHeight )
 
 void GLScene::setXUpBound(unsigned int aBound )
 {
-  for(unsigned int i(0); i!=theTotalLatticeSpSize; ++i )
+  for(unsigned int i(0); i!=theTotalSpeciesSize; ++i )
     {
       if(theSpeciesVisibility[i])
         {
@@ -433,7 +433,7 @@ void GLScene::setXUpBound(unsigned int aBound )
 
 void GLScene::setXLowBound(unsigned int aBound )
 {
-  for(unsigned int i(0); i!=theTotalLatticeSpSize; ++i )
+  for(unsigned int i(0); i!=theTotalSpeciesSize; ++i )
     {
       if(theSpeciesVisibility[i])
         {
@@ -445,7 +445,7 @@ void GLScene::setXLowBound(unsigned int aBound )
 
 void GLScene::setYUpBound(unsigned int aBound )
 {
-  for(unsigned int i(0); i!=theTotalLatticeSpSize; ++i )
+  for(unsigned int i(0); i!=theTotalSpeciesSize; ++i )
     {
       if(theSpeciesVisibility[i])
         {
@@ -457,7 +457,7 @@ void GLScene::setYUpBound(unsigned int aBound )
 
 void GLScene::setYLowBound(unsigned int aBound )
 {
-  for(unsigned int i(0); i!=theTotalLatticeSpSize; ++i )
+  for(unsigned int i(0); i!=theTotalSpeciesSize; ++i )
     {
       if(theSpeciesVisibility[i])
         {
@@ -469,7 +469,7 @@ void GLScene::setYLowBound(unsigned int aBound )
 
 void GLScene::setZUpBound(unsigned int aBound )
 {
-  for(unsigned int i(0); i!=theTotalLatticeSpSize; ++i )
+  for(unsigned int i(0); i!=theTotalSpeciesSize; ++i )
     {
       if(theSpeciesVisibility[i])
         {
@@ -481,7 +481,7 @@ void GLScene::setZUpBound(unsigned int aBound )
 
 void GLScene::setZLowBound(unsigned int aBound )
 {
-  for(unsigned int i(0); i!=theTotalLatticeSpSize; ++i )
+  for(unsigned int i(0); i!=theTotalSpeciesSize; ++i )
     {
       if(theSpeciesVisibility[i])
         {
@@ -1218,22 +1218,23 @@ void GLScene::plot3DHCPMolecules()
     }
   for(int j(theTotalOffLatticeSpSize-1); j!=-1; --j )
     {
-      if(theSpeciesVisibility[j+theTotalLatticeSpSize])
+      int m(j+theTotalLatticeSpSize);
+      if(theSpeciesVisibility[m])
         {
-          Color clr(theSpeciesColor[j+theTotalLatticeSpSize]);
+          Color clr(theSpeciesColor[m]);
           glColor3f(clr.r, clr.g, clr.b); 
           for( unsigned int k(0); k!=theOffLatticeMoleculeSize[j]; ++k )
             {
               x = (thePoints[j][k].x)+theRadius;
               y = (thePoints[j][k].y)+theRadius;
               z = (thePoints[j][k].z)+theRadius;
-              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                  z <= theZUpBound[j] && z >= theZLowBound[j]))
+              if(!( x <= theXUpBound[m] && x >= theXLowBound[m] &&
+                  y <= theYUpBound[m] && y >= theYLowBound[m] &&
+                  z <= theZUpBound[m] && z >= theZLowBound[m]))
                 {
                   glPushMatrix();
                   glTranslatef(x,y,z);
-                  glCallList(theGLIndex+j+theTotalLatticeSpSize);
+                  glCallList(theGLIndex+m);
                   glPopMatrix();
                 }
             }
@@ -1275,22 +1276,23 @@ void GLScene::plot3DCubicMolecules()
     }
   for(int j(theTotalOffLatticeSpSize-1); j!=-1; --j )
     {
-      if( theSpeciesVisibility[j+theTotalLatticeSpSize] )
+      int m(j+theTotalLatticeSpSize);
+      if( theSpeciesVisibility[m] )
         {
-          Color clr(theSpeciesColor[j+theTotalLatticeSpSize]);
+          Color clr(theSpeciesColor[m]);
           glColor3f(clr.r, clr.g, clr.b); 
           for( unsigned int k(0); k!=theOffLatticeMoleculeSize[j]; ++k )
             {
               x = (thePoints[j][k].x)+theRadius;
               y = (thePoints[j][k].y)+theRadius;
               z = (thePoints[j][k].z)+theRadius;
-              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                  z <= theZUpBound[j] && z >= theZLowBound[j]))
+              if(!( x <= theXUpBound[m] && x >= theXLowBound[m] &&
+                  y <= theYUpBound[m] && y >= theYLowBound[m] &&
+                  z <= theZUpBound[m] && z >= theZLowBound[m]))
                 {
                   glPushMatrix();
                   glTranslatef(x,y,z);
-                  glCallList(theGLIndex+j+theTotalLatticeSpSize);
+                  glCallList(theGLIndex+m);
                   glPopMatrix();
                 }
             }
@@ -1330,18 +1332,19 @@ void GLScene::plotHCPPoints()
     }
   for(int j(theTotalOffLatticeSpSize-1); j!=-1; --j )
     {
-      if( theSpeciesVisibility[j+theTotalLatticeSpSize] )
+      int m(j+theTotalLatticeSpSize);
+      if( theSpeciesVisibility[m] )
         {
-          Color clr(theSpeciesColor[j+theTotalLatticeSpSize]);
+          Color clr(theSpeciesColor[m]);
           glColor3f(clr.r, clr.g, clr.b); 
           for( unsigned int k(0); k!=theOffLatticeMoleculeSize[j]; ++k )
             {
               x = (thePoints[j][k].x)+theRadius;
               y = (thePoints[j][k].y)+theRadius;
               z = (thePoints[j][k].z)+theRadius;
-              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                  z <= theZUpBound[j] && z >= theZLowBound[j]))
+              if(!( x <= theXUpBound[m] && x >= theXLowBound[m] &&
+                  y <= theYUpBound[m] && y >= theYLowBound[m] &&
+                  z <= theZUpBound[m] && z >= theZLowBound[m]))
                 {
                   glVertex3f(x, y, z);
                 }
@@ -1383,18 +1386,19 @@ void GLScene::plotCubicPoints()
     }
   for(int j(theTotalOffLatticeSpSize-1); j!=-1; --j )
     {
-      if( theSpeciesVisibility[j+theTotalLatticeSpSize] )
+      int m(j+theTotalLatticeSpSize);
+      if( theSpeciesVisibility[m] )
         {
-          Color clr(theSpeciesColor[j+theTotalLatticeSpSize]);
+          Color clr(theSpeciesColor[m]);
           glColor3f(clr.r, clr.g, clr.b); 
           for( unsigned int k(0); k!=theOffLatticeMoleculeSize[j]; ++k )
             {
               x = (thePoints[j][k].x)+theRadius;
               y = (thePoints[j][k].y)+theRadius;
               z = (thePoints[j][k].z)+theRadius;
-              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                  z <= theZUpBound[j] && z >= theZLowBound[j]))
+              if(!( x <= theXUpBound[m] && x >= theXLowBound[m] &&
+                  y <= theYUpBound[m] && y >= theYLowBound[m] &&
+                  z <= theZUpBound[m] && z >= theZLowBound[m]))
                 {
                   glVertex3f(x, y, z);
                 }
