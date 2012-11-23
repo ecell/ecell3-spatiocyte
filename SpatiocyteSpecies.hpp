@@ -210,7 +210,7 @@ public:
     {
       return (thePopulateProcess != NULL);
     }
-  void populateCompUniform(unsigned voxelIDs[], unsigned* aCount)
+  void populateCompUniform(unsigned* voxelIDs, unsigned* aCount)
     {
       if(thePopulateProcess)
         {

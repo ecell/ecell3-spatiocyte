@@ -2923,6 +2923,7 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
   unsigned populationSize(0);
   std::vector<Species*> prioritySpecies;
   std::vector<Species*> diffusiveSpecies;
+  std::vector<Species*> compProcessSpecies;
   std::vector<Species*> normalSpecies;
   for(std::vector<Species*>::const_iterator i(aComp->species.begin());
       i != aComp->species.end(); ++i)
@@ -2930,6 +2931,10 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
       if((*i)->getVacantSpecies()->getIsDiffusiveVacant())
         {
           diffusiveSpecies.push_back(*i);
+        }
+      else if((*i)->getVacantSpecies() != aComp->vacantSpecies)
+        {
+          compProcessSpecies.push_back(*i);
         }
       else if((*i)->getIsPopulateSpecies())
         {
@@ -2992,6 +2997,11 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
       i != diffusiveSpecies.end(); ++i)
     {
       (*i)->populateUniformOnDiffusiveVacant();
+    }
+  for(std::vector<Species*>::const_iterator i(compProcessSpecies.begin());
+      i != compProcessSpecies.end(); ++i)
+    {
+      (*i)->populateCompUniformSparse();
     }
 }
 

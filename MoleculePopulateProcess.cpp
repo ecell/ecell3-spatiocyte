@@ -179,7 +179,7 @@ void MoleculePopulateProcess::populateUniformOnDiffusiveVacant(Species*
 }
 
 void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
-                                              unsigned int aList[], 
+                                              unsigned int* aList, 
                                               unsigned int* aCount)
 {
   std::cout << "    Populating densely:" <<

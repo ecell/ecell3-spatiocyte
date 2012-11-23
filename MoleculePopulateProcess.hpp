@@ -77,7 +77,7 @@ public:
   virtual void initialize();
   virtual void initializeSecond();
   virtual void populateGaussian(Species*);
-  virtual void populateUniformDense(Species*, unsigned int[], unsigned int*);
+  virtual void populateUniformDense(Species*, unsigned int*, unsigned int*);
   virtual void populateUniformSparse(Species* aSpecies);
   virtual void populateUniformRanged(Species* aSpecies);
   virtual void populateUniformOnDiffusiveVacant(Species* aSpecies);

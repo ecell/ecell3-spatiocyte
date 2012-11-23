@@ -172,6 +172,7 @@ public:
     }
   virtual unsigned getLatticeResizeCoord(unsigned);
   virtual void initializeThird();
+  virtual void printParameters();
   void addCompVoxel(unsigned, unsigned, Point&, Species*, unsigned, unsigned);
   void initializeVectors();
   void initializeFilaments(Point&, unsigned, unsigned, double, Species*,

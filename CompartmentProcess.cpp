@@ -514,3 +514,27 @@ void CompartmentProcess::addNonIntersectInterfaceVoxel(Voxel& aVoxel,
     }
 }
 
+void CompartmentProcess::printParameters()
+{
+  std::cout << getPropertyInterface().getClassName() << "[" <<
+    getFullID().asString() << "]" << std::endl;
+  std::cout << "  width:" << Width << " length:" << Length <<
+    " area:" << Width*Length << std::endl;
+  if(theLipidSpecies)
+    {
+      std::cout << "  " << getIDString(theLipidSpecies) << 
+        " number:" << theLipidSpecies->size() << std::endl;
+      for(unsigned i(0); i != theLipidCompSpecies.size(); ++i)
+        {
+          std::cout << "    " << getIDString(theLipidCompSpecies[i]) <<
+            " number:" << theLipidCompSpecies[i]->size() << std::endl;
+        }
+    } 
+  std::cout << "  " << getIDString(theVacantSpecies) << 
+    " number:" << theVacantSpecies->size() << std::endl;
+      for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
+        {
+          std::cout << "    " << getIDString(theVacantCompSpecies[i]) <<
+            " number:" << theVacantCompSpecies[i]->size() << std::endl;
+        }
+}
