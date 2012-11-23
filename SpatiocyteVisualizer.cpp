@@ -247,7 +247,6 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   theOriCol = theStartCoord/(theRowSize*theLayerSize);
   theSpeciesColor = new Color[theTotalSpeciesSize];
   theSpeciesVisibility = new bool[theTotalSpeciesSize];
-  theSpeciesVisibility = new bool[theTotalSpeciesSize];
   theXUpBound = new unsigned int[theTotalSpeciesSize];
   theXLowBound = new unsigned int[theTotalSpeciesSize];;
   theYUpBound = new unsigned int[theTotalSpeciesSize];
@@ -258,7 +257,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   theMeanPoints = new Point[1];
   theFrequency = new unsigned int*[theLatticeSpSize];
   theMoleculeSize = new unsigned int[theTotalLatticeSpSize];
-  for(unsigned int j(0); j!=theTotalLatticeSpSize; ++j)
+  for(unsigned int j(0); j!=theTotalSpeciesSize; ++j)
     {
       theSpeciesVisibility[j] = true; 
       theXUpBound[j] = 0;
@@ -267,6 +266,9 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
       theYLowBound[j] = 0;
       theZUpBound[j] = theRowSize;
       theZLowBound[j] = 0;
+    }
+  for(unsigned int j(0); j!=theTotalLatticeSpSize; ++j)
+    {
       theMoleculeSize[j] = 0;
       theCoords[j] = new unsigned int[1];
     }
@@ -278,7 +280,6 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   theOffLatticeMoleculeSize = new unsigned int[theTotalOffLatticeSpSize];
   for(unsigned int j(0); j!=theTotalOffLatticeSpSize; ++j )
     {
-      theSpeciesVisibility[theTotalLatticeSpSize+j] = true;
       theOffLatticeMoleculeSize[j] = 0;
       thePoints[j] = new Point[1];
     }

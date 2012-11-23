@@ -74,6 +74,7 @@ public:
     RotateZ(0),
     SubunitRadius(0),
     Width(0),
+    theLipidSpecies(NULL),
     theVacantSpecies(NULL) {}
   virtual ~CompartmentProcess() {}
   SIMPLE_SET_GET_METHOD(Integer, Filaments);
@@ -127,7 +128,14 @@ public:
         {
           Species* aSpecies(theSpatiocyteStepper->variable2species(
                                    (*i).getVariable())); 
-          theCompartmentSpecies.push_back(aSpecies);
+          if((*i).getCoefficient())
+            {
+              theLipidCompSpecies.push_back(aSpecies);
+            }
+          else
+            {
+              theVacantCompSpecies.push_back(aSpecies);
+            }
         }
       if(!SubunitRadius)
         {
@@ -144,15 +152,23 @@ public:
         {
           theLipidSpecies->setIsOffLattice();
         }
-      for(unsigned i(0); i != theCompartmentSpecies.size(); ++i)
+      for(unsigned i(0); i != theLipidCompSpecies.size(); ++i)
         {
-          theCompartmentSpecies[i]->setIsOffLattice();
+          theLipidCompSpecies[i]->setIsOffLattice();
+        }
+      for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
+        {
+          theVacantCompSpecies[i]->setIsOffLattice();
         }
     }
   virtual void initializeSecond()
     {
       SpatiocyteProcess::initializeSecond();
       theVacantSpecies->setIsCompVacant();
+      if(theLipidSpecies)
+        {
+          theLipidSpecies->setIsCompVacant();
+        }
     }
   virtual unsigned getLatticeResizeCoord(unsigned);
   virtual void initializeThird();
@@ -161,14 +177,11 @@ public:
   void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
                            unsigned);
   void elongateFilaments(Species*, unsigned, unsigned, unsigned, double);
-  void connectPeriodic(unsigned, unsigned, unsigned);
-  void connectNorthSouth(unsigned, unsigned, unsigned, unsigned);
-  void connectEastWest(unsigned, unsigned, unsigned, unsigned);
-  void connectSeamEastWest(unsigned, unsigned, unsigned, unsigned);
-  void connectNwSw(unsigned, unsigned, unsigned, unsigned);
+  void connectSubunit(unsigned, unsigned);
   void connectFilaments(unsigned, unsigned, unsigned);
   void addInterfaceVoxel(unsigned, unsigned);
   void setCompartmentDimension();
+  void setDiffuseSize();
   void interfaceSubunits();
   void enlistInterfaceVoxels();
   void enlistNonIntersectInterfaceVoxels();
@@ -229,7 +242,8 @@ protected:
   Variable* theLipidVariable;
   Variable* theVacantVariable;
   std::vector<Point> thePoints;
-  std::vector<Species*> theCompartmentSpecies;
+  std::vector<Species*> theLipidCompSpecies;
+  std::vector<Species*> theVacantCompSpecies;
   std::vector<std::vector<unsigned> > subunitInterfaces;
 };
 
