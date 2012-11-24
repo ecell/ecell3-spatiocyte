@@ -523,6 +523,13 @@ void SpatiocyteStepper::resizeProcessLattice()
     {
       theSpecies[i]->updateMoleculePointers();
     }
+  for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
+      i != theProcessVector.end(); ++i)
+    {    
+      SpatiocyteProcessInterface*
+        aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
+      aProcess->updateResizedLattice();
+    }
 }
 
 void SpatiocyteStepper::initProcessThird()
@@ -2948,7 +2955,7 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
               //in the high priority populate list
               if((*j)->getPopulatePriority() > (*i)->getPopulatePriority() ||
                  ((*j)->getPopulatePriority() == (*i)->getPopulatePriority() &&
-                  (*j)->getIsDiffusiveVacant()))
+                  ((*j)->getIsDiffusiveVacant() || (*j)->getIsMultiscale())))
                 {
                   temp.push_back(*j);
                 }

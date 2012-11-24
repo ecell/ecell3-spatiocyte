@@ -38,7 +38,7 @@ unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
   theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
   theVacantSpecies->resetFixedAdjoins();
   theVacantSpecies->setMoleculeRadius(DiffuseRadius);
-  if(LipidRadius)
+  if(theLipidSpecies)
     {
       theLipidSpecies->resetFixedAdjoins();
       theLipidSpecies->setMoleculeRadius(LipidRadius);
@@ -49,9 +49,18 @@ unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
   Origin.y += OriginY*theComp->lengthY/2;
   Origin.z += OriginZ*theComp->lengthZ/2;
   setCompartmentDimension();
+  setVacantCompSpeciesProperties();
+  setLipidCompSpeciesProperties();
+  subStartCoord = aStartCoord;
+  lipStartCoord = aStartCoord+Filaments*Subunits;
+  endCoord = lipStartCoord+LipidRows*LipidCols;
+  return endCoord-aStartCoord;
+}
+
+void CompartmentProcess::setVacantCompSpeciesProperties()
+{
   for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
     {
-      theVacantCompSpecies[i]->setIsOffLattice();
       theVacantCompSpecies[i]->setDimension(dimension);
       theVacantCompSpecies[i]->setVacantSpecies(theVacantSpecies);
       theVacantCompSpecies[i]->setMoleculeRadius(SubunitRadius);
@@ -59,15 +68,66 @@ unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
     }
   for(unsigned i(0); i != theLipidCompSpecies.size(); ++i)
     {
-      theLipidCompSpecies[i]->setIsOffLattice();
+      Species* aLipid(theLipidCompSpecies[i]);
+      for(unsigned j(0); j != theVacantCompSpecies.size(); ++j)
+        {
+          Species* aVacant(theVacantCompSpecies[j]);
+          if(aLipid->getVacantSpecies() == aVacant)
+            {
+              int aCoeff(getCoefficient(aLipid));
+              Species* aLipidPair(coefficient2species(sqrt(aCoeff*aCoeff)));
+              aVacant->setDiffuseAssociatedSpecies(aLipid->getID(),
+                                                   aLipidPair->getID());
+            }
+        }
+    }
+}
+
+int CompartmentProcess::getCoefficient(Species* aSpecies)
+{
+  for(VariableReferenceVector::iterator i(theVariableReferenceVector.begin());
+      i != theVariableReferenceVector.end(); ++i)
+    {
+      if(aSpecies->getVariable() == (*i).getVariable()) 
+        {
+          return (*i).getCoefficient();
+        }
+    }
+  return 0;
+}
+
+Species* CompartmentProcess::coefficient2species(int aCoeff)
+{
+  for(VariableReferenceVector::iterator i(theVariableReferenceVector.begin());
+      i != theVariableReferenceVector.end(); ++i)
+    {
+      if((*i).getCoefficient() == aCoeff)
+        {
+          return theSpatiocyteStepper->variable2species((*i).getVariable());
+        }
+    }
+  return NULL;
+}
+
+void CompartmentProcess::setLipidCompSpeciesProperties()
+{
+  for(unsigned i(0); i != theLipidCompSpecies.size(); ++i)
+    {
       theLipidCompSpecies[i]->setDimension(dimension);
       theLipidCompSpecies[i]->setVacantSpecies(theLipidSpecies);
       theLipidCompSpecies[i]->setMoleculeRadius(LipidRadius);
     }
-  subStartCoord = aStartCoord;
-  lipStartCoord = aStartCoord+Filaments*Subunits;
-  endCoord = lipStartCoord+LipidRows*LipidCols;
-  return endCoord-aStartCoord;
+}
+
+void CompartmentProcess::updateResizedLattice()
+{
+  for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
+    {
+      //TODO: replace subStartCoord with theVacantSpecies->getCoord(0) 
+      //TODO: replace lipStartCoord with theLipidSpecies->getCoord(0) 
+      theVacantCompSpecies[i]->setVacStartCoord(subStartCoord);
+      theVacantCompSpecies[i]->setLipStartCoord(lipStartCoord);
+    }
 }
 
 void CompartmentProcess::setCompartmentDimension()
@@ -102,7 +162,7 @@ void CompartmentProcess::setCompartmentDimension()
   nLength = Length/(VoxelRadius*2);
   nWidth = Width/(VoxelRadius*2);
   nHeight = Height/(VoxelRadius*2);
-  if(LipidRadius)
+  if(theLipidSpecies)
     {
       LipidCols = (unsigned)rint(Length/(LipidRadius*2));
       LipidRows = (unsigned)rint((Width-2*LipidRadius)/(LipidRadius*sqrt(3)))+1;
@@ -128,10 +188,19 @@ void CompartmentProcess::initializeThird()
                         LipidCols, nLipidRadius);
       connectFilaments(lipStartCoord, LipidRows, LipidCols);
       setDiffuseSize();
+      setSpeciesIntersectLipids();
       isCompartmentalized = true;
     }
   theVacantSpecies->setIsPopulated();
   theLipidSpecies->setIsPopulated();
+}
+
+void CompartmentProcess::setSpeciesIntersectLipids()
+{
+  for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
+    {
+      theVacantCompSpecies[i]->setIntersectLipids(theLipidSpecies);
+    }
 }
 
 Point CompartmentProcess::getStartVoxelPoint()
@@ -183,7 +252,7 @@ void CompartmentProcess::initializeVectors()
   heightVector.z = 0;
   heightEnd = disp(widthEnd, heightVector, nHeight);
 
-  if(LipidRadius)
+  if(theLipidSpecies)
     {
       lipidStart = lengthStart;
       disp_(lipidStart, lengthVector, nLipidRadius);
@@ -212,6 +281,7 @@ void CompartmentProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,
                                              Species* aVacant,
                                              unsigned aStartCoord)
 {
+  //The first comp voxel must have the aStartCoord:
   addCompVoxel(0, 0, aStartPoint, aVacant, aStartCoord, aCols);
   for(unsigned i(1); i != aRows; ++i)
     {

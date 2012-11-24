@@ -121,7 +121,10 @@ public:
     {
       if(theVacantSpecies)
         {
-          theVacantSpecies->setIsDiffusiveVacant();
+          if(!theVacantSpecies->getIsMultiscale())
+            {
+              theVacantSpecies->setIsDiffusiveVacant();
+            }
           theDiffusionSpecies->setVacantSpecies(theVacantSpecies);
         }
     }
@@ -153,7 +156,11 @@ public:
         {
           theWalkMethod = &DiffusionProcess::walkVacant;
         }
-      else
+      else if(theDiffusionSpecies->getIsMultiscale())
+        {
+          theWalkMethod = &DiffusionProcess::walkMultiscale;
+        }
+      else 
         {
           theWalkMethod = &DiffusionProcess::walk;
         }
@@ -190,6 +197,10 @@ public:
   void walkVacant() const
     {
       theDiffusionSpecies->walkVacant();
+    }
+  void walkMultiscale() const
+    {
+      theDiffusionSpecies->walkMultiscale();
     }
   virtual void initializeLastOnce()
     {

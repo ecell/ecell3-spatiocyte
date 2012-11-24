@@ -65,6 +65,7 @@ public:
   virtual void initializeFifth() {}
   virtual void initializeLastOnce() {}
   virtual void printParameters() {}
+  virtual void updateResizedLattice() {}
   virtual void prepreinitialize()
     {
       Process::prepreinitialize();

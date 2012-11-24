@@ -94,6 +94,7 @@ public:
     isFixedAdjoins(false),
     isGaussianPopulation(false),
     isInContact(false),
+    isMultiscale(false),
     isOffLattice(false),
     isPolymer(false),
     isReactiveVacant(false),
@@ -106,10 +107,11 @@ public:
     theInitCoordSize(anInitCoordSize),
     theMoleculeSize(0),
     D(0),
-    theDiffusionInterval(libecs::INF),
-    theWalkProbability(1),
-    theMoleculeRadius(voxelRadius),
     theDiffuseRadius(voxelRadius),
+    theDiffusionInterval(libecs::INF),
+    theMoleculeRadius(voxelRadius),
+    theVoxelRadius(voxelRadius),
+    theWalkProbability(1),
     theRng(aRng),
     thePopulateProcess(NULL),
     theStepper(aStepper),
@@ -126,7 +128,9 @@ public:
       theReactionProbabilities.resize(speciesSize);
       theDiffusionInfluencedReactions.resize(speciesSize);
       theFinalizeReactions.resize(speciesSize);
-      for(int i(0); i != speciesSize; ++ i)
+      theDiffuseAssociatedSpecies.resize(speciesSize);
+      theDiffuseDissociatedSpecies.resize(speciesSize);
+      for(int i(0); i != speciesSize; ++i)
         {
           theDiffusionInfluencedReactions[i] = NULL;
           theReactionProbabilities[i] = 0;
@@ -356,6 +360,14 @@ public:
   void setIsSubunitInitialized()
     {
       isSubunitInitialized = true;
+    }
+  void setIsMultiscale()
+    {
+      isMultiscale = true;
+    }
+  bool getIsMultiscale()
+    {
+      return isMultiscale;
     }
   void setIsCompVacant()
     {
@@ -620,6 +632,55 @@ public:
                 }
             }
         }
+    }
+  void walkMultiscale()
+    {
+      /*
+      unsigned beginMoleculeSize(theMoleculeSize);
+      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
+        {
+          Voxel* source(theMolecules[i]);
+          int size(source->diffuseSize);
+          Voxel* target(&theLattice[source->adjoiningCoords[
+                        gsl_rng_uniform_int(theRng, size)]]);
+          if(target->id == theVacantID)
+            {
+              if(theWalkProbability == 1 ||
+                 gsl_rng_uniform(theRng) < theWalkProbability)
+                {
+                  target->id = theID;
+                  source->id = theVacantID;
+                  theMolecules[i] = target;
+                }
+            }
+          else if(theDiffusionInfluencedReactions[target->id])
+            {
+              //If it meets the reaction probability:
+              if(gsl_rng_uniform(theRng) < theReactionProbabilities[target->id])
+                { 
+                  Species* targetSpecies(theStepper->id2species(target->id));
+                  unsigned targetIndex(targetSpecies->getIndex(target));
+                  if(theCollision)
+                    { 
+                      ++collisionCnts[i];
+                      targetSpecies->addCollision(target);
+                      if(theCollision != 2)
+                        {
+                          return;
+                        }
+                    }
+                  unsigned aMoleculeSize(theMoleculeSize);
+                  react(i, targetIndex, targetSpecies, target);
+                  //Only rewalk the current pointed molecule if it is an
+                  //unwalked molecule (not a product of the reaction):
+                  if(theMoleculeSize < aMoleculeSize)
+                    {
+                      --i;
+                    }
+                }
+            }
+        }
+        */
     }
   void walkVacant()
     {
@@ -1390,6 +1451,42 @@ public:
           theCoords[i] = getCoord(i);
         }
     }
+  void setVacStartCoord(unsigned aCoord)
+    {
+      vacStartCoord = aCoord;
+    }
+  void setLipStartCoord(unsigned aCoord)
+    {
+      lipStartCoord = aCoord;
+    }
+  void setIntersectLipids(Species* aLipid)
+    {
+      //Traverse through the entire compartment voxels:
+      unsigned endA(vacStartCoord+theVacantSpecies->size());
+      unsigned endB(lipStartCoord+aLipid->size());
+      double dist((aLipid->getMoleculeRadius()+theMoleculeRadius)/
+                  2*theVoxelRadius);
+      theIntersectLipids.resize(theVacantSpecies->size());
+      for(unsigned i(vacStartCoord); i != endA; ++i)
+        {
+          Point& pointA(*theLattice[i].point);
+          for(unsigned j(lipStartCoord); j != endB; ++j)
+            {
+              Point& pointB(*theLattice[j].point);
+              if(getDistance(&pointA, &pointB) < dist)
+                {
+                  theIntersectLipids[i-vacStartCoord
+                    ].push_back(j-lipStartCoord);
+                }
+            }
+        }
+      std::cout << "done" << std::endl;
+    }
+  void setDiffuseAssociatedSpecies(unsigned anID, unsigned aPairID)
+    {
+      theDiffuseAssociatedSpecies[anID] = aPairID;
+      theDiffuseDissociatedSpecies[aPairID] = anID;
+    }
 private:
   bool isCentered;
   bool isCompVacant;
@@ -1398,6 +1495,7 @@ private:
   bool isFixedAdjoins;
   bool isGaussianPopulation;
   bool isInContact;
+  bool isMultiscale;
   bool isOffLattice;
   bool isPolymer;
   bool isReactiveVacant;
@@ -1406,20 +1504,23 @@ private:
   bool isTagged;
   bool isVacant;
   const unsigned short theID;
+  unsigned lipStartCoord;
+  unsigned theAdjoiningCoordSize;
   unsigned theCollision;
   unsigned theDimension;
   unsigned theInitCoordSize;
   unsigned theMoleculeSize;
   unsigned theNullCoord;
   unsigned theNullID;
-  unsigned theAdjoiningCoordSize;
+  unsigned vacStartCoord;
   int thePolymerDirectionality;
   int theVacantID;
   double D;
-  double theDiffusionInterval;
-  double theWalkProbability;
-  double theMoleculeRadius;
   double theDiffuseRadius;
+  double theDiffusionInterval;
+  double theMoleculeRadius;
+  double theVoxelRadius;
+  double theWalkProbability;
   const gsl_rng* theRng;
   Species* theVacantSpecies;
   Comp* theComp;
@@ -1430,6 +1531,8 @@ private:
   std::vector<bool> theFinalizeReactions;
   std::vector<unsigned> collisionCnts;
   std::vector<unsigned> theCoords;
+  std::vector<unsigned> theDiffuseAssociatedSpecies;
+  std::vector<unsigned> theDiffuseDissociatedSpecies;
   std::vector<Tag> theTags;
   std::vector<double> theBendAngles;
   std::vector<double> theReactionProbabilities;
@@ -1443,6 +1546,7 @@ private:
   std::vector<SpatiocyteProcessInterface*> theInterruptedProcesses;
   std::vector<Origin> theMoleculeOrigins;
   std::vector<Voxel>& theLattice;
+  std::vector<std::vector<unsigned> > theIntersectLipids;
 };
 
 

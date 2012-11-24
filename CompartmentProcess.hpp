@@ -167,6 +167,10 @@ public:
       for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
         {
           theVacantCompSpecies[i]->setIsOffLattice();
+          if(theLipidSpecies)
+            {
+              theVacantCompSpecies[i]->setIsMultiscale();
+            }
         }
     }
   virtual void initializeSecond()
@@ -181,6 +185,7 @@ public:
   virtual unsigned getLatticeResizeCoord(unsigned);
   virtual void initializeThird();
   virtual void printParameters();
+  virtual void updateResizedLattice();
   void addCompVoxel(unsigned, unsigned, Point&, Species*, unsigned, unsigned);
   void initializeVectors();
   void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
@@ -190,6 +195,8 @@ public:
   void connectFilaments(unsigned, unsigned, unsigned);
   void addInterfaceVoxel(unsigned, unsigned);
   void setCompartmentDimension();
+  void setVacantCompSpeciesProperties();
+  void setLipidCompSpeciesProperties();
   void setDiffuseSize();
   void interfaceSubunits();
   void enlistInterfaceVoxels();
@@ -197,7 +204,10 @@ public:
   void addNonIntersectInterfaceVoxel(Voxel&, Point&);
   void rotate(Point&);
   bool isInside(Point&);
+  void setSpeciesIntersectLipids();
   Point getStartVoxelPoint();
+  int getCoefficient(Species*);
+  Species* coefficient2species(int);
 protected:
   bool isCompartmentalized;
   unsigned dimension;
