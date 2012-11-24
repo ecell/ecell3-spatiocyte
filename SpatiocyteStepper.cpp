@@ -2927,25 +2927,32 @@ bool SpatiocyteStepper::isInsideCoord(unsigned aCoord,
 
 void SpatiocyteStepper::populateComp(Comp* aComp)
 {
-  unsigned populationSize(0);
+  std::vector<unsigned> populationSize;
   std::vector<Species*> prioritySpecies;
+  std::vector<Species*> multiscaleSpecies;
   std::vector<Species*> diffusiveSpecies;
-  std::vector<Species*> compProcessSpecies;
   std::vector<Species*> normalSpecies;
+  populationSize.resize(theSpecies.size());
+  for(unsigned i(0); i != theSpecies.size(); ++i)
+    {
+      populationSize[i] = 0;
+    }
   for(std::vector<Species*>::const_iterator i(aComp->species.begin());
       i != aComp->species.end(); ++i)
     {
-      if((*i)->getVacantSpecies()->getIsDiffusiveVacant())
+      std::cout << "curr:" << (*i)->getVariable()->getFullID().asString() << " " << (*i)->getVacantSpecies()->getVariable()->getFullID().asString() << std::endl;
+      if((*i)->getVacantSpecies()->getIsMultiscale())
+        {
+          multiscaleSpecies.push_back(*i);
+        }
+      else if((*i)->getVacantSpecies()->getIsDiffusiveVacant())
         {
           diffusiveSpecies.push_back(*i);
         }
-      else if((*i)->getVacantSpecies() != aComp->vacantSpecies)
-        {
-          compProcessSpecies.push_back(*i);
-        }
       else if((*i)->getIsPopulateSpecies())
         {
-          populationSize += (unsigned)(*i)->getPopulateCoordSize();
+          populationSize[(*i)->getVacantSpecies()->getID()] += 
+            (*i)->getPopulateCoordSize();
           bool isPushed(false);
           std::vector<Species*> temp;
           std::vector<Species*>::const_iterator j(prioritySpecies.begin());
@@ -2979,36 +2986,42 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
           prioritySpecies = temp;
         }
     }
-  if(aComp->vacantSpecies->size() < populationSize)
+  for(unsigned i(0); i != populationSize.size(); ++i)
     {
-      THROW_EXCEPTION(ValueError, String(
+      if(populationSize[i])
+        {
+          unsigned available(theSpecies[i]->getPopulatableSize());
+          if(populationSize[i] > available)
+            {
+              THROW_EXCEPTION(ValueError, String(
                           getPropertyInterface().getClassName()) +
-                          "There are " + int2str(populationSize) + 
+                          "There are " + int2str(populationSize[i]) + 
                           " total molecules that must be uniformly " +
                           "populated,\nbut there are only "
-                          + int2str(aComp->vacantSpecies->size()) + 
-                          " vacant voxels of [" + 
-                  aComp->vacantSpecies->getVariable()->getFullID().asString() +
+                          + int2str(available) + " vacant voxels of [" + 
+                          theSpecies[i]->getVariable()->getFullID().asString() +
                           "] that can be populated on.");
+            } 
+          if(double(populationSize[i])/available > 0.2)
+            { 
+              populateSpeciesDense(prioritySpecies, populationSize[i],
+                                   available);
+            }
+          else
+            {
+              populateSpeciesSparse(prioritySpecies);
+            }
+        }
     }
-  if(double(populationSize)/aComp->vacantSpecies->size() > 0.2)
-    { 
-      populateSpeciesDense(prioritySpecies, populationSize,
-                           aComp->vacantSpecies->size());
-    }
-  else
+  for(std::vector<Species*>::const_iterator i(multiscaleSpecies.begin());
+      i != multiscaleSpecies.end(); ++i)
     {
-      populateSpeciesSparse(prioritySpecies);
+      (*i)->populateUniformOnMultiscale();
     }
   for(std::vector<Species*>::const_iterator i(diffusiveSpecies.begin());
       i != diffusiveSpecies.end(); ++i)
     {
       (*i)->populateUniformOnDiffusiveVacant();
-    }
-  for(std::vector<Species*>::const_iterator i(compProcessSpecies.begin());
-      i != compProcessSpecies.end(); ++i)
-    {
-      (*i)->populateCompUniformSparse();
     }
 }
 

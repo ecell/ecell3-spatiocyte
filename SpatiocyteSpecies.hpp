@@ -251,6 +251,18 @@ public:
             " not CoordPopulated." << std::endl;
         }
     }
+  void populateUniformOnMultiscale()
+    {
+      if(thePopulateProcess)
+        {
+          thePopulateProcess->populateUniformOnMultiscale(this);
+        }
+      else if(theMoleculeSize)
+        {
+          std::cout << "Species:" << theVariable->getFullID().asString() <<
+            " not CoordPopulated." << std::endl;
+        }
+    }
   Variable* getVariable() const
     {
       return theVariable;
@@ -947,6 +959,15 @@ public:
             }
           theVariable->setValue(theMoleculeSize);
         }
+      if(isMultiscale)
+        {
+          unsigned aCoord(getCoord(theMoleculeSize-1)-vacStartCoord);
+          for(unsigned i(0); i != theIntersectLipids[aCoord].size(); ++i)
+            {
+              unsigned coordB(theIntersectLipids[aCoord][i]+lipStartCoord);
+              theLattice[coordB].id = theID;
+            }
+        }
     }
   void addMolecule(Voxel* aVoxel)
     {
@@ -1465,7 +1486,10 @@ public:
       unsigned endA(vacStartCoord+theVacantSpecies->size());
       unsigned endB(lipStartCoord+aLipid->size());
       double dist((aLipid->getMoleculeRadius()+theMoleculeRadius)/
-                  2*theVoxelRadius);
+                  (2*theVoxelRadius));
+      std::cout << "dist:" << dist << std::endl;
+      std::cout << "lipR:" << aLipid->getMoleculeRadius() << std::endl;
+      std::cout << "myR:" << theMoleculeRadius << std::endl;
       theIntersectLipids.resize(theVacantSpecies->size());
       for(unsigned i(vacStartCoord); i != endA; ++i)
         {
@@ -1475,17 +1499,87 @@ public:
               Point& pointB(*theLattice[j].point);
               if(getDistance(&pointA, &pointB) < dist)
                 {
+                  //We save j-lipStartCoord and not the absolute coord
+                  //since the absolute coord may change after resize 
+                  //of lattice:
                   theIntersectLipids[i-vacStartCoord
                     ].push_back(j-lipStartCoord);
                 }
             }
         }
-      std::cout << "done" << std::endl;
     }
   void setDiffuseAssociatedSpecies(unsigned anID, unsigned aPairID)
     {
       theDiffuseAssociatedSpecies[anID] = aPairID;
       theDiffuseDissociatedSpecies[aPairID] = anID;
+    }
+  unsigned getPopulatableSize()
+    {
+      if(isMultiscale)
+        {
+          if(!getIsPopulated())
+            {
+              std::cout << "The multiscale species:" << 
+                getVariable()->getFullID().asString() << " has not yet " <<
+                "been populated, but it being populated on." << std::endl;
+            }
+          thePopulatableCoords.resize(0);
+          for(unsigned i(0); i != theMoleculeSize; ++i)
+            {
+              unsigned j(getCoord(i)-vacStartCoord);
+              for(unsigned k(0); k != theIntersectLipids[j].size(); ++k)
+                {
+                  unsigned aCoord(theIntersectLipids[j][k]+lipStartCoord);
+                  if(theLattice[aCoord].id == theID)
+                    {
+                      thePopulatableCoords.push_back(aCoord);
+                    }
+                }
+              std::cout << "thePopsize:" << thePopulatableCoords.size() << std::endl;
+              std::cout << "theavia:" << theIntersectLipids[j].size() << std::endl;
+            }
+          return thePopulatableCoords.size();
+        }
+      return theMoleculeSize;
+    }
+  Voxel* getRandomPopulatableMolecule()
+    {
+      Voxel* aMolecule;
+      if(isMultiscale)
+        {
+          unsigned index(0);
+          do
+            {
+              index = gsl_rng_uniform_int(theRng, thePopulatableCoords.size());
+            }
+          while(theLattice[thePopulatableCoords[index]].id != theID);
+          aMolecule =  &theLattice[thePopulatableCoords[index]];
+        }
+      else
+        {
+          aMolecule = getRandomMolecule();
+          while(aMolecule->id != theID)
+            {
+              aMolecule = getRandomMolecule();
+            }
+        }
+      return aMolecule;
+    }
+  unsigned getPopulatableCoord(unsigned index)
+    {
+      if(isMultiscale)
+        {
+          return thePopulatableCoords[index];
+        }
+      return getCoord(index);
+    }
+  Point coord2point(unsigned aCoord)
+    {
+      if(theLattice[aCoord].point)
+        {
+          return *theLattice[aCoord].point;
+        }
+      return theStepper->coord2point(aCoord);
     }
 private:
   bool isCentered;
@@ -1533,6 +1627,7 @@ private:
   std::vector<unsigned> theCoords;
   std::vector<unsigned> theDiffuseAssociatedSpecies;
   std::vector<unsigned> theDiffuseDissociatedSpecies;
+  std::vector<unsigned> thePopulatableCoords;
   std::vector<Tag> theTags;
   std::vector<double> theBendAngles;
   std::vector<double> theReactionProbabilities;

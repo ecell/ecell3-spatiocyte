@@ -49,8 +49,8 @@ unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
   Origin.y += OriginY*theComp->lengthY/2;
   Origin.z += OriginZ*theComp->lengthZ/2;
   setCompartmentDimension();
-  setVacantCompSpeciesProperties();
   setLipidCompSpeciesProperties();
+  setVacantCompSpeciesProperties();
   subStartCoord = aStartCoord;
   lipStartCoord = aStartCoord+Filaments*Subunits;
   endCoord = lipStartCoord+LipidRows*LipidCols;
