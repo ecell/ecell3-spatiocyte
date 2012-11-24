@@ -118,7 +118,7 @@ struct SpeciesPacker
     {
         arc << field<uint64_t>("id", &Species::getID, data);
         arc << field<char[32]>("name", &Species_getName, data);
-        arc << field<double>("radius", &Species::getRadius, data);
+        arc << field<double>("radius", &Species::getMoleculeRadius, data);
         arc << field<double>("D", &Species::getDiffusionCoefficient, data);
     }
 };

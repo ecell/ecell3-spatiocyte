@@ -98,7 +98,7 @@ protected:
       for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
         {
           theLogFile << "," << getIDString(theProcessSpecies[i]) << "=" <<
-            theProcessSpecies[i]->getRadius();
+            theProcessSpecies[i]->getMoleculeRadius();
         }
       theLogFile << std::endl;
     }

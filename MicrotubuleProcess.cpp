@@ -36,11 +36,11 @@ unsigned int MicrotubuleProcess::getLatticeResizeCoord(unsigned int aStartCoord)
 {
   theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
   theVacantSpecies->resetFixedAdjoins();
-  theVacantSpecies->setRadius(DimerPitch*VoxelDiameter/2);
+  theVacantSpecies->setMoleculeRadius(DimerPitch*VoxelDiameter/2);
   theMinusSpecies->resetFixedAdjoins();
-  theMinusSpecies->setRadius(DimerPitch*VoxelDiameter/2);
+  theMinusSpecies->setMoleculeRadius(DimerPitch*VoxelDiameter/2);
   thePlusSpecies->resetFixedAdjoins();
-  thePlusSpecies->setRadius(DimerPitch*VoxelDiameter/2);
+  thePlusSpecies->setMoleculeRadius(DimerPitch*VoxelDiameter/2);
   tempID = theSpecies.size();
   C = theComp->centerPoint;
   C.x += OriginX*theComp->lengthX/2;
@@ -51,7 +51,7 @@ unsigned int MicrotubuleProcess::getLatticeResizeCoord(unsigned int aStartCoord)
       theKinesinSpecies[i]->setIsOffLattice();
       theKinesinSpecies[i]->setDimension(1);
       theKinesinSpecies[i]->setVacantSpecies(theVacantSpecies);
-      theKinesinSpecies[i]->setRadius(DimerPitch*VoxelDiameter/2);
+      theKinesinSpecies[i]->setMoleculeRadius(DimerPitch*VoxelDiameter/2);
     }
   offLatticeRadius = DimerPitch/2;
   latticeRadius = 0.5;

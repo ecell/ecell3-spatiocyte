@@ -108,7 +108,8 @@ public:
     D(0),
     theDiffusionInterval(libecs::INF),
     theWalkProbability(1),
-    theRadius(voxelRadius),
+    theMoleculeRadius(voxelRadius),
+    theDiffuseRadius(voxelRadius),
     theRng(aRng),
     thePopulateProcess(NULL),
     theStepper(aStepper),
@@ -346,7 +347,7 @@ public:
                                        &aCurrentPoint));
           aDisplacement += aDistance*aDistance;
         }
-      return aDisplacement*pow(theRadius*2, 2)/theMoleculeSize;
+      return aDisplacement*pow(theDiffuseRadius*2, 2)/theMoleculeSize;
     }
   void setCollision(unsigned aCollision)
     {
@@ -1076,13 +1077,22 @@ public:
     {
       return theComp->lengthY/2;
     }
-  double getRadius() const
+  double getMoleculeRadius() const
     {
-      return theRadius;
+      return theMoleculeRadius;
     }
-  void setRadius(double aRadius)
+  double getDiffuseRadius() const
     {
-      theRadius = aRadius;
+      return theDiffuseRadius;
+    }
+  void setMoleculeRadius(double aRadius)
+    {
+      theMoleculeRadius = aRadius;
+      theDiffuseRadius = aRadius;
+    }
+  void setDiffuseRadius(double aRadius)
+    {
+      theDiffuseRadius = aRadius;
     }
   Species* getDiffusionInfluencedReactantPair()
     {
@@ -1408,7 +1418,8 @@ private:
   double D;
   double theDiffusionInterval;
   double theWalkProbability;
-  double theRadius;
+  double theMoleculeRadius;
+  double theDiffuseRadius;
   const gsl_rng* theRng;
   Species* theVacantSpecies;
   Comp* theComp;

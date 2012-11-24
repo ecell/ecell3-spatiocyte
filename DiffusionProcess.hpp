@@ -135,7 +135,7 @@ public:
       theDiffusionSpecies->rescaleReactionProbabilities(WalkProbability);
       if(D > 0)
         {
-          double r_v(theDiffusionSpecies->getRadius());
+          double r_v(theDiffusionSpecies->getDiffuseRadius());
           double alpha(0.5); //default for 1D diffusion
           if(theDiffusionSpecies->getDimension() == 2)
             {
