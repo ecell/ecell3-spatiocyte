@@ -65,6 +65,10 @@ void CompartmentProcess::setVacantCompSpeciesProperties()
       theVacantCompSpecies[i]->setVacantSpecies(theVacantSpecies);
       theVacantCompSpecies[i]->setMoleculeRadius(SubunitRadius);
       theVacantCompSpecies[i]->setDiffuseRadius(DiffuseRadius);
+      if(theLipidSpecies)
+        {
+          theVacantCompSpecies[i]->setMultiscaleVacantSpecies(theLipidSpecies);
+        }
     }
   for(unsigned i(0); i != theLipidCompSpecies.size(); ++i)
     {
@@ -76,8 +80,8 @@ void CompartmentProcess::setVacantCompSpeciesProperties()
             {
               int aCoeff(getCoefficient(aLipid));
               Species* aLipidPair(coefficient2species(sqrt(aCoeff*aCoeff)));
-              aVacant->setDiffuseAssociatedSpecies(aLipid->getID(),
-                                                   aLipidPair->getID());
+              aVacant->setMultiscaleBindUnbindIDs(aLipid->getID(),
+                                                  aLipidPair->getID());
             }
         }
     }

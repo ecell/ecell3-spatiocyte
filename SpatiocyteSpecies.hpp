@@ -128,8 +128,8 @@ public:
       theReactionProbabilities.resize(speciesSize);
       theDiffusionInfluencedReactions.resize(speciesSize);
       theFinalizeReactions.resize(speciesSize);
-      theDiffuseAssociatedSpecies.resize(speciesSize);
-      theDiffuseDissociatedSpecies.resize(speciesSize);
+      theMultiscaleBindIDs.resize(speciesSize);
+      theMultiscaleUnbindIDs.resize(speciesSize);
       for(int i(0); i != speciesSize; ++i)
         {
           theDiffusionInfluencedReactions[i] = NULL;
@@ -961,13 +961,40 @@ public:
         }
       if(isMultiscale)
         {
-          unsigned aCoord(getCoord(theMoleculeSize-1)-vacStartCoord);
-          for(unsigned i(0); i != theIntersectLipids[aCoord].size(); ++i)
+          addMultiscaleMolecules(aVoxel);
+        }
+    }
+  void addMultiscaleMolecules(Voxel* aVoxel)
+    {
+      unsigned coordA(aVoxel->coord-vacStartCoord);
+      for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
+        {
+          unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
+          if(theLattice[coordB].id == theMultiscaleVacantSpecies->getID())
             {
-              unsigned coordB(theIntersectLipids[aCoord][i]+lipStartCoord);
               theLattice[coordB].id = theID;
             }
+          else
+            {
+              multiscaleBind(&theLattice[coordB]);
+            }
         }
+    }
+  void multiscaleBind(Voxel* aVoxel)
+    {
+      unsigned anID(aVoxel->id);
+      Species* source(theStepper->id2species(anID));
+      Species* target(theStepper->id2species(theMultiscaleBindIDs[anID]));
+      source->softRemoveMolecule(aVoxel);
+      target->addMolecule(aVoxel);
+    }
+  void multiscaleUnbind(Voxel* aVoxel)
+    {
+      unsigned anID(aVoxel->id);
+      Species* source(theStepper->id2species(anID));
+      Species* target(theStepper->id2species(theMultiscaleUnbindIDs[anID]));
+      source->softRemoveMolecule(aVoxel);
+      target->addMolecule(aVoxel);
     }
   void addMolecule(Voxel* aVoxel)
     {
@@ -1508,10 +1535,10 @@ public:
             }
         }
     }
-  void setDiffuseAssociatedSpecies(unsigned anID, unsigned aPairID)
+  void setMultiscaleBindUnbindIDs(unsigned anID, unsigned aPairID)
     {
-      theDiffuseAssociatedSpecies[anID] = aPairID;
-      theDiffuseDissociatedSpecies[aPairID] = anID;
+      theMultiscaleBindIDs[anID] = aPairID;
+      theMultiscaleUnbindIDs[aPairID] = anID;
     }
   unsigned getPopulatableSize()
     {
@@ -1581,6 +1608,10 @@ public:
         }
       return theStepper->coord2point(aCoord);
     }
+  void setMultiscaleVacantSpecies(Species* aSpecies)
+    {
+      theMultiscaleVacantSpecies = aSpecies;
+    }
 private:
   bool isCentered;
   bool isCompVacant;
@@ -1617,6 +1648,7 @@ private:
   double theWalkProbability;
   const gsl_rng* theRng;
   Species* theVacantSpecies;
+  Species* theMultiscaleVacantSpecies;
   Comp* theComp;
   MoleculePopulateProcessInterface* thePopulateProcess;
   SpatiocyteStepper* theStepper;
@@ -1625,8 +1657,8 @@ private:
   std::vector<bool> theFinalizeReactions;
   std::vector<unsigned> collisionCnts;
   std::vector<unsigned> theCoords;
-  std::vector<unsigned> theDiffuseAssociatedSpecies;
-  std::vector<unsigned> theDiffuseDissociatedSpecies;
+  std::vector<unsigned> theMultiscaleBindIDs;
+  std::vector<unsigned> theMultiscaleUnbindIDs;
   std::vector<unsigned> thePopulatableCoords;
   std::vector<Tag> theTags;
   std::vector<double> theBendAngles;
