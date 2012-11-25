@@ -60,8 +60,8 @@
 #define MAX_COLORS 20
 #define PNG_NUM_MAX 9999999
 const unsigned int GLScene::TIMEOUT_INTERVAL = 10;
-const unsigned int SCREEN_WIDTH = 853;
-const unsigned int SCREEN_HEIGHT = 480;
+const unsigned int SCREEN_WIDTH = 460;
+const unsigned int SCREEN_HEIGHT = 360;
 
 double hue2rgb( double a, double b, double h )
 {
@@ -123,9 +123,9 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
 : Gtk::GL::DrawingArea(config),
   m_Run(false),
   m_RunReverse(false),
-  show3DMolecule(false),
+  show3DMolecule(true),
   showTime(true),
-  showSurface(false),
+  showSurface(true),
   startRecord(false),
   m_stepCnt(-1),
   theMeanPointSize(0),

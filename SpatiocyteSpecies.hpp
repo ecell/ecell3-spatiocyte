@@ -125,6 +125,7 @@ public:
       theAdjoiningCoordSize = anAdjoiningCoordSize;
       theNullCoord = aNullCoord;
       theNullID = aNullID;
+      theSpeciesSize = speciesSize;
       theReactionProbabilities.resize(speciesSize);
       theDiffusionInfluencedReactions.resize(speciesSize);
       theFinalizeReactions.resize(speciesSize);
@@ -670,11 +671,14 @@ public:
               if(theWalkProbability == 1 ||
                  gsl_rng_uniform(theRng) < theWalkProbability)
                 {
-                  removeMultiscaleMolecule(source);
-                  addMultiscaleMolecule(target);
-                  target->id = theID;
-                  source->id = theVacantID;
-                  theMolecules[i] = target;
+                  if(!isIntersectMultiscale(source, target))
+                    {
+                      removeMultiscaleMolecule(source);
+                      addMultiscaleMolecule(target);
+                      target->id = theID;
+                      source->id = theVacantID;
+                      theMolecules[i] = target;
+                    }
                 }
             }
         }
@@ -1004,6 +1008,64 @@ public:
               multiscaleUnbind(&theLattice[coordB]);
             }
         }
+    }
+  bool isIntersectMultiscale(Voxel* source)
+    {
+      unsigned coordA(source->coord-vacStartCoord);
+      for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
+        {
+          unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
+          if(theLattice[coordB].id == theID)
+            {
+              return true;
+            }
+        }
+      return false;
+    }
+  bool getIsPopulatable(Voxel* aVoxel)
+    {
+      if(isMultiscale && isIntersectMultiscale(aVoxel))
+        {
+          return false;
+        }
+      if(aVoxel->id != theVacantID)
+        {
+          return false;
+        }
+      return true;
+    }
+  bool isIntersectMultiscale(Voxel* source, Voxel* target)
+    {
+      bool isIntersect(false);
+      unsigned coordA(source->coord-vacStartCoord);
+      std::vector<unsigned> temp;
+      temp.resize(theIntersectLipids[coordA].size());
+      for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
+        {
+          unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
+          temp[i] = theLattice[coordB].id;
+          theLattice[coordB].id = theSpeciesSize;
+        }
+      coordA = target->coord-vacStartCoord;
+      for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
+        {
+          unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
+          unsigned anID(theLattice[coordB].id);
+          if(anID == theID ||
+             std::find(theMultiscaleIDs.begin(), theMultiscaleIDs.end(),
+                       anID) != theMultiscaleIDs.end())
+            {
+              isIntersect = true;
+              break;
+            }
+        }
+      coordA = source->coord-vacStartCoord;
+      for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
+        {
+          unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
+          theLattice[coordB].id = temp[i];
+        }
+      return isIntersect;
     }
   void multiscaleBind(Voxel* aVoxel)
     {
@@ -1590,6 +1652,11 @@ public:
     }
   void setMultiscaleBindUnbindIDs(unsigned anID, unsigned aPairID)
     {
+      if(std::find(theMultiscaleIDs.begin(), theMultiscaleIDs.end(),
+                   anID) == theMultiscaleIDs.end())
+        {
+          theMultiscaleIDs.push_back(anID);
+        }
       theMultiscaleBindIDs[aPairID] = anID;
       theMultiscaleUnbindIDs[anID] = aPairID;
     }
@@ -1688,6 +1755,7 @@ private:
   unsigned theMoleculeSize;
   unsigned theNullCoord;
   unsigned theNullID;
+  unsigned theSpeciesSize;
   unsigned vacStartCoord;
   int thePolymerDirectionality;
   int theVacantID;
@@ -1709,6 +1777,7 @@ private:
   std::vector<unsigned> collisionCnts;
   std::vector<unsigned> theCoords;
   std::vector<unsigned> theMultiscaleBindIDs;
+  std::vector<unsigned> theMultiscaleIDs;
   std::vector<unsigned> theMultiscaleUnbindIDs;
   std::vector<unsigned> thePopulatableCoords;
   std::vector<Tag> theTags;

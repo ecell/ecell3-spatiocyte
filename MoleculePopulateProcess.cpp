@@ -348,9 +348,13 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
                       " that can be populated.");
     }
   std::random_shuffle(aCoords.begin(), aCoords.end());
-  for(unsigned int i(0); i != aSize; ++i)
+  for(unsigned int i(0); i != aCoords.size(); ++i)
     {
-      aSpecies->addMolecule(&(*theLattice)[aCoords[i]]);
+      Voxel* aVoxel(&(*theLattice)[aCoords[i]]);
+      if(aSpecies->size() < aSize && aSpecies->getIsPopulatable(aVoxel))
+        {
+          aSpecies->addMolecule(aVoxel);
+        }
     }
 }
 
