@@ -35,7 +35,8 @@ LIBECS_DM_INIT(CompartmentProcess, Process);
 
 unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
 {
-  theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
+  Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
+  *theComp = *aComp;
   theVacantSpecies->resetFixedAdjoins();
   theVacantSpecies->setMoleculeRadius(DiffuseRadius);
   if(theLipidSpecies)
@@ -44,11 +45,12 @@ unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
       theLipidSpecies->setMoleculeRadius(LipidRadius);
     }
   //The compartment center point (origin):
-  Origin = theComp->centerPoint;
-  Origin.x += OriginX*theComp->lengthX/2;
-  Origin.y += OriginY*theComp->lengthY/2;
-  Origin.z += OriginZ*theComp->lengthZ/2;
+  Origin = aComp->centerPoint;
+  Origin.x += OriginX*aComp->lengthX/2;
+  Origin.y += OriginY*aComp->lengthY/2;
+  Origin.z += OriginZ*aComp->lengthZ/2;
   setCompartmentDimension();
+  theComp->dimension = dimension;
   setLipidCompSpeciesProperties();
   setVacantCompSpeciesProperties();
   subStartCoord = aStartCoord;
@@ -168,6 +170,9 @@ void CompartmentProcess::setCompartmentDimension()
   nLength = Length/(VoxelRadius*2);
   nWidth = Width/(VoxelRadius*2);
   nHeight = Height/(VoxelRadius*2);
+  theComp->lengthX = nHeight;
+  theComp->lengthY = nLength;
+  theComp->lengthZ = nWidth;
   if(theLipidSpecies)
     {
       LipidCols = (unsigned)rint(Length/(LipidRadius*2));
@@ -216,7 +221,8 @@ void CompartmentProcess::setSpeciesIntersectLipids()
 
 Point CompartmentProcess::getStartVoxelPoint()
 {
-  Species* surface(theComp->surfaceSub->vacantSpecies);
+  Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
+  Species* surface(aComp->surfaceSub->vacantSpecies);
   Point nearest;
   Point origin;
   origin.x = 0;
@@ -269,6 +275,11 @@ void CompartmentProcess::initializeVectors()
       disp_(lipidStart, lengthVector, nLipidRadius);
       disp_(lipidStart, widthVector, nLipidRadius);
     }
+
+  Point center(lengthStart);
+  disp_(center, lengthVector, nLength/2);
+  disp_(center, widthVector, nWidth/2);
+  theComp->centerPoint = center;
 
   //Set up surface vectors:
   surfaceNormal = cross(lengthVector, widthVector);
@@ -441,10 +452,12 @@ void CompartmentProcess::setDiffuseSize()
     {
       Voxel& subunit((*theLattice)[i]);
       subunit.diffuseSize = subunit.adjoiningSize;
+      /*
       if(subunit.diffuseSize < 6)
         {
           std::cout << "diffuseSize:" << subunit.diffuseSize << std::endl;
         }
+        */
     }
 }
 

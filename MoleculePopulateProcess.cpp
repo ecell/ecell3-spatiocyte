@@ -293,7 +293,7 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
     getIDString(aSpecies) << " current size:" << aSpecies->size() <<
     ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
   Comp* aComp(aSpecies->getComp());
-  Species* aVacantSpecies(aComp->vacantSpecies);
+  Species* aVacantSpecies(aSpecies->getVacantSpecies());
   double deltaX(0);
   double deltaY(0);
   double deltaZ(0);

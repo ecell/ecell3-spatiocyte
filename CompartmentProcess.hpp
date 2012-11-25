@@ -158,12 +158,15 @@ public:
     }
   virtual void initializeFirst()
     {
+      theComp = new Comp;
       theVacantSpecies->setIsCompVacant();
       theVacantSpecies->setIsOffLattice();
+      //theVacantSpecies->setComp(theComp);
       if(theLipidSpecies)
         {
           theLipidSpecies->setIsCompVacant();
           theLipidSpecies->setIsOffLattice();
+          //theLipidSpecies->setComp(theComp);
         }
       for(unsigned i(0); i != theLipidCompSpecies.size(); ++i)
         {
@@ -171,6 +174,7 @@ public:
           //setVacantSpecies must be declared here since it needs
           //to be overwritten by DiffusionProcess in initializeSecond:
           theLipidCompSpecies[i]->setVacantSpecies(theLipidSpecies);
+          theLipidCompSpecies[i]->setComp(theComp);
         }
       for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
         {
@@ -178,6 +182,7 @@ public:
           //setVacantSpecies must be declared here since it needs
           //to be overwritten by DiffusionProcess in initializeSecond:
           theVacantCompSpecies[i]->setVacantSpecies(theVacantSpecies);
+          theVacantCompSpecies[i]->setComp(theComp);
           if(theLipidSpecies)
             {
               theVacantCompSpecies[i]->setIsMultiscale();
