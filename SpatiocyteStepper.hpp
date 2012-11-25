@@ -122,11 +122,12 @@ private:
   void checkModel();
   void resizeProcessLattice();
   void initPriorityQueue();
-  void initProcessSecond();
-  void initProcessThird();
-  void initProcessFourth();
-  void initProcessFifth();
-  void initProcessLastOnce();
+  void initializeFirst();
+  void initializeSecond();
+  void initializeThird();
+  void initializeFourth();
+  void initializeFifth();
+  void initializeLastOnce();
   void storeSimulationParameters();
   void setSystemSize(System*, double);
   void printSimulationParameters();

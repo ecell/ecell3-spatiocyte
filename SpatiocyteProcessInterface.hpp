@@ -38,6 +38,7 @@ class SpatiocyteProcessInterface
 { 
 public:
   virtual ~SpatiocyteProcessInterface() {}
+  virtual void initializeFirst() = 0;
   virtual void initializeSecond() = 0;
   virtual void initializeThird() = 0;
   virtual void initializeFourth() = 0;

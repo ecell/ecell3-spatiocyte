@@ -155,31 +155,33 @@ public:
       nDiffuseRadius = DiffuseRadius/(VoxelRadius*2);
       //Normalized lipid voxel radius:
       nLipidRadius = LipidRadius/(VoxelRadius*2);
+    }
+  virtual void initializeFirst()
+    {
+      theVacantSpecies->setIsCompVacant();
       theVacantSpecies->setIsOffLattice();
-      if(LipidRadius)
+      if(theLipidSpecies)
         {
+          theLipidSpecies->setIsCompVacant();
           theLipidSpecies->setIsOffLattice();
         }
       for(unsigned i(0); i != theLipidCompSpecies.size(); ++i)
         {
           theLipidCompSpecies[i]->setIsOffLattice();
+          //setVacantSpecies must be declared here since it needs
+          //to be overwritten by DiffusionProcess in initializeSecond:
+          theLipidCompSpecies[i]->setVacantSpecies(theLipidSpecies);
         }
       for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
         {
           theVacantCompSpecies[i]->setIsOffLattice();
+          //setVacantSpecies must be declared here since it needs
+          //to be overwritten by DiffusionProcess in initializeSecond:
+          theVacantCompSpecies[i]->setVacantSpecies(theVacantSpecies);
           if(theLipidSpecies)
             {
               theVacantCompSpecies[i]->setIsMultiscale();
             }
-        }
-    }
-  virtual void initializeSecond()
-    {
-      SpatiocyteProcess::initializeSecond();
-      theVacantSpecies->setIsCompVacant();
-      if(theLipidSpecies)
-        {
-          theLipidSpecies->setIsCompVacant();
         }
     }
   virtual unsigned getLatticeResizeCoord(unsigned);
@@ -196,6 +198,7 @@ public:
   void addInterfaceVoxel(unsigned, unsigned);
   void setCompartmentDimension();
   void setVacantCompSpeciesProperties();
+  void setVacantCompMultiscaleProperties();
   void setLipidCompSpeciesProperties();
   void setDiffuseSize();
   void interfaceSubunits();

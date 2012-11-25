@@ -74,8 +74,9 @@ void SpatiocyteStepper::initialize()
   //All species have been created at this point, we initialize them now:
   std::cout << "4. initializing species..." << std::endl;
   initSpecies();
+  initializeFirst();
   std::cout << "5. initializing processes the second time..." << std::endl;
-  initProcessSecond();
+  initializeSecond();
   std::cout << "6. constructing lattice..." << std::endl;
   constructLattice();
   std::cout << "7. setting intersecting compartment list..." << std::endl;
@@ -86,7 +87,7 @@ void SpatiocyteStepper::initialize()
   setCompVoxelProperties();
   resizeProcessLattice();
   std::cout << "10. initializing processes the third time..." << std::endl;
-  initProcessThird();
+  initializeThird();
   std::cout << "11. printing simulation parameters..." << std::endl;
   updateSpecies();
   storeSimulationParameters();
@@ -94,13 +95,13 @@ void SpatiocyteStepper::initialize()
   std::cout << "12. populating compartments with molecules..." << std::endl;
   populateComps();
   std::cout << "13. initializing processes the fourth time..." << std::endl;
-  initProcessFourth();
+  initializeFourth();
   std::cout << "14. initializing the priority queue..." << std::endl;
   initPriorityQueue();
   std::cout << "15. initializing processes the fifth time..." << std::endl;
-  initProcessFifth();
+  initializeFifth();
   std::cout << "16. initializing processes the last time..." << std::endl;
-  initProcessLastOnce();
+  initializeLastOnce();
   std::cout << "17. finalizing species..." << std::endl;
   finalizeSpecies();
   std::cout << "18. printing final process parameters..." << std::endl <<
@@ -175,13 +176,13 @@ void SpatiocyteStepper::reset(int seed)
 {
   gsl_rng_set(getRng(), seed); 
   setCurrentTime(0);
-  initProcessSecond();
+  initializeSecond();
   clearComps();
-  initProcessThird();
+  initializeThird();
   populateComps();
-  initProcessFourth();
+  initializeFourth();
   initPriorityQueue();
-  initProcessFifth();
+  initializeFifth();
   finalizeSpecies();
   //checkLattice();
 }
@@ -472,7 +473,18 @@ void SpatiocyteStepper::broadcastLatticeProperties()
     }
 }
 
-void SpatiocyteStepper::initProcessSecond()
+void SpatiocyteStepper::initializeFirst()
+{
+  for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
+      i != theProcessVector.end(); ++i)
+    {      
+      SpatiocyteProcessInterface*
+        aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
+      aProcess->initializeFirst();
+    }
+}
+
+void SpatiocyteStepper::initializeSecond()
 {
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
@@ -532,7 +544,7 @@ void SpatiocyteStepper::resizeProcessLattice()
     }
 }
 
-void SpatiocyteStepper::initProcessThird()
+void SpatiocyteStepper::initializeThird()
 {
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
@@ -543,7 +555,7 @@ void SpatiocyteStepper::initProcessThird()
     }
 }
 
-void SpatiocyteStepper::initProcessFourth()
+void SpatiocyteStepper::initializeFourth()
 {
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
@@ -554,7 +566,7 @@ void SpatiocyteStepper::initProcessFourth()
     }
 }
 
-void SpatiocyteStepper::initProcessFifth()
+void SpatiocyteStepper::initializeFifth()
 {
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
@@ -566,7 +578,7 @@ void SpatiocyteStepper::initProcessFifth()
   setStepInterval(thePriorityQueue.getTop()->getTime()-getCurrentTime());
 }
 
-void SpatiocyteStepper::initProcessLastOnce()
+void SpatiocyteStepper::initializeLastOnce()
 {
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
@@ -2940,7 +2952,6 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
   for(std::vector<Species*>::const_iterator i(aComp->species.begin());
       i != aComp->species.end(); ++i)
     {
-      std::cout << "curr:" << (*i)->getVariable()->getFullID().asString() << " " << (*i)->getVacantSpecies()->getVariable()->getFullID().asString() << std::endl;
       if((*i)->getVacantSpecies()->getIsMultiscale())
         {
           multiscaleSpecies.push_back(*i);

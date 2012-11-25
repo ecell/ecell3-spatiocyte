@@ -117,7 +117,7 @@ public:
                           "as the species to be diffused, but none is given."); 
         }
     }
-  virtual void initializeThird()
+  virtual void initializeSecond()
     {
       if(theVacantSpecies)
         {

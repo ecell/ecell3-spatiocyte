@@ -647,7 +647,6 @@ public:
     }
   void walkMultiscale()
     {
-      /*
       unsigned beginMoleculeSize(theMoleculeSize);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
@@ -660,39 +659,14 @@ public:
               if(theWalkProbability == 1 ||
                  gsl_rng_uniform(theRng) < theWalkProbability)
                 {
+                  removeMultiscaleMolecule(source);
+                  addMultiscaleMolecule(target);
                   target->id = theID;
                   source->id = theVacantID;
                   theMolecules[i] = target;
                 }
             }
-          else if(theDiffusionInfluencedReactions[target->id])
-            {
-              //If it meets the reaction probability:
-              if(gsl_rng_uniform(theRng) < theReactionProbabilities[target->id])
-                { 
-                  Species* targetSpecies(theStepper->id2species(target->id));
-                  unsigned targetIndex(targetSpecies->getIndex(target));
-                  if(theCollision)
-                    { 
-                      ++collisionCnts[i];
-                      targetSpecies->addCollision(target);
-                      if(theCollision != 2)
-                        {
-                          return;
-                        }
-                    }
-                  unsigned aMoleculeSize(theMoleculeSize);
-                  react(i, targetIndex, targetSpecies, target);
-                  //Only rewalk the current pointed molecule if it is an
-                  //unwalked molecule (not a product of the reaction):
-                  if(theMoleculeSize < aMoleculeSize)
-                    {
-                      --i;
-                    }
-                }
-            }
         }
-        */
     }
   void walkVacant()
     {
@@ -961,10 +935,10 @@ public:
         }
       if(isMultiscale)
         {
-          addMultiscaleMolecules(aVoxel);
+          addMultiscaleMolecule(aVoxel);
         }
     }
-  void addMultiscaleMolecules(Voxel* aVoxel)
+  void addMultiscaleMolecule(Voxel* aVoxel)
     {
       unsigned coordA(aVoxel->coord-vacStartCoord);
       for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
@@ -977,6 +951,22 @@ public:
           else
             {
               multiscaleBind(&theLattice[coordB]);
+            }
+        }
+    }
+  void removeMultiscaleMolecule(Voxel* aVoxel)
+    {
+      unsigned coordA(aVoxel->coord-vacStartCoord);
+      for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
+        {
+          unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
+          if(theLattice[coordB].id == theID)
+            {
+              theLattice[coordB].id = theMultiscaleVacantSpecies->getID();
+            }
+          else
+            {
+              multiscaleUnbind(&theLattice[coordB]);
             }
         }
     }
@@ -1002,11 +992,22 @@ public:
     }
   void addCompVoxel(unsigned aCoord)
     {
-
       theLattice[aCoord].id = theID;
       theCompVoxels->push_back(&theLattice[aCoord]);
       ++theMoleculeSize;
       theVariable->setValue(theMoleculeSize);
+    }
+  String getIDString(Species* aSpecies)
+    {
+      Variable* aVariable(aSpecies->getVariable());
+      return "["+aVariable->getSystemPath().asString()+":"+
+        aVariable->getID()+"]["+int2str(aSpecies->getID())+"]";
+    }
+  String getIDString()
+    {
+      Variable* aVariable(getVariable());
+      return "["+aVariable->getSystemPath().asString()+":"+
+        aVariable->getID()+"]["+int2str(getID())+"]";
     }
   unsigned compVoxelSize()
     {
@@ -1071,6 +1072,10 @@ public:
     }
   void softRemoveMolecule(unsigned anIndex)
     {
+      if(isMultiscale)
+        {
+          removeMultiscaleMolecule(theMolecules[anIndex]);
+        }
       if(!isVacant)
         {
           theMolecules[anIndex] = theMolecules[--theMoleculeSize];
@@ -1514,9 +1519,6 @@ public:
       unsigned endB(lipStartCoord+aLipid->size());
       double dist((aLipid->getMoleculeRadius()+theMoleculeRadius)/
                   (2*theVoxelRadius));
-      std::cout << "dist:" << dist << std::endl;
-      std::cout << "lipR:" << aLipid->getMoleculeRadius() << std::endl;
-      std::cout << "myR:" << theMoleculeRadius << std::endl;
       theIntersectLipids.resize(theVacantSpecies->size());
       for(unsigned i(vacStartCoord); i != endA; ++i)
         {
@@ -1537,8 +1539,8 @@ public:
     }
   void setMultiscaleBindUnbindIDs(unsigned anID, unsigned aPairID)
     {
-      theMultiscaleBindIDs[anID] = aPairID;
-      theMultiscaleUnbindIDs[aPairID] = anID;
+      theMultiscaleBindIDs[aPairID] = anID;
+      theMultiscaleUnbindIDs[anID] = aPairID;
     }
   unsigned getPopulatableSize()
     {
@@ -1562,8 +1564,6 @@ public:
                       thePopulatableCoords.push_back(aCoord);
                     }
                 }
-              std::cout << "thePopsize:" << thePopulatableCoords.size() << std::endl;
-              std::cout << "theavia:" << theIntersectLipids[j].size() << std::endl;
             }
           return thePopulatableCoords.size();
         }

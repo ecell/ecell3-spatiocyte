@@ -62,7 +62,6 @@ void CompartmentProcess::setVacantCompSpeciesProperties()
   for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
     {
       theVacantCompSpecies[i]->setDimension(dimension);
-      theVacantCompSpecies[i]->setVacantSpecies(theVacantSpecies);
       theVacantCompSpecies[i]->setMoleculeRadius(SubunitRadius);
       theVacantCompSpecies[i]->setDiffuseRadius(DiffuseRadius);
       if(theLipidSpecies)
@@ -70,6 +69,10 @@ void CompartmentProcess::setVacantCompSpeciesProperties()
           theVacantCompSpecies[i]->setMultiscaleVacantSpecies(theLipidSpecies);
         }
     }
+}
+
+void CompartmentProcess::setVacantCompMultiscaleProperties()
+{
   for(unsigned i(0); i != theLipidCompSpecies.size(); ++i)
     {
       Species* aLipid(theLipidCompSpecies[i]);
@@ -118,7 +121,6 @@ void CompartmentProcess::setLipidCompSpeciesProperties()
   for(unsigned i(0); i != theLipidCompSpecies.size(); ++i)
     {
       theLipidCompSpecies[i]->setDimension(dimension);
-      theLipidCompSpecies[i]->setVacantSpecies(theLipidSpecies);
       theLipidCompSpecies[i]->setMoleculeRadius(LipidRadius);
     }
 }
@@ -178,6 +180,11 @@ void CompartmentProcess::initializeThird()
 {
   if(!isCompartmentalized)
     {
+      //setVacantCompMultiscaleProperties must be in 
+      //initializeThird since it requires vacant species properties
+      //set by DiffusionProcess in initializeSecond:
+      setVacantCompMultiscaleProperties();
+
       thePoints.resize(endCoord-subStartCoord);
       initializeVectors();
       initializeFilaments(subunitStart, Filaments, Subunits, nDiffuseRadius,

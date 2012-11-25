@@ -56,6 +56,7 @@ public:
     theTime(libecs::INF) {}
   virtual ~SpatiocyteProcess() {}
   virtual void fire() {}
+  virtual void initializeFirst() {}
   virtual void initializeSecond()
     {
       theSpecies = theSpatiocyteStepper->getSpecies();
