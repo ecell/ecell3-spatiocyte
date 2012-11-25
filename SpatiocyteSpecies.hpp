@@ -623,7 +623,18 @@ public:
               if(gsl_rng_uniform(theRng) < theReactionProbabilities[target->id])
                 { 
                   Species* targetSpecies(theStepper->id2species(target->id));
-                  unsigned targetIndex(targetSpecies->getIndex(target));
+                  unsigned targetIndex(0);
+                  if(targetSpecies->getIsMultiscale() && theVacantSpecies ==
+                     targetSpecies->getMultiscaleVacantSpecies())
+                    {
+                      //Set an invalid index if the target molecule is
+                      //an implicitly represented multiscale molecule:
+                      targetIndex = targetSpecies->size();
+                    }
+                  else
+                    { 
+                      targetSpecies->getIndex(target);
+                    }
                   if(theCollision)
                     { 
                       ++collisionCnts[i];
@@ -634,7 +645,7 @@ public:
                         }
                     }
                   unsigned aMoleculeSize(theMoleculeSize);
-                  react(i, targetIndex, targetSpecies, target);
+                  react(source, target, i, targetIndex, targetSpecies);
                   //Only rewalk the current pointed molecule if it is an
                   //unwalked molecule (not a product of the reaction):
                   if(theMoleculeSize < aMoleculeSize)
@@ -697,19 +708,23 @@ public:
             }
         }
     }
-  void react(unsigned sourceIndex, unsigned targetIndex,
-             Species* targetSpecies, Voxel* target)
+  void react(Voxel* source, Voxel* target, unsigned sourceIndex,
+             unsigned targetIndex, Species* targetSpecies)
     {
       DiffusionInfluencedReactionProcess* aReaction(
                theDiffusionInfluencedReactions[targetSpecies->getID()]);
+      Voxel* moleculeA(source);
+      Voxel* moleculeB(target);
       unsigned indexA(sourceIndex);
       unsigned indexB(targetIndex);
       if(aReaction->getA() != this)
         {
           indexA = targetIndex; 
           indexB = sourceIndex;
+          moleculeA = target;
+          moleculeB = source;
         }
-      if(aReaction->react(indexA, indexB))
+      if(aReaction->react(moleculeA, moleculeB, indexA, indexB))
         {
           //Soft remove the source molecule, i.e., keep the id:
           softRemoveMolecule(sourceIndex);
@@ -723,7 +738,10 @@ public:
             {
               softRemoveMolecule(sourceIndex);
             }
-          else
+          //If the targetSpecies is a multiscale species with implicit
+          //molecule, theTargetIndex is equal to the target molecule size,
+          //so we use this info to avoid removing the implicit target molecule:
+          else if(targetIndex != targetSpecies->size())
             {
               targetSpecies->softRemoveMolecule(targetIndex);
             }
@@ -900,43 +918,60 @@ public:
     }
   Tag& getTag(unsigned anIndex)
     {
-      if(isTagged)
+      if(isTagged && anIndex != theMoleculeSize)
         {
           return theTags[anIndex];
         }
       return theNullTag;
     }
+  void addMolecule(Voxel* aVoxel)
+    {
+      addMolecule(aVoxel, theNullTag);
+    }
+  Species* getMultiscaleVacantSpecies()
+    {
+      return theMultiscaleVacantSpecies;
+    }
   void addMolecule(Voxel* aVoxel, Tag& aTag)
     {
-      aVoxel->id = theID;
-      if(!isVacant)
-        {
-          ++theMoleculeSize; 
-          if(theMoleculeSize > theMolecules.size())
-            {
-              theMolecules.resize(theMoleculeSize);
-              theTags.resize(theMoleculeSize);
-            }
-          theMolecules[theMoleculeSize-1] = aVoxel;
-          if(isTagged)
-            {
-              //If it is theNullTag:
-              if(aTag.origin == theNullCoord)
-                {
-                  Tag aNewTag = {getCoord(theMoleculeSize-1), theNullID};
-                  theTags[theMoleculeSize-1] = aNewTag;
-                }
-              else
-                {
-                  theTags[theMoleculeSize-1] = aTag;
-                }
-            }
-          theVariable->setValue(theMoleculeSize);
-        }
       if(isMultiscale)
         {
-          addMultiscaleMolecule(aVoxel);
+          Species* aSpecies(theStepper->id2species(aVoxel->id));
+          if(aSpecies->getVacantSpecies() != theMultiscaleVacantSpecies)
+            {
+              doAddMolecule(aVoxel, aTag);
+              addMultiscaleMolecule(aVoxel);
+            }
         }
+      else if(!isVacant)
+        {
+          doAddMolecule(aVoxel, aTag);
+        }
+      aVoxel->id = theID;
+    }
+  void doAddMolecule(Voxel* aVoxel, Tag& aTag)
+    {
+      ++theMoleculeSize; 
+      if(theMoleculeSize > theMolecules.size())
+        {
+          theMolecules.resize(theMoleculeSize);
+          theTags.resize(theMoleculeSize);
+        }
+      theMolecules[theMoleculeSize-1] = aVoxel;
+      if(isTagged)
+        {
+          //If it is theNullTag:
+          if(aTag.origin == theNullCoord)
+            {
+              Tag aNewTag = {getCoord(theMoleculeSize-1), theNullID};
+              theTags[theMoleculeSize-1] = aNewTag;
+            }
+          else
+            {
+              theTags[theMoleculeSize-1] = aTag;
+            }
+        }
+      theVariable->setValue(theMoleculeSize);
     }
   void addMultiscaleMolecule(Voxel* aVoxel)
     {
@@ -985,10 +1020,6 @@ public:
       Species* target(theStepper->id2species(theMultiscaleUnbindIDs[anID]));
       source->softRemoveMolecule(aVoxel);
       target->addMolecule(aVoxel);
-    }
-  void addMolecule(Voxel* aVoxel)
-    {
-      addMolecule(aVoxel, theNullTag);
     }
   void addCompVoxel(unsigned aCoord)
     {
@@ -1050,13 +1081,33 @@ public:
   //it is soft remove because the id of the molecule is not changed:
   void softRemoveMolecule(Voxel* aVoxel)
     {
-      if(!isVacant)
+      if(isMultiscale)
+        {
+          Species* aSpecies(theStepper->id2species(aVoxel->id));
+          std::cout << "softremove:" << aSpecies->getIDString() << std::endl;
+          std::cout << "vacant:" << aSpecies->getVacantSpecies()->getIDString() << std::endl;
+          if(aSpecies->getVacantSpecies() != theMultiscaleVacantSpecies)
+            {
+              softRemoveMolecule(getIndex(aVoxel));
+            }
+        }
+      else if(!isVacant)
         {
           softRemoveMolecule(getIndex(aVoxel));
         }
     }
   void removeMolecule(Voxel* aVoxel)
     {
+      if(isMultiscale)
+        {
+          Species* aSpecies(theStepper->id2species(aVoxel->id));
+          std::cout << "remove:" << aSpecies->getIDString() << std::endl;
+          std::cout << "vacant:" << aSpecies->getVacantSpecies()->getIDString() << std::endl;
+          if(aSpecies->getVacantSpecies() != theMultiscaleVacantSpecies)
+            {
+              removeMolecule(getIndex(aVoxel));
+            }
+        }
       if(!isVacant)
         {
           removeMolecule(getIndex(aVoxel));
