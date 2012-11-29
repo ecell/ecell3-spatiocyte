@@ -67,7 +67,7 @@ public:
   virtual void printParameters() {}
   virtual void prepreinitialize()
     {
-      Process::prepreinitialize();
+      //Process::prepreinitialize();
     }
   virtual void initialize()
     {
