@@ -52,7 +52,7 @@ public:
     isInitialized(false),
     isPriorityQueued(false),
     thePriority(0),
-    theStepInterval(libecs::INF),
+    theInterval(libecs::INF),
     theTime(libecs::INF) {}
   virtual ~SpatiocyteProcess() {}
   virtual void fire() {}
@@ -115,16 +115,16 @@ public:
     }
   void requeue()
     {
-      theTime += getStepInterval(); // do this only for the Processes in Q
+      theTime += getInterval(); // do this only for the Processes in Q
       thePriorityQueue->moveTop(); // do this only for the Processes in Q
     }
   virtual bool isInterrupted(ReactionProcess* aProcess)
     {
       return false;
     }
-  virtual GET_METHOD(Real, StepInterval)
+  virtual double getInterval()
     {
-      return theStepInterval;
+      return theInterval;
     }
   virtual void setPriorityQueue(ProcessPriorityQueue* aPriorityQueue)
     {
@@ -168,7 +168,7 @@ public:
   virtual void substrateValueChanged(Time aCurrentTime)
     {
       const Time anOldTime(theTime);
-      theTime = aCurrentTime + getStepInterval();
+      theTime = aCurrentTime + getInterval();
       if(theTime >= anOldTime)
         {
           thePriorityQueue->moveDown(theQueueID);
@@ -211,7 +211,7 @@ protected:
   unsigned theAdjoiningCoordSize;
   unsigned theNullCoord;
   unsigned theNullID;
-  double theStepInterval;
+  double theInterval;
   Time theTime;
   ProcessID theQueueID;
   ProcessPriorityQueue* thePriorityQueue; 

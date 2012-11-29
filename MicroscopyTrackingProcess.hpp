@@ -124,28 +124,28 @@ public:
       resetLattice();
       if(MeanCount > 0)
         {
-          theStepInterval = ExposureTime/MeanCount;
+          theInterval = ExposureTime/MeanCount;
         }
       else
         {
           for(std::vector<Species*>::const_iterator
               i(thePositiveSpecies.begin()); i != thePositiveSpecies.end(); ++i)
             {
-              if((*i)->getDiffusionInterval() < theStepInterval)
+              if((*i)->getDiffusionInterval() < theInterval)
                 {
-                  theStepInterval = (*i)->getDiffusionInterval();
+                  theInterval = (*i)->getDiffusionInterval();
                 }
               Species* reactantPair((*i)->getDiffusionInfluencedReactantPair());
               if(reactantPair != NULL && 
-                 reactantPair->getDiffusionInterval() < theStepInterval)
+                 reactantPair->getDiffusionInterval() < theInterval)
                 {
-                  theStepInterval = reactantPair->getDiffusionInterval();
+                  theInterval = reactantPair->getDiffusionInterval();
                 }
             }
-          MeanCount = (int)rint(ExposureTime/theStepInterval);
+          MeanCount = (int)rint(ExposureTime/theInterval);
         }
       theMeanCount = (unsigned int)MeanCount;
-      theTime = theStepInterval;
+      theTime = theInterval;
       theLastExposedTime = theTime;
       thePriorityQueue->move(theQueueID);
     }
@@ -168,7 +168,7 @@ public:
           logFluorescentSpecies();
           resetLattice();
         }
-      theTime += theStepInterval;
+      theTime += theInterval;
       thePriorityQueue->moveTop();
     }
 protected:

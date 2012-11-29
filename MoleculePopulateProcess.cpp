@@ -120,8 +120,8 @@ void MoleculePopulateProcess::fire()
       (*i)->removeMolecules();
       populateUniformSparse(*i);
     }
-  theStepInterval = ResetTime;
-  theTime += theStepInterval; 
+  theInterval = ResetTime;
+  theTime += theInterval; 
   thePriorityQueue->move(theQueueID);
 }
 

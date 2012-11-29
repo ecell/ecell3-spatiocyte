@@ -106,7 +106,7 @@ public:
     {
       if(LogInterval > 0)
         {
-          theStepInterval = LogInterval;
+          theInterval = LogInterval;
         }
       else
         {
@@ -114,9 +114,9 @@ public:
           //the step interval:
           theTime = libecs::INF;
           thePriorityQueue->move(theQueueID);
-          theStepInterval = thePriorityQueue->getTop()->getTime();
+          theInterval = thePriorityQueue->getTop()->getTime();
         }
-      theTime = theStepInterval;
+      theTime = theInterval;
       thePriorityQueue->move(theQueueID);
     }
   virtual void initializeLastOnce()
@@ -146,10 +146,10 @@ public:
           thePriorityQueue->moveTop();
           if(thePriorityQueue->getTop()->getTime() > aTime)
             {
-              theStepInterval = thePriorityQueue->getTop()->getTime() -
+              theInterval = thePriorityQueue->getTop()->getTime() -
                 theSpatiocyteStepper->getCurrentTime();
             }
-          theTime = aTime + theStepInterval;
+          theTime = aTime + theInterval;
           thePriorityQueue->move(theQueueID);
         }
     }

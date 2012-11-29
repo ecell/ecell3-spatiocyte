@@ -60,6 +60,7 @@ public:
   virtual void updateResizedLattice() = 0;
   virtual bool getIsPriorityQueued() = 0;
   virtual bool getIsExternInterrupted() = 0;
+  virtual double getInterval() = 0;
 };
 
 #endif /* __SPATIOCYTEPROCESSINTERFACE_HPP */

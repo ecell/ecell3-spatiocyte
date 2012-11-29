@@ -35,24 +35,24 @@ void IteratingLogProcess::initializeFifth()
   for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
       i != theProcessSpecies.end(); ++i)
     {
-      if((*i)->getDiffusionInterval() < theStepInterval)
+      if((*i)->getDiffusionInterval() < theInterval)
         {
-          theStepInterval = (*i)->getDiffusionInterval();
+          theInterval = (*i)->getDiffusionInterval();
         }
       Species* reactantPair((*i)->getDiffusionInfluencedReactantPair());
       if(reactantPair != NULL && 
-         reactantPair->getDiffusionInterval() < theStepInterval)
+         reactantPair->getDiffusionInterval() < theInterval)
         {
-          theStepInterval = reactantPair->getDiffusionInterval();
+          theInterval = reactantPair->getDiffusionInterval();
         }
     }
   if(LogInterval > 0)
     {
-      theStepInterval = LogInterval;
+      theInterval = LogInterval;
     }
   else
     {
-      LogInterval = theStepInterval;
+      LogInterval = theInterval;
     }
   theTime = LogStart;
   thePriorityQueue->move(theQueueID);
@@ -68,7 +68,7 @@ void IteratingLogProcess::initializeLastOnce()
     }
   else
     {
-      timePoints = (unsigned int)ceil((LogEnd-LogStart)/theStepInterval)+1;
+      timePoints = (unsigned int)ceil((LogEnd-LogStart)/theInterval)+1;
     }
   theLogValues.resize(timePoints);
   for(unsigned int i(0); i != timePoints; ++i)
@@ -89,13 +89,13 @@ void IteratingLogProcess::fire()
       //If all survival species are dead, go on to the next iteration:
       if((Survival || RebindTime) && !isSurviving)
         {
-          theStepInterval = libecs::INF;
+          theInterval = libecs::INF;
         }
       ++timePointCnt;
     }
   if(theTime >= LogEnd && Iterations > 0)
     {
-      theStepInterval = LogInterval;
+      theInterval = LogInterval;
       --Iterations;
       std::cout << "Iterations left:" << Iterations << " of " <<
         theTotalIterations << std::endl;
@@ -111,7 +111,7 @@ void IteratingLogProcess::fire()
       saveFile();
       std::cout << "Done saving." << std::endl;
     }
-  theTime += theStepInterval;
+  theTime += theInterval;
   thePriorityQueue->moveTop();
 }
 
@@ -132,7 +132,7 @@ void IteratingLogProcess::saveFile()
       aTime += LogInterval;
     }
   theLogFile.close();
-  theStepInterval = libecs::INF;
+  theInterval = libecs::INF;
 }
 
 void IteratingLogProcess::saveBackup()

@@ -85,8 +85,8 @@ public:
   virtual void fire();
   virtual void initializeFifth()
     {
-      theStepInterval = ResetTime;
-      theTime = StartTime+theStepInterval; 
+      theInterval = ResetTime;
+      theTime = StartTime+theInterval; 
       thePriorityQueue->move(theQueueID);
     }
   virtual int getPriority()

@@ -66,7 +66,7 @@ public:
       if(theTime <= LogEnd)
         {
           logSpecies();
-          theTime += theStepInterval;
+          theTime += theInterval;
         }
       else
         {
@@ -90,7 +90,7 @@ protected:
     {
       Point aCenterPoint(theSpatiocyteStepper->getCenterPoint());
       theLogFile
-        << "log interval=" << theStepInterval
+        << "log interval=" << theInterval
         << ",world width=" << aCenterPoint.z*2
         << ",world height=" << aCenterPoint.y*2
         << ",world length=" <<  aCenterPoint.x*2

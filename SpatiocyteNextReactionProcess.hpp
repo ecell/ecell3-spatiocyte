@@ -135,19 +135,22 @@ public:
     {
       return true;
     }
-  virtual GET_METHOD(Real, StepInterval);
+  virtual double getInterval();
   virtual void fire();
   virtual void initializeFourth();
   virtual void printParameters();
   virtual bool isInterrupted(ReactionProcess*);
 protected:
-  unsigned int updateImmobileSubstrates();
+  unsigned updateSizesAB();
+  double getIntervalUnbindAB();
+  double getIntervalUnbindMultiAB();
   virtual void calculateOrder();
   virtual bool reactACD(Species*, Species*, Species*);
   virtual bool reactAC(Species*, Species*);
   virtual bool reactACbind(Species*, Species*);
   virtual bool reactACDbind(Species*, Species*, Species*);
   virtual void reactABCD();
+  virtual void reactMultiABC();
   virtual Voxel* reactvAC(Variable*, Species*);
   virtual Comp* getComp2D(Species*);
   virtual Voxel* reactvAvBC(Species*);
@@ -165,6 +168,7 @@ protected:
   double SpaceB;
   double SpaceC;
   int BindingSite;
+  unsigned nextIndexA;
   std::stringstream pFormula;
   RealMethodProxy theGetPropensityMethodPtr;  
   std::vector<Voxel*> moleculesA;

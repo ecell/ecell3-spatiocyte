@@ -103,7 +103,7 @@ public:
         }
       theCenterPoint = theSpatiocyteStepper->getCenterPoint();
     }
-  virtual GET_METHOD(Real, StepInterval)
+  virtual GET_METHOD(Real, Interval)
     {
       return MembraneBindTime;
     }

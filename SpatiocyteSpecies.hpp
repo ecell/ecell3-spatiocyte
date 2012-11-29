@@ -30,6 +30,7 @@
 #include "SpatiocyteCommon.hpp"
 #include "SpatiocyteStepper.hpp"
 #include "SpatiocyteProcessInterface.hpp"
+#include "SpatiocyteNextReactionProcess.hpp"
 #include "DiffusionInfluencedReactionProcess.hpp"
 #include "MoleculePopulateProcessInterface.hpp"
 
@@ -577,6 +578,11 @@ public:
             {
               theDiffusionInfluencedReactions[i]->finalizeReaction();
             }
+        }
+      for(unsigned i(0); i != theInterruptedProcesses.size(); ++i)
+        {
+          theInterruptedProcesses[i
+            ]->substrateValueChanged(theStepper->getCurrentTime());
         }
     }
   void addCollision(Voxel* aVoxel)
@@ -1374,9 +1380,15 @@ public:
     {
       return theMolecules[getRandomIndex()];
     }
-  void addInterruptedProcess(SpatiocyteProcessInterface* aProcess)
+  void addInterruptedProcess(SpatiocyteNextReactionProcess* aProcess)
     {
-      theInterruptedProcesses.push_back(aProcess);
+      std::cout << getIDString() << " addding:" << aProcess->getFullID().asString() << std::endl;
+      if(std::find(theInterruptedProcesses.begin(),
+                   theInterruptedProcesses.end(), aProcess) == 
+         theInterruptedProcesses.end())
+        {
+          theInterruptedProcesses.push_back(aProcess);
+        }
     }
   int getBendIndex(double aBendAngle)
     {
@@ -1660,6 +1672,26 @@ public:
       theMultiscaleBindIDs[aPairID] = anID;
       theMultiscaleUnbindIDs[anID] = aPairID;
     }
+  //Get the fraction of number of nanoscopic molecules (anID) within the
+  //multiscale molecule (index):
+  double getMultiscaleBoundFraction(unsigned index, unsigned anID)
+    {
+      double fraction(0);
+      if(isMultiscale)
+        {
+          unsigned i(getCoord(index)-vacStartCoord);
+          for(unsigned j(0); j != theIntersectLipids[i].size(); ++j)
+            {
+              unsigned aCoord(theIntersectLipids[i][j]+lipStartCoord);
+              if(theLattice[aCoord].id == anID)
+                {
+                  fraction += 1;
+                }
+            }
+          fraction /= theIntersectLipids[i].size();
+        }
+      return fraction;
+    }
   unsigned getPopulatableSize()
     {
       if(isMultiscale)
@@ -1790,7 +1822,7 @@ private:
   std::vector<Species*> theTagSpeciesList;
   std::vector<DiffusionInfluencedReactionProcess*> 
     theDiffusionInfluencedReactions;
-  std::vector<SpatiocyteProcessInterface*> theInterruptedProcesses;
+  std::vector<SpatiocyteNextReactionProcess*> theInterruptedProcesses;
   std::vector<Origin> theMoleculeOrigins;
   std::vector<Voxel>& theLattice;
   std::vector<std::vector<unsigned> > theIntersectLipids;

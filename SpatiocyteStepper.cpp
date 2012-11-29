@@ -601,7 +601,8 @@ void SpatiocyteStepper::initPriorityQueue()
         aSpatiocyteProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
       if(aSpatiocyteProcess)
         {
-          aSpatiocyteProcess->setTime(aCurrentTime+aProcess->getStepInterval());
+          aSpatiocyteProcess->setTime(aCurrentTime+
+                                      aSpatiocyteProcess->getInterval());
           aSpatiocyteProcess->setPriorityQueue(&thePriorityQueue);
           //Not all SpatiocyteProcesses are inserted into the priority queue.
           //Only the following processes are inserted in the PriorityQueue and

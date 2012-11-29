@@ -44,7 +44,6 @@ void SpatiocyteNextReactionProcess::fire()
     {
       B->updateMolecules();
     }
-
   if(theOrder == 0)
     {
       if(C)
@@ -62,7 +61,7 @@ void SpatiocyteNextReactionProcess::fire()
           variableC->addValue(coefficientC);
         }
     }
-  else if(getZeroVariableReferenceOffset() == 1)
+  else if(theOrder == 1)
     { 
       //nonHD_A -> nonHD_C + nonHD_D:
       if(A && C && D)
@@ -229,6 +228,7 @@ void SpatiocyteNextReactionProcess::fire()
         }
     }
   //number of substrate species = 2:
+  //coefficients could be more.
   else
     {
       //HD + HD -> product(s)
@@ -389,16 +389,31 @@ void SpatiocyteNextReactionProcess::fire()
             {
               reactABCD();
             }
+          //nonHD + nonHD -> nonHD
+          else
+            {
+              //multiNonHD + nonHD -> nonHD
+              if(A->getIsMultiscale())
+                {
+                  reactMultiABC();
+                }
+            }
         }
     }
   ReactionProcess::fire();
+}
+
+//MultiNonHD + nonHD -> nonHD + nonHD
+void SpatiocyteNextReactionProcess::reactMultiABC()
+{
+  std::cout << "nextIndexA:" << nextIndexA << std::endl;
 }
 
 //nonHD + nonHD -> nonHD + nonHD
 //Both A and B are immobile nonHD
 void SpatiocyteNextReactionProcess::reactABCD()
 {
-  unsigned int rand(gsl_rng_uniform_int(getStepper()->getRng(),
+  unsigned rand(gsl_rng_uniform_int(getStepper()->getRng(),
                                         moleculesA.size()));
   moleculeA = moleculesA[rand];
   moleculeB = A->getRandomAdjoiningVoxel(moleculeA, B, SearchVacant);
@@ -648,7 +663,6 @@ Real SpatiocyteNextReactionProcess::getPropensity_FirstOrder()
     }
 }
 
-
 //Need to solve homodimerization reaction of two substrate species (Size-1):
 Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_TwoSubstrates() 
 {
@@ -660,47 +674,75 @@ Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_TwoSubstrates()
     {
       B->updateMoleculeSize();
     }
-  double sizeA(0);
-  double sizeB(0);
-  //for zero-diffusion nonHD A and B substrates:
-  if(A && B)
+  double sizeA(theVariableReferenceVector[0].getVariable()->getValue());
+  double sizeB(theVariableReferenceVector[1].getVariable()->getValue());
+  //Required for HD species when |coefficient| is != 1
+  if(variableA)
     {
-      sizeB = updateImmobileSubstrates();
-      sizeA = moleculesA.size();
+      sizeA = pow(sizeA, sqrt(coefficientA*coefficientA));
     }
-  else
+  if(variableB)
     {
-      sizeA = theVariableReferenceVector[0].getVariable()->getValue();
-      sizeB = theVariableReferenceVector[1].getVariable()->getValue();
-      if(variableA)
-        {
-          sizeA = pow(sizeA, sqrt(coefficientA*coefficientA));
-        }
-      if(variableB)
-        {
-          sizeB = pow(sizeB, sqrt(coefficientB*coefficientB));
-        }
+      sizeB = pow(sizeB, sqrt(coefficientB*coefficientB));
     }
   if(sizeA > 0.0 && sizeB > 0.0)
     {
-      //std::cout << "p2:" << p << " v1:" << aValue1 << " v2:" << aValue2 << std::endl;
       return p*sizeA*sizeB;
     }
   else
     {
-      //std::cout << "p2:0" << std::endl;
       return 0.0;
     }
 }
 
-unsigned int SpatiocyteNextReactionProcess::updateImmobileSubstrates()
+double SpatiocyteNextReactionProcess::getIntervalUnbindMultiAB()
 {
-  unsigned int sizeB(0);
+  nextIndexA = 0;
+  double fraction(A->getMultiscaleBoundFraction(nextIndexA,
+                                                B->getVacantSpecies()->getID())); 
+  double rand(gsl_rng_uniform_pos(getStepper()->getRng()));
+  double nextInterval(p*fraction*(-log(rand)));
+  for(unsigned i(1); i != A->size(); ++i)
+    {
+      fraction = A->getMultiscaleBoundFraction(i,
+                                               B->getVacantSpecies()->getID());
+      rand = gsl_rng_uniform_pos(getStepper()->getRng());
+      double interval(1.0/(p*fraction)*(-log(rand)));
+      if(interval < nextInterval)
+        {
+          nextIndexA = i;
+          nextInterval = interval;
+        }
+    }
+  return nextInterval;
+}
+
+double SpatiocyteNextReactionProcess::getIntervalUnbindAB()
+{
+  A->updateMoleculeSize();
+  B->updateMoleculeSize();
+  if(A->getIsMultiscale())
+    {
+      return getIntervalUnbindMultiAB();
+    }
+  double sizeB(updateSizesAB());
+  double sizeA(moleculesA.size());
+  if(sizeA > 0.0 && sizeB > 0.0)
+    {
+      double rand(gsl_rng_uniform_pos(getStepper()->getRng()));
+      return 1.0/(p*sizeA*sizeB)*(-log(rand));
+    }
+  return libecs::INF;
+}
+
+unsigned SpatiocyteNextReactionProcess::updateSizesAB()
+{
+  unsigned sizeB(0);
   moleculesA.resize(0);
-  for(unsigned int i(0); i != A->size(); ++i)
+  for(unsigned i(0); i != A->size(); ++i)
     {
       moleculeA = A->getMolecule(i);
-      unsigned int cnt(A->getAdjoiningMoleculeCnt(moleculeA, B));
+      unsigned cnt(A->getAdjoiningMoleculeCnt(moleculeA, B));
       if(cnt)
         {
           moleculesA.push_back(moleculeA);
@@ -731,27 +773,37 @@ Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_OneSubstrate()
 void SpatiocyteNextReactionProcess::initializeSecond()
 {
   ReactionProcess::initializeSecond();
-  if(A && B)
+  //if second order, with A and B substrates, both of them
+  //must be immobile, or A must be multiscale:
+  if (A && B)
     {
-      if(A->getDiffusionCoefficient())
-        {
+      if(A->getDiffusionCoefficient() && !A->getIsMultiscale())
+        { 
           THROW_EXCEPTION(ValueError, String(
-                getPropertyInterface().getClassName()) + " " + 
-                getFullID().asString() + ": A SpatiocyteNextReactionProcess " +
-                "can have two nonHD substrates (second order) only when both " +
-                "of the species are immobile. However, " + getIDString(A) + 
-                " has nonzero diffusion coefficient. Use " +
-                "DiffusionInfluencedReactionProcess instead.");
+                            getPropertyInterface().getClassName()) +
+                            "[" + getFullID().asString() + 
+                            "]: A SpatiocyteNextReactionProcess can have two " +
+                            "nonHD substrates (second order) only when both " +
+                            "of the species are immobile, or substrate is " +
+                            "multiscale and substrate B diffuses within it. " +
+                            "However, " + getIDString(A) + " has nonzero " +
+                            "diffusion coefficient and not a multiscale " +
+                            "species. Use DiffusionInfluencedReaction " +
+                            "instead.");
         }
-      if(B->getDiffusionCoefficient())
+      if(B->getDiffusionCoefficient() && !A->getIsMultiscale())
         {
           THROW_EXCEPTION(ValueError, String(
-                getPropertyInterface().getClassName()) + " " + 
-                getFullID().asString() + ": A SpatiocyteNextReactionProcess " +
-                "can have two nonHD substrates (second order) only when both " +
-                "of the species are immobile. However, " + getIDString(B) + 
-                " has nonzero diffusion coefficient. Use " +
-                "DiffusionInfluencedReactionProcess instead.");
+                            getPropertyInterface().getClassName()) +
+                            "[" + getFullID().asString() + 
+                            "]: A SpatiocyteNextReactionProcess can have two " +
+                            "nonHD substrates (second order) only when both " +
+                            "of the species are immobile, or substrate is " +
+                            "multiscale and substrate B diffuses within it. " +
+                            "However, " + getIDString(B) + " has nonzero " +
+                            "diffusion coefficient and not a multiscale " +
+                            "species. Use DiffusionInfluencedReaction " +
+                            "instead.");
         }
     }
 }
@@ -783,35 +835,6 @@ void SpatiocyteNextReactionProcess::initializeThird()
   else if(variableB)
     {
       variableB->setValue(initSizeB);
-    }
-  //if second order, with A and B substrates, both of them
-  //must be immobile:
-  if (A && B)
-    {
-      if(A->getDiffusionCoefficient())
-        { 
-          THROW_EXCEPTION(ValueError, String(
-                            getPropertyInterface().getClassName()) +
-                            "[" + getFullID().asString() + 
-                            "]: A SpatiocyteNextReactionProcess can have two " +
-                            "nonHD substrates (second order) only when both " +
-                            "of the species are immobile. However, " +
-                            getIDString(A) + " has nonzero diffusion " +
-                            "coefficient. Use DiffusionInfluencedReaction " +
-                            "instead.");
-        }
-      if(B->getDiffusionCoefficient())
-        {
-          THROW_EXCEPTION(ValueError, String(
-                            getPropertyInterface().getClassName()) +
-                            "[" + getFullID().asString() + 
-                            "]: A SpatiocyteNextReactionProcess can have two " +
-                            "nonHD substrates (second order) only when both " +
-                            "of the species are immobile. However, " +
-                            getIDString(B) + " has nonzero diffusion " +
-                            "coefficient. Use DiffusionInfluencedReaction " +
-                            "instead.");
-        }
     }
   if(variableC)
     {
@@ -893,7 +916,9 @@ void SpatiocyteNextReactionProcess::initializeFourth()
       p = k*aSpace;
       pFormula << "[k*aSpace:" << k << "*" << aSpace << "]";
     }
-  else if(getZeroVariableReferenceOffset() == 1) 
+  //Used also by A + B -> product(s) since A and B are in bound form, which
+  //is a first order dissociation reaction:
+  else if(theOrder == 1 || (A && B)) 
     {
       //Convert the unit m/s of k to 1/s for p if the reaction is a surface
       //adsorption reaction:
@@ -935,10 +960,10 @@ void SpatiocyteNextReactionProcess::initializeFourth()
         {
           NEVER_GET_HERE;
         }
-      //If volume + surface = k(volume)(surface) or
-      //   volume + surface = k(surface)(volume) or
-      //   surface + volume = k(volume)(surface) or
-      //   surface + volume = k(surface)(volume)
+      //If volume + surface <= k(volume)(surface) or
+      //   volume + surface <= k(surface)(volume) or
+      //   surface + volume <= k(volume)(surface) or
+      //   surface + volume <= k(surface)(volume)
       if((compD && (
         (compC->dimension == 3 && compD->dimension == 2 &&
          compA->dimension == 3 && compB->dimension == 2) ||
@@ -948,9 +973,9 @@ void SpatiocyteNextReactionProcess::initializeFourth()
          compA->dimension == 3 && compB->dimension == 2) ||
         (compC->dimension == 2 && compD->dimension == 3 &&
          compA->dimension == 2 && compB->dimension == 3))) ||
-      //If volume (+volume) = k(volume)(volume) or
-      //   surface (+surface) = k(volume)(surface) or
-      //   surface (+surface) = k(surface)(volume)
+      //If volume (+volume) <= k(volume)(volume) or
+      //   surface (+surface) <= k(volume)(surface) or
+      //   surface (+surface) <= k(surface)(volume)
          ((compC->dimension == 3 && compA->dimension == 3
           && compB->dimension == 3) ||
          (compC->dimension == 2 && compA->dimension == 3 
@@ -988,9 +1013,9 @@ void SpatiocyteNextReactionProcess::initializeFourth()
           p = k/aVolume;
           pFormula << "[k/aVolume:" << k << "/" << aVolume << "]";
         }
-      //If surface (+surface) = k(surface)(surface) or
-      //   volume (+volume) = k(volume)(surface) or
-      //   volume (+volume) = k(surface)(volume)
+      //If surface (+surface) <= k(surface)(surface) or
+      //   volume (+volume) <= k(volume)(surface) or
+      //   volume (+volume) <= k(surface)(volume)
       else if((compC->dimension == 2 && compA->dimension == 2 
                && compB->dimension == 2) ||
               (compC->dimension == 3 && compA->dimension == 3 
@@ -1032,14 +1057,6 @@ void SpatiocyteNextReactionProcess::initializeFourth()
         {
           NEVER_GET_HERE;
         }
-      /*
-      //A + A -> products
-      if(getZeroVariableReferenceOffset() == 1)
-        {
-          p = k;
-          pFormula << "[k:" << k << "]";
-        }
-        */
     }
 }
 
@@ -1095,13 +1112,18 @@ void SpatiocyteNextReactionProcess::printParameters()
       std::cout << " + " << getIDString(variableD);
     }
   std::cout << " k:" << k << " p = " << pFormula.str() << " = " << p
-    << " nextTime:" << getStepInterval() << " propensity:" << getPropensity_R()
+    << " nextTime:" << getInterval() << " propensity:" << getPropensity_R()
     << std::endl;
 }
 
-
-GET_METHOD_DEF(Real, StepInterval, SpatiocyteNextReactionProcess)
+double SpatiocyteNextReactionProcess::getInterval()
 {
+  if(A && B)
+    {
+      double interval(getIntervalUnbindAB());
+      //std::cout << "interval:" << interval << std::endl;
+      return interval;
+    }
   double step(getPropensity_R()*(-log(gsl_rng_uniform_pos(getStepper()->getRng()))));
   //std::cout << getFullID().asString() << " " << theTime <<  " next:" << theTime+step << " interval:" << step << std::endl; 
   return step;
@@ -1155,6 +1177,12 @@ bool SpatiocyteNextReactionProcess::isInterrupted(ReactionProcess*
     {
       if((*i).isAccessor())
         {
+          Species* aSpecies(theSpatiocyteStepper->variable2species(
+                                                 (*i).getVariable()));
+          if(aSpecies && aSpecies->getIsMultiscale())
+            {
+              aSpecies->addInterruptedProcess(this);
+            }
           for(std::vector<Variable*>::const_iterator j(aVariables.begin());
               j != aVariables.end(); ++j)
             {
@@ -1173,12 +1201,12 @@ void SpatiocyteNextReactionProcess::calculateOrder()
 {
   ReactionProcess::calculateOrder();
   // set theGetPropensityMethodPtr
-  if(getOrder() == 0) // no substrate
+  if(theOrder == 0) // no substrate
     {
       theGetPropensityMethodPtr = RealMethodProxy::create<
         &SpatiocyteNextReactionProcess::getPropensity_ZerothOrder>();
     }
-  else if(getOrder() == 1)   // one substrate, first order.
+  else if(theOrder == 1) // one substrate, first order.
     {
       theGetPropensityMethodPtr = RealMethodProxy::create<
         &SpatiocyteNextReactionProcess::getPropensity_FirstOrder>();
