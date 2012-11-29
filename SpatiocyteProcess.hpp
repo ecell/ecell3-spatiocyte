@@ -69,7 +69,7 @@ public:
   virtual void updateResizedLattice() {}
   virtual void prepreinitialize()
     {
-      Process::prepreinitialize();
+      //Process::prepreinitialize();
     }
   virtual void initialize()
     {
