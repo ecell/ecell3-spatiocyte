@@ -82,7 +82,7 @@ public:
     {
       return true;
     }
-  virtual GET_METHOD(Real, StepInterval)
+  virtual double getInterval()
     {
       return getPropensity()*
         (-log(gsl_rng_uniform_pos(getStepper()->getRng())));

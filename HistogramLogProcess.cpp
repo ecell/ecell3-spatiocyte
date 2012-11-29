@@ -35,18 +35,18 @@ void HistogramLogProcess::initializeFifth()
   for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
       i != theProcessSpecies.end(); ++i)
     {
-      if((*i)->getDiffusionInterval() < theStepInterval)
+      if((*i)->getDiffusionInterval() < theInterval)
         {
-          theStepInterval = (*i)->getDiffusionInterval();
+          theInterval = (*i)->getDiffusionInterval();
         }
     }
   if(LogInterval > 0)
     {
-      theStepInterval = LogInterval;
+      theInterval = LogInterval;
     }
   else
     {
-      LogInterval = theStepInterval;
+      LogInterval = theInterval;
     }
   theTime = LogStart;
   thePriorityQueue->move(theQueueID);
@@ -84,7 +84,7 @@ void HistogramLogProcess::fire()
     }
   else if(theTime >= LogEnd && Iterations > 0)
     {
-      theStepInterval = LogInterval;
+      theInterval = LogInterval;
       --Iterations;
       std::cout << "Iterations left:" << Iterations << " of " <<
         theTotalIterations << std::endl;
@@ -100,7 +100,7 @@ void HistogramLogProcess::fire()
       saveFile();
       std::cout << "Done saving." << std::endl;
     }
-  theTime += theStepInterval;
+  theTime += theInterval;
   thePriorityQueue->moveTop();
 }
 
@@ -124,7 +124,7 @@ void HistogramLogProcess::saveFile()
       aTime += LogInterval;
     }
   theLogFile.close();
-  theStepInterval = libecs::INF;
+  theInterval = libecs::INF;
 }
 
 

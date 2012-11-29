@@ -79,3 +79,6 @@ The 10 digit hex commit codes are available at https://github.com/ecell/ecell3-s
 If the program fails and crashes when loading or running a model, we can get
 some debugging information using the Valgrind tool:
 $ valgrind --tool=memcheck --num-callers=40 --leak-check=full python $HOME/root/bin/ecell3-session -f modelFileName.eml
+
+Making a movie out of saved sequence of png image files:
+ffmpeg -i image%07d.png -sameq out.mp4

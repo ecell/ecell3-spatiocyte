@@ -57,7 +57,7 @@ public:
         if ( theTime <= LogDuration )
         {
             logSpecies();
-            theTime += theStepInterval;
+            theTime += theInterval;
         }
         else
         {

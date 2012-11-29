@@ -74,8 +74,9 @@ void SpatiocyteStepper::initialize()
   //All species have been created at this point, we initialize them now:
   std::cout << "4. initializing species..." << std::endl;
   initSpecies();
+  initializeFirst();
   std::cout << "5. initializing processes the second time..." << std::endl;
-  initProcessSecond();
+  initializeSecond();
   std::cout << "6. constructing lattice..." << std::endl;
   constructLattice();
   std::cout << "7. setting intersecting compartment list..." << std::endl;
@@ -86,7 +87,7 @@ void SpatiocyteStepper::initialize()
   setCompVoxelProperties();
   resizeProcessLattice();
   std::cout << "10. initializing processes the third time..." << std::endl;
-  initProcessThird();
+  initializeThird();
   std::cout << "11. printing simulation parameters..." << std::endl;
   updateSpecies();
   storeSimulationParameters();
@@ -94,13 +95,13 @@ void SpatiocyteStepper::initialize()
   std::cout << "12. populating compartments with molecules..." << std::endl;
   populateComps();
   std::cout << "13. initializing processes the fourth time..." << std::endl;
-  initProcessFourth();
+  initializeFourth();
   std::cout << "14. initializing the priority queue..." << std::endl;
   initPriorityQueue();
   std::cout << "15. initializing processes the fifth time..." << std::endl;
-  initProcessFifth();
+  initializeFifth();
   std::cout << "16. initializing processes the last time..." << std::endl;
-  initProcessLastOnce();
+  initializeLastOnce();
   std::cout << "17. finalizing species..." << std::endl;
   finalizeSpecies();
   std::cout << "18. printing final process parameters..." << std::endl <<
@@ -175,13 +176,13 @@ void SpatiocyteStepper::reset(int seed)
 {
   gsl_rng_set(getRng(), seed); 
   setCurrentTime(0);
-  initProcessSecond();
+  initializeSecond();
   clearComps();
-  initProcessThird();
+  initializeThird();
   populateComps();
-  initProcessFourth();
+  initializeFourth();
   initPriorityQueue();
-  initProcessFifth();
+  initializeFifth();
   finalizeSpecies();
   //checkLattice();
 }
@@ -472,7 +473,18 @@ void SpatiocyteStepper::broadcastLatticeProperties()
     }
 }
 
-void SpatiocyteStepper::initProcessSecond()
+void SpatiocyteStepper::initializeFirst()
+{
+  for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
+      i != theProcessVector.end(); ++i)
+    {      
+      SpatiocyteProcessInterface*
+        aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
+      aProcess->initializeFirst();
+    }
+}
+
+void SpatiocyteStepper::initializeSecond()
 {
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
@@ -523,9 +535,16 @@ void SpatiocyteStepper::resizeProcessLattice()
     {
       theSpecies[i]->updateMoleculePointers();
     }
+  for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
+      i != theProcessVector.end(); ++i)
+    {    
+      SpatiocyteProcessInterface*
+        aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
+      aProcess->updateResizedLattice();
+    }
 }
 
-void SpatiocyteStepper::initProcessThird()
+void SpatiocyteStepper::initializeThird()
 {
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
@@ -536,7 +555,7 @@ void SpatiocyteStepper::initProcessThird()
     }
 }
 
-void SpatiocyteStepper::initProcessFourth()
+void SpatiocyteStepper::initializeFourth()
 {
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
@@ -547,7 +566,7 @@ void SpatiocyteStepper::initProcessFourth()
     }
 }
 
-void SpatiocyteStepper::initProcessFifth()
+void SpatiocyteStepper::initializeFifth()
 {
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
@@ -559,7 +578,7 @@ void SpatiocyteStepper::initProcessFifth()
   setStepInterval(thePriorityQueue.getTop()->getTime()-getCurrentTime());
 }
 
-void SpatiocyteStepper::initProcessLastOnce()
+void SpatiocyteStepper::initializeLastOnce()
 {
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
@@ -582,7 +601,8 @@ void SpatiocyteStepper::initPriorityQueue()
         aSpatiocyteProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
       if(aSpatiocyteProcess)
         {
-          aSpatiocyteProcess->setTime(aCurrentTime+aProcess->getStepInterval());
+          aSpatiocyteProcess->setTime(aCurrentTime+
+                                      aSpatiocyteProcess->getInterval());
           aSpatiocyteProcess->setPriorityQueue(&thePriorityQueue);
           //Not all SpatiocyteProcesses are inserted into the priority queue.
           //Only the following processes are inserted in the PriorityQueue and
@@ -2920,25 +2940,31 @@ bool SpatiocyteStepper::isInsideCoord(unsigned aCoord,
 
 void SpatiocyteStepper::populateComp(Comp* aComp)
 {
-  unsigned populationSize(0);
+  std::vector<unsigned> populationSize;
   std::vector<Species*> prioritySpecies;
+  std::vector<Species*> multiscaleSpecies;
   std::vector<Species*> diffusiveSpecies;
-  std::vector<Species*> compProcessSpecies;
   std::vector<Species*> normalSpecies;
+  populationSize.resize(theSpecies.size());
+  for(unsigned i(0); i != theSpecies.size(); ++i)
+    {
+      populationSize[i] = 0;
+    }
   for(std::vector<Species*>::const_iterator i(aComp->species.begin());
       i != aComp->species.end(); ++i)
     {
-      if((*i)->getVacantSpecies()->getIsDiffusiveVacant())
+      if((*i)->getVacantSpecies()->getIsMultiscale())
+        {
+          multiscaleSpecies.push_back(*i);
+        }
+      else if((*i)->getVacantSpecies()->getIsDiffusiveVacant())
         {
           diffusiveSpecies.push_back(*i);
         }
-      else if((*i)->getVacantSpecies() != aComp->vacantSpecies)
-        {
-          compProcessSpecies.push_back(*i);
-        }
       else if((*i)->getIsPopulateSpecies())
         {
-          populationSize += (unsigned)(*i)->getPopulateCoordSize();
+          populationSize[(*i)->getVacantSpecies()->getID()] += 
+            (*i)->getPopulateCoordSize();
           bool isPushed(false);
           std::vector<Species*> temp;
           std::vector<Species*>::const_iterator j(prioritySpecies.begin());
@@ -2948,7 +2974,7 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
               //in the high priority populate list
               if((*j)->getPopulatePriority() > (*i)->getPopulatePriority() ||
                  ((*j)->getPopulatePriority() == (*i)->getPopulatePriority() &&
-                  (*j)->getIsDiffusiveVacant()))
+                  ((*j)->getIsDiffusiveVacant() || (*j)->getIsMultiscale())))
                 {
                   temp.push_back(*j);
                 }
@@ -2972,36 +2998,42 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
           prioritySpecies = temp;
         }
     }
-  if(aComp->vacantSpecies->size() < populationSize)
+  for(unsigned i(0); i != populationSize.size(); ++i)
     {
-      THROW_EXCEPTION(ValueError, String(
+      if(populationSize[i])
+        {
+          unsigned available(theSpecies[i]->getPopulatableSize());
+          if(populationSize[i] > available)
+            {
+              THROW_EXCEPTION(ValueError, String(
                           getPropertyInterface().getClassName()) +
-                          "There are " + int2str(populationSize) + 
+                          "There are " + int2str(populationSize[i]) + 
                           " total molecules that must be uniformly " +
                           "populated,\nbut there are only "
-                          + int2str(aComp->vacantSpecies->size()) + 
-                          " vacant voxels of [" + 
-                  aComp->vacantSpecies->getVariable()->getFullID().asString() +
+                          + int2str(available) + " vacant voxels of [" + 
+                          theSpecies[i]->getVariable()->getFullID().asString() +
                           "] that can be populated on.");
+            } 
+          if(double(populationSize[i])/available > 0.2)
+            { 
+              populateSpeciesDense(prioritySpecies, populationSize[i],
+                                   available);
+            }
+          else
+            {
+              populateSpeciesSparse(prioritySpecies);
+            }
+        }
     }
-  if(double(populationSize)/aComp->vacantSpecies->size() > 0.2)
-    { 
-      populateSpeciesDense(prioritySpecies, populationSize,
-                           aComp->vacantSpecies->size());
-    }
-  else
+  for(std::vector<Species*>::const_iterator i(multiscaleSpecies.begin());
+      i != multiscaleSpecies.end(); ++i)
     {
-      populateSpeciesSparse(prioritySpecies);
+      (*i)->populateUniformOnMultiscale();
     }
   for(std::vector<Species*>::const_iterator i(diffusiveSpecies.begin());
       i != diffusiveSpecies.end(); ++i)
     {
       (*i)->populateUniformOnDiffusiveVacant();
-    }
-  for(std::vector<Species*>::const_iterator i(compProcessSpecies.begin());
-      i != compProcessSpecies.end(); ++i)
-    {
-      (*i)->populateCompUniformSparse();
     }
 }
 

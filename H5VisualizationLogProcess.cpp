@@ -118,7 +118,7 @@ struct SpeciesPacker
     {
         arc << field<uint64_t>("id", &Species::getID, data);
         arc << field<char[32]>("name", &Species_getName, data);
-        arc << field<double>("radius", &Species::getRadius, data);
+        arc << field<double>("radius", &Species::getMoleculeRadius, data);
         arc << field<double>("D", &Species::getDiffusionCoefficient, data);
     }
 };
@@ -220,7 +220,7 @@ public:
     {
         if(LogInterval > 0)
         {
-            theStepInterval = LogInterval;
+            theInterval = LogInterval;
         }
         else
         {
@@ -228,9 +228,9 @@ public:
             //the step interval:
             theTime = libecs::INF;
             thePriorityQueue->move(theQueueID);
-            theStepInterval = thePriorityQueue->getTop()->getTime();
+            theInterval = thePriorityQueue->getTop()->getTime();
         }
-        theTime = theStepInterval;
+        theTime = theInterval;
         thePriorityQueue->move(theQueueID);
     }
 
@@ -258,10 +258,10 @@ public:
             thePriorityQueue->moveTop();
             if(thePriorityQueue->getTop()->getTime() > aTime)
             {
-                theStepInterval = thePriorityQueue->getTop()->getTime() -
+                theInterval = thePriorityQueue->getTop()->getTime() -
                     theSpatiocyteStepper->getCurrentTime();
             }
-            theTime = aTime + theStepInterval;
+            theTime = aTime + theInterval;
             thePriorityQueue->move(theQueueID);
         }
     }

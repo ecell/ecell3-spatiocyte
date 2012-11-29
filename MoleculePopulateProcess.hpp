@@ -81,11 +81,12 @@ public:
   virtual void populateUniformSparse(Species* aSpecies);
   virtual void populateUniformRanged(Species* aSpecies);
   virtual void populateUniformOnDiffusiveVacant(Species* aSpecies);
+  virtual void populateUniformOnMultiscale(Species* aSpecies);
   virtual void fire();
   virtual void initializeFifth()
     {
-      theStepInterval = ResetTime;
-      theTime = StartTime+theStepInterval; 
+      theInterval = ResetTime;
+      theTime = StartTime+theInterval; 
       thePriorityQueue->move(theQueueID);
     }
   virtual int getPriority()

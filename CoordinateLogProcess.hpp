@@ -66,7 +66,7 @@ public:
       if(theTime <= LogEnd)
         {
           logSpecies();
-          theTime += theStepInterval;
+          theTime += theInterval;
         }
       else
         {
@@ -90,7 +90,7 @@ protected:
     {
       Point aCenterPoint(theSpatiocyteStepper->getCenterPoint());
       theLogFile
-        << "log interval=" << theStepInterval
+        << "log interval=" << theInterval
         << ",world width=" << aCenterPoint.z*2
         << ",world height=" << aCenterPoint.y*2
         << ",world length=" <<  aCenterPoint.x*2
@@ -98,7 +98,7 @@ protected:
       for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
         {
           theLogFile << "," << getIDString(theProcessSpecies[i]) << "=" <<
-            theProcessSpecies[i]->getRadius();
+            theProcessSpecies[i]->getMoleculeRadius();
         }
       theLogFile << std::endl;
     }

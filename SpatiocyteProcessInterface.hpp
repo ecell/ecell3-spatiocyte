@@ -38,6 +38,7 @@ class SpatiocyteProcessInterface
 { 
 public:
   virtual ~SpatiocyteProcessInterface() {}
+  virtual void initializeFirst() = 0;
   virtual void initializeSecond() = 0;
   virtual void initializeThird() = 0;
   virtual void initializeFourth() = 0;
@@ -56,8 +57,10 @@ public:
   virtual void substrateValueChanged(Time) = 0;
   virtual void fire() = 0;
   virtual unsigned getLatticeResizeCoord(unsigned) = 0;
+  virtual void updateResizedLattice() = 0;
   virtual bool getIsPriorityQueued() = 0;
   virtual bool getIsExternInterrupted() = 0;
+  virtual double getInterval() = 0;
 };
 
 #endif /* __SPATIOCYTEPROCESSINTERFACE_HPP */

@@ -86,10 +86,11 @@ void DiffusionInfluencedReactionProcess::initializeThird()
 //Similarly, if B and D belong to the same Comp, B <- D.
 //Otherwise, find a vacant adjoining voxel of C, Y which is the same Comp
 //as D and Y <- D.
-bool DiffusionInfluencedReactionProcess::react(unsigned indexA, unsigned indexB)
+bool DiffusionInfluencedReactionProcess::react(Voxel* molA, Voxel* molB,
+                                               unsigned indexA, unsigned indexB)
 {
-  moleculeA = A->getMolecule(indexA);
-  moleculeB = B->getMolecule(indexB);
+  moleculeA = molA;
+  moleculeB = molB;
   //nonHD_A + nonHD_B -> nonHD_C + HD_D:
   //nonHD_A + nonHD_B -> HD_C + nonHD_D:
   if((variableC && D) || (C && variableD))

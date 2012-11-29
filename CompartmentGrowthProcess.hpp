@@ -62,7 +62,7 @@ public:
   virtual void initializeFifth()
     {
       theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
-      theStepInterval = 1;  
+      theInterval = 1;  
     }
   virtual void printParameters()
     {
@@ -75,7 +75,7 @@ public:
                                   theComp->maxCol-theComp->minCol-4));
       col += theComp->minCol;
       theSpatiocyteStepper->growCompartment(theComp, Axis, col);
-      theTime += theStepInterval;
+      theTime += theInterval;
       thePriorityQueue->moveTop();
     }
   virtual void initializeLastOnce()

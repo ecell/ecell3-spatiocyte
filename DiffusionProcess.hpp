@@ -121,7 +121,10 @@ public:
     {
       if(theVacantSpecies)
         {
-          theVacantSpecies->setIsDiffusiveVacant();
+          if(!theVacantSpecies->getIsMultiscale())
+            {
+              theVacantSpecies->setIsDiffusiveVacant();
+            }
           theDiffusionSpecies->setVacantSpecies(theVacantSpecies);
         }
     }
@@ -135,7 +138,7 @@ public:
       theDiffusionSpecies->rescaleReactionProbabilities(WalkProbability);
       if(D > 0)
         {
-          double r_v(theDiffusionSpecies->getRadius());
+          double r_v(theDiffusionSpecies->getDiffuseRadius());
           double alpha(0.5); //default for 1D diffusion
           if(theDiffusionSpecies->getDimension() == 2)
             {
@@ -146,14 +149,18 @@ public:
             {
               alpha = 2.0/3;
             }
-          theStepInterval = alpha*r_v*r_v*WalkProbability/D;
+          theInterval = alpha*r_v*r_v*WalkProbability/D;
         }
-      theDiffusionSpecies->setDiffusionInterval(theStepInterval);
+      theDiffusionSpecies->setDiffusionInterval(theInterval);
       if(theDiffusionSpecies->getIsDiffusiveVacant())
         {
           theWalkMethod = &DiffusionProcess::walkVacant;
         }
-      else
+      else if(theDiffusionSpecies->getIsMultiscale())
+        {
+          theWalkMethod = &DiffusionProcess::walkMultiscale;
+        }
+      else 
         {
           theWalkMethod = &DiffusionProcess::walk;
         }
@@ -169,7 +176,7 @@ public:
       std::cout << aProcess << std::endl;
       std::cout << "  " << getIDString(theDiffusionSpecies) << " ";
       std::cout << ":" << std::endl << "  Diffusion interval=" <<
-        theStepInterval << ", D=" << D << ", Walk probability (P/rho)=" <<
+        theInterval << ", D=" << D << ", Walk probability (P/rho)=" <<
         WalkProbability << std::endl;
     }
   virtual void fire()
@@ -191,16 +198,20 @@ public:
     {
       theDiffusionSpecies->walkVacant();
     }
+  void walkMultiscale() const
+    {
+      theDiffusionSpecies->walkMultiscale();
+    }
   virtual void initializeLastOnce()
     {
-      theDiffusionSpecies->addInterruptedProcess(this);
+      //theDiffusionSpecies->addInterruptedProcess(this);
     }
   /*
-  virtual GET_METHOD(Real, StepInterval)
+  virtual double getInterval()
     {
       if(theDiffusionSpecies->size())
         {
-          return theStepInterval;
+          return theInterval;
         }
       return libecs::INF;
     }

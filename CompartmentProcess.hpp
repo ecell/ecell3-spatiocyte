@@ -46,6 +46,7 @@ public:
       PROPERTYSLOT_SET_GET(Integer, Filaments);
       PROPERTYSLOT_SET_GET(Integer, Periodic);
       PROPERTYSLOT_SET_GET(Integer, Subunits);
+      PROPERTYSLOT_SET_GET(Real, DiffuseRadius);
       PROPERTYSLOT_SET_GET(Real, Length);
       PROPERTYSLOT_SET_GET(Real, LipidRadius);
       PROPERTYSLOT_SET_GET(Real, OriginX);
@@ -63,6 +64,7 @@ public:
     Filaments(1),
     Periodic(0),
     Subunits(1),
+    DiffuseRadius(0),
     Length(0),
     LipidRadius(0),
     nVoxelRadius(0.5),
@@ -80,6 +82,7 @@ public:
   SIMPLE_SET_GET_METHOD(Integer, Filaments);
   SIMPLE_SET_GET_METHOD(Integer, Periodic);
   SIMPLE_SET_GET_METHOD(Integer, Subunits);
+  SIMPLE_SET_GET_METHOD(Real, DiffuseRadius);
   SIMPLE_SET_GET_METHOD(Real, Length);
   SIMPLE_SET_GET_METHOD(Real, LipidRadius);
   SIMPLE_SET_GET_METHOD(Real, OriginX);
@@ -137,42 +140,59 @@ public:
               theVacantCompSpecies.push_back(aSpecies);
             }
         }
+      if(!DiffuseRadius)
+        {
+          DiffuseRadius = theSpatiocyteStepper->getVoxelRadius();
+        }
       if(!SubunitRadius)
         {
-          SubunitRadius = theSpatiocyteStepper->getVoxelRadius();
+          SubunitRadius = DiffuseRadius;
         }
       //Lattice voxel radius:
       VoxelRadius = theSpatiocyteStepper->getVoxelRadius();
       //Normalized off-lattice voxel radius:
       nSubunitRadius = SubunitRadius/(VoxelRadius*2);
+      nDiffuseRadius = DiffuseRadius/(VoxelRadius*2);
       //Normalized lipid voxel radius:
       nLipidRadius = LipidRadius/(VoxelRadius*2);
+    }
+  virtual void initializeFirst()
+    {
+      theComp = new Comp;
+      theVacantSpecies->setIsCompVacant();
       theVacantSpecies->setIsOffLattice();
-      if(LipidRadius)
+      //theVacantSpecies->setComp(theComp);
+      if(theLipidSpecies)
         {
+          theLipidSpecies->setIsCompVacant();
           theLipidSpecies->setIsOffLattice();
+          //theLipidSpecies->setComp(theComp);
         }
       for(unsigned i(0); i != theLipidCompSpecies.size(); ++i)
         {
           theLipidCompSpecies[i]->setIsOffLattice();
+          //setVacantSpecies must be declared here since it needs
+          //to be overwritten by DiffusionProcess in initializeSecond:
+          theLipidCompSpecies[i]->setVacantSpecies(theLipidSpecies);
+          theLipidCompSpecies[i]->setComp(theComp);
         }
       for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
         {
           theVacantCompSpecies[i]->setIsOffLattice();
-        }
-    }
-  virtual void initializeSecond()
-    {
-      SpatiocyteProcess::initializeSecond();
-      theVacantSpecies->setIsCompVacant();
-      if(theLipidSpecies)
-        {
-          theLipidSpecies->setIsCompVacant();
+          //setVacantSpecies must be declared here since it needs
+          //to be overwritten by DiffusionProcess in initializeSecond:
+          theVacantCompSpecies[i]->setVacantSpecies(theVacantSpecies);
+          theVacantCompSpecies[i]->setComp(theComp);
+          if(theLipidSpecies)
+            {
+              theVacantCompSpecies[i]->setIsMultiscale();
+            }
         }
     }
   virtual unsigned getLatticeResizeCoord(unsigned);
   virtual void initializeThird();
   virtual void printParameters();
+  virtual void updateResizedLattice();
   void addCompVoxel(unsigned, unsigned, Point&, Species*, unsigned, unsigned);
   void initializeVectors();
   void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
@@ -182,6 +202,9 @@ public:
   void connectFilaments(unsigned, unsigned, unsigned);
   void addInterfaceVoxel(unsigned, unsigned);
   void setCompartmentDimension();
+  void setVacantCompSpeciesProperties();
+  void setVacantCompMultiscaleProperties();
+  void setLipidCompSpeciesProperties();
   void setDiffuseSize();
   void interfaceSubunits();
   void enlistInterfaceVoxels();
@@ -189,7 +212,10 @@ public:
   void addNonIntersectInterfaceVoxel(Voxel&, Point&);
   void rotate(Point&);
   bool isInside(Point&);
+  void setSpeciesIntersectLipids();
   Point getStartVoxelPoint();
+  int getCoefficient(Species*);
+  Species* coefficient2species(int);
 protected:
   bool isCompartmentalized;
   unsigned dimension;
@@ -201,12 +227,14 @@ protected:
   unsigned lipStartCoord;
   unsigned subStartCoord;
   unsigned Subunits;
+  double DiffuseRadius;
   double Height;
   double nHeight;
   double Length;
   double lengthDisplace;
   double lengthDisplaceOpp;
   double LipidRadius;
+  double nDiffuseRadius;
   double nLength;
   double nLipidRadius;
   double nSubunitRadius;
