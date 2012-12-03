@@ -1236,7 +1236,7 @@ void SpatiocyteStepper::constructLattice()
     { 
       (*i).coord = a;
       (*i).adjoiningCoords = new unsigned[theAdjoiningCoordSize];
-      (*i).initAdjoins = NULL;
+      //(*i).initAdjoins = NULL;
       (*i).diffuseSize = theAdjoiningCoordSize;
       (*i).adjoiningSize = theAdjoiningCoordSize;
       (*i).point = NULL;
@@ -2202,8 +2202,9 @@ void SpatiocyteStepper::setDiffusiveComp(Comp* aComp)
 void SpatiocyteStepper::optimizeSurfaceVoxel(unsigned aCoord, Comp* aComp)
 {
   Voxel& aVoxel(theLattice[aCoord]);
-  unsigned short surfaceID(aComp->vacantSpecies->getID());
+  //unsigned short surfaceID(aComp->vacantSpecies->getID());
   aComp->adjoinCount.resize(theAdjoiningCoordSize);
+  /*
   aVoxel.surfaceCoords = new std::vector<std::vector<unsigned> >;
   aVoxel.surfaceCoords->resize(4);
   std::vector<unsigned>& immedSurface((*aVoxel.surfaceCoords)[IMMED]);
@@ -2211,8 +2212,9 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(unsigned aCoord, Comp* aComp)
   std::vector<unsigned>& innerVolume((*aVoxel.surfaceCoords)[INNER]);
   std::vector<unsigned>& outerVolume((*aVoxel.surfaceCoords)[OUTER]);
   std::vector<std::vector<unsigned> > sharedCoordsList;
+  */
   unsigned* forward(aVoxel.adjoiningCoords);
-  unsigned* reverse(forward+theAdjoiningCoordSize);
+  //unsigned* reverse(forward+theAdjoiningCoordSize);
   std::vector<unsigned> adjoiningCopy;
   for(unsigned k(0); k != theAdjoiningCoordSize; ++k)
     {
@@ -2230,6 +2232,7 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(unsigned aCoord, Comp* aComp)
           ++aComp->adjoinCount[l-adjoiningCopy.begin()];
           (*forward) = (*l);
           ++forward;
+          /*
           //immedSurface contains all adjoining surface voxels except the 
           //source voxel, aVoxel:
           immedSurface.push_back(*l);
@@ -2265,9 +2268,11 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(unsigned aCoord, Comp* aComp)
                     }
                 }
             }
+            */
         }
       else
         {
+          /*
           --reverse;
           (*reverse) = (*l);
           //We know that it is not a surface voxel, so it would not
@@ -2283,13 +2288,16 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(unsigned aCoord, Comp* aComp)
             {
               innerVolume.push_back(*l);
             }
+            */
         }
     } 
+  /*
   for(std::vector<std::vector<unsigned> >::iterator
       i(sharedCoordsList.begin()); i != sharedCoordsList.end(); ++i)
     {
       aVoxel.surfaceCoords->push_back(*i);
     }
+    */
   aVoxel.diffuseSize = forward-aVoxel.adjoiningCoords;
 }
 
@@ -2322,6 +2330,7 @@ Comp* SpatiocyteStepper::system2Comp(System* aSystem)
 
 void SpatiocyteStepper::setSurfaceSubunit(unsigned aCoord, Comp* aComp)
 {
+  /*
   Voxel& aVoxel(theLattice[aCoord]);
   // The subunit is only useful for a cylindrical surface
   // and for polymerization on it.
@@ -2355,6 +2364,7 @@ void SpatiocyteStepper::setSurfaceSubunit(unsigned aCoord, Comp* aComp)
   aPoint.x = aCenterPoint.x + sin(f)*aRadius*sin(d);
   aPoint.y = aCenterPoint.y + aRadius*cos(d);
   aPoint.z = aCenterPoint.z + cos(f)*aRadius*sin(d);
+  */
 }
 
 void SpatiocyteStepper::setIntersectingCompartmentList() 

@@ -41,7 +41,7 @@
 
 class SpatiocyteProcessInterface;
 class Species;
-struct Subunit;
+//struct Subunit;
 typedef PriorityQueue<SpatiocyteProcessInterface*> ProcessPriorityQueue;
 typedef ProcessPriorityQueue::ID ProcessID;
 
@@ -117,11 +117,14 @@ struct Voxel
   //Try to limit the adjoiningSize <= 6:
   unsigned int coord;
   unsigned int* adjoiningCoords;
+  Point* point;
+  //remove initAdjoins once MicrotubuleProcess is fixed:
+  /*
   unsigned int* initAdjoins;
   Subunit* subunit;
-  Point* point;
   //Contains adjoining and extended surface voxels:
   std::vector<std::vector<unsigned int> >* surfaceCoords;
+  */
 };
 
 struct Comp
@@ -186,6 +189,7 @@ struct Origin
   int col;
 };
 
+/*
 struct Bend
 {
   double angle;
@@ -223,5 +227,6 @@ struct Subunit
   //so there can be duplicates of contPoints
   std::vector<int> contPointSize;
 };
+*/
 
 #endif /* __SpatiocyteCommon_hpp */

@@ -203,7 +203,7 @@ void CompartmentProcess::initializeThird()
       elongateFilaments(theLipidSpecies, lipStartCoord, LipidRows,
                         LipidCols, nLipidRadius);
       connectFilaments(lipStartCoord, LipidRows, LipidCols);
-      setDiffuseSize();
+      setDiffuseSize(lipStartCoord, endCoord);
       setSpeciesIntersectLipids();
       isCompartmentalized = true;
     }
@@ -328,12 +328,7 @@ void CompartmentProcess::addCompVoxel(unsigned rowIndex,
   Voxel& aVoxel((*theLattice)[aCoord]);
   aVoxel.point = &thePoints[aStartCoord-subStartCoord+rowIndex*aCols+colIndex];
   *aVoxel.point = aPoint;
-  aVoxel.adjoiningCoords = new unsigned[theAdjoiningCoordSize];
   aVoxel.adjoiningSize = 0;
-  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
-    {
-      aVoxel.adjoiningCoords[i] = theNullCoord;
-    }
   aVacant->addCompVoxel(aCoord);
 }
 
@@ -446,18 +441,12 @@ void CompartmentProcess::connectFilaments(unsigned aStartCoord,
     }
 }
 
-void CompartmentProcess::setDiffuseSize()
+void CompartmentProcess::setDiffuseSize(unsigned start, unsigned end)
 {
-  for(unsigned i(subStartCoord); i != endCoord; ++i)
+  for(unsigned i(start); i != end; ++i)
     {
       Voxel& subunit((*theLattice)[i]);
       subunit.diffuseSize = subunit.adjoiningSize;
-      /*
-      if(subunit.diffuseSize < 6)
-        {
-          std::cout << "diffuseSize:" << subunit.diffuseSize << std::endl;
-        }
-        */
     }
 }
 
@@ -465,14 +454,28 @@ void CompartmentProcess::connectSubunit(unsigned a, unsigned b)
 {
   Voxel& aVoxel((*theLattice)[a]);
   Voxel& adjoin((*theLattice)[b]);
-  aVoxel.adjoiningCoords[aVoxel.adjoiningSize++] = b;
-  adjoin.adjoiningCoords[adjoin.adjoiningSize++] = a;
+  addAdjoin(aVoxel, b);
+  addAdjoin(adjoin, a);
+}
+
+void CompartmentProcess::addAdjoin(Voxel& aVoxel, unsigned coord)
+{
+  unsigned* temp(new unsigned[aVoxel.adjoiningSize+1]);
+  for(unsigned int i(0); i != aVoxel.adjoiningSize; ++i)
+    {
+      temp[i] = aVoxel.adjoiningCoords[i];
+    }
+  delete[] aVoxel.adjoiningCoords;
+  temp[aVoxel.adjoiningSize++] = coord;
+  aVoxel.adjoiningCoords = temp;
 }
 
 void CompartmentProcess::interfaceSubunits()
 {
   enlistInterfaceVoxels();
   enlistNonIntersectInterfaceVoxels();
+  setDiffuseSize(subStartCoord, lipStartCoord);
+  enlistSubunitInterfaceAdjoins();
   theVacantSpecies->setIsPopulated();
   theInterfaceSpecies->setIsPopulated();
 }
@@ -486,12 +489,12 @@ void CompartmentProcess::enlistInterfaceVoxels()
       Point center(*subunit.point);
       Point bottomLeft(*subunit.point);
       Point topRight(*subunit.point);
-      bottomLeft.x -= nDiffuseRadius+theSpatiocyteStepper->getColLength();
-      bottomLeft.y -= nDiffuseRadius+theSpatiocyteStepper->getLayerLength();
-      bottomLeft.z -= nDiffuseRadius+theSpatiocyteStepper->getRowLength();
-      topRight.x += nDiffuseRadius+theSpatiocyteStepper->getColLength();
-      topRight.y += nDiffuseRadius+theSpatiocyteStepper->getLayerLength();
-      topRight.z += nDiffuseRadius+theSpatiocyteStepper->getRowLength();
+      bottomLeft.x -= nSubunitRadius+theSpatiocyteStepper->getColLength();
+      bottomLeft.y -= nSubunitRadius+theSpatiocyteStepper->getLayerLength();
+      bottomLeft.z -= nSubunitRadius+theSpatiocyteStepper->getRowLength();
+      topRight.x += nSubunitRadius+theSpatiocyteStepper->getColLength();
+      topRight.y += nSubunitRadius+theSpatiocyteStepper->getLayerLength();
+      topRight.z += nSubunitRadius+theSpatiocyteStepper->getRowLength();
       unsigned blRow(0);
       unsigned blLayer(0);
       unsigned blCol(0);
@@ -521,7 +524,9 @@ void CompartmentProcess::addInterfaceVoxel(unsigned subunitCoord,
   Point subunitPoint(*subunit.point);
   Point voxelPoint(theSpatiocyteStepper->coord2point(voxelCoord));
   double dist(getDistance(&subunitPoint, &voxelPoint));
-  if(dist <= (nDiffuseRadius+nVoxelRadius)*1.0001) 
+  //Should use SubunitRadius instead of DiffuseRadius since it is the
+  //actual size of the subunit:
+  if(dist <= (nSubunitRadius+nVoxelRadius)*1.0001) 
     {
       Voxel& voxel((*theLattice)[voxelCoord]);
       //theSpecies[6]->addMolecule(&voxel);
@@ -532,7 +537,30 @@ void CompartmentProcess::addInterfaceVoxel(unsigned subunitCoord,
           //theSpecies[5]->addMolecule(&voxel);
           theInterfaceSpecies->addMolecule(&voxel);
         }
+      //each subunit list has unique (no duplicates) interface voxels:
       subunitInterfaces[subunitCoord-subStartCoord].push_back(voxelCoord);
+    }
+}
+
+void CompartmentProcess::enlistSubunitInterfaceAdjoins()
+{
+  for(unsigned i(0); i != subunitInterfaces.size(); ++i)
+    {
+      for(unsigned j(0); j != subunitInterfaces[i].size(); ++j)
+        {
+          Voxel& subunit((*theLattice)[i+subStartCoord]);
+          Voxel& interface((*theLattice)[subunitInterfaces[i][j]]);
+          addAdjoin(interface, i+subStartCoord);
+          for(unsigned k(0); k != interface.diffuseSize; ++k)
+            {
+              unsigned coord(interface.adjoiningCoords[k]);
+              Voxel& adjoin((*theLattice)[coord]);
+              if(adjoin.id != theInterfaceSpecies->getID())
+                {
+                  addAdjoin(subunit, coord);
+                }
+            }
+        }
     }
 }
 

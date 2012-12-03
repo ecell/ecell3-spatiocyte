@@ -395,7 +395,10 @@ void SpatiocyteNextReactionProcess::fire()
               //multiNonHD + nonHD -> nonHD
               if(A->getIsMultiscale())
                 {
-                  reactMultiABC();
+                  if(!reactMultiABC())
+                    {
+                      return;
+                    }
                 }
             }
         }
@@ -404,9 +407,18 @@ void SpatiocyteNextReactionProcess::fire()
 }
 
 //MultiNonHD + nonHD -> nonHD + nonHD
-void SpatiocyteNextReactionProcess::reactMultiABC()
+bool SpatiocyteNextReactionProcess::reactMultiABC()
 {
-  std::cout << "nextIndexA:" << nextIndexA << std::endl;
+  moleculeA = A->getMolecule(nextIndexA);
+  moleculeC = C->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
+  if(moleculeC == NULL)
+    {
+      requeue();
+      return false;
+    }
+  A->removeMolecule(nextIndexA);
+  C->addMolecule(moleculeC);
+  return true;
 }
 
 //nonHD + nonHD -> nonHD + nonHD

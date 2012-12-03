@@ -205,12 +205,14 @@ public:
   void setVacantCompSpeciesProperties();
   void setVacantCompMultiscaleProperties();
   void setLipidCompSpeciesProperties();
-  void setDiffuseSize();
+  void setDiffuseSize(unsigned, unsigned);
   void interfaceSubunits();
   void enlistInterfaceVoxels();
   void enlistNonIntersectInterfaceVoxels();
+  void enlistSubunitInterfaceAdjoins();
   void addNonIntersectInterfaceVoxel(Voxel&, Point&);
   void rotate(Point&);
+  void addAdjoin(Voxel&, unsigned);
   bool isInside(Point&);
   void setSpeciesIntersectLipids();
   Point getStartVoxelPoint();

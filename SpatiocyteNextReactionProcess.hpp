@@ -150,7 +150,7 @@ protected:
   virtual bool reactACbind(Species*, Species*);
   virtual bool reactACDbind(Species*, Species*, Species*);
   virtual void reactABCD();
-  virtual void reactMultiABC();
+  virtual bool reactMultiABC();
   virtual Voxel* reactvAC(Variable*, Species*);
   virtual Comp* getComp2D(Species*);
   virtual Voxel* reactvAvBC(Species*);

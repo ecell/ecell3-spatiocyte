@@ -272,6 +272,7 @@ public:
   std::vector<unsigned> getSourceCoords()
     {
       std::vector<unsigned> aCoords;
+      /*
       for(unsigned i(0); i != theMoleculeSize; ++i)
         {
           std::vector<unsigned>& 
@@ -284,11 +285,13 @@ public:
                 }
             }
         }
+        */
       return aCoords;
     }
   std::vector<unsigned> getTargetCoords()
     {
       std::vector<unsigned> aCoords;
+      /*
       for(unsigned i(0); i != theMoleculeSize; ++i)
         {
           std::vector<unsigned>& 
@@ -301,11 +304,13 @@ public:
                 }
             }
         }
+        */
       return aCoords;
     }
   std::vector<unsigned> getSharedCoords()
     {
       std::vector<unsigned> aCoords;
+      /*
       for(unsigned i(0); i != theMoleculeSize; ++i)
         {
           std::vector<unsigned>& 
@@ -318,6 +323,7 @@ public:
                 }
             }
         }
+        */
       return aCoords;
     }
   unsigned size() const
@@ -338,10 +344,12 @@ public:
             }
           return theStepper->coord2point(getCoord(anIndex));
         }
+      /*
       else if(isPolymer)
         {
           return theMolecules[anIndex]->subunit->subunitPoint;
         }
+        */
       return theStepper->coord2point(getCoord(anIndex));
     }
   unsigned short getID() const

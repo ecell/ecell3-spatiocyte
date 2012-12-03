@@ -7,7 +7,6 @@ SpatiocyteProcess\
 MassActionProcess\
 ReactionProcess\
 VisualizationLogProcess\
-MicrotubuleProcess\
 CompartmentProcess\
 ErythrocyteProcess\
 H5VisualizationLogProcess\
@@ -23,8 +22,9 @@ DiffusionProcess\
 TagProcess\
 PeriodicBoundaryDiffusionProcess
 #PolymerFragmentationProcess\
-#PolymerizationParameterProcess\
-#PolymerizationProcess
+MicrotubuleProcess\
+PolymerizationParameterProcess\
+PolymerizationProcess
 
 ECELL3_DMC = ecell3-dmc
 CXX = g++
