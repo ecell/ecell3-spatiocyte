@@ -406,9 +406,11 @@ void SpatiocyteNextReactionProcess::fire()
   ReactionProcess::fire();
 }
 
-//MultiNonHD + nonHD -> nonHD + nonHD
+//MultiNonHD.nonHD -> nonHD
+//MultiA.B -> C
 bool SpatiocyteNextReactionProcess::reactMultiABC()
 {
+  std::cout << "react Multi ABC:" << nextIndexA << std::endl;
   moleculeA = A->getMolecule(nextIndexA);
   moleculeC = C->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
   if(moleculeC == NULL)
@@ -417,11 +419,12 @@ bool SpatiocyteNextReactionProcess::reactMultiABC()
       return false;
     }
   A->removeMolecule(nextIndexA);
+  std::cout << "adding molecule" << std::endl;
   C->addMolecule(moleculeC);
   return true;
 }
 
-//nonHD + nonHD -> nonHD + nonHD
+//nonHD.nonHD -> nonHD + nonHD
 //Both A and B are immobile nonHD
 void SpatiocyteNextReactionProcess::reactABCD()
 {
@@ -709,17 +712,31 @@ Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_TwoSubstrates()
 
 double SpatiocyteNextReactionProcess::getIntervalUnbindMultiAB()
 {
+  if(!A->size() || !p)
+    {
+      return libecs::INF;
+    }
   nextIndexA = 0;
   double fraction(A->getMultiscaleBoundFraction(nextIndexA,
-                                                B->getVacantSpecies()->getID())); 
+                                            B->getVacantSpecies()->getID())); 
   double rand(gsl_rng_uniform_pos(getStepper()->getRng()));
-  double nextInterval(p*fraction*(-log(rand)));
+  double denom((p*fraction)*(-log(rand)));
+  double nextInterval(libecs::INF);
+  if(denom)
+    {
+      nextInterval = 1.0/denom;
+    }
   for(unsigned i(1); i != A->size(); ++i)
     {
       fraction = A->getMultiscaleBoundFraction(i,
                                                B->getVacantSpecies()->getID());
       rand = gsl_rng_uniform_pos(getStepper()->getRng());
-      double interval(1.0/(p*fraction)*(-log(rand)));
+      denom = (p*fraction)*(-log(rand));
+      double interval(libecs::INF);
+      if(denom)
+        {
+          interval = 1.0/denom;
+        }
       if(interval < nextInterval)
         {
           nextIndexA = i;
@@ -737,12 +754,13 @@ double SpatiocyteNextReactionProcess::getIntervalUnbindAB()
     {
       return getIntervalUnbindMultiAB();
     }
-  double sizeB(updateSizesAB());
-  double sizeA(moleculesA.size());
-  if(sizeA > 0.0 && sizeB > 0.0)
+  const double sizeB(updateSizesAB());
+  const double sizeA(moleculesA.size());
+  const double rand(gsl_rng_uniform_pos(getStepper()->getRng()));
+  const double denom((p*sizeA*sizeB)*(-log(rand)));
+  if(denom)
     {
-      double rand(gsl_rng_uniform_pos(getStepper()->getRng()));
-      return 1.0/(p*sizeA*sizeB)*(-log(rand));
+      return 1.0/denom;
     }
   return libecs::INF;
 }

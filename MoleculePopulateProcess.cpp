@@ -351,7 +351,7 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
   for(unsigned int i(0); i != aCoords.size(); ++i)
     {
       Voxel* aVoxel(&(*theLattice)[aCoords[i]]);
-      if(aSpecies->size() < aSize && aSpecies->getIsPopulatable(aVoxel))
+      if(aSpecies->size() < aSize && aSpecies->isPopulatable(aVoxel))
         {
           aSpecies->addMolecule(aVoxel);
         }

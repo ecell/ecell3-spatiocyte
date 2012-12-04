@@ -459,6 +459,11 @@ void SpatiocyteStepper::initSpecies()
       (*i)->initialize(theSpecies.size(), theAdjoiningCoordSize, 
                        theNullCoord, theNullID);
     }
+  for(std::vector<Comp*>::const_iterator i(theComps.begin());
+      i != theComps.end(); ++i)
+    {
+      (*i)->interfaceID = theSpecies.size();
+    }
 }
 
 void SpatiocyteStepper::broadcastLatticeProperties()
@@ -889,8 +894,8 @@ void SpatiocyteStepper::registerCompSpecies(Comp* aComp)
           aVariable->setValue(0);
           Species* aSpecies(addSpecies(aVariable));
           aComp->vacantSpecies = aSpecies;
-          aSpecies->setVacantSpecies(aSpecies);
           aComp->vacantID = aSpecies->getID(); //remove this
+          aSpecies->setVacantSpecies(aSpecies);
           aSpecies->setIsCompVacant();
         }
       std::vector<Species*>::iterator j(variable2ispecies(aVariable));

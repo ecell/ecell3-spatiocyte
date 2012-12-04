@@ -102,15 +102,13 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* molA, Voxel* molB,
           HD_p = variableD;
           nonHD_p = C;
         }
-      if(A->getComp() == nonHD_p->getComp() ||
-         A->getID() == nonHD_p->getVacantID())
+      if(A->isReplaceable(moleculeA, nonHD_p))
         {
           moleculeP = moleculeA;
           //Hard remove the B molecule, since nonHD_p is in a different Comp:
           moleculeB->id = B->getVacantID();
         }
-      else if(B->getComp() == nonHD_p->getComp() ||
-              B->getID() == nonHD_p->getVacantID())
+      else if(B->isReplaceable(moleculeB, nonHD_p))
         {
           moleculeP = moleculeB;
           //Hard remove the A molecule, since nonHD_p is in a different Comp:
@@ -151,13 +149,12 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* molA, Voxel* molB,
       return true;
     }
 
-  if(A->getComp() == C->getComp() || A->getID() == C->getVacantID())
+  if(A->isReplaceable(moleculeA, C))
     {
       moleculeC = moleculeA;
       if(D)
         {
-          if(B->getComp() == D->getComp() ||
-             B->getID() == D->getVacantID())
+          if(B->isReplaceable(moleculeB, D))
             {
               moleculeD = moleculeB;
             }
@@ -179,14 +176,12 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* molA, Voxel* molB,
           moleculeB->id = B->getVacantID();
         }
     }
-  else if(B->getComp() == C->getComp() ||
-          B->getID() == C->getVacantID())
+  else if(B->isReplaceable(moleculeB, C))
     {
       moleculeC = moleculeB;
       if(D)
         {
-          if(A->getComp() == D->getComp() ||
-             A->getID() == D->getVacantID())
+          if(A->isReplaceable(moleculeA, D))
             {
               moleculeD = moleculeA;
             }

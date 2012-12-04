@@ -161,12 +161,12 @@ public:
       theComp = new Comp;
       theVacantSpecies->setIsCompVacant();
       theVacantSpecies->setIsOffLattice();
-      //theVacantSpecies->setComp(theComp);
+      theVacantSpecies->setComp(theComp);
       if(theLipidSpecies)
         {
           theLipidSpecies->setIsCompVacant();
           theLipidSpecies->setIsOffLattice();
-          //theLipidSpecies->setComp(theComp);
+          theLipidSpecies->setComp(theComp);
         }
       for(unsigned i(0); i != theLipidCompSpecies.size(); ++i)
         {

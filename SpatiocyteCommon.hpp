@@ -118,8 +118,8 @@ struct Voxel
   unsigned int coord;
   unsigned int* adjoiningCoords;
   Point* point;
-  //remove initAdjoins once MicrotubuleProcess is fixed:
   /*
+  //remove initAdjoins once MicrotubuleProcess is fixed:
   unsigned int* initAdjoins;
   Subunit* subunit;
   //Contains adjoining and extended surface voxels:
@@ -131,8 +131,9 @@ struct Comp
 {
   bool isIntersectParent;
   bool isIntersectRoot;
-  unsigned short dimension;
-  unsigned short vacantID; //remove this
+  unsigned dimension;
+  unsigned vacantID; //remove this
+  unsigned interfaceID;
   int enclosed;
   int geometry;
   int xyPlane;
@@ -160,7 +161,7 @@ struct Comp
   System* system;
   Comp* surfaceSub;
   //Even if there are many adjacent diffusive compartents, use only one single
-  //common id. So There is only one common diffusive Comp:
+  //common id. So there is only one common diffusive Comp:
   Comp* diffusiveComp;
   Point centerPoint;
   Species* vacantSpecies;

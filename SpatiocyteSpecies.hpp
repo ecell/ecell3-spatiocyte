@@ -181,8 +181,7 @@ public:
         }
       else if(theMoleculeSize)
         {
-          std::cout << "Warning: Species " <<
-            theVariable->getFullID().asString() <<
+          std::cout << "Warning: Species " << getIDString() <<
             " not populated." << std::endl;
         }
     }
@@ -607,16 +606,12 @@ public:
     }
   void walk()
     {
-      unsigned beginMoleculeSize(theMoleculeSize);
+      const unsigned beginMoleculeSize(theMoleculeSize);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
-          int size;
-          if(isFixedAdjoins)
-            {
-              size = theAdjoiningCoordSize;
-            }
-          else
+          int size(theAdjoiningCoordSize);
+          if(!isFixedAdjoins)
             {
               size = source->diffuseSize;
             }
@@ -632,40 +627,58 @@ public:
                   theMolecules[i] = target;
                 }
             }
-          else if(theDiffusionInfluencedReactions[target->id])
+          else
             {
-              //If it meets the reaction probability:
-              if(gsl_rng_uniform(theRng) < theReactionProbabilities[target->id])
-                { 
-                  Species* targetSpecies(theStepper->id2species(target->id));
-                  unsigned targetIndex(0);
-                  if(targetSpecies->getIsMultiscale() && theVacantSpecies ==
-                     targetSpecies->getMultiscaleVacantSpecies())
-                    {
-                      //Set an invalid index if the target molecule is
-                      //an implicitly represented multiscale molecule:
-                      targetIndex = targetSpecies->size();
-                    }
-                  else
+              if(target->id == theComp->interfaceID)
+                {
+                  unsigned coord(gsl_rng_uniform_int(theRng, 
+                                                     target->adjoiningSize-
+                                                     target->diffuseSize));
+                  coord = target->adjoiningCoords[coord+target->diffuseSize];
+                  target = &theLattice[coord];
+                }
+              if(theDiffusionInfluencedReactions[target->id])
+                {
+                  //If it meets the reaction probability:
+                  if(gsl_rng_uniform(theRng) < 
+                     theReactionProbabilities[target->id])
                     { 
-                      targetSpecies->getIndex(target);
-                    }
-                  if(theCollision)
-                    { 
-                      ++collisionCnts[i];
-                      targetSpecies->addCollision(target);
-                      if(theCollision != 2)
+                      Species* targetSpecies(theStepper->id2species(
+                                                                  target->id));
+                      unsigned targetIndex(0);
+                      if(targetSpecies->getIsMultiscale() && theVacantSpecies ==
+                         targetSpecies->getMultiscaleVacantSpecies())
                         {
-                          return;
+                          //Set an invalid index if the target molecule is
+                          //an implicitly represented multiscale molecule:
+                          targetIndex = targetSpecies->size();
                         }
-                    }
-                  unsigned aMoleculeSize(theMoleculeSize);
-                  react(source, target, i, targetIndex, targetSpecies);
-                  //Only rewalk the current pointed molecule if it is an
-                  //unwalked molecule (not a product of the reaction):
-                  if(theMoleculeSize < aMoleculeSize)
-                    {
-                      --i;
+                      else
+                        { 
+                          targetIndex = targetSpecies->getIndex(target);
+                        }
+                      if(theCollision)
+                        { 
+                          ++collisionCnts[i];
+                          targetSpecies->addCollision(target);
+                          if(theCollision != 2)
+                            {
+                              return;
+                            }
+                        }
+                      unsigned aMoleculeSize(theMoleculeSize);
+                      react(source, target, i, targetIndex, targetSpecies);
+                      //If the reaction is successful, the last molecule of this
+                      //species will replace the pointer of i, so we need to 
+                      //decrement i to perform the diffusion on it. However, if
+                      //theMoleculeSize didn't decrease, that means the
+                      //currently walked molecule was a product of this
+                      //reaction and so we don't need to walk it again by
+                      //decrementing i.
+                      if(theMoleculeSize < aMoleculeSize)
+                        {
+                          --i;
+                        }
                     }
                 }
             }
@@ -1029,24 +1042,15 @@ public:
       for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
         {
           unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
-          if(theLattice[coordB].id == theID)
+          unsigned anID(theLattice[coordB].id);
+          if(anID == theID ||
+             std::find(theMultiscaleIDs.begin(), theMultiscaleIDs.end(),
+                       anID) != theMultiscaleIDs.end())
             {
               return true;
             }
         }
       return false;
-    }
-  bool getIsPopulatable(Voxel* aVoxel)
-    {
-      if(isMultiscale && isIntersectMultiscale(aVoxel))
-        {
-          return false;
-        }
-      if(aVoxel->id != theVacantID)
-        {
-          return false;
-        }
-      return true;
     }
   bool isIntersectMultiscale(Voxel* source, Voxel* target)
     {
@@ -1107,14 +1111,30 @@ public:
   String getIDString(Species* aSpecies)
     {
       Variable* aVariable(aSpecies->getVariable());
-      return "["+aVariable->getSystemPath().asString()+":"+
-        aVariable->getID()+"]["+int2str(aSpecies->getID())+"]";
+      if(aVariable)
+        {
+          return "["+aVariable->getSystemPath().asString()+":"+
+            aVariable->getID()+"]["+int2str(aSpecies->getID())+"]";
+        }
+      else if(aSpecies->getID() == theNullID)
+        {
+          return "[theNullID]["+int2str(aSpecies->getID())+"]";
+        }
+      return "[unknown]";
     }
   String getIDString()
     {
       Variable* aVariable(getVariable());
-      return "["+aVariable->getSystemPath().asString()+":"+
-        aVariable->getID()+"]["+int2str(getID())+"]";
+      if(aVariable)
+        {
+          return "["+aVariable->getSystemPath().asString()+":"+
+            aVariable->getID()+"]["+int2str(getID())+"]";
+        }
+      else if(getID() == theNullID)
+        {
+          return "[theNullID]["+int2str(getID())+"]";
+        }
+      return "[unknown]";
     }
   unsigned compVoxelSize()
     {
@@ -1147,8 +1167,8 @@ public:
           index = getIndexFast(aVoxel);
           if(index == theMoleculeSize)
             { 
-              std::cout << "error in getting the index:" << 
-                getVariable()->getFullID().asString() << std::endl;
+              std::cout << "error in getting the index:" << getIDString() <<
+               " size:" << theMoleculeSize << std::endl;
               return 0;
             }
         }
@@ -1160,8 +1180,6 @@ public:
       if(isMultiscale)
         {
           Species* aSpecies(theStepper->id2species(aVoxel->id));
-          std::cout << "softremove:" << aSpecies->getIDString() << std::endl;
-          std::cout << "vacant:" << aSpecies->getVacantSpecies()->getIDString() << std::endl;
           if(aSpecies->getVacantSpecies() != theMultiscaleVacantSpecies)
             {
               softRemoveMolecule(getIndex(aVoxel));
@@ -1177,8 +1195,6 @@ public:
       if(isMultiscale)
         {
           Species* aSpecies(theStepper->id2species(aVoxel->id));
-          std::cout << "remove:" << aSpecies->getIDString() << std::endl;
-          std::cout << "vacant:" << aSpecies->getVacantSpecies()->getIDString() << std::endl;
           if(aSpecies->getVacantSpecies() != theMultiscaleVacantSpecies)
             {
               removeMolecule(getIndex(aVoxel));
@@ -1390,7 +1406,6 @@ public:
     }
   void addInterruptedProcess(SpatiocyteNextReactionProcess* aProcess)
     {
-      std::cout << getIDString() << " addding:" << aProcess->getFullID().asString() << std::endl;
       if(std::find(theInterruptedProcesses.begin(),
                    theInterruptedProcesses.end(), aProcess) == 
          theInterruptedProcesses.end())
@@ -1417,7 +1432,7 @@ public:
           for(unsigned i(0); i != source->adjoiningSize; ++i)
             {
               unsigned aCoord(source->adjoiningCoords[i]);
-              if(theLattice[aCoord].id == theVacantID)
+              if(isPopulatable(&theLattice[aCoord]))
                 {
                   compCoords.push_back(aCoord);
                 }
@@ -1441,7 +1456,7 @@ public:
       if(bindingSite < source->adjoiningSize)
         { 
           unsigned aCoord(source->adjoiningCoords[bindingSite]);
-          if(theLattice[aCoord].id == theVacantID)
+          if(isPopulatable(&theLattice[aCoord]))
             {
               return &theLattice[aCoord];
             }
@@ -1486,8 +1501,8 @@ public:
           for(unsigned i(0); i != source->adjoiningSize; ++i)
             {
               unsigned aCoord(source->adjoiningCoords[i]);
-              if(theLattice[aCoord].id == theVacantID && 
-                 &theLattice[aCoord] != target)
+              if(&theLattice[aCoord] != target && 
+                 isPopulatable(&theLattice[aCoord]))
                 {
                   compCoords.push_back(aCoord);
                 }
@@ -1529,8 +1544,8 @@ public:
           for(unsigned i(0); i != source->adjoiningSize; ++i)
             {
               unsigned aCoord(source->adjoiningCoords[i]);
-              if(theLattice[aCoord].id == theVacantID &&
-                 source != targetA && source != targetB)
+              if(source != targetA && source != targetB && 
+                 isPopulatable(&theLattice[aCoord]))
                 {
                   compCoords.push_back(aCoord);
                 }
@@ -1556,7 +1571,7 @@ public:
         {
           const int r(gsl_rng_uniform_int(theRng, aCoords.size())); 
           unsigned aCoord(aCoords[r]);
-          if(theLattice[aCoord].id == theVacantID)
+          if(isPopulatable(&theLattice[aCoord]))
             {
               return &theLattice[aCoord];
             }
@@ -1587,7 +1602,7 @@ public:
           for(int i(r); i != aSize; ++i)
             {
               Voxel* aVoxel(aVacantSpecies->getCompVoxel(i));
-              if(aVoxel->id == theVacantID)
+              if(isPopulatable(aVoxel))
                 {
                   return aVoxel;
                 }
@@ -1595,7 +1610,7 @@ public:
           for(int i(0); i != r; ++i)
             {
               Voxel* aVoxel(aVacantSpecies->getCompVoxel(i));
-              if(aVoxel->id == theVacantID)
+              if(isPopulatable(aVoxel))
                 {
                   return aVoxel;
                 }
@@ -1604,7 +1619,7 @@ public:
       else
         {
           Voxel* aVoxel(aVacantSpecies->getCompVoxel(r));
-          if(aVoxel->id == theVacantID)
+          if(isPopulatable(aVoxel))
             {
               return aVoxel;
             }
@@ -1769,6 +1784,39 @@ public:
   void setMultiscaleVacantSpecies(Species* aSpecies)
     {
       theMultiscaleVacantSpecies = aSpecies;
+    }
+  //Can aVoxel be populated by this species:
+  bool isPopulatable(Voxel* aVoxel)
+    {
+      if(isMultiscale)
+        {
+          if(isIntersectMultiscale(aVoxel))
+            {
+              return false;
+            }
+        }
+      else if(aVoxel->id != theVacantID)
+        {
+          return false;
+        }
+      return true;
+    }
+  //Can aVoxel of this species replaced by aSpecies:
+  bool isReplaceable(Voxel* aVoxel, Species* aSpecies)
+    {
+      if(getComp() != aSpecies->getComp() &&
+         theID != aSpecies->getVacantID())
+        {
+          return false;
+        }
+      if(aSpecies->getIsMultiscale())
+        {
+          if(aSpecies->isIntersectMultiscale(aVoxel))
+            {
+              return false;
+            }
+        }
+      return true;
     }
 private:
   bool isCentered;

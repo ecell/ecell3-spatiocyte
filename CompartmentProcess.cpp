@@ -36,6 +36,7 @@ LIBECS_DM_INIT(CompartmentProcess, Process);
 unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
 {
   Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
+  aComp->interfaceID = theInterfaceSpecies->getID();
   *theComp = *aComp;
   theVacantSpecies->resetFixedAdjoins();
   theVacantSpecies->setMoleculeRadius(DiffuseRadius);
@@ -463,6 +464,12 @@ void CompartmentProcess::addAdjoin(Voxel& aVoxel, unsigned coord)
   unsigned* temp(new unsigned[aVoxel.adjoiningSize+1]);
   for(unsigned int i(0); i != aVoxel.adjoiningSize; ++i)
     {
+      //Avoid duplicated adjoins:
+      if(aVoxel.adjoiningCoords[i] == coord)
+        {
+          delete[] temp;
+          return;
+        }
       temp[i] = aVoxel.adjoiningCoords[i];
     }
   delete[] aVoxel.adjoiningCoords;
