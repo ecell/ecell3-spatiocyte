@@ -1064,19 +1064,7 @@ public:
           temp[i] = theLattice[coordB].id;
           theLattice[coordB].id = theSpeciesSize;
         }
-      coordA = target->coord-vacStartCoord;
-      for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
-        {
-          unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
-          unsigned anID(theLattice[coordB].id);
-          if(anID == theID ||
-             std::find(theMultiscaleIDs.begin(), theMultiscaleIDs.end(),
-                       anID) != theMultiscaleIDs.end())
-            {
-              isIntersect = true;
-              break;
-            }
-        }
+      isIntersect = isIntersectMultiscale(target);
       coordA = source->coord-vacStartCoord;
       for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
         {
