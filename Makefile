@@ -29,7 +29,7 @@ PolymerizationProcess
 ECELL3_DMC = ecell3-dmc
 CXX = g++
 CXXFLAGS = -Wall -O3 -g
-CXXFLAGS += $(shell pkg-config --cflags gtkmm-2.4 gtkglextmm-x11-1.2)
+GUIFLAGS = $(CXXFLAGS) $(shell pkg-config --cflags gtkmm-2.4 gtkglextmm-x11-1.2)
 CPPFLAGS = -DG_DISABLE_DEPRECATED -DGDK_PIXBUF_DISABLE_DEPRECATED -DPNG_SKIP_SETJMP_CHECK # -DGDK_DISABLE_DEPRECATED 
 GUILIBS =
 GUILIBS += $(shell pkg-config --libs gtkmm-2.4 gtkglextmm-x11-1.2 libpng)
@@ -102,13 +102,13 @@ PeriodicBoundaryDiffusionProcess.so: 	PeriodicBoundaryDiffusionProcess.cpp
 PolymerFragmentationProcess.so: 	PolymerFragmentationProcess.cpp
 	$(ECELL3_DMC) -o PolymerFragmentationProcess.so --ldflags=ReactionProcess.so PolymerFragmentationProcess.cpp
 
-
+dms: $(SOS) 
 
 %.so: %.cpp
 	$(ECELL3_DMC) $< 
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c -o $@ $<
+	$(CXX) $(GUIFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 $(SPATIOCYTE):$(OBJECTS)
 	$(CXX) -v -o $@ $(OBJECTS) $(GUILIBS)
