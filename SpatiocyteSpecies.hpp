@@ -607,10 +607,10 @@ public:
   void walk()
     {
       const unsigned beginMoleculeSize(theMoleculeSize);
+      unsigned size(theAdjoiningCoordSize);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
-          int size(theAdjoiningCoordSize);
           if(!isFixedAdjoins)
             {
               size = source->diffuseSize;
