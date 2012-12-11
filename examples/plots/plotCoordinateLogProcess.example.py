@@ -9,7 +9,7 @@ legendFontSize = 14
 lineFontSize = 14
 
 files = []
-fileNames = ["../CoordinateLog.csv"]
+fileNames = ["../2010.arjunan.syst.synth.biol/CoordinateLog.csv"]
 legendTitles = []
 lines = ['-', '-', '-', '-']
 colors = ['r', 'g', 'b', 'y', 'c', 'k']

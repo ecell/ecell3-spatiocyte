@@ -8,7 +8,7 @@ legendFontSize = 14
 lineFontSize = 14
 
 files = []
-fileNames = ["../HistogramLog.csv"]
+fileNames = ["../2010.arjunan.syst.synth.biol/HistogramLog.csv"]
 legendTitles = []
 lines = ['-', '-', '-', '-']
 colors = ['r', 'g', 'b', 'k', 'c', 'y']
