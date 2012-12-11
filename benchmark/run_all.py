@@ -6,8 +6,8 @@ import run_single
 
 prefix = 'out_'
 
-T = 0.001
-REPEAT = 3
+T = 10.
+REPEAT = 30
 R = 2.5e-9
 D = 1e-12
 
@@ -28,7 +28,7 @@ def run_set(outfile, name, V_list, N_list, T_list):
         outfile.flush()
     outfile.write(']\n')
 
-Vv = [1e-15, ] * 11
+Vv = [2e-14, ] * 11
 Nv = [100,300,1000,3000,10000,30000,100000,300000,1000000,3000000,10000000]
 Tv = [max(1e-5, min(T, 1e0 / math.pow(N, 2.0 / 3.0))) for N in Nv]
 Vc = [3.33e-15,1e-14, 3.33e-14,1e-13, 3.33e-13,1e-12, 3.33e-12,1e-11, 3.33e-11,1e-10, 3.33e-10,1e-9]#,3.33e-9]
@@ -43,8 +43,8 @@ N3000 = [3000, ] * 8
 #T3000 = [1e-2, 1e-2, 1e-3, 1e-3, 1e-3, 1e-4, 1e-5, 1e-6]#, 1e-7]
 T3000 = [2e6 / math.pow(1.0/V, 2.0 / 3.0) for V in V3000]
 
-mode = "V"
-outfile = open(prefix+mode+'spatiocyte.py','w'); 
+mode = "Vspatiocyte"
+outfile = open(prefix+mode+'.py','w'); 
 dataname = 'data_' + mode
 run_set(outfile, dataname, Vv, Nv, Tv); outfile.write('\n\n')
 

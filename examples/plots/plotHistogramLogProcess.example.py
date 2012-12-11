@@ -8,7 +8,7 @@ legendFontSize = 14
 lineFontSize = 14
 
 files = []
-fileNames = ["../example_models/HistogramLog.csv"]
+fileNames = ["../HistogramLog.csv"]
 legendTitles = []
 lines = ['-', '-', '-', '-']
 colors = ['r', 'g', 'b', 'k', 'c', 'y']

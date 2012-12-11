@@ -9,7 +9,7 @@ legendFontSize = 14
 lineFontSize = 14
 
 files = []
-fileNames = ["../example_models/CoordinateLog.csv"]
+fileNames = ["../CoordinateLog.csv"]
 legendTitles = []
 lines = ['-', '-', '-', '-']
 colors = ['r', 'g', 'b', 'y', 'c', 'k']
