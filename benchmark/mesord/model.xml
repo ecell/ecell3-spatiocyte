@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level2/version4" level="2" version="4">
+<model name="MesoRD Test System: Diffusion">
+  <notes>
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <p>MesoRD Test System: Diffusion</p>
+      <p>A minimal system that demonstrates diffusion with periodic
+      boundary conditions.</p>
+      <p>$Id: diffusion.xml 615 2011-08-22 09:17:51Z davidfange $</p>
+    </body>
+  </notes>
+
+
+
+  <!-- ********************
+       * UNIT DEFINITIONS *
+       ******************** -->
+  <listOfUnitDefinitions>
+    <unitDefinition id="um">
+      <listOfUnits>
+        <unit kind="metre" scale="-6"/>
+      </listOfUnits>
+    </unitDefinition>
+  </listOfUnitDefinitions>
+
+
+
+  <!-- ****************
+       * COMPARTMENTS *
+       **************** -->
+  <listOfCompartments>
+    <compartment id="CompartmentOne"
+		 units="litre"
+		 spatialDimensions="3">
+      <annotation>
+	<MesoRD:csg xmlns:MesoRD="http://www.icm.uu.se">
+	  <MesoRD:translation MesoRD:x="0"
+			      MesoRD:y="1"
+			      MesoRD:z="0"
+			      MesoRD:units="um">
+	    <MesoRD:box MesoRD:x="1"
+			MesoRD:y="1"
+			MesoRD:z="1"
+			MesoRD:units="um"/>
+	  </MesoRD:translation>
+	  </MesoRD:csg>
+      </annotation>
+    </compartment>
+    <compartment id="CompartmentTwo" 
+		 units="litre"
+		 spatialDimensions="3">
+      <annotation>
+	<MesoRD:csg xmlns:MesoRD="http://www.icm.uu.se">
+	  <MesoRD:difference>
+	    <MesoRD:box MesoRD:x="1"
+			MesoRD:y="1"
+			MesoRD:z="1"
+			MesoRD:units="um">
+            <MesoRD:pbc MesoRD:x="true"
+                        MesoRD:y="true"
+                        MesoRD:z="true"/>
+	    </MesoRD:box>
+          <MesoRD:compartment MesoRD:id="CompartmentOne"/>
+        </MesoRD:difference>
+	</MesoRD:csg>
+      </annotation>
+    </compartment>
+  </listOfCompartments>
+
+
+
+  <!-- ***********
+       * SPECIES *
+       *********** -->
+  <listOfSpecies>
+    <species id="A1"
+             boundaryCondition="false"
+             compartment="CompartmentOne"
+             hasOnlySubstanceUnits="true"
+             initialAmount="1000"
+             name="A"
+             substanceUnits="item"> 
+      <annotation>
+	<MesoRD:species_diffusion xmlns:MesoRD="http://www.icm.uu.se">
+	  <MesoRD:diffusion MesoRD:compartment="CompartmentOne"
+			    MesoRD:rate="1e-8"
+			    MesoRD:units="cm2ps"/>
+	  <MesoRD:diffusion MesoRD:compartment="CompartmentTwo"
+			    MesoRD:rate="1e-8"
+			    MesoRD:units="cm2ps"/>
+	</MesoRD:species_diffusion>
+      </annotation>
+    </species>
+  </listOfSpecies>
+</model>
+</sbml>

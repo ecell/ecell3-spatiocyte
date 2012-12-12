@@ -2,13 +2,16 @@ import time
 import pickle
 import gc
 
-gc.disable()
-#T = 1e-5
-#L = 1e-6
-#N = 1e+3
-#R = 2.5e-9
-#D = 1e-12
-#filename = 'tempfile.txt'
+try:
+  T
+except NameError:
+  T = 1e-1
+  L = 1e-6
+  N = 1e+3
+  R = 2.5e-9
+  D = 1e-12
+  filename = 'tempfile.txt'
+
 stirTime = T*1e-3
 
 print "parameters=\"{'T':%0.6e, 'L':%0.6e, 'N':%0.6e, 'R':%0.6e, 'D':%0.6e, 'filename':%s}\"" %(T, L, N, R, D, filename)
@@ -41,5 +44,6 @@ gc.enable()
 duration = end-start
 f = open(filename, 'w')
 pickle.dump(duration, f)
+print duration
 f.close()
 
