@@ -68,15 +68,17 @@ public:
     variableC(NULL),
     variableD(NULL), 
     variableE(NULL),
-    variableF(NULL),
-    moleculeA(NULL),
-    moleculeB(NULL),
-    moleculeC(NULL),
-    moleculeD(NULL),
-    moleculeE(NULL),
-    moleculeF(NULL),
-    moleculeP(NULL),
-    moleculeS(NULL) {}
+    variableF(NULL)
+  {
+    moleculeA = theNullCoord;
+    moleculeB = theNullCoord;
+    moleculeC = theNullCoord;
+    moleculeD = theNullCoord;
+    moleculeE = theNullCoord;
+    moleculeF = theNullCoord;
+    moleculeP = theNullCoord;
+    moleculeS = theNullCoord;
+  }
   virtual ~ReactionProcess() {}
   SIMPLE_SET_GET_METHOD(Real, k);
   SIMPLE_SET_GET_METHOD(Real, p);
@@ -171,31 +173,31 @@ public:
     {
       return E;
     }
-  virtual Voxel* getMoleculeA()
+  virtual unsigned getMoleculeA()
     {
       return moleculeA;
     }
-  virtual Voxel* getMoleculeB()
+  virtual unsigned getMoleculeB()
     {
       return moleculeB;
     }
-  virtual Voxel* getMoleculeC()
+  virtual unsigned getMoleculeC()
     {
       return moleculeC;
     }
-  virtual Voxel* getMoleculeD()
+  virtual unsigned getMoleculeD()
     {
       return moleculeD;
     }
-  virtual Voxel* getMoleculeE()
+  virtual unsigned getMoleculeE()
     {
       return moleculeE;
     }
-  virtual Voxel* getMoleculeP()
+  virtual unsigned getMoleculeP()
     {
       return moleculeP;
     }
-  virtual Voxel* getMoleculeS()
+  virtual unsigned getMoleculeS()
     {
       return moleculeS;
     }
@@ -228,14 +230,14 @@ protected:
   Variable* variableD;
   Variable* variableE;
   Variable* variableF;
-  Voxel* moleculeA;
-  Voxel* moleculeB;
-  Voxel* moleculeC;
-  Voxel* moleculeD;
-  Voxel* moleculeE;
-  Voxel* moleculeF;
-  Voxel* moleculeP;
-  Voxel* moleculeS;
+  unsigned moleculeA;
+  unsigned moleculeB;
+  unsigned moleculeC;
+  unsigned moleculeD;
+  unsigned moleculeE;
+  unsigned moleculeF;
+  unsigned moleculeP;
+  unsigned moleculeS;
   std::vector<SpatiocyteProcess*> theInterruptedProcesses;
 };
 

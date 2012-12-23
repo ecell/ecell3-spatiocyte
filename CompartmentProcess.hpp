@@ -96,6 +96,13 @@ public:
   virtual void prepreinitialize()
     {
       SpatiocyteProcess::prepreinitialize();
+    }
+  virtual void initialize()
+    {
+      if(isInitialized)
+        {
+          return;
+        }
       theInterfaceVariable = createVariable("Interface");
       theVacantVariable = createVariable("Vacant");
       if(LipidRadius)
@@ -108,13 +115,6 @@ public:
             {
               theLipidVariable = createVariable("Lipid");
             }
-        }
-    }
-  virtual void initialize()
-    {
-      if(isInitialized)
-        {
-          return;
         }
       SpatiocyteProcess::initialize();
       theInterfaceSpecies = theSpatiocyteStepper->addSpecies(
@@ -210,7 +210,7 @@ public:
   void enlistInterfaceVoxels();
   void enlistNonIntersectInterfaceVoxels();
   void enlistSubunitInterfaceAdjoins();
-  void addNonIntersectInterfaceVoxel(Voxel&, Point&);
+  void addNonIntersectInterfaceVoxel(unsigned, Point&);
   void rotate(Point&);
   void addAdjoin(Voxel&, unsigned);
   bool isInside(Point&);

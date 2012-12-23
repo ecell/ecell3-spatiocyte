@@ -117,7 +117,7 @@ private:
   void setIntersectingPeers();
   void printProcessParameters();
   void checkSurfaceComp();
-  void shuffleAdjoiningCoords();
+  void shuffleAdjoins();
   void setLatticeProperties();
   void checkModel();
   void resizeProcessLattice();
@@ -185,7 +185,7 @@ private:
   bool SearchVacant;
   unsigned short theNullID;
   unsigned LatticeType; 
-  unsigned theAdjoiningCoordSize;
+  unsigned theAdjoinSize;
   unsigned theCellShape;
   unsigned theRowSize;
   unsigned theColSize;

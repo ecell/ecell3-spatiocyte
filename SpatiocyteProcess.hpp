@@ -135,7 +135,7 @@ public:
                                     unsigned aNullCoord, unsigned aNullID)
     {
       theLattice = aLattice;
-      theAdjoiningCoordSize = anAdjoiningCoordSize;
+      theAdjoinSize = anAdjoiningCoordSize;
       theNullCoord = aNullCoord;
       theNullID = aNullID;
     }
@@ -208,7 +208,7 @@ protected:
   bool isInitialized;
   bool isPriorityQueued;
   int thePriority;
-  unsigned theAdjoiningCoordSize;
+  unsigned theAdjoinSize;
   unsigned theNullCoord;
   unsigned theNullID;
   double theInterval;

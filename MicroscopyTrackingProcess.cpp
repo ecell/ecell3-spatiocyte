@@ -47,7 +47,7 @@ void MicroscopyTrackingProcess::incSpeciesLatticeCount()
           for(unsigned int k(1); k != theLatticeSpeciesIndices[i].size(); ++k)
             {
               ++theFreqLattice[theLatticeSpeciesIndices[i][k]][
-                aMolecule.adjoiningCoords[k-1]];
+                aMolecule.adjoins[k-1]];
             }
         }
     }

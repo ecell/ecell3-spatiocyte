@@ -155,6 +155,7 @@ void VisualizationLogProcess::logPolymers(int anIndex)
 
 void VisualizationLogProcess::logSourceMolecules(int anIndex)
 {
+  /*
   Species* aSpecies(thePolymerSpecies[anIndex]);
   int aSourceIndex(theLatticeSpecies.size()+anIndex);
   theLogFile.write((char*)(&aSourceIndex), sizeof(aSourceIndex));
@@ -166,10 +167,12 @@ void VisualizationLogProcess::logSourceMolecules(int anIndex)
       unsigned int aCoord(aCoords[i]);
       theLogFile.write((char*)(&aCoord), sizeof(aCoord));
     }
+    */
 }  
 
 void VisualizationLogProcess::logTargetMolecules(int anIndex)
 {
+  /*
   Species* aSpecies(thePolymerSpecies[anIndex]);
   int aTargetIndex(theLatticeSpecies.size()+thePolymerSpecies.size()+anIndex);
   theLogFile.write((char*)(&aTargetIndex), sizeof(aTargetIndex));
@@ -181,10 +184,12 @@ void VisualizationLogProcess::logTargetMolecules(int anIndex)
       unsigned int aCoord(aCoords[i]);
       theLogFile.write((char*)(&aCoord), sizeof(aCoord));
     }
+    */
 }  
 
 void VisualizationLogProcess::logSharedMolecules(int anIndex)
 {
+  /*
   Species* aSpecies(thePolymerSpecies[anIndex]);
   int aSharedIndex(theLatticeSpecies.size()+thePolymerSpecies.size()*2+anIndex);
   theLogFile.write((char*)(&aSharedIndex), sizeof(aSharedIndex));
@@ -196,6 +201,7 @@ void VisualizationLogProcess::logSharedMolecules(int anIndex)
       unsigned int aCoord(aCoords[i]);
       theLogFile.write((char*)(&aCoord), sizeof(aCoord));
     }
+    */
 }  
 
 void VisualizationLogProcess::logSpecies()

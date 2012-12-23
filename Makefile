@@ -10,15 +10,15 @@ VisualizationLogProcess\
 CompartmentProcess\
 ErythrocyteProcess\
 H5VisualizationLogProcess\
-IteratingLogProcess\
 DiffusionInfluencedReactionProcess\
+IteratingLogProcess\
 OscillationAnalysisProcess\
 SpatiocyteNextReactionProcess\
 MicroscopyTrackingProcess\
+DiffusionProcess\
 CoordinateLogProcess\
 HistogramLogProcess\
 MoleculePopulateProcess\
-DiffusionProcess\
 TagProcess\
 PeriodicBoundaryDiffusionProcess
 #PolymerFragmentationProcess\

@@ -111,20 +111,10 @@ struct Voxel
 {
   unsigned short id;
   unsigned short diffuseSize;
-  unsigned short adjoiningSize;
-  //We use short here to maintain the size of Voxel as 128 bytes which helps
-  //prefetching. Species ID:
-  //Try to limit the adjoiningSize <= 6:
-  unsigned int coord;
-  unsigned int* adjoiningCoords;
+  unsigned short adjoinSize;
+  unsigned short coord;
+  unsigned int* adjoins;
   Point* point;
-  /*
-  //remove initAdjoins once MicrotubuleProcess is fixed:
-  unsigned int* initAdjoins;
-  Subunit* subunit;
-  //Contains adjoining and extended surface voxels:
-  std::vector<std::vector<unsigned int> >* surfaceCoords;
-  */
 };
 
 struct Comp

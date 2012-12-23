@@ -50,7 +50,7 @@ void ErythrocyteProcess::populateMolecules()
 {
   for(unsigned int i(0); i != filamentCoords.size(); ++i)
     {
-      theSpectrinSpecies->addMolecule(&(*theLattice)[filamentCoords[i]]);
+      theSpectrinSpecies->addMolecule(filamentCoords[i]);
     }
   theSpectrinSpecies->setIsPopulated();
   std::cout << "size of spectrin:" << theSpectrinSpecies->size() << std::endl;
@@ -126,11 +126,11 @@ void ErythrocyteProcess::initializeProtofilaments()
       unsigned int cnt(getIntersectCount(aPoint, aCoord));
       if(cnt == 1)
         {
-          theSpectrinSpecies->addMolecule(&(*theLattice)[aCoord]);
+          theSpectrinSpecies->addMolecule(aCoord);
         }
       else if(cnt > 1)
         {
-          theVertexSpecies->addMolecule(&(*theLattice)[aCoord]);
+          theVertexSpecies->addMolecule(aCoord);
         }
     }
 }
@@ -213,10 +213,10 @@ bool ErythrocyteProcess::isOnPlane(Point& N, Point& P, Point& T,
   if(isInsidePlane(N, P, T))
     {
       Voxel& aVoxel((*theLattice)[aCoord]);
-      for(unsigned int j(0); j != aVoxel.adjoiningSize; ++j)
+      for(unsigned int j(0); j != aVoxel.adjoinSize; ++j)
         {
           Point adPoint(theSpatiocyteStepper->coord2point(
-                            aVoxel.adjoiningCoords[j]));
+                            aVoxel.adjoins[j]));
           if(!isInsidePlane(N, P, adPoint))
             {
               return true;

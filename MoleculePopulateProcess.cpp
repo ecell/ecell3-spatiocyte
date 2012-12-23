@@ -158,7 +158,7 @@ void MoleculePopulateProcess::populateUniformOnMultiscale(Species* aSpecies)
             }
           for(unsigned int i(0); i != aSize; ++i)
             {
-              Voxel* aMolecule;
+              unsigned aMolecule;
               //After a molecule is added, the diffusive vacant species
               //molecule list is not updated, so we need to check if
               //it really is still vacant:
@@ -204,7 +204,7 @@ void MoleculePopulateProcess::populateUniformOnDiffusiveVacant(Species*
             }
           for(unsigned int i(0); i != aSize; ++i)
             {
-              Voxel* aMolecule;
+              unsigned aMolecule;
               //After a molecule is added, the diffusive vacant species
               //molecule list is not updated, so we need to check if
               //it really is still vacant:
@@ -242,7 +242,7 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
                   aCoord = aVacantSpecies->getCoord(aList[(*aCount)++]); 
                 }
               while((*theLattice)[aCoord].id != aVacantSpecies->getID());
-              aSpecies->addMolecule(&(*theLattice)[aCoord]);
+              aSpecies->addMolecule(aCoord);
             }
         }
       else
@@ -275,7 +275,7 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
                                 getStepper()->getRng(), availableVoxelSize));
                 }
               while((*theLattice)[aCoord].id != aVacantSpecies->getID());
-              aSpecies->addMolecule(&(*theLattice)[aCoord]);
+              aSpecies->addMolecule(aCoord);
             }
         }
       else
@@ -350,10 +350,10 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
   std::random_shuffle(aCoords.begin(), aCoords.end());
   for(unsigned int i(0); i != aCoords.size(); ++i)
     {
-      Voxel* aVoxel(&(*theLattice)[aCoords[i]]);
-      if(aSpecies->size() < aSize && aSpecies->isPopulatable(aVoxel))
+      unsigned aCoord(aCoords[i]);
+      if(aSpecies->size() < aSize && aSpecies->isPopulatable(aCoord))
         {
-          aSpecies->addMolecule(aVoxel);
+          aSpecies->addMolecule(aCoord);
         }
     }
 }

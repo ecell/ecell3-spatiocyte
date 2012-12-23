@@ -151,9 +151,9 @@ protected:
   virtual bool reactACDbind(Species*, Species*, Species*);
   virtual void reactABCD();
   virtual bool reactMultiABC();
-  virtual Voxel* reactvAC(Variable*, Species*);
+  virtual unsigned reactvAC(Variable*, Species*);
   virtual Comp* getComp2D(Species*);
-  virtual Voxel* reactvAvBC(Species*);
+  virtual unsigned reactvAvBC(Species*);
   Real getPropensity_ZerothOrder(); 
   Real getPropensity_FirstOrder();
   Real getPropensity_SecondOrder_TwoSubstrates(); 
@@ -171,7 +171,7 @@ protected:
   unsigned nextIndexA;
   std::stringstream pFormula;
   RealMethodProxy theGetPropensityMethodPtr;  
-  std::vector<Voxel*> moleculesA;
+  std::vector<unsigned> moleculesA;
 };
 
 #endif /* __SpatiocyteNextReactionProcess_hpp */
