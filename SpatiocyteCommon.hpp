@@ -111,7 +111,6 @@ struct Voxel
 {
   unsigned short id;
   unsigned short diffuseSize;
-  unsigned int* adjoins;
 };
 
 struct VoxelInfo

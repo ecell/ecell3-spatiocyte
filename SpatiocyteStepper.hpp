@@ -204,6 +204,7 @@ private:
   std::vector<Comp*> theComps;
   std::vector<Voxel> theLattice;
   std::vector<VoxelInfo> theInfo;
+  std::vector<unsigned> theAdjoins;
   std::vector<Process*> theExternInterruptedProcesses;
   std::vector<std::vector<unsigned> > theCoordMols;
 };
