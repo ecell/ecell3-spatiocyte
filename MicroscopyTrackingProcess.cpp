@@ -64,21 +64,7 @@ void MicroscopyTrackingProcess::logFluorescentSpecies()
           if(theFreqLattice[j][i])
             {
               aMols.push_back(i);
-              /*
-              if(theLatticeSpecies[j]->getIsPolymer())
-                {
-                  aPoints.push_back((*theLattice)[i].subunit->subunitPoint);
-                }
-              else if((*theLattice)[i].point)
-                */
-              if((*theLattice)[i].point)
-                {
-                  aPoints.push_back(*(*theLattice)[i].point);
-                }
-              else
-                {
-                  aPoints.push_back(theSpatiocyteStepper->coord2point(i));
-                }
+              aPoints.push_back((*theInfo)[i].point);
               break;
             }
         }

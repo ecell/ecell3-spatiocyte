@@ -54,7 +54,7 @@ public:
     SearchVacant(false),
     LatticeType(HCP_LATTICE),
     VoxelRadius(10e-9),
-    theNormalizedVoxelRadius(0.5) {}
+    nVoxelRadius(0.5) {}
   virtual ~SpatiocyteStepper() {}
   virtual void initialize();
   // need to check interrupt when we suddenly stop the simulation, do we
@@ -192,7 +192,7 @@ private:
   unsigned theLayerSize;
   unsigned theBioSpeciesSize;
   double VoxelRadius; //r_v
-  double theNormalizedVoxelRadius;
+  double nVoxelRadius;
   double theHCPl;
   double theHCPx;
   double theHCPy;
@@ -203,6 +203,7 @@ private:
   std::vector<Species*> theSpecies;
   std::vector<Comp*> theComps;
   std::vector<Voxel> theLattice;
+  std::vector<VoxelInfo> theInfo;
   std::vector<Process*> theExternInterruptedProcesses;
   std::vector<std::vector<unsigned> > theCoordMols;
 };

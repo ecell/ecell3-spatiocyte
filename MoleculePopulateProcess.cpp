@@ -325,7 +325,7 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
   for(unsigned int i(0); i != aVacantSize; ++i)
     {
       unsigned int aMol(aVacantSpecies->getPopulatableMol(i));
-      Point aPoint(aVacantSpecies->coord2point(aMol));
+      Point& aPoint((*theInfo)[aMol].point);
       if((*theLattice)[aMol].id == aSpecies->getVacantID() &&
          aPoint.x < maxX && aPoint.x > minX &&
          aPoint.y < maxY && aPoint.y > minY &&

@@ -212,7 +212,7 @@ public:
   void enlistSubunitInterfaceAdjoins();
   void addNonIntersectInterfaceVoxel(unsigned, Point&);
   void rotate(Point&);
-  void addAdjoin(Voxel&, unsigned);
+  void addAdjoin(unsigned, unsigned);
   bool isInside(Point&);
   void setSpeciesIntersectLipids();
   Point getStartVoxelPoint();

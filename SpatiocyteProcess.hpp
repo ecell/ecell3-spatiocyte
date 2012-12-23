@@ -131,10 +131,12 @@ public:
       thePriorityQueue = aPriorityQueue;
     }
   virtual void setLatticeProperties(std::vector<Voxel>* aLattice,
+                                    std::vector<VoxelInfo>* anInfo,
                                     unsigned anAdjoiningMolSize,
                                     unsigned aNullMol, unsigned aNullID)
     {
       theLattice = aLattice;
+      theInfo = anInfo;
       theAdjoinSize = anAdjoiningMolSize;
       theNullMol = aNullMol;
       theNullID = aNullID;
@@ -218,6 +220,7 @@ protected:
   SpatiocyteStepper* theSpatiocyteStepper;
   std::vector<Species*> theSpecies;
   std::vector<Species*> theProcessSpecies;
+  std::vector<VoxelInfo>* theInfo;
   std::vector<Voxel>* theLattice;
   VariableReferenceVector thePositiveVariableReferences;
   VariableReferenceVector theNegativeVariableReferences;

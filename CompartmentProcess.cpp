@@ -191,7 +191,6 @@ void CompartmentProcess::initializeThird()
       //set by DiffusionProcess in initializeSecond:
       setVacantCompMultiscaleProperties();
 
-      thePoints.resize(endMol-subStartMol);
       initializeVectors();
       initializeFilaments(subunitStart, Filaments, Subunits, nDiffuseRadius,
                           theVacantSpecies, subStartMol);
@@ -232,12 +231,12 @@ Point CompartmentProcess::getStartVoxelPoint()
   double dist;
   if(surface->size())
     {
-      nearest = theSpatiocyteStepper->coord2point(surface->getMol(0));
+      nearest = surface->getPoint(0);
       dist = getDistance(nearest, origin);
     }
   for(unsigned i(1); i < surface->size(); ++i)
     {
-      Point aPoint(theSpatiocyteStepper->coord2point(surface->getMol(i)));
+      Point& aPoint(surface->getPoint(i));
       double aDist(getDistance(aPoint, origin));
       if(aDist < dist)
         {
@@ -326,10 +325,9 @@ void CompartmentProcess::addCompVoxel(unsigned rowIndex,
                                       unsigned aCols)
 {
   unsigned aMol(aStartMol+rowIndex*aCols+colIndex);
-  Voxel& aVoxel((*theLattice)[aMol]);
-  aVoxel.point = &thePoints[aStartMol-subStartMol+rowIndex*aCols+colIndex];
-  *aVoxel.point = aPoint;
-  aVoxel.adjoinSize = 0;
+  VoxelInfo& anInfo((*theInfo)[aMol]);
+  anInfo.point = aPoint;
+  anInfo.adjoinSize = 0;
   aVacant->addCompVoxel(aMol);
 }
 
@@ -341,8 +339,8 @@ void CompartmentProcess::elongateFilaments(Species* aVacant,
 {
   for(unsigned i(0); i != aRows; ++i)
     {
-      Voxel* startVoxel(&(*theLattice)[aStartMol+i*aCols]);
-      Point A(*startVoxel->point);
+      VoxelInfo& anInfo((*theInfo)[aStartMol+i*aCols]);
+      Point A(anInfo.point);
       for(unsigned j(1); j != aCols; ++j)
         {
           disp_(A, lengthVector, aRadius*2);
@@ -447,22 +445,22 @@ void CompartmentProcess::setDiffuseSize(unsigned start, unsigned end)
   for(unsigned i(start); i != end; ++i)
     {
       Voxel& subunit((*theLattice)[i]);
-      subunit.diffuseSize = subunit.adjoinSize;
+      subunit.diffuseSize = (*theInfo)[i].adjoinSize;
     }
 }
 
 void CompartmentProcess::connectSubunit(unsigned a, unsigned b)
 {
-  Voxel& aVoxel((*theLattice)[a]);
-  Voxel& adjoin((*theLattice)[b]);
-  addAdjoin(aVoxel, b);
-  addAdjoin(adjoin, a);
+  addAdjoin(a, b);
+  addAdjoin(b, a);
 }
 
-void CompartmentProcess::addAdjoin(Voxel& aVoxel, unsigned mol)
+void CompartmentProcess::addAdjoin(unsigned sub, unsigned mol)
 {
-  unsigned* temp(new unsigned[aVoxel.adjoinSize+1]);
-  for(unsigned int i(0); i != aVoxel.adjoinSize; ++i)
+  VoxelInfo& anInfo((*theInfo)[sub]);
+  Voxel& aVoxel((*theLattice)[sub]);
+  unsigned* temp(new unsigned[anInfo.adjoinSize+1]);
+  for(unsigned int i(0); i != anInfo.adjoinSize; ++i)
     {
       //Avoid duplicated adjoins:
       if(aVoxel.adjoins[i] == mol)
@@ -473,7 +471,7 @@ void CompartmentProcess::addAdjoin(Voxel& aVoxel, unsigned mol)
       temp[i] = aVoxel.adjoins[i];
     }
   delete[] aVoxel.adjoins;
-  temp[aVoxel.adjoinSize++] = mol;
+  temp[anInfo.adjoinSize++] = mol;
   aVoxel.adjoins = temp;
 }
 
@@ -492,10 +490,8 @@ void CompartmentProcess::enlistInterfaceVoxels()
   subunitInterfaces.resize(Filaments*Subunits);
   for(unsigned i(subStartMol); i != lipStartMol; ++i)
     {
-      Voxel& subunit((*theLattice)[i]);
-      Point center(*subunit.point);
-      Point bottomLeft(*subunit.point);
-      Point topRight(*subunit.point);
+      Point bottomLeft((*theInfo)[i].point);
+      Point topRight((*theInfo)[i].point);
       bottomLeft.x -= nSubunitRadius+theSpatiocyteStepper->getColLength();
       bottomLeft.y -= nSubunitRadius+theSpatiocyteStepper->getLayerLength();
       bottomLeft.z -= nSubunitRadius+theSpatiocyteStepper->getRowLength();
@@ -527,8 +523,7 @@ void CompartmentProcess::enlistInterfaceVoxels()
 void CompartmentProcess::addInterfaceVoxel(unsigned subunitMol,
                                            unsigned voxelMol)
 { 
-  Voxel& subunit((*theLattice)[subunitMol]);
-  Point subunitPoint(*subunit.point);
+  Point& subunitPoint((*theInfo)[subunitMol].point);
   Point voxelPoint(theSpatiocyteStepper->coord2point(voxelMol));
   double dist(getDistance(subunitPoint, voxelPoint));
   //Should use SubunitRadius instead of DiffuseRadius since it is the
@@ -555,16 +550,15 @@ void CompartmentProcess::enlistSubunitInterfaceAdjoins()
     {
       for(unsigned j(0); j != subunitInterfaces[i].size(); ++j)
         {
-          Voxel& subunit((*theLattice)[i+subStartMol]);
+          addAdjoin(subunitInterfaces[i][j], i+subStartMol);
           Voxel& interface((*theLattice)[subunitInterfaces[i][j]]);
-          addAdjoin(interface, i+subStartMol);
           for(unsigned k(0); k != interface.diffuseSize; ++k)
             {
               unsigned mol(interface.adjoins[k]);
               Voxel& adjoin((*theLattice)[mol]);
               if(adjoin.id != theInterfaceSpecies->getID())
                 {
-                  addAdjoin(subunit, mol);
+                  addAdjoin(i+subStartMol, mol);
                 }
             }
         }
@@ -624,7 +618,7 @@ void CompartmentProcess::addNonIntersectInterfaceVoxel(unsigned aMol,
       Voxel& adjoin((*theLattice)[aVoxel.adjoins[i]]);
       if(adjoin.id != theInterfaceSpecies->getID())
         {
-          Point pointB(theSpatiocyteStepper->coord2point(adjoin.coord));
+          Point& pointB((*theInfo)[aVoxel.adjoins[i]].point);
           double distB(point2planeDist(pointB, surfaceNormal, surfaceDisplace));
           //if not on the same side of the plane:
           if((distA < 0) != (distB < 0))

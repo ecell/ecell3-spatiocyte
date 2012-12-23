@@ -170,7 +170,7 @@ Point SpatiocyteStepper::getCenterPoint()
 
 double SpatiocyteStepper::getNormalizedVoxelRadius()
 {
-  return theNormalizedVoxelRadius;
+  return nVoxelRadius;
 }
 
 void SpatiocyteStepper::reset(int seed)
@@ -195,7 +195,7 @@ Species* SpatiocyteStepper::addSpecies(Variable* aVariable)
     {
       Species *aSpecies(new Species(this, aVariable, theSpecies.size(),
                           (int)aVariable->getValue(), getRng(), VoxelRadius,
-                          theLattice));
+                          theLattice, theInfo));
       theSpecies.push_back(aSpecies);
       return aSpecies;
     }
@@ -336,14 +336,14 @@ Point SpatiocyteStepper::getPeriodicPoint(unsigned aMol,
     {
     case HCP_LATTICE: 
       aPoint.y = (aCol%2)*theHCPl+theHCPy*aLayer;
-      aPoint.z = aRow*2*theNormalizedVoxelRadius+
-        ((aLayer+aCol)%2)*theNormalizedVoxelRadius;
+      aPoint.z = aRow*2*nVoxelRadius+
+        ((aLayer+aCol)%2)*nVoxelRadius;
       aPoint.x = aCol*theHCPx;
       break;
     case CUBIC_LATTICE:
-      aPoint.y = aLayer*2*theNormalizedVoxelRadius;
-      aPoint.z = aRow*2*theNormalizedVoxelRadius;
-      aPoint.x = aCol*2*theNormalizedVoxelRadius;
+      aPoint.y = aLayer*2*nVoxelRadius;
+      aPoint.z = aRow*2*nVoxelRadius;
+      aPoint.x = aCol*2*nVoxelRadius;
       break;
     }
   return aPoint;
@@ -474,7 +474,7 @@ void SpatiocyteStepper::broadcastLatticeProperties()
     {      
       SpatiocyteProcessInterface*
         aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
-      aProcess->setLatticeProperties(&theLattice, theAdjoinSize,
+      aProcess->setLatticeProperties(&theLattice, &theInfo, theAdjoinSize,
                                      theNullMol, theNullID);
     }
 }
@@ -524,23 +524,8 @@ void SpatiocyteStepper::resizeProcessLattice()
         aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
       endMol += aProcess->getLatticeResizeMol(endMol);
     }
-  //Save the coords of molecules before resizing theLattice
-  //because the voxel address pointed by molecule list will become
-  //invalid once it is resized:
-  for(unsigned i(0); i != theSpecies.size(); ++i)
-    {
-      theSpecies[i]->saveMols();
-    }
   theLattice.resize(endMol);
-  for(unsigned i(startMol); i != endMol; ++i)
-    {
-      theLattice[i].coord = i;
-    }
-  //Update the molecule list with the new voxel addresses:
-  for(unsigned i(0); i != theSpecies.size(); ++i)
-    {
-      theSpecies[i]->updateMolPointers();
-    }
+  theInfo.resize(endMol);
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
     {    
@@ -685,7 +670,7 @@ void SpatiocyteStepper::registerComps()
   //Create one last species to represent a NULL Comp. This is for
   //voxels that do not belong to any Comps:
   Species* aSpecies(new Species(this, NULL, theSpecies.size(), 0, getRng(),
-                                VoxelRadius, theLattice));
+                                VoxelRadius, theLattice, theInfo));
   theSpecies.push_back(aSpecies);
   aSpecies->setComp(NULL);
   theNullID = aSpecies->getID(); 
@@ -916,9 +901,9 @@ void SpatiocyteStepper::setLatticeProperties()
     {
     case HCP_LATTICE: 
       theAdjoinSize = 12;
-      theHCPl = theNormalizedVoxelRadius/sqrt(3); 
-      theHCPx = theNormalizedVoxelRadius*sqrt(8.0/3); //Lx
-      theHCPy = theNormalizedVoxelRadius*sqrt(3); //Ly
+      theHCPl = nVoxelRadius/sqrt(3); 
+      theHCPx = nVoxelRadius*sqrt(8.0/3); //Lx
+      theHCPy = nVoxelRadius*sqrt(3); //Ly
       break;
     case CUBIC_LATTICE:
       theAdjoinSize = 6;
@@ -939,14 +924,14 @@ void SpatiocyteStepper::setLatticeProperties()
         {
         case HCP_LATTICE: 
           theCenterPoint.z = aRootComp->lengthZ/2+4*
-            theNormalizedVoxelRadius; //row
+            nVoxelRadius; //row
           theCenterPoint.y = aRootComp->lengthY/2+2*theHCPy; //layer
           theCenterPoint.x = aRootComp->lengthX/2+2*theHCPx; //column
           break;
         case CUBIC_LATTICE:
-          theCenterPoint.z = aRootComp->lengthZ/2+8*theNormalizedVoxelRadius;
-          theCenterPoint.y = aRootComp->lengthY/2+8*theNormalizedVoxelRadius;
-          theCenterPoint.x = aRootComp->lengthX/2+8*theNormalizedVoxelRadius;
+          theCenterPoint.z = aRootComp->lengthZ/2+8*nVoxelRadius;
+          theCenterPoint.y = aRootComp->lengthY/2+8*nVoxelRadius;
+          theCenterPoint.x = aRootComp->lengthX/2+8*nVoxelRadius;
           break;
         }
     }
@@ -955,17 +940,17 @@ void SpatiocyteStepper::setLatticeProperties()
     {
     case HCP_LATTICE: 
       theRowSize = (unsigned)rint((theCenterPoint.z)/
-                                      (theNormalizedVoxelRadius));
+                                      (nVoxelRadius));
       theLayerSize = (unsigned)rint((theCenterPoint.y*2)/theHCPy);
       theColSize = (unsigned)rint((theCenterPoint.x*2)/theHCPx);
       break;
     case CUBIC_LATTICE:
       theRowSize = (unsigned)rint((theCenterPoint.z)/
-                                      (theNormalizedVoxelRadius));
+                                      (nVoxelRadius));
       theLayerSize = (unsigned)rint((theCenterPoint.y)/
-                                      (theNormalizedVoxelRadius));
+                                      (nVoxelRadius));
       theColSize = (unsigned)rint((theCenterPoint.x)/
-                                      (theNormalizedVoxelRadius));
+                                      (nVoxelRadius));
       break;
     }
   //For the CUBOID cell geometry, we need to readjust the size of
@@ -988,6 +973,7 @@ void SpatiocyteStepper::setLatticeProperties()
   //to the voxel will become invalid once you do that:
   //Also add one more voxel for the nullVoxel:
   theLattice.resize(theRowSize*theLayerSize*theColSize+1);
+  theInfo.resize(theRowSize*theLayerSize*theColSize+1);
   //Initialize the null coord:
   theNullMol = theRowSize*theLayerSize*theColSize;
   theLattice[theNullMol].id = theNullID;
@@ -1236,40 +1222,40 @@ void SpatiocyteStepper::constructLattice()
 { 
   Comp* aRootComp(theComps[0]);
   unsigned aSize(theRowSize*theLayerSize*theColSize);
-  unsigned a(0);
   unsigned short rootID(aRootComp->vacantSpecies->getID());
-  for(std::vector<Voxel>::iterator i(theLattice.begin()); a != aSize; ++i, ++a)
+  for(unsigned a(0); a != aSize;  ++a)
     { 
-      (*i).coord = a;
-      (*i).adjoins = new unsigned[theAdjoinSize];
-      //(*i).initAdjoins = NULL;
-      (*i).diffuseSize = theAdjoinSize;
-      (*i).adjoinSize = theAdjoinSize;
-      (*i).point = NULL;
+      theInfo[a].coord = a;
+      theInfo[a].adjoinSize = theAdjoinSize;
       unsigned aCol(a/(theRowSize*theLayerSize)); 
       unsigned aLayer((a%(theRowSize*theLayerSize))/theRowSize); 
       unsigned aRow((a%(theRowSize*theLayerSize))%theRowSize); 
+      theInfo[a].point.y = (aCol%2)*theHCPl+theHCPy*aLayer;
+      theInfo[a].point.z = aRow*2*nVoxelRadius+((aLayer+aCol)%2)*nVoxelRadius;
+      theInfo[a].point.x = aCol*theHCPx;
+      theLattice[a].adjoins = new unsigned[theAdjoinSize];
+      theLattice[a].diffuseSize = theAdjoinSize;
       if(aRootComp->geometry == CUBOID || isInsideMol(a, aRootComp, 0))
         {
           //By default, the voxel is vacant and we set it to the root id:
-          (*i).id = rootID;
+          theLattice[a].id = rootID;
           for(unsigned j(0); j != theAdjoinSize; ++j)
             { 
               // By default let the adjoin voxel pointer point to the 
               // source voxel (i.e., itself)
-              (*i).adjoins[j] = a;
+              theLattice[a].adjoins[j] = a;
             } 
-          concatenateVoxel(*i, aRow, aLayer, aCol);
+          concatenateVoxel(theLattice[a], aRow, aLayer, aCol);
         }
       else
         {
           //We set id = theNullID if it is an invalid voxel, i.e., no molecules
           //will occupy it:
-          (*i).id = theNullID;
+          theLattice[a].id = theNullID;
           //Concatenate some of the null voxels close to the surface:
           if(isInsideMol(a, aRootComp, 4))
             {
-              concatenateVoxel(*i, aRow, aLayer, aCol);
+              concatenateVoxel(theLattice[a], aRow, aLayer, aCol);
             }
         }
     }
@@ -1645,14 +1631,14 @@ Point SpatiocyteStepper::coord2point(unsigned aMol)
     {
     case HCP_LATTICE: 
       aPoint.y = (aGlobalCol%2)*theHCPl+theHCPy*aGlobalLayer;
-      aPoint.z = aGlobalRow*2*theNormalizedVoxelRadius+
-        ((aGlobalLayer+aGlobalCol)%2)*theNormalizedVoxelRadius;
+      aPoint.z = aGlobalRow*2*nVoxelRadius+
+        ((aGlobalLayer+aGlobalCol)%2)*nVoxelRadius;
       aPoint.x = aGlobalCol*theHCPx;
       break;
     case CUBIC_LATTICE:
-      aPoint.y = aGlobalLayer*2*theNormalizedVoxelRadius;
-      aPoint.z = aGlobalRow*2*theNormalizedVoxelRadius;
-      aPoint.x = aGlobalCol*2*theNormalizedVoxelRadius;
+      aPoint.y = aGlobalLayer*2*nVoxelRadius;
+      aPoint.z = aGlobalRow*2*nVoxelRadius;
+      aPoint.x = aGlobalCol*2*nVoxelRadius;
       break;
     }
   return aPoint;
@@ -1660,7 +1646,7 @@ Point SpatiocyteStepper::coord2point(unsigned aMol)
 
 double SpatiocyteStepper::getRowLength()
 {
-  return theNormalizedVoxelRadius*2;
+  return nVoxelRadius*2;
 }
 
 double SpatiocyteStepper::getColLength()
@@ -1670,9 +1656,9 @@ double SpatiocyteStepper::getColLength()
     case HCP_LATTICE: 
       return theHCPx;
     case CUBIC_LATTICE:
-      return theNormalizedVoxelRadius*2;
+      return nVoxelRadius*2;
     }
-  return theNormalizedVoxelRadius*2;
+  return nVoxelRadius*2;
 }
 
 double SpatiocyteStepper::getLayerLength()
@@ -1682,9 +1668,9 @@ double SpatiocyteStepper::getLayerLength()
     case HCP_LATTICE: 
       return theHCPy;
     case CUBIC_LATTICE:
-      return theNormalizedVoxelRadius*2;
+      return nVoxelRadius*2;
     }
-  return theNormalizedVoxelRadius*2;
+  return nVoxelRadius*2;
 }
 
 double SpatiocyteStepper::getMinLatticeSpace()
@@ -1694,9 +1680,9 @@ double SpatiocyteStepper::getMinLatticeSpace()
     case HCP_LATTICE: 
       return theHCPl;
     case CUBIC_LATTICE:
-      return theNormalizedVoxelRadius*2;
+      return nVoxelRadius*2;
     }
-  return theNormalizedVoxelRadius*2;
+  return nVoxelRadius*2;
 }
 
 unsigned SpatiocyteStepper::point2coord(Point& aPoint)
@@ -1730,12 +1716,12 @@ void SpatiocyteStepper::point2global(Point aPoint,
       layer = rint((aPoint.y-(aGlobalCol%2)*theHCPl)/
                                         theHCPy);
       row = rint((aPoint.z-((aGlobalLayer+aGlobalCol)%2)*
-          theNormalizedVoxelRadius)/(2*theNormalizedVoxelRadius));
+          nVoxelRadius)/(2*nVoxelRadius));
       break;
     case CUBIC_LATTICE:
-      col = rint(aPoint.x/(2*theNormalizedVoxelRadius));
-      layer = rint(aPoint.y/(2*theNormalizedVoxelRadius));
-      row = rint(aPoint.z/(2*theNormalizedVoxelRadius));
+      col = rint(aPoint.x/(2*nVoxelRadius));
+      layer = rint(aPoint.y/(2*nVoxelRadius));
+      row = rint(aPoint.z/(2*nVoxelRadius));
       break;
     }
   if(row < 0)
@@ -2861,11 +2847,11 @@ bool SpatiocyteStepper::isInsideMol(unsigned aMol,
     {
     case CUBOID:
       if(sqrt(pow(aPoint.x-aCenterPoint.x, 2)) <= 
-         aComp->lengthX/2+theNormalizedVoxelRadius+delta &&
+         aComp->lengthX/2+nVoxelRadius+delta &&
          sqrt(pow(aPoint.y-aCenterPoint.y, 2)) <= 
-         aComp->lengthY/2+theNormalizedVoxelRadius+delta &&
+         aComp->lengthY/2+nVoxelRadius+delta &&
          sqrt(pow(aPoint.z-aCenterPoint.z, 2)) <= 
-         aComp->lengthZ/2+theNormalizedVoxelRadius+delta)
+         aComp->lengthZ/2+nVoxelRadius+delta)
         {
           return true;
         }
@@ -2885,7 +2871,7 @@ bool SpatiocyteStepper::isInsideMol(unsigned aMol,
       aCenterPoint.x = aPoint.x; 
       aWestPoint.x = aComp->centerPoint.x-aComp->lengthX/2;
       anEastPoint.x = aComp->centerPoint.x+aComp->lengthX/2;
-      aRadius = aComp->lengthY/2+theNormalizedVoxelRadius;
+      aRadius = aComp->lengthY/2+nVoxelRadius;
       //If the distance between the voxel and the center point is less than 
       //or equal to the radius, then the voxel must be inside the Comp:
       if((aPoint.x >= aWestPoint.x && aPoint.x <= anEastPoint.x &&
@@ -2899,7 +2885,7 @@ bool SpatiocyteStepper::isInsideMol(unsigned aMol,
       aCenterPoint.x = aPoint.x; 
       aWestPoint.x = aComp->centerPoint.x-aComp->lengthX/2+aComp->lengthY/2;
       anEastPoint.x = aComp->centerPoint.x+aComp->lengthX/2-aComp->lengthY/2;
-      aRadius = aComp->lengthY/2+theNormalizedVoxelRadius;
+      aRadius = aComp->lengthY/2+nVoxelRadius;
       //If the distance between the voxel and the center point is less than 
       //or equal to the radius, then the voxel must be inside the Comp:
       if((aPoint.x >= aWestPoint.x && aPoint.x <= anEastPoint.x &&

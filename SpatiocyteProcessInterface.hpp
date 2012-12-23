@@ -52,8 +52,9 @@ public:
   virtual void setQueueID(ProcessID) = 0;
   virtual void addSubstrateInterrupt(Species*, Voxel*) = 0;
   virtual void removeSubstrateInterrupt(Species*, Voxel*) = 0;
-  virtual void setLatticeProperties(std::vector<Voxel>*, unsigned,
-                                    unsigned, unsigned) = 0;
+  virtual void setLatticeProperties(std::vector<Voxel>*,
+                                    std::vector<VoxelInfo>*,
+                                    unsigned, unsigned, unsigned) = 0;
   virtual void substrateValueChanged(Time) = 0;
   virtual void fire() = 0;
   virtual unsigned getLatticeResizeMol(unsigned) = 0;

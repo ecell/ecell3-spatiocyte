@@ -213,7 +213,7 @@ bool ErythrocyteProcess::isOnPlane(Point& N, Point& P, Point& T,
   if(isInsidePlane(N, P, T))
     {
       Voxel& aVoxel((*theLattice)[aMol]);
-      for(unsigned int j(0); j != aVoxel.adjoinSize; ++j)
+      for(unsigned int j(0); j != (*theInfo)[aMol].adjoinSize; ++j)
         {
           Point adPoint(theSpatiocyteStepper->coord2point(
                             aVoxel.adjoins[j]));

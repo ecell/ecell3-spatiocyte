@@ -111,10 +111,14 @@ struct Voxel
 {
   unsigned short id;
   unsigned short diffuseSize;
-  unsigned short adjoinSize;
-  unsigned short coord;
   unsigned int* adjoins;
-  Point* point;
+};
+
+struct VoxelInfo
+{
+  unsigned short coord;
+  unsigned short adjoinSize;
+  Point point;
 };
 
 struct Comp
