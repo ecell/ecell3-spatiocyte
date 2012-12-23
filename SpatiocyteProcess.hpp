@@ -131,12 +131,12 @@ public:
       thePriorityQueue = aPriorityQueue;
     }
   virtual void setLatticeProperties(std::vector<Voxel>* aLattice,
-                                    unsigned anAdjoiningCoordSize,
-                                    unsigned aNullCoord, unsigned aNullID)
+                                    unsigned anAdjoiningMolSize,
+                                    unsigned aNullMol, unsigned aNullID)
     {
       theLattice = aLattice;
-      theAdjoinSize = anAdjoiningCoordSize;
-      theNullCoord = aNullCoord;
+      theAdjoinSize = anAdjoiningMolSize;
+      theNullMol = aNullMol;
       theNullID = aNullID;
     }
   Time getTime() const
@@ -159,7 +159,7 @@ public:
     {
       return theSpatiocyteStepper->id2species(id);
     }
-  virtual unsigned getLatticeResizeCoord(unsigned)
+  virtual unsigned getLatticeResizeMol(unsigned)
     {
       return 0;
     }
@@ -209,7 +209,7 @@ protected:
   bool isPriorityQueued;
   int thePriority;
   unsigned theAdjoinSize;
-  unsigned theNullCoord;
+  unsigned theNullMol;
   unsigned theNullID;
   double theInterval;
   Time theTime;

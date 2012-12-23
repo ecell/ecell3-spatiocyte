@@ -75,8 +75,8 @@ public:
   void coord2global(unsigned, unsigned&, unsigned&, unsigned&);
   void point2global(Point, unsigned&, unsigned&, unsigned&);
   Comp* system2Comp(System*);
-  bool isBoundaryCoord(unsigned, unsigned);
-  unsigned getPeriodicCoord(unsigned, unsigned, Origin*);
+  bool isBoundaryMol(unsigned, unsigned);
+  unsigned getPeriodicMol(unsigned, unsigned, Origin*);
   unsigned global2coord(unsigned, unsigned, unsigned);
   Point getPeriodicPoint(unsigned, unsigned, Origin*);
   void checkLattice();
@@ -95,15 +95,15 @@ public:
   void rotateX(double, Point*, int sign=1);
   void rotateY(double, Point*, int sign=1);
   void rotateZ(double, Point*, int sign=1);
-  bool isPeriodicEdgeCoord(unsigned, Comp*);
-  bool isRemovableEdgeCoord(unsigned, Comp*);
+  bool isPeriodicEdgeMol(unsigned, Comp*);
+  bool isRemovableEdgeMol(unsigned, Comp*);
   double getRowLength();
   double getColLength();
   double getLayerLength();
   double getMinLatticeSpace();
   void updateSpecies();
   void finalizeSpecies();
-  unsigned getStartCoord();
+  unsigned getStartMol();
 
   virtual GET_METHOD(Real, TimeScale)
   {
@@ -163,13 +163,13 @@ private:
   void replaceVoxel(unsigned, unsigned);
   void replaceUniVoxel(unsigned, unsigned);
   void setMinMaxSurfaceDimensions(unsigned, Comp*);
-  bool isInsideCoord(unsigned, Comp*, double);
+  bool isInsideMol(unsigned, Comp*, double);
   bool isSurfaceVoxel(Voxel&, unsigned, Comp*);
   bool isLineVoxel(Voxel&, unsigned, Comp*);
   bool isEnclosedSurfaceVoxel(Voxel&, unsigned, Comp*);
   bool isEnclosedRootSurfaceVoxel(Voxel&, unsigned, Comp*, Comp*);
-  bool isPeerCoord(unsigned, Comp*);
-  bool isLowerPeerCoord(unsigned, Comp*);
+  bool isPeerMol(unsigned, Comp*);
+  bool isLowerPeerMol(unsigned, Comp*);
   bool isRootSurfaceVoxel(Voxel&, unsigned, Comp*);
   bool isParentSurfaceVoxel(Voxel&, unsigned, Comp*);
   bool compartmentalizeVoxel(unsigned, Comp*);
@@ -196,7 +196,7 @@ private:
   double theHCPl;
   double theHCPx;
   double theHCPy;
-  unsigned theNullCoord;
+  unsigned theNullMol;
   Point theCenterPoint;
   ProcessPriorityQueue thePriorityQueue; 
   std::vector<Species*>::iterator variable2ispecies(Variable*);
@@ -204,6 +204,7 @@ private:
   std::vector<Comp*> theComps;
   std::vector<Voxel> theLattice;
   std::vector<Process*> theExternInterruptedProcesses;
+  std::vector<std::vector<unsigned> > theCoordMols;
 };
 
 #endif /* __SpatiocyteStepper_hpp */

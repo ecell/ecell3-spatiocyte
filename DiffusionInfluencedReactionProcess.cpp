@@ -119,10 +119,10 @@ bool DiffusionInfluencedReactionProcess::react(unsigned molA, unsigned molB,
           moleculeP = nonHD_p->getRandomAdjoin(moleculeA, SearchVacant);
           //Only proceed if we can find an adjoin vacant voxel
           //of A which can be occupied by C:
-          if(moleculeP == theNullCoord)
+          if(moleculeP == theNullMol)
             {
               moleculeP = nonHD_p->getRandomAdjoin(moleculeB, SearchVacant);
-              if(moleculeP == theNullCoord)
+              if(moleculeP == theNullMol)
                 {
                   return false;
                 }
@@ -133,7 +133,7 @@ bool DiffusionInfluencedReactionProcess::react(unsigned molA, unsigned molB,
           (*theLattice)[moleculeB].id = B->getVacantID();
         }
       HD_p->addValue(1);
-      nonHD_p->addMolecule(moleculeP, A->getTag(indexA));
+      nonHD_p->addMol(moleculeP, A->getTag(indexA));
       return true;
     }
   //nonHD_A + nonHD_B -> HD_C:
@@ -161,13 +161,13 @@ bool DiffusionInfluencedReactionProcess::react(unsigned molA, unsigned molB,
             {
               moleculeD = D->getRandomAdjoin(moleculeC, moleculeC,
                                              SearchVacant);
-              if(moleculeD == theNullCoord)
+              if(moleculeD == theNullMol)
                 {
                   return false;
                 }
               (*theLattice)[moleculeB].id = B->getVacantID();
             }
-          D->addMolecule(moleculeD, B->getTag(indexB));
+          D->addMol(moleculeD, B->getTag(indexB));
         }
       else
         {
@@ -188,13 +188,13 @@ bool DiffusionInfluencedReactionProcess::react(unsigned molA, unsigned molB,
             {
               moleculeD = D->getRandomAdjoin(moleculeC, moleculeC,
                                              SearchVacant);
-              if(moleculeD == theNullCoord)
+              if(moleculeD == theNullMol)
                 {
                   return false;
                 }
               (*theLattice)[moleculeA].id = A->getVacantID();
             }
-          D->addMolecule(moleculeD, B->getTag(indexB));
+          D->addMol(moleculeD, B->getTag(indexB));
         }
       else
         {
@@ -205,10 +205,10 @@ bool DiffusionInfluencedReactionProcess::react(unsigned molA, unsigned molB,
   else
     {
       moleculeC = C->getRandomAdjoin(moleculeA, SearchVacant);
-      if(moleculeC == theNullCoord)
+      if(moleculeC == theNullMol)
         {
           moleculeC = C->getRandomAdjoin(moleculeB, SearchVacant);
-          if(moleculeC == theNullCoord)
+          if(moleculeC == theNullMol)
             {
               //Only proceed if we can find an adjoin vacant voxel
               //of A or B which can be occupied by C:
@@ -219,60 +219,60 @@ bool DiffusionInfluencedReactionProcess::react(unsigned molA, unsigned molB,
         {
           moleculeD = D->getRandomAdjoin(moleculeC, moleculeC,
                                                  SearchVacant);
-          if(moleculeD == theNullCoord)
+          if(moleculeD == theNullMol)
             {
               return false;
             }
-          D->addMolecule(moleculeD, B->getTag(indexB));
+          D->addMol(moleculeD, B->getTag(indexB));
         }
       //Hard remove the A molecule since it is not used:
       (*theLattice)[moleculeA].id = A->getVacantID();
       //Hard remove the B molecule since it is not used:
       (*theLattice)[moleculeB].id = B->getVacantID();
     }
-  C->addMolecule(moleculeC, A->getTag(indexA));
-  addMoleculeE();
-  addMoleculeF();
+  C->addMol(moleculeC, A->getTag(indexA));
+  addMolE();
+  addMolF();
   return true;
 }
 
 //positive-coefficient F
-void DiffusionInfluencedReactionProcess::addMoleculeF()
+void DiffusionInfluencedReactionProcess::addMolF()
 {
   if(!F)
     {
       return;
     }
   moleculeF = F->getRandomAdjoin(moleculeC, SearchVacant);
-  if(moleculeF == theNullCoord)
+  if(moleculeF == theNullMol)
     {
       moleculeF = F->getRandomAdjoin(moleculeD, SearchVacant);
-      if(moleculeF == theNullCoord)
+      if(moleculeF == theNullMol)
         {
           return;
         }
     }
-  F->addMolecule(moleculeF);
+  F->addMol(moleculeF);
 }
 
 //zero-coefficient E
 //we create a molecule E at random location in the compartment to avoid
 //rebinding effect, useful to maintain the concentration of a substrate species
 //even after the reaction:
-void DiffusionInfluencedReactionProcess::addMoleculeE()
+void DiffusionInfluencedReactionProcess::addMolE()
 {
   if(!E)
     {
       return;
     }
-  moleculeE = E->getRandomCompCoord(1);
-  if(moleculeE == theNullCoord)
+  moleculeE = E->getRandomCompMol(1);
+  if(moleculeE == theNullMol)
     {
       std::cout << getFullID().asString() << " unable to add molecule E" <<
         std::endl;
       return;
     }
-  E->addMolecule(moleculeE);
+  E->addMol(moleculeE);
 }
 
 void DiffusionInfluencedReactionProcess::finalizeReaction()

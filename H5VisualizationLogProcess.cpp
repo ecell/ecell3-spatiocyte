@@ -45,9 +45,9 @@
 class ParticleData
 {
 public:
-    unsigned int getCoordinate() const
+    unsigned int getMolinate() const
     {
-        return theCoord;
+        return theMol;
     }
 
     unsigned short getSpeciesID() const
@@ -60,11 +60,11 @@ public:
         return theLatticeID;
     }
 
-    ParticleData(unsigned int coord, unsigned short speciesID, unsigned int latticeID)
-        : theCoord(coord), theSpeciesID(speciesID), theLatticeID(latticeID) {}
+    ParticleData(unsigned int mol, unsigned short speciesID, unsigned int latticeID)
+        : theMol(mol), theSpeciesID(speciesID), theLatticeID(latticeID) {}
 
 private:
-    const unsigned int theCoord;
+    const unsigned int theMol;
     const unsigned short theSpeciesID;
     const uint64_t theLatticeID;
 };
@@ -90,7 +90,7 @@ struct ParticleDataPacker
 
     void operator()(archiver_type& arc, ParticleData const* data = 0) const
     {
-        arc << field<uint64_t>("id", &ParticleData::getCoordinate, data);
+        arc << field<uint64_t>("id", &ParticleData::getMolinate, data);
         arc << field<uint64_t>("species_id", &ParticleData::getSpeciesID, data);
         arc << field<uint64_t>("lattice_id", &ParticleData::getLatticeID, data);
     }
@@ -118,7 +118,7 @@ struct SpeciesPacker
     {
         arc << field<uint64_t>("id", &Species::getID, data);
         arc << field<char[32]>("name", &Species_getName, data);
-        arc << field<double>("radius", &Species::getMoleculeRadius, data);
+        arc << field<double>("radius", &Species::getMolRadius, data);
         arc << field<double>("D", &Species::getDiffusionCoefficient, data);
     }
 };
@@ -143,25 +143,25 @@ struct CompPacker
         arc << field<boost::array<double, 3> >("lengths", &Comp_lengths, data);
         arc << field<Comp, double, double>("voxelRadius", voxelRadius);
         arc << field<Comp, double, double>("normalizedVoxelRadius", normalizedVoxelRadius);
-        arc << field<Comp, unsigned int, unsigned int>("startCoord", startCoord);
+        arc << field<Comp, unsigned int, unsigned int>("startMol", startMol);
         arc << field<Comp, unsigned int, unsigned int>("layerSize", layerSize);
         arc << field<Comp, unsigned int, unsigned int>("rowSize", rowSize);
         arc << field<Comp, unsigned int, unsigned int>("colSize", colSize);
     }
 
     CompPacker(double voxelRadius, double normalizedVoxelRadius,
-               unsigned int startCoord, unsigned int layerSize,
+               unsigned int startMol, unsigned int layerSize,
                unsigned int rowSize, unsigned int colSize)
         : voxelRadius(voxelRadius), normalizedVoxelRadius(normalizedVoxelRadius),
-          startCoord(startCoord), layerSize(layerSize), rowSize(rowSize), colSize(colSize) {}
+          startMol(startMol), layerSize(layerSize), rowSize(rowSize), colSize(colSize) {}
 
     CompPacker(): voxelRadius(0.), normalizedVoxelRadius(0.),
-                  startCoord(0), layerSize(0), rowSize(0), colSize(0) {}
+                  startMol(0), layerSize(0), rowSize(0), colSize(0) {}
 
 private:
     const double voxelRadius;
     const double normalizedVoxelRadius;
-    unsigned int startCoord;
+    unsigned int startMol;
     unsigned int layerSize;
     unsigned int rowSize;
     unsigned int colSize;
@@ -268,7 +268,7 @@ public:
 protected:
     void initializeLog();
     void logSpecies();
-    void logMolecules(H5::DataSpace const& space, H5::DataSet const& dataSet, hsize_t (&dims)[1], Species *);
+    void logMols(H5::DataSpace const& space, H5::DataSet const& dataSet, hsize_t (&dims)[1], Species *);
 
     template<typename T>
     void setH5Attribute(H5::Group& dg, const char* name, T const& data);
@@ -330,7 +330,7 @@ void H5VisualizationLogProcess::initializeLog()
         CompPacker<field_packer<h5_le_traits> > serializer(
             theSpatiocyteStepper->getVoxelRadius(),
             theSpatiocyteStepper->getNormalizedVoxelRadius(),
-            theSpatiocyteStepper->getStartCoord(),
+            theSpatiocyteStepper->getStartMol(),
             theSpatiocyteStepper->getLayerSize(),
             theSpatiocyteStepper->getRowSize(),
             theSpatiocyteStepper->getColSize());
@@ -358,7 +358,7 @@ void H5VisualizationLogProcess::initializeLog()
     }
 }
 
-void H5VisualizationLogProcess::logMolecules(H5::DataSpace const& space, H5::DataSet const& dataSet, hsize_t (&dims)[1], Species* aSpecies)
+void H5VisualizationLogProcess::logMols(H5::DataSpace const& space, H5::DataSet const& dataSet, hsize_t (&dims)[1], Species* aSpecies)
 {
     //No need to log lipid or vacant molecules since we have
     //already logged them once during initialization:
@@ -366,7 +366,7 @@ void H5VisualizationLogProcess::logMolecules(H5::DataSpace const& space, H5::Dat
     {
       if(aSpecies->getIsDiffusiveVacant() || aSpecies->getIsReactiveVacant())
         {
-          aSpecies->updateMolecules();
+          aSpecies->updateMols();
         }
       else
         {
@@ -393,8 +393,8 @@ void H5VisualizationLogProcess::logMolecules(H5::DataSpace const& space, H5::Dat
     unsigned char* p = buf.get();
     for(int i(0); i != aSize; ++i)
     {
-        unsigned int const coord(aSpecies->getCoord(i));
-        p = pack<ParticleDataPacker>(p, ParticleData(coord, aSpecies->getID(), aSpecies->getComp()->vacantSpecies->getID()));
+        unsigned int const mol(aSpecies->getMol(i));
+        p = pack<ParticleDataPacker>(p, ParticleData(mol, aSpecies->getID(), aSpecies->getComp()->vacantSpecies->getID()));
     }
     dataSet.write(buf.get(), particleDataType, mem, slab);
 }
@@ -421,7 +421,7 @@ void H5VisualizationLogProcess::logSpecies()
 
     for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
     {
-        logMolecules(space, dataSet, dims, theProcessSpecies[i]);
+        logMols(space, dataSet, dims, theProcessSpecies[i]);
     }
 }
 

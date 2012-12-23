@@ -58,7 +58,7 @@ public:
       for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
         {
-          (*i)->initMoleculeOrigins();
+          (*i)->initMolOrigins();
         }
     }
   virtual void fire()
@@ -67,7 +67,7 @@ public:
       for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
           i != theProcessSpecies.end(); ++i)
         {
-          (*i)->relocateBoundaryMolecules();
+          (*i)->relocateBoundaryMols();
         }
     }
 };

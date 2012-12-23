@@ -47,8 +47,8 @@ public:
   DiffusionInfluencedReactionProcess():
    Collision(0) {}
   virtual ~DiffusionInfluencedReactionProcess() {}
-  virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
-  virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
+  virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMol) {}
+  virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMol) {}
   virtual void initialize()
     {
       if(isInitialized)
@@ -74,8 +74,8 @@ public:
   virtual void finalizeReaction();
 protected:
   void calculateReactionProbability();
-  void addMoleculeE();
-  void addMoleculeF();
+  void addMolE();
+  void addMolF();
 protected:
   unsigned int Collision;
   double D_A;

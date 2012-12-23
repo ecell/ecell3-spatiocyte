@@ -50,7 +50,7 @@ void OscillationAnalysisProcess::testLocalization(int aStatus)
   int aSize(minD_m->size());
   for(int i(0); i != aSize; ++i)
     {
-      Point aPoint(theSpatiocyteStepper->coord2point(minD_m->getCoord(i)));
+      Point aPoint(theSpatiocyteStepper->coord2point(minD_m->getMol(i)));
       if(aPoint.x < theCenterPoint.x/2)
         {
           ++quad1;
@@ -87,7 +87,7 @@ void OscillationAnalysisProcess::testOscillation()
   std::vector<double> rightPositions;
   for(int i(0); i != aSize; ++i)
     {
-      Point aPoint(theSpatiocyteStepper->coord2point(minD_m->getCoord(i)));
+      Point aPoint(theSpatiocyteStepper->coord2point(minD_m->getMol(i)));
       if(aPoint.x < theCenterPoint.x)
         {
           leftPositions.push_back(aPoint.x);

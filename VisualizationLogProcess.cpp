@@ -37,8 +37,8 @@ void VisualizationLogProcess::initializeLog()
   unsigned int aLatticeType(theSpatiocyteStepper->getLatticeType());
   theLogFile.write((char*)(&aLatticeType), sizeof(aLatticeType));
   theLogFile.write((char*)(&theMeanCount), sizeof(theMeanCount));
-  unsigned int aStartCoord(0);
-  theLogFile.write((char*)(&aStartCoord), sizeof(aStartCoord));
+  unsigned int aStartMol(0);
+  theLogFile.write((char*)(&aStartMol), sizeof(aStartMol));
   unsigned int aRowSize(theSpatiocyteStepper->getRowSize());
   theLogFile.write((char*)(&aRowSize), sizeof(aRowSize));
   unsigned int aLayerSize(theSpatiocyteStepper->getLayerSize());
@@ -72,14 +72,14 @@ void VisualizationLogProcess::initializeLog()
       theLogFile.write(
        theLatticeSpecies[i]->getVariable()->getFullID().asString().c_str(),
        aStringSize);
-      double aRadius(theLatticeSpecies[i]->getMoleculeRadius());
+      double aRadius(theLatticeSpecies[i]->getMolRadius());
       theLogFile.write((char*)(&aRadius), sizeof(aRadius));
     }
   for(unsigned int i(0); i!=thePolymerSpecies.size(); ++i)
     {
       unsigned int aPolymerIndex(thePolymerIndex[i]);
       theLogFile.write((char*) (&aPolymerIndex), sizeof(aPolymerIndex));
-      double aRadius(thePolymerSpecies[i]->getMoleculeRadius());
+      double aRadius(thePolymerSpecies[i]->getMolRadius());
       theLogFile.write((char*)(&aRadius), sizeof(aRadius));
     }
   for(unsigned int i(0); i != theOffLatticeSpecies.size(); ++i)
@@ -90,12 +90,12 @@ void VisualizationLogProcess::initializeLog()
       theLogFile.write(
        theOffLatticeSpecies[i]->getVariable()->getFullID().asString().c_str(),
        aStringSize);
-      double aRadius(theOffLatticeSpecies[i]->getMoleculeRadius());
+      double aRadius(theOffLatticeSpecies[i]->getMolRadius());
       theLogFile.write((char*)(&aRadius), sizeof(aRadius));
     }
 }
 
-void VisualizationLogProcess::logMolecules(int anIndex)
+void VisualizationLogProcess::logMols(int anIndex)
 {
   Species* aSpecies(theLatticeSpecies[anIndex]);
   //No need to log lipid or non diffusing vacant molecules since we have
@@ -107,15 +107,15 @@ void VisualizationLogProcess::logMolecules(int anIndex)
   //The remaining vacant molecules must be diffusive, so we need to update
   //them before logging their position:
   //Also update the molecules of the tag species:
-  aSpecies->updateMolecules();
+  aSpecies->updateMols();
   theLogFile.write((char*)(&anIndex), sizeof(anIndex));
   //The species molecule size:
   int aSize(aSpecies->size());
   theLogFile.write((char*)(&aSize), sizeof(aSize)); 
   for(int i(0); i != aSize; ++i)
     {
-      unsigned int aCoord(aSpecies->getCoord(i));
-      theLogFile.write((char*)(&aCoord), sizeof(aCoord));
+      unsigned int aMol(aSpecies->getMol(i));
+      theLogFile.write((char*)(&aMol), sizeof(aMol));
     }
 }  
 
@@ -127,7 +127,7 @@ void VisualizationLogProcess::logOffLattice(int anIndex)
     {
       return;
     }
-  aSpecies->updateMolecules();
+  aSpecies->updateMols();
   theLogFile.write((char*)(&anIndex), sizeof(anIndex));
   //The species molecule size:
   int aSize(aSpecies->size());
@@ -153,53 +153,53 @@ void VisualizationLogProcess::logPolymers(int anIndex)
     }
 }  
 
-void VisualizationLogProcess::logSourceMolecules(int anIndex)
+void VisualizationLogProcess::logSourceMols(int anIndex)
 {
   /*
   Species* aSpecies(thePolymerSpecies[anIndex]);
   int aSourceIndex(theLatticeSpecies.size()+anIndex);
   theLogFile.write((char*)(&aSourceIndex), sizeof(aSourceIndex));
-  const std::vector<unsigned int> aCoords(aSpecies->getSourceCoords());
-  int aSize(aCoords.size());
+  const std::vector<unsigned int> aMols(aSpecies->getSourceMols());
+  int aSize(aMols.size());
   theLogFile.write((char*)(&aSize), sizeof(aSize)); 
-  for(unsigned int i(0); i != aCoords.size(); ++i)
+  for(unsigned int i(0); i != aMols.size(); ++i)
     {
-      unsigned int aCoord(aCoords[i]);
-      theLogFile.write((char*)(&aCoord), sizeof(aCoord));
+      unsigned int aMol(aMols[i]);
+      theLogFile.write((char*)(&aMol), sizeof(aMol));
     }
     */
 }  
 
-void VisualizationLogProcess::logTargetMolecules(int anIndex)
+void VisualizationLogProcess::logTargetMols(int anIndex)
 {
   /*
   Species* aSpecies(thePolymerSpecies[anIndex]);
   int aTargetIndex(theLatticeSpecies.size()+thePolymerSpecies.size()+anIndex);
   theLogFile.write((char*)(&aTargetIndex), sizeof(aTargetIndex));
-  const std::vector<unsigned int> aCoords(aSpecies->getTargetCoords());
-  int aSize(aCoords.size());
+  const std::vector<unsigned int> aMols(aSpecies->getTargetMols());
+  int aSize(aMols.size());
   theLogFile.write((char*)(&aSize), sizeof(aSize)); 
-  for(unsigned int i(0); i != aCoords.size(); ++i)
+  for(unsigned int i(0); i != aMols.size(); ++i)
     {
-      unsigned int aCoord(aCoords[i]);
-      theLogFile.write((char*)(&aCoord), sizeof(aCoord));
+      unsigned int aMol(aMols[i]);
+      theLogFile.write((char*)(&aMol), sizeof(aMol));
     }
     */
 }  
 
-void VisualizationLogProcess::logSharedMolecules(int anIndex)
+void VisualizationLogProcess::logSharedMols(int anIndex)
 {
   /*
   Species* aSpecies(thePolymerSpecies[anIndex]);
   int aSharedIndex(theLatticeSpecies.size()+thePolymerSpecies.size()*2+anIndex);
   theLogFile.write((char*)(&aSharedIndex), sizeof(aSharedIndex));
-  const std::vector<unsigned int> aCoords(aSpecies->getSharedCoords());
-  int aSize(aCoords.size());
+  const std::vector<unsigned int> aMols(aSpecies->getSharedMols());
+  int aSize(aMols.size());
   theLogFile.write((char*)(&aSize), sizeof(aSize)); 
-  for(unsigned int i(0); i != aCoords.size(); ++i)
+  for(unsigned int i(0); i != aMols.size(); ++i)
     {
-      unsigned int aCoord(aCoords[i]);
-      theLogFile.write((char*)(&aCoord), sizeof(aCoord));
+      unsigned int aMol(aMols[i]);
+      theLogFile.write((char*)(&aMol), sizeof(aMol));
     }
     */
 }  
@@ -210,24 +210,24 @@ void VisualizationLogProcess::logSpecies()
   theLogFile.write((char*)(&aCurrentTime), sizeof(aCurrentTime));
   for(unsigned int i(0); i != theLatticeSpecies.size(); ++i)
     {
-      logMolecules(i);
+      logMols(i);
     }
   for(unsigned int i(0); i != thePolymerSpecies.size(); ++i)
     {
-      logSourceMolecules(i);
+      logSourceMols(i);
     }
   for(unsigned int i(0); i != thePolymerSpecies.size(); ++i)
     {
-      logTargetMolecules(i);
+      logTargetMols(i);
     }
   for(unsigned int i(0); i != thePolymerSpecies.size(); ++i)
     {
-      logSharedMolecules(i);
+      logSharedMols(i);
     }
   /*
   for(unsigned int i(0); i!=theReservedSpecies.size(); ++i)
     {
-      logReservedMolecules(i);
+      logReservedMols(i);
     }
     */
   //theLogMarker is a constant throughout the simulation:
@@ -260,8 +260,8 @@ void VisualizationLogProcess::logCompVacant()
           theLogFile.write((char*)(&aSize), sizeof(aSize)); 
           for(unsigned int j(0); j != aSize; ++j)
             {
-              unsigned int aCoord(aVacantSpecies->getCoord(j));
-              theLogFile.write((char*)(&aCoord), sizeof(aCoord));
+              unsigned int aMol(aVacantSpecies->getMol(j));
+              theLogFile.write((char*)(&aMol), sizeof(aMol));
             }  
         }
     }

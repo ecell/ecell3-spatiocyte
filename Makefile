@@ -16,7 +16,7 @@ OscillationAnalysisProcess\
 SpatiocyteNextReactionProcess\
 MicroscopyTrackingProcess\
 DiffusionProcess\
-CoordinateLogProcess\
+MoleculeLogProcess\
 HistogramLogProcess\
 MoleculePopulateProcess\
 TagProcess\
@@ -54,8 +54,8 @@ ReactionProcess.so: 	ReactionProcess.cpp
 IteratingLogProcess.so: 	IteratingLogProcess.cpp
 	$(ECELL3_DMC) -o IteratingLogProcess.so --ldflags=SpatiocyteProcess.so IteratingLogProcess.cpp
 
-CoordinateLogProcess.so: 	CoordinateLogProcess.cpp
-	$(ECELL3_DMC) -o CoordinateLogProcess.so --ldflags="SpatiocyteProcess.so IteratingLogProcess.so" CoordinateLogProcess.cpp
+MoleculeLogProcess.so: 	MoleculeLogProcess.cpp
+	$(ECELL3_DMC) -o MoleculeLogProcess.so --ldflags="SpatiocyteProcess.so IteratingLogProcess.so" MoleculeLogProcess.cpp
 
 DiffusionInfluencedReactionProcess.so: 	DiffusionInfluencedReactionProcess.cpp
 	$(ECELL3_DMC) -o DiffusionInfluencedReactionProcess.so --ldflags=ReactionProcess.so DiffusionInfluencedReactionProcess.cpp

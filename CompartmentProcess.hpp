@@ -189,7 +189,7 @@ public:
             }
         }
     }
-  virtual unsigned getLatticeResizeCoord(unsigned);
+  virtual unsigned getLatticeResizeMol(unsigned);
   virtual void initializeThird();
   virtual void printParameters();
   virtual void updateResizedLattice();
@@ -221,13 +221,13 @@ public:
 protected:
   bool isCompartmentalized;
   unsigned dimension;
-  unsigned endCoord;
+  unsigned endMol;
   unsigned Filaments;
   unsigned Periodic;
   unsigned LipidRows;
   unsigned LipidCols;
-  unsigned lipStartCoord;
-  unsigned subStartCoord;
+  unsigned lipStartMol;
+  unsigned subStartMol;
   unsigned Subunits;
   double DiffuseRadius;
   double Height;

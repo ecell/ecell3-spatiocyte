@@ -157,10 +157,10 @@ protected:
   virtual void initializeLog();
   virtual void logCompVacant();
   void logSpecies();
-  void logMolecules(int);
-  void logSourceMolecules(int);
-  void logTargetMolecules(int);
-  void logSharedMolecules(int);
+  void logMols(int);
+  void logSourceMols(int);
+  void logTargetMols(int);
+  void logSharedMols(int);
   void logPolymers(int);
   void logOffLattice(int);
 protected:

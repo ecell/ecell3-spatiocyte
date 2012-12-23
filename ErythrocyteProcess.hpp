@@ -108,7 +108,7 @@ public:
       TriangleAltitude = cos(M_PI/6)*EdgeLength;
     }
   virtual void initializeThird();
-  void populateMolecules();
+  void populateMols();
   void initializeDirectionVectors();
   void initializeProtofilaments();
   void normalize(Point&);
@@ -131,7 +131,7 @@ protected:
   Species* theVertexSpecies;
   Species* theSpectrinSpecies;
   Comp* theComp;
-  std::vector<unsigned int> filamentCoords;
+  std::vector<unsigned int> filamentMols;
 };
 
 #endif /* __ErythrocyteProcess_hpp */

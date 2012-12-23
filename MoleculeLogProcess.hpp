@@ -29,35 +29,35 @@
 //
 
 
-#ifndef __CoordinateLogProcess_hpp
-#define __CoordinateLogProcess_hpp
+#ifndef __MoleculeLogProcess_hpp
+#define __MoleculeLogProcess_hpp
 
 #include <fstream> //provides ofstream
 #include <MethodProxy.hpp>
 #include "IteratingLogProcess.hpp"
 #include "SpatiocyteSpecies.hpp"
 
-LIBECS_DM_CLASS(CoordinateLogProcess, IteratingLogProcess)
+LIBECS_DM_CLASS(MoleculeLogProcess, IteratingLogProcess)
 { 
 public:
-  LIBECS_DM_OBJECT(CoordinateLogProcess, Process)
+  LIBECS_DM_OBJECT(MoleculeLogProcess, Process)
     {
       INHERIT_PROPERTIES(IteratingLogProcess);
     }
-  CoordinateLogProcess():
-    theMoleculeSize(0)
+  MoleculeLogProcess():
+    theMolSize(0)
   {
-    FileName = "CoordinateLog.csv";
+    FileName = "MoleculeLog.csv";
   }
-  virtual ~CoordinateLogProcess() {}
+  virtual ~MoleculeLogProcess() {}
   virtual void initializeLastOnce()
     {
       for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
         {
-          theMoleculeSize += theProcessSpecies[i]->size();
+          theMolSize += theProcessSpecies[i]->size();
         }
       theLogFile.open(FileName.c_str(), std::ios::trunc);
-      theStartCoord = theSpatiocyteStepper->getStartCoord();
+      theStartMol = theSpatiocyteStepper->getStartMol();
       initializeLog();
       logSpecies();
     }
@@ -81,7 +81,7 @@ public:
       for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
         {
           theLogFile << getStepper()->getCurrentTime();
-          logMolecules(i);
+          logMols(i);
           theLogFile << std::endl;
         }
     }
@@ -98,11 +98,11 @@ protected:
       for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
         {
           theLogFile << "," << getIDString(theProcessSpecies[i]) << "=" <<
-            theProcessSpecies[i]->getMoleculeRadius();
+            theProcessSpecies[i]->getMolRadius();
         }
       theLogFile << std::endl;
     }
-  void logMolecules(int anIndex)
+  void logMols(int anIndex)
     {
       Species* aSpecies(theProcessSpecies[anIndex]);
       for(unsigned int i(0); i != aSpecies->size(); ++i)
@@ -113,8 +113,8 @@ protected:
         }
     }
 private:
-  double theMoleculeSize;
-  unsigned int theStartCoord;
+  double theMolSize;
+  unsigned int theStartMol;
 };
 
-#endif /* __CoordinateLogProcess_hpp */
+#endif /* __MoleculeLogProcess_hpp */

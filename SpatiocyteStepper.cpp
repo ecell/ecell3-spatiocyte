@@ -217,14 +217,14 @@ std::vector<Species*> SpatiocyteStepper::getSpecies()
   return theSpecies;
 }
 
-bool SpatiocyteStepper::isBoundaryCoord(unsigned aCoord,
+bool SpatiocyteStepper::isBoundaryMol(unsigned aMol,
                                         unsigned aDimension)
 {
   //This method is only for checking boundaries on a cube:
   unsigned aRow;
   unsigned aLayer;
   unsigned aCol;
-  coord2global(aCoord, aRow, aLayer, aCol);
+  coord2global(aMol, aRow, aLayer, aCol);
   if(aDimension == 3)
     {
       //If the voxel is on one of the 6 cuboid surfaces:
@@ -258,7 +258,7 @@ bool SpatiocyteStepper::isBoundaryCoord(unsigned aCoord,
   return false;
 }
 
-unsigned SpatiocyteStepper::getPeriodicCoord(unsigned aCoord,
+unsigned SpatiocyteStepper::getPeriodicMol(unsigned aMol,
                                                  unsigned aDimension,
                                                  Origin* anOrigin)
 {
@@ -266,7 +266,7 @@ unsigned SpatiocyteStepper::getPeriodicCoord(unsigned aCoord,
   unsigned aRow;
   unsigned aLayer;
   unsigned aCol;
-  coord2global(aCoord, aRow, aLayer, aCol);
+  coord2global(aMol, aRow, aLayer, aCol);
   unsigned nextRow(aRow);
   unsigned nextLayer(aLayer);
   unsigned nextCol(aCol);
@@ -309,10 +309,10 @@ unsigned SpatiocyteStepper::getPeriodicCoord(unsigned aCoord,
     {
       return nextRow+theRowSize*nextLayer+theRowSize*theLayerSize*nextCol;
     }
-  return theNullCoord;
+  return theNullMol;
 }
 
-Point SpatiocyteStepper::getPeriodicPoint(unsigned aCoord,
+Point SpatiocyteStepper::getPeriodicPoint(unsigned aMol,
                                           unsigned aDimension,
                                           Origin* anOrigin)
 {
@@ -327,7 +327,7 @@ Point SpatiocyteStepper::getPeriodicPoint(unsigned aCoord,
   unsigned aGlobalCol;
   unsigned aGlobalLayer;
   unsigned aGlobalRow;
-  coord2global(aCoord, aGlobalRow, aGlobalLayer, aGlobalCol);
+  coord2global(aMol, aGlobalRow, aGlobalLayer, aGlobalCol);
   int aRow(aGlobalRow+anOrigin->row*row);
   int aLayer(aGlobalLayer+anOrigin->layer*layer);
   int aCol(aGlobalCol+anOrigin->col*col);
@@ -458,7 +458,7 @@ void SpatiocyteStepper::initSpecies()
       i != theSpecies.end(); ++i)
     {
       (*i)->initialize(theSpecies.size(), theAdjoinSize, 
-                       theNullCoord, theNullID);
+                       theNullMol, theNullID);
     }
   for(std::vector<Comp*>::const_iterator i(theComps.begin());
       i != theComps.end(); ++i)
@@ -475,7 +475,7 @@ void SpatiocyteStepper::broadcastLatticeProperties()
       SpatiocyteProcessInterface*
         aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
       aProcess->setLatticeProperties(&theLattice, theAdjoinSize,
-                                     theNullCoord, theNullID);
+                                     theNullMol, theNullID);
     }
 }
 
@@ -515,31 +515,31 @@ void SpatiocyteStepper::printProcessParameters()
 
 void SpatiocyteStepper::resizeProcessLattice()
 {
-  unsigned startCoord(theLattice.size());
-  unsigned endCoord(startCoord);
+  unsigned startMol(theLattice.size());
+  unsigned endMol(startMol);
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
     {      
       SpatiocyteProcessInterface*
         aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
-      endCoord += aProcess->getLatticeResizeCoord(endCoord);
+      endMol += aProcess->getLatticeResizeMol(endMol);
     }
   //Save the coords of molecules before resizing theLattice
   //because the voxel address pointed by molecule list will become
   //invalid once it is resized:
   for(unsigned i(0); i != theSpecies.size(); ++i)
     {
-      theSpecies[i]->saveCoords();
+      theSpecies[i]->saveMols();
     }
-  theLattice.resize(endCoord);
-  for(unsigned i(startCoord); i != endCoord; ++i)
+  theLattice.resize(endMol);
+  for(unsigned i(startMol); i != endMol; ++i)
     {
       theLattice[i].coord = i;
     }
   //Update the molecule list with the new voxel addresses:
   for(unsigned i(0); i != theSpecies.size(); ++i)
     {
-      theSpecies[i]->updateMoleculePointers();
+      theSpecies[i]->updateMolPointers();
     }
   for(std::vector<Process*>::const_iterator i(theProcessVector.begin());
       i != theProcessVector.end(); ++i)
@@ -989,8 +989,8 @@ void SpatiocyteStepper::setLatticeProperties()
   //Also add one more voxel for the nullVoxel:
   theLattice.resize(theRowSize*theLayerSize*theColSize+1);
   //Initialize the null coord:
-  theNullCoord = theRowSize*theLayerSize*theColSize;
-  theLattice[theNullCoord].id = theNullID;
+  theNullMol = theRowSize*theLayerSize*theColSize;
+  theLattice[theNullMol].id = theNullID;
 }
 
 void SpatiocyteStepper::storeSimulationParameters()
@@ -1249,7 +1249,7 @@ void SpatiocyteStepper::constructLattice()
       unsigned aCol(a/(theRowSize*theLayerSize)); 
       unsigned aLayer((a%(theRowSize*theLayerSize))/theRowSize); 
       unsigned aRow((a%(theRowSize*theLayerSize))%theRowSize); 
-      if(aRootComp->geometry == CUBOID || isInsideCoord(a, aRootComp, 0))
+      if(aRootComp->geometry == CUBOID || isInsideMol(a, aRootComp, 0))
         {
           //By default, the voxel is vacant and we set it to the root id:
           (*i).id = rootID;
@@ -1267,7 +1267,7 @@ void SpatiocyteStepper::constructLattice()
           //will occupy it:
           (*i).id = theNullID;
           //Concatenate some of the null voxels close to the surface:
-          if(isInsideCoord(a, aRootComp, 4))
+          if(isInsideMol(a, aRootComp, 4))
             {
               concatenateVoxel(*i, aRow, aLayer, aCol);
             }
@@ -1284,12 +1284,12 @@ void SpatiocyteStepper::setPeriodicEdge()
   isPeriodicEdge = true;
 }
 
-bool SpatiocyteStepper::isPeriodicEdgeCoord(unsigned aCoord, Comp* aComp)
+bool SpatiocyteStepper::isPeriodicEdgeMol(unsigned aMol, Comp* aComp)
 {
   unsigned aRow;
   unsigned aLayer;
   unsigned aCol;
-  coord2global(aCoord, aRow, aLayer, aCol);
+  coord2global(aMol, aRow, aLayer, aCol);
   if(aComp->system->getSuperSystem()->isRootSystem() &&
      ((aRow <= 1 && aCol <= 1) ||
       (aRow <= 1 && aLayer <= 1) ||
@@ -1309,12 +1309,12 @@ bool SpatiocyteStepper::isPeriodicEdgeCoord(unsigned aCoord, Comp* aComp)
   return false;
 }
 
-bool SpatiocyteStepper::isRemovableEdgeCoord(unsigned aCoord, Comp* aComp)
+bool SpatiocyteStepper::isRemovableEdgeMol(unsigned aMol, Comp* aComp)
 {
   unsigned aRow;
   unsigned aLayer;
   unsigned aCol;
-  coord2global(aCoord, aRow, aLayer, aCol);
+  coord2global(aMol, aRow, aLayer, aCol);
   int sharedCnt(0);
   int removeCnt(0);
   //Minus 1 to maxRow to account for surfaces that use two rows to envelope the
@@ -1384,20 +1384,20 @@ void SpatiocyteStepper::concatenateVoxel(Voxel& aVoxel,
                                          unsigned aLayer,
                                          unsigned aCol)
 {
-  unsigned aCoord(aRow+
+  unsigned aMol(aRow+
                       theRowSize*aLayer+
                       theRowSize*theLayerSize*aCol);
   if(aRow > 0)
     { 
-      concatenateRows(aVoxel, aCoord, aRow-1, aLayer, aCol); 
+      concatenateRows(aVoxel, aMol, aRow-1, aLayer, aCol); 
     } 
   if(aLayer > 0)
     {
-      concatenateLayers(aVoxel, aCoord, aRow, aLayer-1, aCol); 
+      concatenateLayers(aVoxel, aMol, aRow, aLayer-1, aCol); 
     }
   if(aCol > 0)
     { 
-      concatenateCols(aVoxel, aCoord, aRow, aLayer, aCol-1); 
+      concatenateCols(aVoxel, aMol, aRow, aLayer, aCol-1); 
     }
 }
 
@@ -1633,12 +1633,12 @@ double SpatiocyteStepper::getCuboidSpecArea(Comp* aComp)
   return anArea;
 }
 
-Point SpatiocyteStepper::coord2point(unsigned aCoord)
+Point SpatiocyteStepper::coord2point(unsigned aMol)
 {
   unsigned aGlobalCol;
   unsigned aGlobalLayer;
   unsigned aGlobalRow;
-  coord2global(aCoord, aGlobalRow, aGlobalLayer, aGlobalCol);
+  coord2global(aMol, aGlobalRow, aGlobalLayer, aGlobalCol);
   //the center point of a voxel 
   Point aPoint;
   switch(LatticeType)
@@ -1767,14 +1767,14 @@ void SpatiocyteStepper::point2global(Point aPoint,
     }
 }
 
-void SpatiocyteStepper::coord2global(unsigned aCoord,
+void SpatiocyteStepper::coord2global(unsigned aMol,
                                      unsigned& aGlobalRow,
                                      unsigned& aGlobalLayer,
                                      unsigned& aGlobalCol) 
 {
-  aGlobalCol = (aCoord)/(theRowSize*theLayerSize);
-  aGlobalLayer = ((aCoord)%(theRowSize*theLayerSize))/theRowSize;
-  aGlobalRow = ((aCoord)%(theRowSize*theLayerSize))%theRowSize;
+  aGlobalCol = (aMol)/(theRowSize*theLayerSize);
+  aGlobalLayer = ((aMol)%(theRowSize*theLayerSize))/theRowSize;
+  aGlobalRow = ((aMol)%(theRowSize*theLayerSize))%theRowSize;
 }
 
 void SpatiocyteStepper::concatenateLayers(Voxel& aVoxel,
@@ -1968,50 +1968,50 @@ void SpatiocyteStepper::concatenatePeriodicSurfaces()
       i+=theRowSize)
     {
       unsigned j(i+theRowSize-1);
-      unsigned srcCoord(coord2row(i)+ 
+      unsigned srcMol(coord2row(i)+ 
                             theRowSize*coord2layer(i)+ 
                             theRowSize*theLayerSize*coord2col(i)); 
-      unsigned destCoord(coord2row(j)+
+      unsigned destMol(coord2row(j)+
                              theRowSize*coord2layer(i)+
                              theRowSize*theLayerSize*coord2col(i)); 
       if(aRootComp->xyPlane == UNIPERIODIC)
         { 
-          replaceUniVoxel(srcCoord, destCoord);
+          replaceUniVoxel(srcMol, destMol);
         }
       else if(aRootComp->xyPlane == PERIODIC)
         { 
-          replaceVoxel(srcCoord, destCoord);
+          replaceVoxel(srcMol, destMol);
         }
       else if(!isPeriodicEdge)
         {
           //We cannot have valid voxels pointing to itself it it is not periodic
           //to avoid incorrect homodimerization reaction. So we set such
           //molecules to null ID.
-          theLattice[srcCoord].id = theNullID;
-          theLattice[destCoord].id = theNullID;
+          theLattice[srcMol].id = theNullID;
+          theLattice[destMol].id = theNullID;
         }
     }
   for(unsigned i(0); i<=theRowSize*theLayerSize*(theColSize-1)+theRowSize;)
     {
       unsigned j(theRowSize*(theLayerSize-1)+i);
-      unsigned srcCoord(coord2row(i)+
+      unsigned srcMol(coord2row(i)+
                             theRowSize*coord2layer(i)+ 
                             theRowSize*theLayerSize*coord2col(i)); 
-      unsigned destCoord(coord2row(i)+
+      unsigned destMol(coord2row(i)+
                              theRowSize*coord2layer(j)+ 
                              theRowSize*theLayerSize*coord2col(i)); 
       if(aRootComp->xzPlane == UNIPERIODIC)
         { 
-          replaceUniVoxel(srcCoord, destCoord);
+          replaceUniVoxel(srcMol, destMol);
         }
       else if(aRootComp->xzPlane == PERIODIC)
         { 
-          replaceVoxel(srcCoord, destCoord);
+          replaceVoxel(srcMol, destMol);
         }
       else if(!isPeriodicEdge)
         {
-          theLattice[srcCoord].id = theNullID;
-          theLattice[destCoord].id = theNullID;
+          theLattice[srcMol].id = theNullID;
+          theLattice[destMol].id = theNullID;
         }
       ++i;
       if(coord2layer(i) != 0)
@@ -2021,41 +2021,41 @@ void SpatiocyteStepper::concatenatePeriodicSurfaces()
     }
   for(unsigned i(0); i!=theRowSize*theLayerSize; ++i)
     {
-      unsigned srcCoord(coord2row(i)+
+      unsigned srcMol(coord2row(i)+
                             theRowSize*coord2layer(i)+ 
                             theRowSize*theLayerSize*0); 
-      unsigned destCoord(coord2row(i)+
+      unsigned destMol(coord2row(i)+
                              theRowSize*coord2layer(i)+ 
                              theRowSize*theLayerSize*(theColSize-1)); 
       if(aRootComp->yzPlane == UNIPERIODIC)
         { 
-          replaceUniVoxel(srcCoord, destCoord);
+          replaceUniVoxel(srcMol, destMol);
         }
       else if(aRootComp->yzPlane == PERIODIC)
         { 
-          replaceVoxel(srcCoord, destCoord);
+          replaceVoxel(srcMol, destMol);
         }
       else if(!isPeriodicEdge)
         {
-          theLattice[srcCoord].id = theNullID;
-          theLattice[destCoord].id = theNullID;
+          theLattice[srcMol].id = theNullID;
+          theLattice[destMol].id = theNullID;
         }
     }
 }
 
-unsigned SpatiocyteStepper::coord2row(unsigned aCoord)
+unsigned SpatiocyteStepper::coord2row(unsigned aMol)
 {
-  return (aCoord%(theRowSize*theLayerSize))%theRowSize;
+  return (aMol%(theRowSize*theLayerSize))%theRowSize;
 }
 
-unsigned SpatiocyteStepper::coord2layer(unsigned aCoord)
+unsigned SpatiocyteStepper::coord2layer(unsigned aMol)
 {
-  return (aCoord%(theRowSize*theLayerSize))/theRowSize;
+  return (aMol%(theRowSize*theLayerSize))/theRowSize;
 }
 
-unsigned SpatiocyteStepper::coord2col(unsigned aCoord)
+unsigned SpatiocyteStepper::coord2col(unsigned aMol)
 {
-  return aCoord/(theRowSize*theLayerSize);
+  return aMol/(theRowSize*theLayerSize);
 }
 
 void SpatiocyteStepper::replaceVoxel(unsigned src, unsigned dest)
@@ -2172,9 +2172,9 @@ void SpatiocyteStepper::setSurfaceVoxelProperties(Comp* aComp)
       Species* aVacantSpecies(aComp->vacantSpecies);
       for(unsigned i(0); i != aVacantSpecies->size(); ++i)
         {
-          unsigned aCoord(aVacantSpecies->getCoord(i));
-          optimizeSurfaceVoxel(aCoord, aComp);
-          setSurfaceSubunit(aCoord, aComp);
+          unsigned aMol(aVacantSpecies->getMol(i));
+          optimizeSurfaceVoxel(aMol, aComp);
+          setSurfaceSubunit(aMol, aComp);
         }
     }
 }
@@ -2198,26 +2198,26 @@ void SpatiocyteStepper::setDiffusiveComp(Comp* aComp)
       Species* aVacantSpecies(aComp->vacantSpecies);
       for(unsigned i(0); i != aVacantSpecies->size(); ++i)
         {
-          unsigned aCoord(aVacantSpecies->getCoord(i));
-          aComp->diffusiveComp->vacantSpecies->addCompVoxel(aCoord);
+          unsigned aMol(aVacantSpecies->getMol(i));
+          aComp->diffusiveComp->vacantSpecies->addCompVoxel(aMol);
         }
-      aVacantSpecies->clearMolecules();
+      aVacantSpecies->clearMols();
     }
 }
 
-void SpatiocyteStepper::optimizeSurfaceVoxel(unsigned aCoord, Comp* aComp)
+void SpatiocyteStepper::optimizeSurfaceVoxel(unsigned aMol, Comp* aComp)
 {
-  Voxel& aVoxel(theLattice[aCoord]);
+  Voxel& aVoxel(theLattice[aMol]);
   //unsigned short surfaceID(aComp->vacantSpecies->getID());
   aComp->adjoinCount.resize(theAdjoinSize);
   /*
-  aVoxel.surfaceCoords = new std::vector<std::vector<unsigned> >;
-  aVoxel.surfaceCoords->resize(4);
-  std::vector<unsigned>& immedSurface((*aVoxel.surfaceCoords)[IMMED]);
-  std::vector<unsigned>& extSurface((*aVoxel.surfaceCoords)[EXTEND]);
-  std::vector<unsigned>& innerVolume((*aVoxel.surfaceCoords)[INNER]);
-  std::vector<unsigned>& outerVolume((*aVoxel.surfaceCoords)[OUTER]);
-  std::vector<std::vector<unsigned> > sharedCoordsList;
+  aVoxel.surfaceMols = new std::vector<std::vector<unsigned> >;
+  aVoxel.surfaceMols->resize(4);
+  std::vector<unsigned>& immedSurface((*aVoxel.surfaceMols)[IMMED]);
+  std::vector<unsigned>& extSurface((*aVoxel.surfaceMols)[EXTEND]);
+  std::vector<unsigned>& innerVolume((*aVoxel.surfaceMols)[INNER]);
+  std::vector<unsigned>& outerVolume((*aVoxel.surfaceMols)[OUTER]);
+  std::vector<std::vector<unsigned> > sharedMolsList;
   */
   unsigned* forward(aVoxel.adjoins);
   //unsigned* reverse(forward+theAdjoinSize);
@@ -2232,7 +2232,7 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(unsigned aCoord, Comp* aComp)
   for(std::vector<unsigned>::iterator l(adjoinCopy.begin());
       l != adjoinCopy.end(); ++l)
     {
-      if((*l) != aCoord && theLattice[*l].id != theNullID 
+      if((*l) != aMol && theLattice[*l].id != theNullID 
          && id2Comp(theLattice[*l].id)->dimension <= aComp->dimension)
         {
           ++aComp->adjoinCount[l-adjoinCopy.begin()];
@@ -2247,30 +2247,30 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(unsigned aCoord, Comp* aComp)
               //extSurface contains the adjoin surface voxels of
               //adjoin surface voxels. They do not include the source voxel
               //and its adjoin voxels:
-              unsigned extendedCoord(theLattice[*l].adjoins[m]);
-              if(theLattice[extendedCoord].id == surfaceID &&
-                 extendedCoord != aCoord &&
+              unsigned extendedMol(theLattice[*l].adjoins[m]);
+              if(theLattice[extendedMol].id == surfaceID &&
+                 extendedMol != aMol &&
                  std::find(adjoinCopy.begin(), adjoinCopy.end(),
-                      extendedCoord) == adjoinCopy.end())
+                      extendedMol) == adjoinCopy.end())
                 {
                   std::vector<unsigned>::iterator n(std::find(
-                      extSurface.begin(), extSurface.end(), extendedCoord));
+                      extSurface.begin(), extSurface.end(), extendedMol));
                   if(n == extSurface.end())
                     {
-                      extSurface.push_back(extendedCoord);
+                      extSurface.push_back(extendedMol);
                       //We require shared immediate voxel which
                       //connects the extended voxel with the source voxel 
                       //for polymerization. Create a new list of shared
                       //immediate voxel each time a new extended voxel is added:
-                      std::vector<unsigned> sharedCoords;
-                      sharedCoords.push_back(*l);
-                      sharedCoordsList.push_back(sharedCoords);
+                      std::vector<unsigned> sharedMols;
+                      sharedMols.push_back(*l);
+                      sharedMolsList.push_back(sharedMols);
                     }
                   else
                     {
                       //An extended voxel may have multiple shared immediate
                       //voxels, so we insert the additional ones in the list:
-                      sharedCoordsList[n-extSurface.begin()].push_back(*l);
+                      sharedMolsList[n-extSurface.begin()].push_back(*l);
                     }
                 }
             }
@@ -2285,7 +2285,7 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(unsigned aCoord, Comp* aComp)
           //be a self-pointed adjoin voxel. If it is not inside the
           //surface (i.e., the parent volume) Comp, it must be an
           //outer volume voxel:
-          if(!isInsideCoord(*l, aComp, 0))
+          if(!isInsideMol(*l, aComp, 0))
             {
               outerVolume.push_back(*l);
             }
@@ -2299,9 +2299,9 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(unsigned aCoord, Comp* aComp)
     } 
   /*
   for(std::vector<std::vector<unsigned> >::iterator
-      i(sharedCoordsList.begin()); i != sharedCoordsList.end(); ++i)
+      i(sharedMolsList.begin()); i != sharedMolsList.end(); ++i)
     {
-      aVoxel.surfaceCoords->push_back(*i);
+      aVoxel.surfaceMols->push_back(*i);
     }
     */
   aVoxel.diffuseSize = forward-aVoxel.adjoins;
@@ -2334,16 +2334,16 @@ Comp* SpatiocyteStepper::system2Comp(System* aSystem)
   return NULL;
 }
 
-void SpatiocyteStepper::setSurfaceSubunit(unsigned aCoord, Comp* aComp)
+void SpatiocyteStepper::setSurfaceSubunit(unsigned aMol, Comp* aComp)
 {
   /*
-  Voxel& aVoxel(theLattice[aCoord]);
+  Voxel& aVoxel(theLattice[aMol]);
   // The subunit is only useful for a cylindrical surface
   // and for polymerization on it.
   aVoxel.subunit = new Subunit;
-  aVoxel.subunit->coord = aCoord;
+  aVoxel.subunit->coord = aMol;
   Point& aPoint(aVoxel.subunit->surfacePoint);
-  aPoint = coord2point(aCoord);
+  aPoint = coord2point(aMol);
   double aRadius(aComp->lengthY/2);
   Point aCenterPoint(aComp->centerPoint);
   Point aWestPoint(aComp->centerPoint);
@@ -2467,20 +2467,20 @@ void SpatiocyteStepper::compartmentalizeLattice()
     }
 }
 
-bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aCoord, Comp* aComp)
+bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aMol, Comp* aComp)
 {
-  Voxel& aVoxel(theLattice[aCoord]);
+  Voxel& aVoxel(theLattice[aMol]);
   if(aComp->dimension == 3)
     {
       if(aComp->system->isRootSystem() ||
-         isInsideCoord(aCoord, aComp, 0))
+         isInsideMol(aMol, aComp, 0))
         {
           //Check if the voxel belongs to an intersecting peer compartment:
           if(!aComp->intersectPeers.empty())
             {
-              //The function isPeerCoord also checks if the voxel is a future
+              //The function isPeerMol also checks if the voxel is a future
               //surface voxel of the peer compartment: 
-              if(isPeerCoord(aCoord, aComp))
+              if(isPeerMol(aMol, aComp))
                 { 
                   return false;
                 }
@@ -2488,10 +2488,10 @@ bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aCoord, Comp* aComp)
                 {
                   //Check if the voxel is neighbor of a peer voxel (either
                   //a future surface voxel)
-                  if(isEnclosedSurfaceVoxel(aVoxel, aCoord, aComp))
+                  if(isEnclosedSurfaceVoxel(aVoxel, aMol, aComp))
                     {
-                      aComp->surfaceSub->vacantSpecies->addCompVoxel(aCoord);
-                      setMinMaxSurfaceDimensions(aCoord, aComp);
+                      aComp->surfaceSub->vacantSpecies->addCompVoxel(aMol);
+                      setMinMaxSurfaceDimensions(aMol, aComp);
                       return true;
                     }
                 }
@@ -2501,15 +2501,15 @@ bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aCoord, Comp* aComp)
               Comp* aRootComp(system2Comp(aComp->system->getSuperSystem())); 
               if(aRootComp->surfaceSub && 
                  aRootComp->surfaceSub->enclosed && 
-                 isRootSurfaceVoxel(aVoxel, aCoord, aRootComp))
+                 isRootSurfaceVoxel(aVoxel, aMol, aRootComp))
                 {
                   return false;
                 }
               if(aComp->surfaceSub && 
-                 isEnclosedRootSurfaceVoxel(aVoxel, aCoord, aComp, aRootComp))
+                 isEnclosedRootSurfaceVoxel(aVoxel, aMol, aComp, aRootComp))
                 {
-                  aComp->surfaceSub->vacantSpecies->addCompVoxel(aCoord);
-                  setMinMaxSurfaceDimensions(aCoord, aComp);
+                  aComp->surfaceSub->vacantSpecies->addCompVoxel(aMol);
+                  setMinMaxSurfaceDimensions(aMol, aComp);
                   return true;
                 }
             }
@@ -2517,30 +2517,30 @@ bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aCoord, Comp* aComp)
             {
               Comp* aParentComp(system2Comp(aComp->system->getSuperSystem())); 
               if(aComp->surfaceSub && aComp->surfaceSub->enclosed &&
-                 isParentSurfaceVoxel(aVoxel, aCoord, aParentComp))
+                 isParentSurfaceVoxel(aVoxel, aMol, aParentComp))
                 {
-                  aComp->surfaceSub->vacantSpecies->addCompVoxel(aCoord);
-                  setMinMaxSurfaceDimensions(aCoord, aComp);
+                  aComp->surfaceSub->vacantSpecies->addCompVoxel(aMol);
+                  setMinMaxSurfaceDimensions(aMol, aComp);
                   return true;
                 }
             }
           for(unsigned i(0); i != aComp->immediateSubs.size(); ++i)
             {
-              if(compartmentalizeVoxel(aCoord, aComp->immediateSubs[i]))
+              if(compartmentalizeVoxel(aMol, aComp->immediateSubs[i]))
                 {
                   return true;
                 }
             }
-          aComp->vacantSpecies->addCompVoxel(aCoord);
+          aComp->vacantSpecies->addCompVoxel(aMol);
           return true;
         }
       if(aComp->surfaceSub)
         { 
-          if(isInsideCoord(aCoord, aComp, 4) &&
-             isSurfaceVoxel(aVoxel, aCoord, aComp))
+          if(isInsideMol(aMol, aComp, 4) &&
+             isSurfaceVoxel(aVoxel, aMol, aComp))
             {
-              aComp->surfaceSub->vacantSpecies->addCompVoxel(aCoord);
-              setMinMaxSurfaceDimensions(aCoord, aComp);
+              aComp->surfaceSub->vacantSpecies->addCompVoxel(aMol);
+              setMinMaxSurfaceDimensions(aMol, aComp);
               return true;
             }
         }
@@ -2548,24 +2548,24 @@ bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aCoord, Comp* aComp)
   else if(aComp->system->getSuperSystem()->isRootSystem())
     {
       Comp* aRootComp(system2Comp(aComp->system->getSuperSystem())); 
-      if(!isInsideCoord(aCoord, aRootComp, -4) &&
-         isRootSurfaceVoxel(aVoxel, aCoord, aRootComp))
+      if(!isInsideMol(aMol, aRootComp, -4) &&
+         isRootSurfaceVoxel(aVoxel, aMol, aRootComp))
         {
-          aComp->vacantSpecies->addCompVoxel(aCoord);
-          setMinMaxSurfaceDimensions(aCoord, aRootComp);
+          aComp->vacantSpecies->addCompVoxel(aMol);
+          setMinMaxSurfaceDimensions(aMol, aRootComp);
           return true;
         }
     }
   return false;
 }
 
-bool SpatiocyteStepper::isRootSurfaceVoxel(Voxel& aVoxel, unsigned aCoord,
+bool SpatiocyteStepper::isRootSurfaceVoxel(Voxel& aVoxel, unsigned aMol,
                                            Comp* aComp)
 {
   for(unsigned i(0); i != theAdjoinSize; ++i)
     {
       if(theLattice[aVoxel.adjoins[i]].id == theNullID ||
-         aVoxel.adjoins[i] == aCoord)
+         aVoxel.adjoins[i] == aMol)
         {
           return true;
         }
@@ -2573,14 +2573,14 @@ bool SpatiocyteStepper::isRootSurfaceVoxel(Voxel& aVoxel, unsigned aCoord,
   return false;
 }
 
-bool SpatiocyteStepper::isParentSurfaceVoxel(Voxel& aVoxel, unsigned aCoord,
+bool SpatiocyteStepper::isParentSurfaceVoxel(Voxel& aVoxel, unsigned aMol,
                                              Comp* aComp)
 {
-  if(!isInsideCoord(aCoord, aComp, -4))
+  if(!isInsideMol(aMol, aComp, -4))
     {
       for(unsigned i(0); i != theAdjoinSize; ++i)
         {
-          if(!isInsideCoord(aVoxel.adjoins[i], aComp, 0))
+          if(!isInsideMol(aVoxel.adjoins[i], aComp, 0))
             {
               return true;
             }
@@ -2590,18 +2590,18 @@ bool SpatiocyteStepper::isParentSurfaceVoxel(Voxel& aVoxel, unsigned aCoord,
 }
 
 bool SpatiocyteStepper::isEnclosedRootSurfaceVoxel(Voxel& aVoxel, 
-                                                   unsigned aCoord,
+                                                   unsigned aMol,
                                                    Comp* aComp,
                                                    Comp* aRootComp)
 { 
   if(aComp->surfaceSub->enclosed || aRootComp->enclosed <= aComp->enclosed)
     { 
-      if(!isInsideCoord(aCoord, aRootComp, -4))
+      if(!isInsideMol(aMol, aRootComp, -4))
         {
           if(!aRootComp->surfaceSub || 
              (aRootComp->surfaceSub && !aRootComp->surfaceSub->enclosed))
             {
-              if(isRootSurfaceVoxel(aVoxel, aCoord, aComp))
+              if(isRootSurfaceVoxel(aVoxel, aMol, aComp))
                 {
                   return true;
                 }
@@ -2610,9 +2610,9 @@ bool SpatiocyteStepper::isEnclosedRootSurfaceVoxel(Voxel& aVoxel,
             {
               for(unsigned i(0); i != theAdjoinSize; ++i)
                 {
-                  unsigned adjoinCoord(aVoxel.adjoins[i]);
-                  Voxel& adjoin(theLattice[adjoinCoord]);
-                  if(isRootSurfaceVoxel(adjoin, adjoinCoord, aComp))
+                  unsigned adjoinMol(aVoxel.adjoins[i]);
+                  Voxel& adjoin(theLattice[adjoinMol]);
+                  if(isRootSurfaceVoxel(adjoin, adjoinMol, aComp))
                     {
                       return true;
                     }
@@ -2623,15 +2623,15 @@ bool SpatiocyteStepper::isEnclosedRootSurfaceVoxel(Voxel& aVoxel,
   return false;
 }
 
-bool SpatiocyteStepper::isSurfaceVoxel(Voxel& aVoxel, unsigned aCoord,
+bool SpatiocyteStepper::isSurfaceVoxel(Voxel& aVoxel, unsigned aMol,
                                        Comp* aComp)
 {
-  if(isPeerCoord(aCoord, aComp))
+  if(isPeerMol(aMol, aComp))
     { 
       return false;
     }
   if(aComp->surfaceSub && !aComp->surfaceSub->enclosed &&
-     isLowerPeerCoord(aCoord, aComp))
+     isLowerPeerMol(aMol, aComp))
     {
       return false;
     }
@@ -2639,14 +2639,14 @@ bool SpatiocyteStepper::isSurfaceVoxel(Voxel& aVoxel, unsigned aCoord,
     {
       Comp* aRootComp(system2Comp(aComp->system->getSuperSystem())); 
       if(aRootComp->surfaceSub && aRootComp->surfaceSub->enclosed && 
-         isRootSurfaceVoxel(aVoxel, aCoord, aRootComp))
+         isRootSurfaceVoxel(aVoxel, aMol, aRootComp))
         {
           return false;
         }
     }
   for(unsigned i(0); i != theAdjoinSize; ++i)
     {
-      if(isInsideCoord(aVoxel.adjoins[i], aComp, 0))
+      if(isInsideMol(aVoxel.adjoins[i], aComp, 0))
         {
           return true;
         }
@@ -2655,12 +2655,12 @@ bool SpatiocyteStepper::isSurfaceVoxel(Voxel& aVoxel, unsigned aCoord,
 }
 
 bool SpatiocyteStepper::isEnclosedSurfaceVoxel(Voxel& aVoxel, 
-                                               unsigned aCoord,
+                                               unsigned aMol,
                                                Comp* aComp)
 {
   for(unsigned i(0); i != theAdjoinSize; ++i)
     {
-      if(isPeerCoord(aVoxel.adjoins[i], aComp))
+      if(isPeerMol(aVoxel.adjoins[i], aComp))
         {
           return true;
         }
@@ -2668,12 +2668,12 @@ bool SpatiocyteStepper::isEnclosedSurfaceVoxel(Voxel& aVoxel,
   return false;
 }
 
-bool SpatiocyteStepper::isLowerPeerCoord(unsigned aCoord, Comp* aComp)
+bool SpatiocyteStepper::isLowerPeerMol(unsigned aMol, Comp* aComp)
 {
   for(std::vector<Comp*>::iterator i(aComp->intersectLowerPeers.begin());
       i != aComp->intersectLowerPeers.end(); ++i)
     {
-      if(isInsideCoord(aCoord, *i, 0))
+      if(isInsideMol(aMol, *i, 0))
         {
           return true;
         }
@@ -2681,12 +2681,12 @@ bool SpatiocyteStepper::isLowerPeerCoord(unsigned aCoord, Comp* aComp)
   return false;
 }
 
-bool SpatiocyteStepper::isPeerCoord(unsigned aCoord, Comp* aComp)
+bool SpatiocyteStepper::isPeerMol(unsigned aMol, Comp* aComp)
 {
   for(std::vector<Comp*>::iterator i(aComp->intersectPeers.begin());
       i != aComp->intersectPeers.end(); ++i)
     {
-      if(isInsideCoord(aCoord, *i, 0))
+      if(isInsideMol(aMol, *i, 0))
         {
           return true;
         }
@@ -2699,11 +2699,11 @@ bool SpatiocyteStepper::isPeerCoord(unsigned aCoord, Comp* aComp)
     {
       if((*i)->surfaceSub && (*i)->surfaceSub->enclosed)
         { 
-          if(isInsideCoord(aCoord, *i, 4))
+          if(isInsideMol(aMol, *i, 4))
             {
               for(unsigned j(0); j != theAdjoinSize; ++j)
                 {
-                  if(isInsideCoord(theLattice[aCoord].adjoins[j],
+                  if(isInsideMol(theLattice[aMol].adjoins[j],
                                    *i, 0))
                     {
                       return true;
@@ -2715,11 +2715,11 @@ bool SpatiocyteStepper::isPeerCoord(unsigned aCoord, Comp* aComp)
   return false;
 }
 
-bool SpatiocyteStepper::isLineVoxel(Voxel& aVoxel, unsigned aCoord,
+bool SpatiocyteStepper::isLineVoxel(Voxel& aVoxel, unsigned aMol,
                                     Comp* aComp)
 {
     const double safety(2.0);
-    const Point aPoint(coord2point(aCoord));
+    const Point aPoint(coord2point(aMol));
 
     double distance(aPoint.x - aComp->centerPoint.x);
     if (-safety < distance && distance <= 0)
@@ -2757,19 +2757,19 @@ bool SpatiocyteStepper::isLineVoxel(Voxel& aVoxel, unsigned aCoord,
     return false;
 }
 
-unsigned SpatiocyteStepper::getStartCoord()
+unsigned SpatiocyteStepper::getStartMol()
 {
   return 0;
 }
 
 
-void SpatiocyteStepper::setMinMaxSurfaceDimensions(unsigned aCoord, 
+void SpatiocyteStepper::setMinMaxSurfaceDimensions(unsigned aMol, 
                                                    Comp* aComp)
 {
   unsigned aRow;
   unsigned aLayer;
   unsigned aCol;
-  coord2global(aCoord, aRow, aLayer, aCol);
+  coord2global(aMol, aRow, aLayer, aCol);
   if(aRow < aComp->minRow)
     {
       aComp->minRow = aRow;
@@ -2840,10 +2840,10 @@ void SpatiocyteStepper::rotateZ(double angle, Point* aPoint, int sign)
     }
 }
 
-bool SpatiocyteStepper::isInsideCoord(unsigned aCoord,
+bool SpatiocyteStepper::isInsideMol(unsigned aMol,
                                       Comp* aComp, double delta)
 {
-  Point aPoint(coord2point(aCoord));
+  Point aPoint(coord2point(aMol));
   Point aCenterPoint(aComp->centerPoint);
   Point aWestPoint(aComp->centerPoint);
   Point anEastPoint(aComp->centerPoint); 
@@ -2980,7 +2980,7 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
       else if((*i)->getIsPopulateSpecies())
         {
           populationSize[(*i)->getVacantSpecies()->getID()] += 
-            (*i)->getPopulateCoordSize();
+            (*i)->getPopulateMolSize();
           bool isPushed(false);
           std::vector<Species*> temp;
           std::vector<Species*>::const_iterator j(prioritySpecies.begin());
@@ -3094,8 +3094,8 @@ void SpatiocyteStepper::clearComp(Comp* aComp)
   for(std::vector<Species*>::const_iterator i(aComp->species.begin());
       i != aComp->species.end(); ++i)
     {
-      (*i)->removeMolecules();
-      (*i)->updateMolecules();
+      (*i)->removeMols();
+      (*i)->updateMols();
     }
 }
 

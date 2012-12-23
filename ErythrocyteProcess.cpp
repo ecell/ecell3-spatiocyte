@@ -46,11 +46,11 @@ void ErythrocyteProcess::initializeThird()
     }
 }
 
-void ErythrocyteProcess::populateMolecules()
+void ErythrocyteProcess::populateMols()
 {
-  for(unsigned int i(0); i != filamentCoords.size(); ++i)
+  for(unsigned int i(0); i != filamentMols.size(); ++i)
     {
-      theSpectrinSpecies->addMolecule(filamentCoords[i]);
+      theSpectrinSpecies->addMol(filamentMols[i]);
     }
   theSpectrinSpecies->setIsPopulated();
   std::cout << "size of spectrin:" << theSpectrinSpecies->size() << std::endl;
@@ -121,52 +121,52 @@ void ErythrocyteProcess::initializeProtofilaments()
   Species* aVacant(theComp->vacantSpecies);
   for(unsigned int i(0); i != aVacant->size(); ++i)
     {
-      unsigned int aCoord(aVacant->getCoord(i));
-      Point aPoint(theSpatiocyteStepper->coord2point(aCoord));
-      unsigned int cnt(getIntersectCount(aPoint, aCoord));
+      unsigned int aMol(aVacant->getMol(i));
+      Point aPoint(theSpatiocyteStepper->coord2point(aMol));
+      unsigned int cnt(getIntersectCount(aPoint, aMol));
       if(cnt == 1)
         {
-          theSpectrinSpecies->addMolecule(aCoord);
+          theSpectrinSpecies->addMol(aMol);
         }
       else if(cnt > 1)
         {
-          theVertexSpecies->addMolecule(aCoord);
+          theVertexSpecies->addMol(aMol);
         }
     }
 }
 
 unsigned int ErythrocyteProcess::getIntersectCount(Point& aPoint,
-                                                   unsigned int aCoord)
+                                                   unsigned int aMol)
 { 
   unsigned int cnt(0);
-  if(isOnUpperPlanes(aPoint, aCoord, Y))
+  if(isOnUpperPlanes(aPoint, aMol, Y))
     {
       ++cnt;
     } 
-  else if(isOnLowerPlanes(aPoint, aCoord, Y))
+  else if(isOnLowerPlanes(aPoint, aMol, Y))
     {
       ++cnt;
     }
-  if(isOnUpperPlanes(aPoint, aCoord, R))
+  if(isOnUpperPlanes(aPoint, aMol, R))
     {
       ++cnt;
     } 
-  else if(isOnLowerPlanes(aPoint, aCoord, R))
+  else if(isOnLowerPlanes(aPoint, aMol, R))
     {
       ++cnt;
     }
-  if(isOnUpperPlanes(aPoint, aCoord, L))
+  if(isOnUpperPlanes(aPoint, aMol, L))
     {
       ++cnt;
     } 
-  else if(isOnLowerPlanes(aPoint, aCoord, L))
+  else if(isOnLowerPlanes(aPoint, aMol, L))
     {
       ++cnt;
     }
   return cnt;
 }
 
-bool ErythrocyteProcess::isOnUpperPlanes(Point& aPoint, unsigned int aCoord,
+bool ErythrocyteProcess::isOnUpperPlanes(Point& aPoint, unsigned int aMol,
                                          Point& N)
 { 
   double currLength(0);
@@ -176,7 +176,7 @@ bool ErythrocyteProcess::isOnUpperPlanes(Point& aPoint, unsigned int aCoord,
       A.x = C.x+currLength*N.x;
       A.y = C.y+currLength*N.y;
       A.z = C.z+currLength*N.z;
-      if(isOnPlane(N, A, aPoint, aCoord)) 
+      if(isOnPlane(N, A, aPoint, aMol)) 
         {
           return true;
         }
@@ -185,7 +185,7 @@ bool ErythrocyteProcess::isOnUpperPlanes(Point& aPoint, unsigned int aCoord,
   return false;
 }
 
-bool ErythrocyteProcess::isOnLowerPlanes(Point& aPoint, unsigned int aCoord,
+bool ErythrocyteProcess::isOnLowerPlanes(Point& aPoint, unsigned int aMol,
                                          Point& N)
 { 
   double currLength(-TriangleAltitude);
@@ -195,7 +195,7 @@ bool ErythrocyteProcess::isOnLowerPlanes(Point& aPoint, unsigned int aCoord,
       A.x = C.x+currLength*N.x;
       A.y = C.y+currLength*N.y;
       A.z = C.z+currLength*N.z;
-      if(isOnPlane(N, A, aPoint, aCoord)) 
+      if(isOnPlane(N, A, aPoint, aMol)) 
         {
           return true;
         }
@@ -208,11 +208,11 @@ bool ErythrocyteProcess::isOnLowerPlanes(Point& aPoint, unsigned int aCoord,
 //P = a point on the plane
 //T = a target point
 bool ErythrocyteProcess::isOnPlane(Point& N, Point& P, Point& T,
-                                   unsigned int aCoord)
+                                   unsigned int aMol)
 {
   if(isInsidePlane(N, P, T))
     {
-      Voxel& aVoxel((*theLattice)[aCoord]);
+      Voxel& aVoxel((*theLattice)[aMol]);
       for(unsigned int j(0); j != aVoxel.adjoinSize; ++j)
         {
           Point adPoint(theSpatiocyteStepper->coord2point(

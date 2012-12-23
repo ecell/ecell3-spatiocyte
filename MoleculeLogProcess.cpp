@@ -28,6 +28,6 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
-#include "CoordinateLogProcess.hpp"
+#include "MoleculeLogProcess.hpp"
 
-LIBECS_DM_INIT(CoordinateLogProcess, Process); 
+LIBECS_DM_INIT(MoleculeLogProcess, Process); 

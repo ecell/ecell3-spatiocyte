@@ -70,14 +70,14 @@ public:
     variableE(NULL),
     variableF(NULL)
   {
-    moleculeA = theNullCoord;
-    moleculeB = theNullCoord;
-    moleculeC = theNullCoord;
-    moleculeD = theNullCoord;
-    moleculeE = theNullCoord;
-    moleculeF = theNullCoord;
-    moleculeP = theNullCoord;
-    moleculeS = theNullCoord;
+    moleculeA = theNullMol;
+    moleculeB = theNullMol;
+    moleculeC = theNullMol;
+    moleculeD = theNullMol;
+    moleculeE = theNullMol;
+    moleculeF = theNullMol;
+    moleculeP = theNullMol;
+    moleculeS = theNullMol;
   }
   virtual ~ReactionProcess() {}
   SIMPLE_SET_GET_METHOD(Real, k);

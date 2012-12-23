@@ -34,20 +34,20 @@ LIBECS_DM_INIT(MicroscopyTrackingProcess, Process);
 
 void MicroscopyTrackingProcess::incSpeciesLatticeCount()
 {
-  for(unsigned int i(0); i != thePositiveSpecies.size(); ++i)
+  for(unsigned i(0); i != thePositiveSpecies.size(); ++i)
     {
       Species* aSpecies(thePositiveSpecies[i]);
-      aSpecies->updateMolecules();
-      unsigned int aMoleculeSize(aSpecies->size());
-      for(unsigned int j(0); j != aMoleculeSize; ++j)
+      aSpecies->updateMols();
+      unsigned aMolSize(aSpecies->size());
+      for(unsigned j(0); j != aMolSize; ++j)
         { 
-          unsigned int aCoord(aSpecies->getCoord(j));
-          Voxel& aMolecule((*theLattice)[aCoord]);
-          ++theFreqLattice[theLatticeSpeciesIndices[i][0]][aCoord];
-          for(unsigned int k(1); k != theLatticeSpeciesIndices[i].size(); ++k)
+          unsigned aMol(aSpecies->getMol(j));
+          Voxel& aVoxel((*theLattice)[aMol]);
+          ++theFreqLattice[theLatticeSpeciesIndices[i][0]][aMol];
+          for(unsigned k(1); k != theLatticeSpeciesIndices[i].size(); ++k)
             {
               ++theFreqLattice[theLatticeSpeciesIndices[i][k]][
-                aMolecule.adjoins[k-1]];
+                aVoxel.adjoins[k-1]];
             }
         }
     }
@@ -56,14 +56,14 @@ void MicroscopyTrackingProcess::incSpeciesLatticeCount()
 void MicroscopyTrackingProcess::logFluorescentSpecies()
 {
   std::vector<Point> aPoints;
-  std::vector<unsigned int> aCoords;
-  for(unsigned int i(0); i != theFreqLatticeSize; ++i)
+  std::vector<unsigned> aMols;
+  for(unsigned i(0); i != theFreqLatticeSize; ++i)
     { 
-      for(unsigned int j(0); j != theLatticeSpecies.size(); ++j)
+      for(unsigned j(0); j != theLatticeSpecies.size(); ++j)
         {
           if(theFreqLattice[j][i])
             {
-              aCoords.push_back(i);
+              aMols.push_back(i);
               /*
               if(theLatticeSpecies[j]->getIsPolymer())
                 {
@@ -85,18 +85,18 @@ void MicroscopyTrackingProcess::logFluorescentSpecies()
     }
   double aCurrentTime(theSpatiocyteStepper->getCurrentTime());
   theLogFile.write((char*)(&aCurrentTime), sizeof(aCurrentTime));
-  unsigned int pointSize(aPoints.size());
+  unsigned pointSize(aPoints.size());
   theLogFile.write((char*)(&pointSize), sizeof(pointSize));
-  for(unsigned int i(0); i != pointSize; ++i)
+  for(unsigned i(0); i != pointSize; ++i)
     {
       Point aPoint(aPoints[i]);
       theLogFile.write((char*)(&aPoint), sizeof(aPoint));
     }
-  for(unsigned int i(0); i != theLatticeSpecies.size(); ++i)
+  for(unsigned i(0); i != theLatticeSpecies.size(); ++i)
     {
-      for(unsigned int j(0); j != pointSize; ++j)
+      for(unsigned j(0); j != pointSize; ++j)
         {
-          unsigned int frequency(theFreqLattice[i][aCoords[j]]);
+          unsigned frequency(theFreqLattice[i][aMols[j]]);
           theLogFile.write((char*)(&frequency), sizeof(frequency));
         }
     }
