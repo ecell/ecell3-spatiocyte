@@ -565,7 +565,7 @@ public:
                   unsigned index(gsl_rng_uniform_int(theRng, range));
                   targetMol = theLattice[targetMol].adjoins[diffuseSize+index];
                 }
-              unsigned short& targetID(theLattice[targetMol].id);
+              const unsigned short& targetID(theLattice[targetMol].id);
               if(theDiffusionInfluencedReactions[targetID])
                 {
                   //If it meets the reaction probability:
