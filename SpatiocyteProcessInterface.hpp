@@ -54,6 +54,7 @@ public:
   virtual void removeSubstrateInterrupt(Species*, Voxel*) = 0;
   virtual void setLatticeProperties(std::vector<Voxel>*,
                                     std::vector<VoxelInfo>*,
+                                    std::vector<unsigned>*,
                                     unsigned, unsigned, unsigned) = 0;
   virtual void substrateValueChanged(Time) = 0;
   virtual void fire() = 0;

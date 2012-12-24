@@ -4,6 +4,15 @@ SpatiocyteVisualizer
 DMS=\
 SpatiocyteStepper\
 SpatiocyteProcess\
+ReactionProcess\
+DiffusionInfluencedReactionProcess\
+DiffusionProcess\
+VisualizationLogProcess\
+MoleculePopulateProcess
+#\
+DMS=\
+SpatiocyteStepper\
+SpatiocyteProcess\
 MassActionProcess\
 ReactionProcess\
 VisualizationLogProcess\
