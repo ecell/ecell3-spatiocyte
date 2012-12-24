@@ -124,6 +124,7 @@ public:
   void initialize(int speciesSize, int anAdjoinSize,
                   unsigned aNullMol, unsigned aNullID)
     {
+      theRands.resize(50);
       theAdjoinSize = anAdjoinSize;
       theNullMol = aNullMol;
       theNullID = aNullID;
@@ -534,31 +535,44 @@ public:
         }
       std::cout << "error in species add collision" << std::endl;
     }
+  void setRands(unsigned start)
+    {
+      std::vector<unsigned> rans;
+      rans.resize(theRands.size());
+      for(unsigned i(0); i != theRands.size(); ++i)
+        {
+          rans[i] = gsl_rng_uniform_int(theRng, theAdjoinSize);
+        }
+      for(unsigned i(0); i != theRands.size(); ++i)
+        {
+          theRands[i] = theAdjoins[theMols[start+i]*theAdjoinSize+rans[i]];
+        }
+    }
   void walk()
     {
       const unsigned beginMolSize(theMolSize);
-      unsigned size(theAdjoinSize);
-      for(unsigned i(0); i < beginMolSize && i < theMolSize; ++i)
+      unsigned j(0);
+      for(unsigned i(0); i < beginMolSize && i < theMolSize; ++i, ++j)
         {
-          if(!isFixedAdjoins)
+          if(j == theRands.size())
             {
-              size = theLattice[theMols[i]].diffuseSize;
+              j = 0;
+              setRands(i);
             }
-          const unsigned ran(gsl_rng_uniform_int(theRng, size));
-          if(theLattice[theAdjoins[theMols[i]*theAdjoinSize+ran]].id == theVacantID)
+          if(theLattice[theRands[j]].id == theVacantID)
             {
               if(theWalkProbability == 1 ||
                  gsl_rng_uniform(theRng) < theWalkProbability)
                 {
-                  theLattice[theAdjoins[theMols[i]*theAdjoinSize+ran]].id = theID;
+                  theLattice[theRands[j]].id = theID;
                   theLattice[theMols[i]].id = theVacantID;
-                  theMols[i] = theAdjoins[theMols[i]*theAdjoinSize+ran];
+                  theMols[i] = theRands[j];
                 }
             }
           else
             {
-              unsigned targetMol(theAdjoins[theMols[i]*theAdjoinSize+ran]);
-              if(theLattice[theAdjoins[theMols[i]*theAdjoinSize+ran]].id == theComp->interfaceID)
+              unsigned targetMol(theRands[j]);
+              if(theLattice[theRands[j]].id == theComp->interfaceID)
                 {
                   unsigned diffuseSize(theLattice[targetMol].diffuseSize);
                   unsigned range(theInfo[targetMol].adjoinSize-diffuseSize);
@@ -1777,6 +1791,7 @@ private:
   std::vector<SpatiocyteNextReactionProcess*> theInterruptedProcesses;
   std::vector<Origin> theMolOrigins;
   std::vector<unsigned>& theAdjoins;
+  std::vector<unsigned> theRands;
   std::vector<VoxelInfo>& theInfo;
   std::vector<Voxel>& theLattice;
   std::vector<std::vector<unsigned> > theIntersectLipids;
