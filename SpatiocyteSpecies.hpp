@@ -539,25 +539,21 @@ public:
       if(theTarMols.size() < theMolSize)
         {
           theTarMols.resize(theMolSize);
-          theRands.resize(theMolSize);
-        }
-      for(unsigned i(0); i != theMolSize; ++i)
-        {
-          theRands[i] = gsl_rng_uniform_int(theRng, theAdjoinSize);
-        }
-      for(unsigned i(0); i != theMolSize; ++i)
-        {
-          theTarMols[i] = theAdjoins[theMols[i]*theAdjoinSize+theRands[i]];
-        }
-      /*
-      for(unsigned i(0); i != theMolSize; ++i)
-        {
-          if(theLattice[theTarMols[i]].id == theVacantID)
+          theRands.resize(theMolSize*10);
+          for(unsigned i(0); i != theMolSize*10; ++i)
             {
-              theLattice[theTarMols[i]].id = theID;
+              theRands[i] = gsl_rng_uniform_int(theRng, theAdjoinSize);
             }
         }
-        */
+      unsigned j(gsl_rng_uniform_int(theRng, theRands.size()));
+      for(unsigned i(0); i != theMolSize; ++i, ++j)
+        {
+          if(j == theRands.size())
+            {
+              j = 0;
+            }
+          theTarMols[i] = theAdjoins[theMols[i]*theAdjoinSize+theRands[j]];
+        }
     }
   void walk()
     {

@@ -37,7 +37,7 @@ PolymerizationProcess
 
 ECELL3_DMC = ecell3-dmc
 CXX = g++
-CXXFLAGS = -Wall -O3 -g
+CXXFLAGS = -Wall -O3 -g -fprefetch-loop-arrays
 GUIFLAGS = $(CXXFLAGS) $(shell pkg-config --cflags gtkmm-2.4 gtkglextmm-x11-1.2)
 CPPFLAGS = -DG_DISABLE_DEPRECATED -DGDK_PIXBUF_DISABLE_DEPRECATED -DPNG_SKIP_SETJMP_CHECK # -DGDK_DISABLE_DEPRECATED 
 GUILIBS =
