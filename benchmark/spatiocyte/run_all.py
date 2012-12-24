@@ -7,7 +7,7 @@ import run_single
 prefix = 'out_'
 
 T = 10.
-REPEAT = 30
+REPEAT = 3
 R = 2.5e-9
 D = 1e-12
 
