@@ -124,7 +124,7 @@ public:
   void initialize(int speciesSize, int anAdjoinSize,
                   unsigned aNullMol, unsigned aNullID)
     {
-      theRands.resize(50);
+      theRands.resize(10000);
       theAdjoinSize = anAdjoinSize;
       theNullMol = aNullMol;
       theNullID = aNullID;
@@ -552,27 +552,23 @@ public:
     {
       const unsigned beginMolSize(theMolSize);
       unsigned j(0);
+      setRands(0);
       for(unsigned i(0); i < beginMolSize && i < theMolSize; ++i, ++j)
         {
-          if(j == theRands.size())
-            {
-              j = 0;
-              setRands(i);
-            }
-          if(theLattice[theRands[j]].id == theVacantID)
+          if(theLattice[theRands[i]].id == theVacantID)
             {
               if(theWalkProbability == 1 ||
                  gsl_rng_uniform(theRng) < theWalkProbability)
                 {
-                  theLattice[theRands[j]].id = theID;
+                  theLattice[theRands[i]].id = theID;
                   theLattice[theMols[i]].id = theVacantID;
-                  theMols[i] = theRands[j];
+                  theMols[i] = theRands[i];
                 }
             }
           else
             {
-              unsigned targetMol(theRands[j]);
-              if(theLattice[theRands[j]].id == theComp->interfaceID)
+              unsigned targetMol(theRands[i]);
+              if(theLattice[theRands[i]].id == theComp->interfaceID)
                 {
                   unsigned diffuseSize(theLattice[targetMol].diffuseSize);
                   unsigned range(theInfo[targetMol].adjoinSize-diffuseSize);
