@@ -543,7 +543,7 @@ public:
         {
           rans[i] = gsl_rng_uniform_int(theRng, theAdjoinSize);
         }
-      for(unsigned i(0); i != theRands.size(); ++i)
+      for(unsigned i(0); i != theRands.size() && start+i < theMolSize; ++i)
         {
           theRands[i] = theAdjoins[theMols[start+i]*theAdjoinSize+rans[i]];
         }
@@ -555,20 +555,25 @@ public:
       setRands(0);
       for(unsigned i(0); i < beginMolSize && i < theMolSize; ++i, ++j)
         {
-          if(theLattice[theRands[i]].id == theVacantID)
+          if(j == theRands.size())
+            {
+              j = 0;
+              setRands(i);
+            }
+          if(theLattice[theRands[j]].id == theVacantID)
             {
               if(theWalkProbability == 1 ||
                  gsl_rng_uniform(theRng) < theWalkProbability)
                 {
-                  theLattice[theRands[i]].id = theID;
+                  theLattice[theRands[j]].id = theID;
                   theLattice[theMols[i]].id = theVacantID;
-                  theMols[i] = theRands[i];
+                  theMols[i] = theRands[j];
                 }
             }
           else
             {
-              unsigned targetMol(theRands[i]);
-              if(theLattice[theRands[i]].id == theComp->interfaceID)
+              unsigned targetMol(theRands[j]);
+              if(theLattice[theRands[j]].id == theComp->interfaceID)
                 {
                   unsigned diffuseSize(theLattice[targetMol].diffuseSize);
                   unsigned range(theInfo[targetMol].adjoinSize-diffuseSize);
