@@ -130,7 +130,7 @@ public:
     {
       thePriorityQueue = aPriorityQueue;
     }
-  virtual void setLatticeProperties(std::vector<Voxel>* aLattice,
+  virtual void setLatticeProperties(std::vector<unsigned short>* aLattice,
                                     std::vector<VoxelInfo>* anInfo,
                                     std::vector<unsigned>* anAdjoins,
                                     unsigned anAdjoiningMolSize,
@@ -167,8 +167,8 @@ public:
     {
       return 0;
     }
-  virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
-  virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
+  virtual void addSubstrateInterrupt(Species* aSpecies, unsigned short aMolecule) {}
+  virtual void removeSubstrateInterrupt(Species* aSpecies, unsigned short aMolecule) {}
   virtual void substrateValueChanged(Time aCurrentTime)
     {
       const Time anOldTime(theTime);
@@ -202,7 +202,7 @@ public:
       return aVariable;
     }
 protected:
-  String getIDString(Voxel*) const;
+  String getIDString(unsigned short) const;
   String getIDString(Species*) const;
   String getIDString(Variable*) const;
   String getIDString(Comp*) const;
@@ -224,7 +224,7 @@ protected:
   std::vector<Species*> theProcessSpecies;
   std::vector<unsigned>* theAdjoins;
   std::vector<VoxelInfo>* theInfo;
-  std::vector<Voxel>* theLattice;
+  std::vector<unsigned short>* theLattice;
   VariableReferenceVector thePositiveVariableReferences;
   VariableReferenceVector theNegativeVariableReferences;
   VariableReferenceVector theZeroVariableReferences;

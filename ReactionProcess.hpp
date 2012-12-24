@@ -201,8 +201,8 @@ public:
     {
       return moleculeS;
     }
-  virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
-  virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
+  virtual void addSubstrateInterrupt(Species*, unsigned short) {}
+  virtual void removeSubstrateInterrupt(Species*, unsigned short) {}
 protected:
   virtual void calculateOrder();
 protected:

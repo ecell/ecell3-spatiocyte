@@ -47,8 +47,8 @@ public:
   DiffusionInfluencedReactionProcess():
    Collision(0) {}
   virtual ~DiffusionInfluencedReactionProcess() {}
-  virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMol) {}
-  virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMol) {}
+  virtual void addSubstrateInterrupt(Species*, unsigned short) {}
+  virtual void removeSubstrateInterrupt(Species*, unsigned short) {}
   virtual void initialize()
     {
       if(isInitialized)

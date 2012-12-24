@@ -7,7 +7,7 @@ try:
 except NameError:
   T = 1e-1
   L = 1e-6
-  N = 1e+3
+  N = 1e+4
   R = 2.5e-9
   D = 1e-12
   filename = 'tempfile.txt'

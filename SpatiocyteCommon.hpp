@@ -107,16 +107,11 @@ struct Point
   double z;
 };
 
-struct Voxel
-{
-  unsigned short id;
-  unsigned short diffuseSize;
-};
-
 struct VoxelInfo
 {
-  unsigned short coord;
+  unsigned short diffuseSize;
   unsigned short adjoinSize;
+  unsigned short coord;
   Point point;
 };
 

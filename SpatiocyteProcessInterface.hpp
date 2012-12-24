@@ -50,9 +50,9 @@ public:
   virtual Time getTime() const = 0;
   virtual int getQueuePriority() const = 0;
   virtual void setQueueID(ProcessID) = 0;
-  virtual void addSubstrateInterrupt(Species*, Voxel*) = 0;
-  virtual void removeSubstrateInterrupt(Species*, Voxel*) = 0;
-  virtual void setLatticeProperties(std::vector<Voxel>*,
+  virtual void addSubstrateInterrupt(Species*, unsigned short) = 0;
+  virtual void removeSubstrateInterrupt(Species*, unsigned short) = 0;
+  virtual void setLatticeProperties(std::vector<unsigned short>*,
                                     std::vector<VoxelInfo>*,
                                     std::vector<unsigned>*,
                                     unsigned, unsigned, unsigned) = 0;

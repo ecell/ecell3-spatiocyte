@@ -3,7 +3,7 @@
 ifundefine T
   define T 1e-1
   define L 1e-6
-  define N 1000
+  define N 10000
   define DELTA_T 4.166e-6
   define D 1e-12
 endif
