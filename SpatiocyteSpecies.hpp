@@ -540,27 +540,25 @@ public:
       unsigned size(theAdjoinSize);
       for(unsigned i(0); i < beginMolSize && i < theMolSize; ++i)
         {
-          Voxel& source(theLattice[theMols[i]]);
           if(!isFixedAdjoins)
             {
-              size = source.diffuseSize;
+              size = theLattice[theMols[i]].diffuseSize;
             }
-          unsigned targetMol(theAdjoins[theMols[i]*theAdjoinSize+
-                             gsl_rng_uniform_int(theRng, size)]);
-          unsigned short& targetID(theLattice[targetMol].id);
-          if(targetID == theVacantID)
+          const unsigned ran(gsl_rng_uniform_int(theRng, size));
+          if(theLattice[theAdjoins[theMols[i]*theAdjoinSize+ran]].id == theVacantID)
             {
               if(theWalkProbability == 1 ||
                  gsl_rng_uniform(theRng) < theWalkProbability)
                 {
-                  targetID = theID;
-                  source.id = theVacantID;
-                  theMols[i] = targetMol;
+                  theLattice[theAdjoins[theMols[i]*theAdjoinSize+ran]].id = theID;
+                  theLattice[theMols[i]].id = theVacantID;
+                  theMols[i] = theAdjoins[theMols[i]*theAdjoinSize+ran];
                 }
             }
           else
             {
-              if(targetID == theComp->interfaceID)
+              unsigned targetMol(theAdjoins[theMols[i]*theAdjoinSize+ran]);
+              if(theLattice[theAdjoins[theMols[i]*theAdjoinSize+ran]].id == theComp->interfaceID)
                 {
                   unsigned diffuseSize(theLattice[targetMol].diffuseSize);
                   unsigned range(theInfo[targetMol].adjoinSize-diffuseSize);
