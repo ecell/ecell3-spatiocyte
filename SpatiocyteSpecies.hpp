@@ -85,9 +85,9 @@ class Species
 {
 public:
   Species(SpatiocyteStepper* aStepper, Variable* aVariable,
-          unsigned short anID, int anInitMolSize, const gsl_rng* aRng,
-          double voxelRadius, std::vector<unsigned short>& aLattice,
-          std::vector<VoxelInfo>& anInfo, std::vector<unsigned>& anAdjoins):
+          unsigned anID, int anInitMolSize, const gsl_rng* aRng,
+          double voxelRadius, std::vector<unsigned>& aLattice,
+          std::vector<VoxelInfo>& anInfo):
     isCentered(false),
     isCompVacant(false),
     isDiffusing(false),
@@ -118,7 +118,6 @@ public:
     theStepper(aStepper),
     theVariable(aVariable),
     theCompMols(&theMols),
-    theAdjoins(anAdjoins),
     theInfo(anInfo),
     theLattice(aLattice) {}
   ~Species() {}
@@ -282,7 +281,7 @@ public:
     {
       return theInfo[getMol(anIndex)].point;
     }
-  unsigned short getID() const
+  unsigned getID() const
     {
       return theID;
     }
@@ -543,9 +542,10 @@ public:
           theRands.resize(std::min(unsigned(10000), theMolSize*10));
           for(unsigned i(0); i != theRands.size(); ++i)
             {
-              theRands[i] = gsl_rng_uniform_int(theRng, theAdjoinSize);
+              theRands[i] = gsl_rng_uniform_int(theRng, theAdjoinSize-1)+1;
             }
         }
+      /*
       unsigned j(gsl_rng_uniform_int(theRng, theRands.size()));
       for(unsigned i(0); i != theMolSize; ++i, ++j)
         {
@@ -553,23 +553,30 @@ public:
             {
               j = gsl_rng_uniform_int(theRng, theRands.size());
             }
-          theTarMols[i] = theAdjoins[theMols[i]*theAdjoinSize+theRands[j]];
+          theTarMols[i] = theLattice[theMols[i]*theAdjoinSize+theRands[j]];
         }
+        */
     }
   void walk()
     {
       const unsigned beginMolSize(theMolSize);
       setTarMols();
-      for(unsigned i(0); i < beginMolSize && i < theMolSize; ++i)
+      unsigned j(gsl_rng_uniform_int(theRng, theRands.size()));
+      for(unsigned i(0); i < beginMolSize && i < theMolSize; ++i, ++j)
         {
-          if(theLattice[theTarMols[i]] == theVacantID)
+          while(j == theRands.size())
+            {
+              j = gsl_rng_uniform_int(theRng, theRands.size());
+            }
+          const unsigned tar();
+          if(theLattice[theLattice[theMols[i]*theAdjoinSize+theRands[j]]*theAdjoinSize] == theVacantID)
             {
               if(theWalkProbability == 1 ||
                  gsl_rng_uniform(theRng) < theWalkProbability)
                 {
-                  theLattice[theTarMols[i]] = theID;
-                  theLattice[theMols[i]] = theVacantID;
-                  theMols[i] = theTarMols[i];
+                  theLattice[theLattice[theMols[i]*theAdjoinSize+theRands[j]]*theAdjoinSize] = theID;
+                  theLattice[theMols[i]*theAdjoinSize] = theVacantID;
+                  theMols[i] = theLattice[theMols[i]*theAdjoinSize+theRands[j]];
                 }
             }
           /*
@@ -581,9 +588,9 @@ public:
                   unsigned diffuseSize(theLattice[targetMol].diffuseSize);
                   unsigned range(theInfo[targetMol].adjoinSize-diffuseSize);
                   unsigned index(gsl_rng_uniform_int(theRng, range));
-                  targetMol = theAdjoins[targetMol*theAdjoinSize+diffuseSize+index];
+                  targetMol = theLattice[targetMol*theAdjoinSize+diffuseSize+index];
                 }
-              const unsigned short& targetID(theLattice[targetMol].id);
+              const unsigned& targetID(theLattice[targetMol].id);
               if(theDiffusionInfluencedReactions[targetID])
                 {
                   //If it meets the reaction probability:
@@ -638,10 +645,10 @@ public:
       for(unsigned i(0); i < beginMolSize && i < theMolSize; ++i)
         {
           unsigned srcMol(theMols[i]);
-          unsigned short& source(theLattice[srcMol]);
+          unsigned& source(theLattice[srcMol*theAdjoinSize]);
           int size(theInfo[srcMol].diffuseSize);
-          unsigned tarMol(theAdjoins[theMols[i]*theAdjoinSize+gsl_rng_uniform_int(theRng, size)]);
-          unsigned short& target(theLattice[tarMol]);
+          unsigned tarMol(theLattice[theMols[i]*theAdjoinSize+gsl_rng_uniform_int(theRng, size-1)+1]);
+          unsigned& target(theLattice[tarMol*theAdjoinSize]);
           if(target == theVacantID)
             {
               if(theWalkProbability == 1 ||
@@ -664,7 +671,7 @@ public:
       updateVacantMols();
       for(unsigned i(0); i < theMolSize; ++i)
         {
-          unsigned short& source(theLattice[theMols[i]]);
+          unsigned& source(theLattice[theMols[i]*theAdjoinSize]);
           int size;
           if(isFixedAdjoins)
             {
@@ -674,9 +681,9 @@ public:
             {
               size = theInfo[theMols[i]].diffuseSize;
             }
-          unsigned aMol(theAdjoins[theMols[i]*theAdjoinSize+
-                        gsl_rng_uniform_int(theRng, size)]);
-          unsigned short& target(theLattice[aMol]);
+          unsigned aMol(theLattice[theMols[i]*theAdjoinSize+
+                        gsl_rng_uniform_int(theRng, size-1)+1]);
+          unsigned& target(theLattice[aMol*theAdjoinSize]);
           if(target == theVacantID)
             {
               if(theWalkProbability == 1 ||
@@ -772,7 +779,7 @@ public:
           unsigned aMol(getMol(i));
           if(theStepper->isPeriodicEdgeMol(aMol, theComp))
             {
-              theLattice[aMol] = theLattice[theNullMol];
+              theLattice[aMol*theAdjoinSize] = theLattice[theNullMol*theAdjoinSize];
             }
           else 
             { 
@@ -854,7 +861,7 @@ public:
           //Voxel* aVoxel(theVacantSpecies->getCompVoxel(i));
           unsigned aMol(theVacantSpecies->getCompMol(i));
           //if(aVoxel->id == theID)
-          if(theLattice[aMol] == theID)
+          if(theLattice[aMol*theAdjoinSize] == theID)
             {
               ++theMolSize;
               if(theMolSize > theMols.size())
@@ -878,7 +885,7 @@ public:
           //Voxel* aVoxel(theVacantSpecies->getCompVoxel(i));
           unsigned aMol(theVacantSpecies->getCompMol(i));
           //if(aVoxel->id == theID)
-          if(theLattice[aMol] == theID)
+          if(theLattice[aMol*theAdjoinSize] == theID)
             {
               ++theMolSize;
             }
@@ -917,7 +924,7 @@ public:
     {
       if(isMultiscale)
         {
-          Species* aSpecies(theStepper->id2species(theLattice[aMol]));
+          Species* aSpecies(theStepper->id2species(theLattice[aMol*theAdjoinSize]));
           if(aSpecies->getVacantSpecies() != theMultiscaleVacantSpecies)
             {
               doAddMol(aMol, aTag);
@@ -928,7 +935,7 @@ public:
         {
           doAddMol(aMol, aTag);
         }
-      theLattice[aMol] = theID;
+      theLattice[aMol*theAdjoinSize] = theID;
     }
   void doAddMol(unsigned aMol, Tag& aTag)
     {
@@ -960,9 +967,9 @@ public:
       for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
         {
           unsigned coordB(theIntersectLipids[coordA][i]+lipStartMol);
-          if(theLattice[coordB] == theMultiscaleVacantSpecies->getID())
+          if(theLattice[coordB*theAdjoinSize] == theMultiscaleVacantSpecies->getID())
             {
-              theLattice[coordB] = theID;
+              theLattice[coordB*theAdjoinSize] = theID;
             }
           else
             {
@@ -976,9 +983,9 @@ public:
       for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
         {
           unsigned coordB(theIntersectLipids[coordA][i]+lipStartMol);
-          if(theLattice[coordB] == theID)
+          if(theLattice[coordB*theAdjoinSize] == theID)
             {
-              theLattice[coordB] = theMultiscaleVacantSpecies->getID();
+              theLattice[coordB*theAdjoinSize] = theMultiscaleVacantSpecies->getID();
             }
           else
             {
@@ -992,7 +999,7 @@ public:
       for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
         {
           unsigned coordB(theIntersectLipids[coordA][i]+lipStartMol);
-          unsigned anID(theLattice[coordB]);
+          unsigned anID(theLattice[coordB*theAdjoinSize]);
           if(anID == theID ||
              std::find(theMultiscaleIDs.begin(), theMultiscaleIDs.end(),
                        anID) != theMultiscaleIDs.end())
@@ -1011,21 +1018,21 @@ public:
       for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
         {
           unsigned coordB(theIntersectLipids[coordA][i]+lipStartMol);
-          temp[i] = theLattice[coordB];
-          theLattice[coordB] = theSpeciesSize;
+          temp[i] = theLattice[coordB*theAdjoinSize];
+          theLattice[coordB*theAdjoinSize] = theSpeciesSize;
         }
       isIntersect = isIntersectMultiscale(tarMol);
       coordA = srcMol-vacStartMol;
       for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
         {
           unsigned coordB(theIntersectLipids[coordA][i]+lipStartMol);
-          theLattice[coordB] = temp[i];
+          theLattice[coordB*theAdjoinSize] = temp[i];
         }
       return isIntersect;
     }
   void multiscaleBind(unsigned aMol)
     {
-      unsigned anID(theLattice[aMol]);
+      unsigned anID(theLattice[aMol*theAdjoinSize]);
       Species* source(theStepper->id2species(anID));
       Species* target(theStepper->id2species(theMultiscaleBindIDs[anID]));
       source->softRemoveMol(aMol);
@@ -1033,7 +1040,7 @@ public:
     }
   void multiscaleUnbind(unsigned aMol)
     {
-      unsigned anID(theLattice[aMol]);
+      unsigned anID(theLattice[aMol*theAdjoinSize]);
       Species* source(theStepper->id2species(anID));
       Species* target(theStepper->id2species(theMultiscaleUnbindIDs[anID]));
       source->softRemoveMol(aMol);
@@ -1041,7 +1048,7 @@ public:
     }
   void addCompVoxel(unsigned aMol)
     {
-      theLattice[aMol] = theID;
+      theLattice[aMol*theAdjoinSize] = theID;
       //theCompVoxels->push_back(&theLattice[aMol]);
       theCompMols->push_back(aMol);
       ++theMolSize;
@@ -1125,7 +1132,7 @@ public:
     {
       if(isMultiscale)
         {
-          Species* aSpecies(theStepper->id2species(theLattice[aMol]));
+          Species* aSpecies(theStepper->id2species(theLattice[aMol*theAdjoinSize]));
           if(aSpecies->getVacantSpecies() != theMultiscaleVacantSpecies)
             {
               softRemoveMolIndex(getMolIndex(aMol));
@@ -1140,7 +1147,7 @@ public:
     {
       if(isMultiscale)
         {
-          Species* aSpecies(theStepper->id2species(theLattice[aMol]));
+          Species* aSpecies(theStepper->id2species(theLattice[aMol*theAdjoinSize]));
           if(aSpecies->getVacantSpecies() != theMultiscaleVacantSpecies)
             {
               removeMolIndex(getMolIndex(aMol));
@@ -1155,7 +1162,7 @@ public:
     {
       if(!isVacant)
         {
-          theLattice[theMols[anIndex]] = theVacantID;
+          theLattice[theMols[anIndex]*theAdjoinSize] = theVacantID;
           softRemoveMolIndex(anIndex);
         }
     }
@@ -1191,7 +1198,7 @@ public:
         {
           for(unsigned i(0); i < theMolSize; ++i)
             {
-              theLattice[theMols[i]] = theVacantSpecies->getID();
+              theLattice[theMols[i]*theAdjoinSize] = theVacantSpecies->getID();
             }
           theMolSize = 0;
           theVariable->setValue(theMolSize);
@@ -1236,16 +1243,16 @@ public:
           unsigned periodicMol(theStepper->getPeriodicMol(
                                                 getMol(i),
                                                 theDimension, &anOrigin));
-          if(theLattice[periodicMol] == theVacantID)
+          if(theLattice[periodicMol*theAdjoinSize] == theVacantID)
             {
-              theLattice[theMols[i]] = theVacantID;
+              theLattice[theMols[i]*theAdjoinSize] = theVacantID;
               theMols[i] = periodicMol;
-              theLattice[theMols[i]] = theID;
+              theLattice[theMols[i]*theAdjoinSize] = theID;
               theMolOrigins[i] = anOrigin;
             }
         }
     }
-  int getVacantID() const
+  unsigned getVacantID() const
     {
       return theVacantID;
     }
@@ -1375,9 +1382,9 @@ public:
       std::vector<unsigned> compMols;
       if(searchVacant)
         { 
-          for(unsigned i(0); i != theInfo[srcMol].adjoinSize; ++i)
+          for(unsigned i(1); i != theInfo[srcMol].adjoinSize; ++i)
             {
-              unsigned aMol(theAdjoins[srcMol*theAdjoinSize+i]);
+              unsigned aMol(theLattice[srcMol*theAdjoinSize+i]);
               if(isPopulatable(aMol))
                 {
                   compMols.push_back(aMol);
@@ -1386,10 +1393,10 @@ public:
         }
       else
         {
-          for(unsigned i(0); i != theInfo[srcMol].adjoinSize; ++i)
+          for(unsigned i(1); i != theInfo[srcMol].adjoinSize; ++i)
             {
-              unsigned aMol(theAdjoins[srcMol*theAdjoinSize+i]);
-              if(theStepper->id2Comp(theLattice[aMol]) == theComp)
+              unsigned aMol(theLattice[srcMol*theAdjoinSize+i]);
+              if(theStepper->id2Comp(theLattice[aMol*theAdjoinSize]) == theComp)
                 {
                   compMols.push_back(aMol);
                 }
@@ -1401,7 +1408,7 @@ public:
     {
       if(bindingSite < theInfo[srcMol].adjoinSize)
         { 
-          unsigned aMol(theAdjoins[srcMol*theAdjoinSize+bindingSite]);
+          unsigned aMol(theLattice[srcMol*theAdjoinSize+bindingSite+1]);
           if(isPopulatable(aMol))
             {
               return aMol;
@@ -1415,10 +1422,10 @@ public:
       std::vector<unsigned> compMols;
       if(searchVacant)
         { 
-          for(unsigned i(0); i != theInfo[srcMol].adjoinSize; ++i)
+          for(unsigned i(1); i != theInfo[srcMol].adjoinSize; ++i)
             {
-              unsigned aMol(theAdjoins[srcMol*theAdjoinSize+i]);
-              if(theLattice[aMol] == aTargetSpecies->getID())
+              unsigned aMol(theLattice[srcMol*theAdjoinSize+i]);
+              if(theLattice[aMol*theAdjoinSize] == aTargetSpecies->getID())
                 {
                   compMols.push_back(aMol);
                 }
@@ -1426,10 +1433,10 @@ public:
         }
       else
         {
-          for(unsigned i(0); i != theInfo[srcMol].adjoinSize; ++i)
+          for(unsigned i(1); i != theInfo[srcMol].adjoinSize; ++i)
             {
-              unsigned aMol(theAdjoins[srcMol*theAdjoinSize+i]);
-              if(theStepper->id2Comp(theLattice[aMol]) == theComp)
+              unsigned aMol(theLattice[srcMol*theAdjoinSize+i]);
+              if(theStepper->id2Comp(theLattice[aMol*theAdjoinSize]) == theComp)
                 {
                   compMols.push_back(aMol);
                 }
@@ -1443,9 +1450,9 @@ public:
       std::vector<unsigned> compMols;
       if(searchVacant)
         { 
-          for(unsigned i(0); i != theInfo[srcMol].adjoinSize; ++i)
+          for(unsigned i(1); i != theInfo[srcMol].adjoinSize; ++i)
             {
-              unsigned aMol(theAdjoins[srcMol*theAdjoinSize+i]);
+              unsigned aMol(theLattice[srcMol*theAdjoinSize+i]);
               if(aMol != tarMol && isPopulatable(aMol))
                 {
                   compMols.push_back(aMol);
@@ -1454,10 +1461,10 @@ public:
         }
       else
         {
-          for(unsigned i(0); i != theInfo[srcMol].adjoinSize; ++i)
+          for(unsigned i(1); i != theInfo[srcMol].adjoinSize; ++i)
             {
-              unsigned aMol(theAdjoins[srcMol*theAdjoinSize+i]);
-              if(theStepper->id2Comp(theLattice[aMol]) == theComp &&
+              unsigned aMol(theLattice[srcMol*theAdjoinSize+i]);
+              if(theStepper->id2Comp(theLattice[aMol*theAdjoinSize]) == theComp &&
                  aMol != tarMol)
                 {
                   compMols.push_back(aMol);
@@ -1469,9 +1476,9 @@ public:
   unsigned getAdjoinMolCnt(unsigned srcMol, Species* aTargetSpecies)
     {
       unsigned cnt(0);
-      for(unsigned i(0); i != theInfo[srcMol].adjoinSize; ++i)
+      for(unsigned i(1); i != theInfo[srcMol].adjoinSize; ++i)
         {
-          if(theLattice[theAdjoins[srcMol*theAdjoinSize+i]] == aTargetSpecies->getID())
+          if(theLattice[theLattice[srcMol*theAdjoinSize+i]*theAdjoinSize] == aTargetSpecies->getID())
             {
               ++cnt;
             }
@@ -1486,9 +1493,9 @@ public:
         {
           if(searchVacant)
             { 
-              for(unsigned i(0); i != theInfo[srcMol].adjoinSize; ++i)
+              for(unsigned i(1); i != theInfo[srcMol].adjoinSize; ++i)
                 {
-                  unsigned aMol(theAdjoins[srcMol*theAdjoinSize+i]);
+                  unsigned aMol(theLattice[srcMol*theAdjoinSize+i]);
                   if(isPopulatable(aMol))
                     {
                       compMols.push_back(aMol);
@@ -1497,10 +1504,10 @@ public:
             }
           else
             {
-              for(unsigned i(0); i != theInfo[srcMol].adjoinSize; ++i)
+              for(unsigned i(1); i != theInfo[srcMol].adjoinSize; ++i)
                 {
-                  unsigned aMol(theAdjoins[srcMol*theAdjoinSize+i]);
-                  if(theStepper->id2Comp(theLattice[aMol]) == theComp)
+                  unsigned aMol(theLattice[srcMol*theAdjoinSize+i]);
+                  if(theStepper->id2Comp(theLattice[aMol]*theAdjoinSize) == theComp)
                     {
                       compMols.push_back(aMol);
                     }
@@ -1529,7 +1536,7 @@ public:
         {
           const int r(gsl_rng_uniform_int(theRng, aMols.size())); 
           unsigned aMol(aMols[r]);
-          if(theLattice[aMol] == aVacantSpecies->getID())
+          if(theLattice[aMol*theAdjoinSize] == aVacantSpecies->getID())
             {
               return aMol;
             }
@@ -1630,7 +1637,7 @@ public:
           for(unsigned j(0); j != theIntersectLipids[i].size(); ++j)
             {
               unsigned aMol(theIntersectLipids[i][j]+lipStartMol);
-              if(theLattice[aMol] == anID)
+              if(theLattice[aMol*theAdjoinSize] == anID)
                 {
                   fraction += 1;
                 }
@@ -1656,7 +1663,7 @@ public:
               for(unsigned k(0); k != theIntersectLipids[j].size(); ++k)
                 {
                   unsigned aMol(theIntersectLipids[j][k]+lipStartMol);
-                  if(theLattice[aMol] == theID)
+                  if(theLattice[aMol*theAdjoinSize] == theID)
                     {
                       thePopulatableMols.push_back(aMol);
                     }
@@ -1676,13 +1683,13 @@ public:
             {
               index = gsl_rng_uniform_int(theRng, thePopulatableMols.size());
             }
-          while(theLattice[thePopulatableMols[index]] != theID);
+          while(theLattice[thePopulatableMols[index]*theAdjoinSize] != theID);
           aMol =  thePopulatableMols[index];
         }
       else
         {
           aMol = getRandomMol();
-          while(theLattice[aMol] != theID)
+          while(theLattice[aMol*theAdjoinSize] != theID)
             {
               aMol = getRandomMol();
             }
@@ -1711,7 +1718,7 @@ public:
               return false;
             }
         }
-      else if(theLattice[aMol] != theVacantID)
+      else if(theLattice[aMol*theAdjoinSize] != theVacantID)
         {
           return false;
         }
@@ -1750,7 +1757,7 @@ private:
   bool isTag;
   bool isTagged;
   bool isVacant;
-  const unsigned short theID;
+  const unsigned theID;
   unsigned lipStartMol;
   unsigned theAdjoinSize;
   unsigned theCollision;
@@ -1762,7 +1769,7 @@ private:
   unsigned theSpeciesSize;
   unsigned vacStartMol;
   int thePolymerDirectionality;
-  unsigned short theVacantID;
+  unsigned theVacantID;
   double D;
   double theDiffuseRadius;
   double theDiffusionInterval;
@@ -1795,11 +1802,10 @@ private:
     theDiffusionInfluencedReactions;
   std::vector<SpatiocyteNextReactionProcess*> theInterruptedProcesses;
   std::vector<Origin> theMolOrigins;
-  std::vector<unsigned>& theAdjoins;
   std::vector<unsigned> theRands;
   std::vector<unsigned> theTarMols;
   std::vector<VoxelInfo>& theInfo;
-  std::vector<unsigned short>& theLattice;
+  std::vector<unsigned>& theLattice;
   std::vector<std::vector<unsigned> > theIntersectLipids;
 };
 

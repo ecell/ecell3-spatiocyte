@@ -130,15 +130,13 @@ public:
     {
       thePriorityQueue = aPriorityQueue;
     }
-  virtual void setLatticeProperties(std::vector<unsigned short>* aLattice,
+  virtual void setLatticeProperties(std::vector<unsigned>* aLattice,
                                     std::vector<VoxelInfo>* anInfo,
-                                    std::vector<unsigned>* anAdjoins,
                                     unsigned anAdjoiningMolSize,
                                     unsigned aNullMol, unsigned aNullID)
     {
       theLattice = aLattice;
       theInfo = anInfo;
-      theAdjoins = anAdjoins;
       theAdjoinSize = anAdjoiningMolSize;
       theNullMol = aNullMol;
       theNullID = aNullID;
@@ -159,7 +157,7 @@ public:
     {
       theQueueID = anID;
     }
-  Species* id2species(unsigned short id)
+  Species* id2species(unsigned id)
     {
       return theSpatiocyteStepper->id2species(id);
     }
@@ -167,8 +165,8 @@ public:
     {
       return 0;
     }
-  virtual void addSubstrateInterrupt(Species* aSpecies, unsigned short aMolecule) {}
-  virtual void removeSubstrateInterrupt(Species* aSpecies, unsigned short aMolecule) {}
+  virtual void addSubstrateInterrupt(Species* aSpecies, unsigned aMolecule) {}
+  virtual void removeSubstrateInterrupt(Species* aSpecies, unsigned aMolecule) {}
   virtual void substrateValueChanged(Time aCurrentTime)
     {
       const Time anOldTime(theTime);
@@ -202,11 +200,11 @@ public:
       return aVariable;
     }
 protected:
-  String getIDString(unsigned short) const;
+  String getIDString(unsigned) const;
   String getIDString(Species*) const;
   String getIDString(Variable*) const;
   String getIDString(Comp*) const;
-  String getIDString(unsigned) const;
+  //String getIDString(unsigned) const;
 protected:
   bool isExternInterrupted;
   bool isInitialized;
@@ -222,9 +220,8 @@ protected:
   SpatiocyteStepper* theSpatiocyteStepper;
   std::vector<Species*> theSpecies;
   std::vector<Species*> theProcessSpecies;
-  std::vector<unsigned>* theAdjoins;
   std::vector<VoxelInfo>* theInfo;
-  std::vector<unsigned short>* theLattice;
+  std::vector<unsigned>* theLattice;
   VariableReferenceVector thePositiveVariableReferences;
   VariableReferenceVector theNegativeVariableReferences;
   VariableReferenceVector theZeroVariableReferences;
