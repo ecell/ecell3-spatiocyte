@@ -241,7 +241,7 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
                 {
                   aMol = aVacantSpecies->getMol(aList[(*aCount)++]); 
                 }
-              while((*theLattice)[aMol] != aVacantSpecies->getID());
+              while((*theIDs)[aMol] != aVacantSpecies->getID());
               aSpecies->addMol(aMol);
             }
         }
@@ -274,7 +274,7 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
                   aMol = aVacantSpecies->getMol(gsl_rng_uniform_int(
                                 getStepper()->getRng(), availableVoxelSize));
                 }
-              while((*theLattice)[aMol] != aVacantSpecies->getID());
+              while((*theIDs)[aMol] != aVacantSpecies->getID());
               aSpecies->addMol(aMol);
             }
         }
@@ -326,7 +326,7 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
     {
       unsigned int aMol(aVacantSpecies->getPopulatableMol(i));
       Point& aPoint((*theInfo)[aMol].point);
-      if((*theLattice)[aMol] == aSpecies->getVacantID() &&
+      if((*theIDs)[aMol] == aSpecies->getVacantID() &&
          aPoint.x < maxX && aPoint.x > minX &&
          aPoint.y < maxY && aPoint.y > minY &&
          aPoint.z < maxZ && aPoint.z > minZ)

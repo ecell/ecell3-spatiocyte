@@ -106,13 +106,13 @@ bool DiffusionInfluencedReactionProcess::react(unsigned molA, unsigned molB,
         {
           moleculeP = moleculeA;
           //Hard remove the B molecule, since nonHD_p is in a different Comp:
-          (*theLattice)[moleculeB] = B->getVacantID();
+          (*theIDs)[moleculeB] = B->getVacantID();
         }
       else if(B->isReplaceable(moleculeB, nonHD_p))
         {
           moleculeP = moleculeB;
           //Hard remove the A molecule, since nonHD_p is in a different Comp:
-          (*theLattice)[moleculeA] = A->getVacantID();
+          (*theIDs)[moleculeA] = A->getVacantID();
         }
       else
         { 
@@ -128,9 +128,9 @@ bool DiffusionInfluencedReactionProcess::react(unsigned molA, unsigned molB,
                 }
             }
           //Hard remove the A molecule, since nonHD_p is in a different Comp:
-          (*theLattice)[moleculeA] = A->getVacantID();
+          (*theIDs)[moleculeA] = A->getVacantID();
           //Hard remove the B molecule, since nonHD_p is in a different Comp:
-          (*theLattice)[moleculeB] = B->getVacantID();
+          (*theIDs)[moleculeB] = B->getVacantID();
         }
       HD_p->addValue(1);
       nonHD_p->addMol(moleculeP, A->getTag(indexA));
@@ -141,9 +141,9 @@ bool DiffusionInfluencedReactionProcess::react(unsigned molA, unsigned molB,
     {
 
       //Hard remove the A molecule, since nonHD_p is in a different Comp:
-      (*theLattice)[moleculeA] = A->getVacantID();
+      (*theIDs)[moleculeA] = A->getVacantID();
       //Hard remove the B molecule, since nonHD_p is in a different Comp:
-      (*theLattice)[moleculeB] = B->getVacantID();
+      (*theIDs)[moleculeB] = B->getVacantID();
       variableC->addValue(1);
       return true;
     }
@@ -165,14 +165,14 @@ bool DiffusionInfluencedReactionProcess::react(unsigned molA, unsigned molB,
                 {
                   return false;
                 }
-              (*theLattice)[moleculeB] = B->getVacantID();
+              (*theIDs)[moleculeB] = B->getVacantID();
             }
           D->addMol(moleculeD, B->getTag(indexB));
         }
       else
         {
           //Hard remove the B molecule since it is not used:
-          (*theLattice)[moleculeB] = B->getVacantID();
+          (*theIDs)[moleculeB] = B->getVacantID();
         }
     }
   else if(B->isReplaceable(moleculeB, C))
@@ -192,14 +192,14 @@ bool DiffusionInfluencedReactionProcess::react(unsigned molA, unsigned molB,
                 {
                   return false;
                 }
-              (*theLattice)[moleculeA] = A->getVacantID();
+              (*theIDs)[moleculeA] = A->getVacantID();
             }
           D->addMol(moleculeD, B->getTag(indexB));
         }
       else
         {
           //Hard remove the A molecule since it is not used:
-          (*theLattice)[moleculeA] = A->getVacantID();
+          (*theIDs)[moleculeA] = A->getVacantID();
         }
     }
   else
@@ -226,9 +226,9 @@ bool DiffusionInfluencedReactionProcess::react(unsigned molA, unsigned molB,
           D->addMol(moleculeD, B->getTag(indexB));
         }
       //Hard remove the A molecule since it is not used:
-      (*theLattice)[moleculeA] = A->getVacantID();
+      (*theIDs)[moleculeA] = A->getVacantID();
       //Hard remove the B molecule since it is not used:
-      (*theLattice)[moleculeB] = B->getVacantID();
+      (*theIDs)[moleculeB] = B->getVacantID();
     }
   C->addMol(moleculeC, A->getTag(indexA));
   addMolE();

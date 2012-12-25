@@ -23,10 +23,8 @@ def plot_data(N, T, fmt):
 
 imp.load_source('out_Vspatiocyte', 'out_Vspatiocyte.py')
 imp.load_source('out_VspatiocyteOld', 'out_VspatiocyteOld.py')
-imp.load_source('out_VspatiocyteStride', 'out_VspatiocyteStride.py')
 from out_Vspatiocyte import *
 from out_VspatiocyteOld import *
-from out_VspatiocyteStride import *
 from out_C import *
 from out_V import *
 from out_N300 import *
@@ -56,12 +54,11 @@ figtext(.82, .85, r'$t \ \propto \ N^{5/3}$', color='k')
 
 #for i in range(len(Nc)):
 plot_data(Nc, data_C,'kx')
-loglog(X, 0.15*X, 'k-')
+loglog(X, 0.19*X, 'b-')
 
 
 plot_data(Nv, data_Vspatiocyte,'k.')
-plot_data(Nv, data_VspatiocyteOld,'k.')
-plot_data(Nv, data_VspatiocyteStride,'b.')
+#plot_data(Nv, data_VspatiocyteOld,'k.')
 
 figtext(.14, .4, r'(1) C = 50 nM')
 figtext(.8, .59, r'$t \  \propto \ N$', color='k')
@@ -130,48 +127,6 @@ print C300, C3000
 
 #data_N3000 *= 11696
 #data_N300 *= 11696
-
-axes([.63,.19,.33,.31])
-
-# M-> uM
-C300 *= 1e6
-C3000 *= 1e6
-
-for i in range(len(C3000)):
-    plot_data(C3000, data_N3000,'k+')
-#loglog(C3000, 5e1** C3000, 'b:')
-bd3000 = numpy.array(data_BD[3]).mean()
-loglog([1e-4,1e4],[bd3000,bd3000], 'b:')
-
-
-for i in range(len(C300)):
-    plot_data(C300, data_N300,'kd')
-loglog(C300, 1.0e4* C300**(2.0/3.0), 'k-.', label='C^(2/3)')
-#loglog(C300, 1e5* C300, 'k-.', label='C^1')
-#loglog(C300, 2.5e4* C300**(4.0/3.0), 'k-.', label='C^(4/3)')
-
-figtext(.75, .195, r'(3a) N = 300')
-figtext(.84, .25, r'$t \ \propto \ C^{2/3}$', color='k')
-figtext(.66, .32, r'(3b) N = 3000')
-
-#bd 300
-bd300 = numpy.array(data_BD[1]).mean()
-loglog([1e-5,1e5],[bd300,bd300], 'b:')
-
-figtext(.65, .455, r'BD', color='k')
-
-#xlabel('Concentration')
-#ylabel('time [s]')
-
-#xlim(5e-10,5e-2)
-#ylim(1e2,5e9)
-#xlim(5e-10,5e-3)
-xlim(2e-4,9e3)
-ylim(2e2,8e11)
-
-xticks([1e-3, 1e0, 1e3], ['nM','uM','mM'], size=16)
-yticks([60,3600,3600*24,3600*24*30, 3600*24*30*12],
-       ['m', 'h', 'd', 'm', 'y'], size=16)
 
 show()
 #savefig('fig1.eps')

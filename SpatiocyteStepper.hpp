@@ -202,7 +202,7 @@ private:
   std::vector<Species*>::iterator variable2ispecies(Variable*);
   std::vector<Species*> theSpecies;
   std::vector<Comp*> theComps;
-  std::vector<unsigned short> theLattice;
+  std::vector<unsigned short> theIDs;
   std::vector<VoxelInfo> theInfo;
   std::vector<unsigned> theAdjoins;
   std::vector<Process*> theExternInterruptedProcesses;
