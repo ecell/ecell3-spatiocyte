@@ -534,21 +534,21 @@ public:
         }
       std::cout << "error in species add collision" << std::endl;
     }
-  void setTarMols()
+  void setTarMols(unsigned start)
     {
       if(theTarMols.size() < theMolSize)
         {
           theTarMols.resize(theMolSize);
-          theRands.resize(theMolSize*10);
-          for(unsigned i(0); i != theMolSize*10; ++i)
+          theRands.resize(1000);
+          for(unsigned i(0); i != 1000; ++i)
             {
               theRands[i] = gsl_rng_uniform_int(theRng, theAdjoinSize);
             }
         }
       unsigned j(gsl_rng_uniform_int(theRng, theRands.size()));
-      for(unsigned i(0); i != theMolSize; ++i, ++j)
+      for(unsigned i(start); i != start+1000 && i != theMolSize; ++i, ++j)
         {
-          if(j > theRands.size())
+          if(j == theRands.size())
             {
               j = 0;
             }
@@ -558,9 +558,12 @@ public:
   void walk()
     {
       const unsigned beginMolSize(theMolSize);
-      setTarMols();
       for(unsigned i(0); i < beginMolSize && i < theMolSize; ++i)
         {
+          if(i%1000 == 0)
+            {
+              setTarMols(i);
+            }
           if(theLattice[theTarMols[i]] == theVacantID)
             {
               if(theWalkProbability == 1 ||
