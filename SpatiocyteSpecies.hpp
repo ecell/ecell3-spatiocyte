@@ -548,7 +548,7 @@ public:
       unsigned j(gsl_rng_uniform_int(theRng, theRands.size()));
       for(unsigned i(0); i != theMolSize; ++i, ++j)
         {
-          if(j == theRands.size())
+          if(j > theRands.size())
             {
               j = 0;
             }

@@ -54,7 +54,7 @@ figtext(.82, .85, r'$t \ \propto \ N^{5/3}$', color='k')
 
 #for i in range(len(Nc)):
 plot_data(Nc, data_C,'kx')
-loglog(X, 0.2*X, 'k-')
+loglog(X, 0.15*X, 'k-')
 
 
 plot_data(Nv, data_Vspatiocyte,'k.')
