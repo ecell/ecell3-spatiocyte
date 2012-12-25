@@ -71,18 +71,18 @@ typedef ProcessPriorityQueue::ID ProcessID;
 #define REMOVE_BOTH    5
 
 //The 12 adjoining voxels of a voxel in the HCP lattice:
-#define NORTH    1 
-#define SOUTH    2
-#define EAST     3 
-#define WEST     4 
-#define NW       5 
-#define SW       6
-#define NE       7
-#define SE       8
-#define DORSALN  9
-#define DORSALS  10
-#define VENTRALN 11 
-#define VENTRALS 12
+#define NORTH    0 
+#define SOUTH    1
+#define EAST     2 
+#define WEST     3 
+#define NW       4 
+#define SW       5
+#define NE       6
+#define SE       7
+#define DORSALN  8
+#define DORSALS  9
+#define VENTRALN 10 
+#define VENTRALS 11
 
 //The 6 adjoining voxels of a voxel in the CUBIC lattice:
 #define DORSAL   4 
