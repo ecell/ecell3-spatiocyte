@@ -53,6 +53,7 @@ public:
     isPeriodicEdge(false),
     SearchVacant(false),
     LatticeType(HCP_LATTICE),
+    theBoxSize(8),
     VoxelRadius(10e-9),
     nVoxelRadius(0.5) {}
   virtual ~SpatiocyteStepper() {}
@@ -156,10 +157,13 @@ private:
   void setSurfaceVoxelProperties(Comp*);
   void setSurfaceCompProperties(Comp*);
   void setVolumeCompProperties(Comp*);
-  void concatenateVoxel(unsigned short&, unsigned, unsigned, unsigned);
-  void concatenateLayers(unsigned short&, unsigned, unsigned, unsigned, unsigned);
-  void concatenateRows(unsigned short&, unsigned, unsigned, unsigned, unsigned);
-  void concatenateCols(unsigned short&, unsigned, unsigned, unsigned, unsigned);
+  void concatenateVoxel(unsigned, unsigned);
+  void concatenateLayers(std::vector<unsigned>&, unsigned, unsigned, unsigned,
+                         unsigned);
+  void concatenateRows(std::vector<unsigned>&, unsigned, unsigned, unsigned,
+                       unsigned);
+  void concatenateCols(std::vector<unsigned>&, unsigned, unsigned, unsigned,
+                       unsigned);
   void replaceVoxel(unsigned, unsigned);
   void replaceUniVoxel(unsigned, unsigned);
   void setMinMaxSurfaceDimensions(unsigned, Comp*);
@@ -172,7 +176,7 @@ private:
   bool isLowerPeerMol(unsigned, Comp*);
   bool isRootSurfaceVoxel(unsigned short&, unsigned, Comp*);
   bool isParentSurfaceVoxel(unsigned short&, unsigned, Comp*);
-  bool compartmentalizeVoxel(unsigned, Comp*);
+  bool compartmentalizeVoxel(unsigned, unsigned, Comp*);
   double getCuboidSpecArea(Comp*);
   unsigned coord2row(unsigned);
   unsigned coord2col(unsigned);
@@ -186,11 +190,18 @@ private:
   unsigned short theNullID;
   unsigned LatticeType; 
   unsigned theAdjoinSize;
-  unsigned theCellShape;
-  unsigned theRowSize;
-  unsigned theColSize;
-  unsigned theLayerSize;
   unsigned theBioSpeciesSize;
+  unsigned theBoxSize;
+  unsigned theCellShape;
+  unsigned theColSize;
+  unsigned theRowSize;
+  unsigned theLayerSize;
+  unsigned theBoxColSize;
+  unsigned theBoxRowSize;
+  unsigned theBoxLayerSize;
+  unsigned theBoxCols;
+  unsigned theBoxRows;
+  unsigned theBoxLayers;
   double VoxelRadius; //r_v
   double nVoxelRadius;
   double theHCPl;
@@ -202,9 +213,9 @@ private:
   std::vector<Species*>::iterator variable2ispecies(Variable*);
   std::vector<Species*> theSpecies;
   std::vector<Comp*> theComps;
-  std::vector<unsigned short> theIDs;
-  std::vector<VoxelInfo> theInfo;
-  std::vector<unsigned> theAdjoins;
+  std::vector<std::vector<unsigned short> > theIDs;
+  std::vector<std::vector<VoxelInfo> > theInfo;
+  std::vector<std::vector<unsigned> > theAdjoins;
   std::vector<Process*> theExternInterruptedProcesses;
   std::vector<std::vector<unsigned> > theCoordMols;
 };

@@ -112,10 +112,13 @@ void VisualizationLogProcess::logMols(int anIndex)
   //The species molecule size:
   int aSize(aSpecies->size());
   theLogFile.write((char*)(&aSize), sizeof(aSize)); 
-  for(int i(0); i != aSize; ++i)
+  for(unsigned i(0); i != theIDs->size(); ++i)
     {
-      unsigned int aMol(aSpecies->getMol(i));
-      theLogFile.write((char*)(&aMol), sizeof(aMol));
+      for(unsigned j(0); j != aSpecies->size(i); ++j)
+        {
+          unsigned aCoord((*theInfo)[i][aSpecies->getMol(i, j)].coord);
+          theLogFile.write((char*)(&aCoord), sizeof(aCoord));
+        }
     }
 }  
 
@@ -132,10 +135,13 @@ void VisualizationLogProcess::logOffLattice(int anIndex)
   //The species molecule size:
   int aSize(aSpecies->size());
   theLogFile.write((char*)(&aSize), sizeof(aSize)); 
-  for(int i(0); i != aSize; ++i)
+  for(unsigned i(0); i != theIDs->size(); ++i)
     {
-      Point aPoint(aSpecies->getPoint(i));
-      theLogFile.write((char*)(&aPoint), sizeof(aPoint));
+      for(unsigned j(0); j != aSpecies->size(i); ++j)
+        {
+          Point aPoint(aSpecies->getPoint(i, j));
+          theLogFile.write((char*)(&aPoint), sizeof(aPoint));
+        }
     }
 }  
 
@@ -146,10 +152,13 @@ void VisualizationLogProcess::logPolymers(int anIndex)
   //The species molecule size:
   int aSize(aSpecies->size());
   theLogFile.write((char*)(&aSize), sizeof(aSize)); 
-  for(int i(0); i != aSize; ++i)
+  for(unsigned i(0); i != theIDs->size(); ++i)
     {
-      Point aPoint(aSpecies->getPoint(i));
-      theLogFile.write((char*)(&aPoint), sizeof(aPoint));
+      for(unsigned j(0); j != aSpecies->size(i); ++j)
+        {
+          Point aPoint(aSpecies->getPoint(i, j));
+          theLogFile.write((char*)(&aPoint), sizeof(aPoint));
+        }
     }
 }  
 
@@ -246,6 +255,7 @@ void VisualizationLogProcess::logSpecies()
 
 void VisualizationLogProcess::logCompVacant()
 {
+  /*
   double aCurrentTime(theSpatiocyteStepper->getCurrentTime());
   theLogFile.write((char*)(&aCurrentTime), sizeof(aCurrentTime));
   for(unsigned int i(0); i != theLatticeSpecies.size(); ++i)
@@ -265,21 +275,25 @@ void VisualizationLogProcess::logCompVacant()
             }  
         }
     }
+    */
   //theLogMarker is a constant throughout the simulation:
   theLogFile.write((char*)(&theLogMarker), sizeof(theLogMarker));
-  for(unsigned int i(0); i != theOffLatticeSpecies.size(); ++i)
+  for(unsigned int k(0); k != theOffLatticeSpecies.size(); ++k)
     {
-      if(theOffLatticeSpecies[i]->getIsCompVacant())
+      if(theOffLatticeSpecies[k]->getIsCompVacant())
         {
-          Species* aSpecies(theOffLatticeSpecies[i]);
-          theLogFile.write((char*)(&i), sizeof(i));
+          Species* aSpecies(theOffLatticeSpecies[k]);
+          theLogFile.write((char*)(&k), sizeof(k));
           //The species molecule size:
           int aSize(aSpecies->size());
           theLogFile.write((char*)(&aSize), sizeof(aSize)); 
-          for(int i(0); i != aSize; ++i)
+          for(unsigned i(0); i != theIDs->size(); ++i)
             {
-              Point aPoint(aSpecies->getPoint(i));
-              theLogFile.write((char*)(&aPoint), sizeof(aPoint));
+              for(unsigned j(0); j != aSpecies->size(i); ++j)
+                {
+                  Point aPoint(aSpecies->getPoint(i, j));
+                  theLogFile.write((char*)(&aPoint), sizeof(aPoint));
+                }
             }
         }
     }

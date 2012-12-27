@@ -23,8 +23,10 @@ def plot_data(N, T, fmt):
 
 imp.load_source('out_Vspatiocyte', 'out_Vspatiocyte.py')
 imp.load_source('out_VspatiocyteOld', 'out_VspatiocyteOld.py')
+imp.load_source('out_VspatiocytePrevious', 'out_VspatiocytePrevious.py')
 from out_Vspatiocyte import *
 from out_VspatiocyteOld import *
+from out_VspatiocytePrevious import *
 from out_C import *
 from out_V import *
 from out_N300 import *
@@ -57,8 +59,9 @@ plot_data(Nc, data_C,'kx')
 loglog(X, 0.19*X, 'b-')
 
 
-plot_data(Nv, data_Vspatiocyte,'k.')
-#plot_data(Nv, data_VspatiocyteOld,'k.')
+plot_data(Nv, data_Vspatiocyte,'r.')
+plot_data(Nv, data_VspatiocyteOld,'k.')
+plot_data(Nv, data_VspatiocytePrevious,'k.')
 
 figtext(.14, .4, r'(1) C = 50 nM')
 figtext(.8, .59, r'$t \  \propto \ N$', color='k')

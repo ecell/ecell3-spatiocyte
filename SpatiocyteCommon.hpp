@@ -111,7 +111,7 @@ struct VoxelInfo
 {
   unsigned short diffuseSize;
   unsigned short adjoinSize;
-  unsigned short coord;
+  unsigned coord;
   Point point;
 };
 

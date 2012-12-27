@@ -89,6 +89,7 @@ void DiffusionInfluencedReactionProcess::initializeThird()
 bool DiffusionInfluencedReactionProcess::react(unsigned molA, unsigned molB,
                                                unsigned indexA, unsigned indexB)
 {
+  /*
   moleculeA = molA;
   moleculeB = molB;
   //nonHD_A + nonHD_B -> nonHD_C + HD_D:
@@ -233,12 +234,14 @@ bool DiffusionInfluencedReactionProcess::react(unsigned molA, unsigned molB,
   C->addMol(moleculeC, A->getTag(indexA));
   addMolE();
   addMolF();
+  */
   return true;
 }
 
 //positive-coefficient F
 void DiffusionInfluencedReactionProcess::addMolF()
 {
+  /*
   if(!F)
     {
       return;
@@ -253,6 +256,7 @@ void DiffusionInfluencedReactionProcess::addMolF()
         }
     }
   F->addMol(moleculeF);
+  */
 }
 
 //zero-coefficient E
@@ -261,6 +265,7 @@ void DiffusionInfluencedReactionProcess::addMolF()
 //even after the reaction:
 void DiffusionInfluencedReactionProcess::addMolE()
 {
+  /*
   if(!E)
     {
       return;
@@ -273,6 +278,7 @@ void DiffusionInfluencedReactionProcess::addMolE()
       return;
     }
   E->addMol(moleculeE);
+  */
 }
 
 void DiffusionInfluencedReactionProcess::finalizeReaction()

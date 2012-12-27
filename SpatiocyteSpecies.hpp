@@ -85,9 +85,10 @@ class Species
 {
 public:
   Species(SpatiocyteStepper* aStepper, Variable* aVariable,
-          unsigned short anID, int anInitMolSize, const gsl_rng* aRng,
-          double voxelRadius, std::vector<unsigned short>& anIDs,
-          std::vector<VoxelInfo>& anInfo, std::vector<unsigned>& anAdjoins):
+          unsigned short anID, const gsl_rng* aRng,
+          double voxelRadius, std::vector<std::vector<unsigned short> >& anIDs,
+          std::vector<std::vector<VoxelInfo> >& anInfo,
+          std::vector<std::vector<unsigned> >& anAdjoins):
     isCentered(false),
     isCompVacant(false),
     isDiffusing(false),
@@ -105,8 +106,6 @@ public:
     isVacant(false),
     theID(anID),
     theCollision(0),
-    theInitMolSize(anInitMolSize),
-    theMolSize(0),
     D(0),
     theDiffuseRadius(voxelRadius),
     theDiffusionInterval(libecs::INF),
@@ -125,6 +124,29 @@ public:
   void initialize(int speciesSize, int anAdjoinSize,
                   unsigned aNullMol, unsigned aNullID)
     {
+      theBoxSize = theIDs.size();
+      theMolSize.resize(theBoxSize);
+      theMols.resize(theBoxSize);
+      theTarMols.resize(theBoxSize);
+      theRands.resize(theBoxSize);
+      theInitMolSize.resize(theBoxSize),
+      theTags.resize(theBoxSize);
+      unsigned anInitMolSize(0);
+      if(getVariable())
+        {
+          anInitMolSize = getVariable()->getValue();
+        }
+      unsigned bal(anInitMolSize%theBoxSize);
+      for(unsigned i(0); i != theBoxSize; ++i)
+        {
+          theMolSize[i] = 0;
+          theInitMolSize[i] = anInitMolSize/theBoxSize;
+          if(bal)
+            {
+              theInitMolSize[i] += 1;
+              --bal;
+            }
+        }
       theAdjoinSize = anAdjoinSize;
       theNullMol = aNullMol;
       theNullID = aNullID;
@@ -181,7 +203,7 @@ public:
         {
           thePopulateProcess->populateGaussian(this);
         }
-      else if(theMolSize)
+      else if(size())
         {
           std::cout << "Warning: Species " << getIDString() <<
             " not populated." << std::endl;
@@ -224,7 +246,7 @@ public:
         {
           thePopulateProcess->populateUniformDense(this, voxelIDs, aCount);
         }
-      else if(theMolSize)
+      else if(size())
         {
           std::cout << "Species:" << theVariable->getFullID().asString() <<
             " not MoleculePopulated." << std::endl;
@@ -236,7 +258,7 @@ public:
         {
           thePopulateProcess->populateUniformSparse(this);
         }
-      else if(theMolSize)
+      else if(size())
         {
           std::cout << "Species:" << theVariable->getFullID().asString() <<
             " not MoleculePopulated." << std::endl;
@@ -248,7 +270,7 @@ public:
         {
           thePopulateProcess->populateUniformOnDiffusiveVacant(this);
         }
-      else if(theMolSize)
+      else if(size())
         {
           std::cout << "Species:" << theVariable->getFullID().asString() <<
             " not MoleculePopulated." << std::endl;
@@ -260,7 +282,7 @@ public:
         {
           thePopulateProcess->populateUniformOnMultiscale(this);
         }
-      else if(theMolSize)
+      else if(size())
         {
           std::cout << "Species:" << theVariable->getFullID().asString() <<
             " not MoleculePopulated." << std::endl;
@@ -270,17 +292,26 @@ public:
     {
       return theVariable;
     }
+  unsigned size(unsigned aBox) const
+    {
+      return theMolSize[aBox];
+    }
   unsigned size() const
     {
-      return theMolSize;
+      unsigned aSize(0);
+      for(unsigned i(0); i != theBoxSize; ++i)
+        {
+          aSize += size(i);
+        }
+      return aSize;
     }
-  unsigned& getMol(unsigned anIndex)
+  unsigned& getMol(unsigned aBox, unsigned anIndex)
     {
-      return theMols[anIndex];
+      return theMols[aBox][anIndex];
     }
-  Point& getPoint(unsigned anIndex)
+  Point& getPoint(unsigned aBox, unsigned anIndex)
     {
-      return theInfo[getMol(anIndex)].point;
+      return theInfo[aBox][getMol(aBox, anIndex)].point;
     }
   unsigned short getID() const
     {
@@ -288,12 +319,14 @@ public:
     }
   double getMeanSquaredDisplacement()
     {
-      if(!theMolSize)
+      const unsigned aSize(size());
+      if(aSize)
         {
           return 0;
         }
       double aDisplacement(0);
-      for(unsigned i(0); i < theMolSize; ++i)
+      /*
+      for(unsigned i(0); i < aSize; ++i)
         {
           Point aCurrentPoint(theStepper->getPeriodicPoint(
                                                  getMol(i),
@@ -303,7 +336,8 @@ public:
                                        aCurrentPoint));
           aDisplacement += aDistance*aDistance;
         }
-      return aDisplacement*pow(theDiffuseRadius*2, 2)/theMolSize;
+        */
+      return aDisplacement*pow(theDiffuseRadius*2, 2)/aSize;
     }
   void setCollision(unsigned aCollision)
     {
@@ -337,14 +371,17 @@ public:
     }
   void setIsPopulated()
     {
-      theInitMolSize = theMolSize;
-      getVariable()->setValue(theMolSize);
+      for(unsigned i(0); i != theBoxSize; ++i)
+        {
+          theInitMolSize[i] = theMolSize[i];
+        }
+      getVariable()->setValue(size());
     }
   void finalizeSpecies()
     {
       if(theCollision)
         {
-          collisionCnts.resize(theMolSize);
+          collisionCnts.resize(size());
           for(std::vector<unsigned>::iterator 
               i(collisionCnts.begin()); i != collisionCnts.end(); ++i)
             {
@@ -355,6 +392,7 @@ public:
       //diffusing vacant species to avoid bias when random walking:
       if(isCompVacant)
         {
+          /*
           for(unsigned i(0); i != theComp->species.size(); ++i)
             {
               if(theComp->species[i]->getIsDiffusiveVacant())
@@ -363,11 +401,15 @@ public:
                   break;
                 }
             }
+            */
           if(isTagged)
             {
-              for(unsigned i(0); i != theMolSize; ++i)
+              for(unsigned i(0); i != theBoxSize; ++i)
                 {
-                  theTags[i].origin = getMol(i);
+                  for(unsigned j(0); j != theMolSize[i]; ++j)
+                    {
+                      theTags[i][j].origin = getMol(i, j);
+                    }
                 }
             }
         }
@@ -483,7 +525,14 @@ public:
     }
   bool getIsPopulated() const
     {
-      return theMolSize == theInitMolSize;
+      for(unsigned i(0); i != theBoxSize; ++i)
+        {
+          if(theInitMolSize[i] != theMolSize[i])
+            {
+              return false;
+            }
+        }
+      return true;
     }
   double getDiffusionInterval() const
     {
@@ -525,6 +574,7 @@ public:
     }
   void addCollision(unsigned aMol)
     {
+      /*
       for(unsigned i(0); i < theMolSize; ++i)
         {
           if(theMols[i] == aMol)
@@ -534,44 +584,62 @@ public:
             }
         }
       std::cout << "error in species add collision" << std::endl;
+      */
     }
-  void setTarMols()
+  void setTarMols(std::vector<unsigned>& aTarMols,
+                  std::vector<unsigned>& aRands,
+                  std::vector<unsigned>& anAdjoins,
+                  std::vector<unsigned>& aMols,
+                  unsigned& aMolSize)
     {
-      if(theTarMols.size() < theMolSize)
+      if(aTarMols.size() < aMolSize)
         {
-          theTarMols.resize(theMolSize);
-          theRands.resize(std::min(unsigned(10000), theMolSize*10));
-          for(unsigned i(0); i != theRands.size(); ++i)
+          aTarMols.resize(aMolSize);
+          aRands.resize(std::min(unsigned(10000), aMolSize*10));
+          for(unsigned i(0); i != aRands.size(); ++i)
             {
-              theRands[i] = gsl_rng_uniform_int(theRng, theAdjoinSize);
+              aRands[i] = gsl_rng_uniform_int(theRng, theAdjoinSize);
             }
         }
-      unsigned j(gsl_rng_uniform_int(theRng, theRands.size()));
-      for(unsigned i(0); i != theMolSize; ++i, ++j)
+      unsigned j(gsl_rng_uniform_int(theRng, aRands.size()));
+      for(unsigned i(0); i != aMolSize; ++i, ++j)
         {
-          while(j == theRands.size())
+          while(j == aRands.size())
             {
-              j = gsl_rng_uniform_int(theRng, theRands.size());
+              j = gsl_rng_uniform_int(theRng, aRands.size());
             }
-          theTarMols[i] = theAdjoins[theMols[i]*theAdjoinSize+theRands[j]];
+          aTarMols[i] = anAdjoins[aMols[i]*theAdjoinSize+aRands[j]];
         }
     }
-  void walk()
+  void walkBox(std::vector<unsigned short>& anIDs,
+               std::vector<unsigned>& aTarMols,
+               std::vector<unsigned>& aMols,
+               unsigned& aMolSize)
     {
-      const unsigned beginMolSize(theMolSize);
-      setTarMols();
-      for(unsigned i(0); i < beginMolSize && i < theMolSize; ++i)
+      const unsigned beginMolSize(aMolSize);
+      for(unsigned i(0); i < beginMolSize && i < aMolSize; ++i)
         {
-          if(theIDs[theTarMols[i]] == theVacantID)
+          if(anIDs[aTarMols[i]] == theVacantID)
             {
               if(theWalkProbability == 1 ||
                  gsl_rng_uniform(theRng) < theWalkProbability)
                 {
-                  theIDs[theTarMols[i]] = theID;
-                  theIDs[theMols[i]] = theVacantID;
-                  theMols[i] = theTarMols[i];
+                  anIDs[aTarMols[i]] = theID;
+                  anIDs[aMols[i]] = theVacantID;
+                  aMols[i] = aTarMols[i];
                 }
             }
+        }
+    }
+  void walk()
+    {
+      for(unsigned i(0); i != theBoxSize; ++i)
+        {
+          setTarMols(theTarMols[i], theRands[i], theAdjoins[i],
+                     theMols[i], theMolSize[i]);
+          walkBox(theIDs[i], theTarMols[i], theMols[i], theMolSize[i]);
+        } 
+
           /*
           else
             {
@@ -630,10 +698,10 @@ public:
                 }
             }
             */
-        }
     }
   void walkMultiscale()
     {
+      /*
       unsigned beginMolSize(theMolSize);
       for(unsigned i(0); i < beginMolSize && i < theMolSize; ++i)
         {
@@ -658,9 +726,11 @@ public:
                 }
             }
         }
+        */
     }
   void walkVacant()
     {
+      /*
       updateVacantMols();
       for(unsigned i(0); i < theMolSize; ++i)
         {
@@ -688,10 +758,12 @@ public:
                 }
             }
         }
+        */
     }
   void react(unsigned srcMol, unsigned tarMol, unsigned sourceIndex,
              unsigned targetIndex, Species* targetSpecies)
     {
+      /*
       DiffusionInfluencedReactionProcess* aReaction(
                theDiffusionInfluencedReactions[targetSpecies->getID()]);
       unsigned moleculeA(srcMol);
@@ -728,6 +800,7 @@ public:
             }
           theFinalizeReactions[targetSpecies->getID()] = true;
         }
+        */
     }
   void setComp(Comp* aComp)
     {
@@ -743,6 +816,7 @@ public:
     }
   void removeSurfaces()
     {
+      /*
       int newMolSize(0);
       for(unsigned i(0); i < theMolSize; ++i) 
         {
@@ -763,9 +837,11 @@ public:
       //Must resize, otherwise compVoxelSize will be inaccurate:
       theMols.resize(theMolSize);
       theVariable->setValue(theMolSize);
+      */
     }
   void removePeriodicEdgeVoxels()
     {
+      /*
       int newMolSize(0);
       for(unsigned i(0); i < theMolSize; ++i) 
         {
@@ -784,9 +860,11 @@ public:
       //Must resize, otherwise compVoxelSize will be inaccurate:
       theMols.resize(theMolSize);
       theVariable->setValue(theMolSize);
+      */
     }
   void updateSpecies()
     {
+      /*
       if(isCompVacant && (isDiffusiveVacant || isReactiveVacant))
         {
           theCompMols = new std::vector<unsigned>;
@@ -795,6 +873,7 @@ public:
               theCompMols->push_back(theMols[i]);
             }
         }
+        */
     }
   //If it isReactiveVacant it will only be called by SNRP when it is substrate
   //If it isDiffusiveVacant it will only be called by DiffusionProcess before
@@ -820,6 +899,7 @@ public:
     }
   void updateTagMols()
     {
+      /*
       theMolSize = 0;
       for(unsigned i(0); i != theTaggedSpeciesList.size(); ++i)
         {
@@ -841,12 +921,14 @@ public:
                 }
             }
         }
+        */
     }
   //Even if it is a isCompVacant, this method will be called by
   //VisualizationLogProcess, or SNRP if it is Reactive, or DiffusionProcess
   //if it is Diffusive:
   void updateVacantMols()
     {
+      /*
       theMolSize = 0;
       int aSize(theVacantSpecies->compVoxelSize());
       for(int i(0); i != aSize; ++i)
@@ -868,9 +950,11 @@ public:
             }
         }
       theVariable->setValue(theMolSize);
+      */
     }
   void updateVacantMolSize()
     {
+      /*
       theMolSize = 0;
       int aSize(theVacantSpecies->compVoxelSize());
       for(int i(0); i != aSize; ++i)
@@ -888,74 +972,76 @@ public:
           theMols.resize(theMolSize);
         }
       theVariable->setValue(theMolSize);
+      */
     }
-  void setTagID(unsigned anIndex, unsigned anID)
+  void setTagID(unsigned aBox, unsigned anIndex, unsigned anID)
     {
-      theTags[anIndex].id = anID;
+      theTags[aBox][anIndex].id = anID;
     }
-  unsigned getTagID(unsigned anIndex)
+  unsigned getTagID(unsigned aBox, unsigned anIndex)
     {
-      return theTags[anIndex].id;
+      return theTags[aBox][anIndex].id;
     }
-  Tag& getTag(unsigned anIndex)
+  Tag& getTag(unsigned aBox, unsigned anIndex)
     {
-      if(isTagged && anIndex != theMolSize)
+      if(isTagged && anIndex != theMolSize[aBox])
         {
-          return theTags[anIndex];
+          return theTags[aBox][anIndex];
         }
       return theNullTag;
     }
-  void addMol(unsigned aMol)
+  void addMol(unsigned aBox, unsigned aMol)
     {
-      addMol(aMol, theNullTag);
+      addMol(aBox, aMol, theNullTag);
     }
   Species* getMultiscaleVacantSpecies()
     {
       return theMultiscaleVacantSpecies;
     }
-  void addMol(unsigned aMol, Tag& aTag)
+  void addMol(unsigned aBox, unsigned aMol, Tag& aTag)
     {
       if(isMultiscale)
         {
-          Species* aSpecies(theStepper->id2species(theIDs[aMol]));
+          Species* aSpecies(theStepper->id2species(theIDs[aBox][aMol]));
           if(aSpecies->getVacantSpecies() != theMultiscaleVacantSpecies)
             {
-              doAddMol(aMol, aTag);
+              doAddMol(aBox, aMol, aTag);
               addMultiscaleMol(aMol);
             }
         }
       else if(!isVacant)
         {
-          doAddMol(aMol, aTag);
+          doAddMol(aBox, aMol, aTag);
         }
-      theIDs[aMol] = theID;
+      theIDs[aBox][aMol] = theID;
     }
-  void doAddMol(unsigned aMol, Tag& aTag)
+  void doAddMol(unsigned aBox, unsigned aMol, Tag& aTag)
     {
-      ++theMolSize; 
-      if(theMolSize > theMols.size())
+      ++theMolSize[aBox]; 
+      if(theMolSize[aBox] > theMols[aBox].size())
         {
-          theMols.resize(theMolSize);
-          theTags.resize(theMolSize);
+          theMols[aBox].resize(theMolSize[aBox]);
+          theTags[aBox].resize(theMolSize[aBox]);
         }
-      theMols[theMolSize-1] = aMol;
+      theMols[aBox][theMolSize[aBox]-1] = aMol;
       if(isTagged)
         {
           //If it is theNullTag:
           if(aTag.origin == theNullMol)
             {
-              Tag aNewTag = {getMol(theMolSize-1), theNullID};
-              theTags[theMolSize-1] = aNewTag;
+              Tag aNewTag = {getMol(aBox, theMolSize[aBox]-1), theNullID};
+              theTags[aBox][theMolSize[aBox]-1] = aNewTag;
             }
           else
             {
-              theTags[theMolSize-1] = aTag;
+              theTags[aBox][theMolSize[aBox]-1] = aTag;
             }
         }
-      theVariable->setValue(theMolSize);
+      theVariable->setValue(size());
     }
   void addMultiscaleMol(unsigned aMol)
     {
+      /*
       unsigned coordA(aMol-vacStartMol);
       for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
         {
@@ -969,9 +1055,11 @@ public:
               multiscaleBind(coordB);
             }
         }
+        */
     }
   void removeMultiscaleMol(unsigned aMol)
     {
+      /*
       unsigned coordA(aMol-vacStartMol);
       for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
         {
@@ -985,9 +1073,11 @@ public:
               multiscaleUnbind(coordB);
             }
         }
+        */
     }
   bool isIntersectMultiscale(unsigned aMol)
     {
+      /*
       unsigned coordA(aMol-vacStartMol);
       for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
         {
@@ -1000,11 +1090,13 @@ public:
               return true;
             }
         }
+        */
       return false;
     }
   bool isIntersectMultiscale(unsigned srcMol, unsigned tarMol)
     {
       bool isIntersect(false);
+      /*
       unsigned coordA(srcMol-vacStartMol);
       std::vector<unsigned> temp;
       temp.resize(theIntersectLipids[coordA].size());
@@ -1021,31 +1113,36 @@ public:
           unsigned coordB(theIntersectLipids[coordA][i]+lipStartMol);
           theIDs[coordB] = temp[i];
         }
+        */
       return isIntersect;
     }
   void multiscaleBind(unsigned aMol)
     {
+      /*
       unsigned anID(theIDs[aMol]);
       Species* source(theStepper->id2species(anID));
       Species* target(theStepper->id2species(theMultiscaleBindIDs[anID]));
       source->softRemoveMol(aMol);
       target->addMol(aMol);
+      */
     }
   void multiscaleUnbind(unsigned aMol)
     {
+      /*
       unsigned anID(theIDs[aMol]);
       Species* source(theStepper->id2species(anID));
       Species* target(theStepper->id2species(theMultiscaleUnbindIDs[anID]));
       source->softRemoveMol(aMol);
       target->addMol(aMol);
+      */
     }
-  void addCompVoxel(unsigned aMol)
+  void addCompVoxel(unsigned aBox, unsigned aMol)
     {
-      theIDs[aMol] = theID;
-      //theCompVoxels->push_back(&theIDs[aMol]);
-      theCompMols->push_back(aMol);
-      ++theMolSize;
-      theVariable->setValue(theMolSize);
+      theIDs[aBox][aMol] = theID;
+      (*theCompMols)[aBox].push_back(aMol);
+      ++theMolSize[aBox];
+      //TODO: synchronize for multip
+      theVariable->addValue(1);
     }
   String getIDString(Species* aSpecies)
     {
@@ -1075,46 +1172,46 @@ public:
         }
       return "[unknown]";
     }
+  /*
   unsigned compVoxelSize()
     {
       //return theCompVoxels->size();
-      return theCompMols->size();
+      return (*theCompMols->size();
     }
-  unsigned getCompMol(unsigned index)
+  unsigned getCompMol(unsigned aBox, unsigned index)
     {
-      return (*theCompMols)[index];
+      return (*theCompMols)[aBox][index];
     }
-  /*
   Voxel* getCompVoxel(unsigned index)
     {
       return (*theCompVoxels)[index];
     }
     */
-  unsigned getMolIndexFast(unsigned aMol)
+  unsigned getMolIndexFast(unsigned aBox, unsigned aMol)
     {
-      for(unsigned i(0); i < theMolSize; ++i)
+      for(unsigned i(0); i < theMolSize[aBox]; ++i)
         {
-          if(theMols[i] == aMol)
+          if(theMols[aBox][i] == aMol)
             {
               return i;
             }
         }
-      return theMolSize;
+      return theMolSize[aBox];
     }
-  unsigned getMolIndex(unsigned aMol)
+  unsigned getMolIndex(unsigned aBox, unsigned aMol)
     {
-      unsigned index(getMolIndexFast(aMol));
-      if(index == theMolSize)
+      unsigned index(getMolIndexFast(aBox, aMol));
+      if(index == theMolSize[aBox])
         { 
           if(isDiffusiveVacant || isReactiveVacant)
             {
               updateVacantMols();
             }
-          index = getMolIndexFast(aMol);
-          if(index == theMolSize)
+          index = getMolIndexFast(aBox, aMol);
+          if(index == theMolSize[aBox])
             { 
               std::cout << "error in getting the index:" << getIDString() <<
-               " size:" << theMolSize << std::endl;
+               " size:" << theMolSize[aBox] << std::endl;
               return 0;
             }
         }
@@ -1123,6 +1220,7 @@ public:
   //it is soft remove because the id of the molecule is not changed:
   void softRemoveMol(unsigned aMol)
     {
+      /*
       if(isMultiscale)
         {
           Species* aSpecies(theStepper->id2species(theIDs[aMol]));
@@ -1135,9 +1233,11 @@ public:
         {
           softRemoveMolIndex(getMolIndex(aMol));
         }
+        */
     }
   void removeMol(unsigned aMol)
     {
+      /*
       if(isMultiscale)
         {
           Species* aSpecies(theStepper->id2species(theIDs[aMol]));
@@ -1150,17 +1250,21 @@ public:
         {
           removeMolIndex(getMolIndex(aMol));
         }
+        */
     }
   void removeMolIndex(unsigned anIndex)
     {
+      /*
       if(!isVacant)
         {
           theIDs[theMols[anIndex]] = theVacantID;
           softRemoveMolIndex(anIndex);
         }
+        */
     }
   void softRemoveMolIndex(unsigned anIndex)
     {
+      /*
       if(isMultiscale)
         {
           removeMultiscaleMol(theMols[anIndex]);
@@ -1175,18 +1279,23 @@ public:
           theVariable->setValue(theMolSize);
           return;
         }
+        */
     }
   //Used to remove all molecules and free memory used to store the molecules
   void clearMols()
     {
-      theMols.resize(0);
-      theMolSize = 0;
+      for(unsigned i(0); i != theBoxSize; ++i)
+        {
+          theMols[i].resize(0);
+          theMolSize[i] = 0;
+        }
       theVariable->setValue(0);
     }
   //Used by the SpatiocyteStepper when resetting an interation, so must
   //clear the whole compartment using theComp->vacantSpecies->getVacantID():
   void removeMols()
     {
+      /*
       if(!isCompVacant)
         {
           for(unsigned i(0); i < theMolSize; ++i)
@@ -1196,17 +1305,28 @@ public:
           theMolSize = 0;
           theVariable->setValue(theMolSize);
         }
+        */
     }
-  int getPopulateMolSize()
+  int getPopulateMolSize(unsigned aBox)
     {
-      return theInitMolSize-theMolSize;
+      return theInitMolSize[aBox]-theMolSize[aBox];
     }
-  int getInitMolSize()
+  int getTotalPopulateMolSize()
     {
-      return theInitMolSize;
+      unsigned aSize(0);
+      for(unsigned i(0); i != theBoxSize; ++i)
+        {
+          aSize += getPopulateMolSize(i);
+        }
+      return aSize;
+    }
+  int getInitMolSize(unsigned aBox)
+    {
+      return theInitMolSize[aBox];
     }
   void initMolOrigins()
     {
+      /*
       theMolOrigins.resize(theMolSize);
       for(unsigned i(0); i < theMolSize; ++i)
         {
@@ -1216,9 +1336,11 @@ public:
           anOrigin.layer = 0;
           anOrigin.col = 0;
         }
+        */
     }
   void removeBoundaryMols()
     {
+      /*
       for(unsigned i(0); i < theMolSize; ++i)
         {
           if(theStepper->isBoundaryMol(getMol(i), theDimension))
@@ -1227,9 +1349,11 @@ public:
             }
         }
       theVariable->setValue(theMolSize);
+      */
     }
   void relocateBoundaryMols()
     {
+      /*
       for(unsigned i(0); i < theMolSize; ++i)
         {
           Origin anOrigin(theMolOrigins[i]);
@@ -1244,6 +1368,7 @@ public:
               theMolOrigins[i] = anOrigin;
             }
         }
+        */
     }
   int getVacantID() const
     {
@@ -1342,13 +1467,13 @@ public:
           theTagSpeciesList[i]->setDiffusionInterval(theDiffusionInterval);
         }
     }
-  unsigned getRandomIndex()
+  unsigned getRandomIndex(unsigned aBox)
     {
-      return gsl_rng_uniform_int(theRng, theMolSize);
+      return gsl_rng_uniform_int(theRng, theMolSize[aBox]);
     }
-  unsigned getRandomMol()
+  unsigned getRandomMol(unsigned aBox)
     {
-      return theMols[getRandomIndex()];
+      return theMols[aBox][getRandomIndex(aBox)];
     }
   void addInterruptedProcess(SpatiocyteNextReactionProcess* aProcess)
     {
@@ -1373,6 +1498,7 @@ public:
   unsigned getRandomAdjoin(unsigned srcMol, int searchVacant)
     {
       std::vector<unsigned> compMols;
+      /*
       if(searchVacant)
         { 
           for(unsigned i(0); i != theInfo[srcMol].adjoinSize; ++i)
@@ -1395,10 +1521,12 @@ public:
                 }
             }
         }
+        */
       return getRandomVacantMol(compMols);
     } 
   unsigned getBindingSiteAdjoin(unsigned srcMol, int bindingSite)
     {
+      /*
       if(bindingSite < theInfo[srcMol].adjoinSize)
         { 
           unsigned aMol(theAdjoins[srcMol*theAdjoinSize+bindingSite]);
@@ -1407,12 +1535,14 @@ public:
               return aMol;
             }
         }
+        */
       return theNullMol;
     } 
   unsigned getRandomAdjoin(unsigned srcMol, Species* aTargetSpecies,
                            int searchVacant)
     {
       std::vector<unsigned> compMols;
+      /*
       if(searchVacant)
         { 
           for(unsigned i(0); i != theInfo[srcMol].adjoinSize; ++i)
@@ -1435,12 +1565,14 @@ public:
                 }
             }
         }
+        */
       return getRandomVacantMol(compMols, aTargetSpecies);
     } 
   unsigned getRandomAdjoin(unsigned srcMol, unsigned tarMol,
                            int searchVacant)
     {
       std::vector<unsigned> compMols;
+      /*
       if(searchVacant)
         { 
           for(unsigned i(0); i != theInfo[srcMol].adjoinSize; ++i)
@@ -1464,11 +1596,13 @@ public:
                 }
             }
         }
+        */
       return getRandomVacantMol(compMols);
     }
   unsigned getAdjoinMolCnt(unsigned srcMol, Species* aTargetSpecies)
     {
       unsigned cnt(0);
+      /*
       for(unsigned i(0); i != theInfo[srcMol].adjoinSize; ++i)
         {
           if(theIDs[theAdjoins[srcMol*theAdjoinSize+i]] == aTargetSpecies->getID())
@@ -1476,12 +1610,14 @@ public:
               ++cnt;
             }
         }
+        */
       return cnt;
     }
   unsigned getRandomAdjoin(unsigned srcMol, unsigned targetA,
                            unsigned targetB, int searchVacant)
     {
       std::vector<unsigned> compMols;
+      /*
       if(srcMol != targetA && srcMol != targetB)
         {
           if(searchVacant)
@@ -1507,6 +1643,7 @@ public:
                 }
             }
         }
+        */
       return getRandomVacantMol(compMols);
     }
   unsigned getRandomVacantMol(std::vector<unsigned>& aMols)
@@ -1525,6 +1662,7 @@ public:
   unsigned getRandomVacantMol(std::vector<unsigned>& aMols,
                                 Species* aVacantSpecies)
     {
+      /*
       if(aMols.size())
         {
           const int r(gsl_rng_uniform_int(theRng, aMols.size())); 
@@ -1534,10 +1672,12 @@ public:
               return aMol;
             }
         }
+        */
       return theNullMol;
     }
   unsigned getRandomCompMol(int searchVacant)
     {
+      /*
       Species* aVacantSpecies(theComp->vacantSpecies);
       int aSize(aVacantSpecies->compVoxelSize());
       int r(gsl_rng_uniform_int(theRng, aSize));
@@ -1568,14 +1708,17 @@ public:
               return aMol;
             }
         }
+        */
       return theNullMol;
     }
+      /*
   unsigned getRandomAdjoinCompMol(Comp* aComp, int searchVacant)
     {
       int aSize(theVacantSpecies->size());
       int r(gsl_rng_uniform_int(theRng, aSize)); 
       return getRandomAdjoin(theVacantSpecies->getMol(r), searchVacant);
     }
+    */
   void setVacStartMol(unsigned aMol)
     {
       vacStartMol = aMol;
@@ -1586,6 +1729,7 @@ public:
     }
   void setIntersectLipids(Species* aLipid)
     {
+      /*
       //Traverse through the entire compartment voxels:
       unsigned endA(vacStartMol+theVacantSpecies->size());
       unsigned endB(lipStartMol+aLipid->size());
@@ -1608,6 +1752,7 @@ public:
                 }
             }
         }
+        */
     }
   void setMultiscaleBindUnbindIDs(unsigned anID, unsigned aPairID)
     {
@@ -1624,6 +1769,7 @@ public:
   double getMultiscaleBoundFraction(unsigned index, unsigned anID)
     {
       double fraction(0);
+      /*
       if(isMultiscale)
         {
           unsigned i(getMol(index)-vacStartMol);
@@ -1637,12 +1783,14 @@ public:
             }
           fraction /= theIntersectLipids[i].size();
         }
+        */
       return fraction;
     }
   unsigned getPopulatableSize()
     {
       if(isMultiscale)
         {
+          /*
           if(!getIsPopulated())
             {
               std::cout << "The multiscale species:" << 
@@ -1663,14 +1811,16 @@ public:
                 }
             }
           return thePopulatableMols.size();
+          */
         }
-      return theMolSize;
+      return size();
     }
-  unsigned getRandomPopulatableMol()
+  unsigned getRandomPopulatableMol(unsigned aBox)
     {
       unsigned aMol;
       if(isMultiscale)
         {
+          /*
           unsigned index(0);
           do
             {
@@ -1678,24 +1828,27 @@ public:
             }
           while(theIDs[thePopulatableMols[index]] != theID);
           aMol =  thePopulatableMols[index];
+          */
         }
       else
         {
-          aMol = getRandomMol();
-          while(theIDs[aMol] != theID)
+          aMol = getRandomMol(aBox);
+          while(theIDs[aBox][aMol] != theID)
             {
-              aMol = getRandomMol();
+              aMol = getRandomMol(aBox);
             }
         }
       return aMol;
     }
-  unsigned getPopulatableMol(unsigned index)
+  unsigned getPopulatableMol(unsigned aBox, unsigned index)
     {
+      /*
       if(isMultiscale)
         {
           return thePopulatableMols[index];
         }
-      return getMol(index);
+        */
+      return getMol(aBox, index);
     }
   void setMultiscaleVacantSpecies(Species* aSpecies)
     {
@@ -1704,6 +1857,7 @@ public:
   //Can aVoxel be populated by this species:
   bool isPopulatable(unsigned aMol)
     {
+      /*
       if(isMultiscale)
         {
           if(isIntersectMultiscale(aMol))
@@ -1715,6 +1869,7 @@ public:
         {
           return false;
         }
+        */
       return true;
     }
   //Can aVoxel of this species replaced by aSpecies:
@@ -1755,12 +1910,13 @@ private:
   unsigned theAdjoinSize;
   unsigned theCollision;
   unsigned theDimension;
-  unsigned theInitMolSize;
-  unsigned theMolSize;
+  std::vector<unsigned> theInitMolSize;
+  std::vector<unsigned> theMolSize;
   unsigned theNullMol;
   unsigned theNullID;
   unsigned theSpeciesSize;
   unsigned vacStartMol;
+  unsigned theBoxSize;
   int thePolymerDirectionality;
   unsigned short theVacantID;
   double D;
@@ -1779,15 +1935,15 @@ private:
   Tag theNullTag;
   std::vector<bool> theFinalizeReactions;
   std::vector<unsigned> collisionCnts;
-  std::vector<unsigned> theMols;
   std::vector<unsigned> theMultiscaleBindIDs;
   std::vector<unsigned> theMultiscaleIDs;
   std::vector<unsigned> theMultiscaleUnbindIDs;
   std::vector<unsigned> thePopulatableMols;
-  std::vector<Tag> theTags;
+  std::vector<std::vector<Tag> > theTags;
   std::vector<double> theBendAngles;
   std::vector<double> theReactionProbabilities;
-  std::vector<unsigned>* theCompMols;
+  std::vector<std::vector<unsigned> > theMols;
+  std::vector<std::vector<unsigned> >* theCompMols;
   std::vector<Species*> theDiffusionInfluencedReactantPairs;
   std::vector<Species*> theTaggedSpeciesList;
   std::vector<Species*> theTagSpeciesList;
@@ -1795,11 +1951,11 @@ private:
     theDiffusionInfluencedReactions;
   std::vector<SpatiocyteNextReactionProcess*> theInterruptedProcesses;
   std::vector<Origin> theMolOrigins;
-  std::vector<unsigned>& theAdjoins;
-  std::vector<unsigned> theRands;
-  std::vector<unsigned> theTarMols;
-  std::vector<VoxelInfo>& theInfo;
-  std::vector<unsigned short>& theIDs;
+  std::vector<std::vector<unsigned> >& theAdjoins;
+  std::vector<std::vector<unsigned> > theRands;
+  std::vector<std::vector<unsigned> > theTarMols;
+  std::vector<std::vector<VoxelInfo> >& theInfo;
+  std::vector<std::vector<unsigned short> >& theIDs;
   std::vector<std::vector<unsigned> > theIntersectLipids;
 };
 
