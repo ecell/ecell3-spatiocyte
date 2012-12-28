@@ -157,13 +157,13 @@ private:
   void setSurfaceVoxelProperties(Comp*);
   void setSurfaceCompProperties(Comp*);
   void setVolumeCompProperties(Comp*);
-  void concatenateVoxel(unsigned, unsigned);
-  void concatenateLayers(std::vector<unsigned>&, unsigned, unsigned, unsigned,
-                         unsigned);
-  void concatenateRows(std::vector<unsigned>&, unsigned, unsigned, unsigned,
-                       unsigned);
-  void concatenateCols(std::vector<unsigned>&, unsigned, unsigned, unsigned,
-                       unsigned);
+  void concatenateVoxel(std::vector<unsigned>&, unsigned, unsigned);
+  void concatenateLayers(std::vector<unsigned>&, unsigned, unsigned,
+                         unsigned, unsigned, unsigned);
+  void concatenateRows(std::vector<unsigned>&, unsigned, unsigned,
+                       unsigned, unsigned, unsigned);
+  void concatenateCols(std::vector<unsigned>&, unsigned, unsigned,
+                       unsigned, unsigned, unsigned);
   void replaceVoxel(unsigned, unsigned);
   void replaceUniVoxel(unsigned, unsigned);
   void setMinMaxSurfaceDimensions(unsigned, Comp*);
@@ -197,8 +197,9 @@ private:
   unsigned theRowSize;
   unsigned theLayerSize;
   unsigned theBoxColSize;
-  unsigned theBoxRowSize;
   unsigned theBoxLayerSize;
+  unsigned theBoxMaxSize;
+  unsigned theBoxRowSize;
   unsigned theBoxCols;
   unsigned theBoxRows;
   unsigned theBoxLayers;

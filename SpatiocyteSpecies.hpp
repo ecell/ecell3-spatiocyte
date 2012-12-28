@@ -121,9 +121,10 @@ public:
     theInfo(anInfo),
     theIDs(anIDs) {}
   ~Species() {}
-  void initialize(int speciesSize, int anAdjoinSize,
+  void initialize(int speciesSize, unsigned aBoxMaxSize, int anAdjoinSize,
                   unsigned aNullMol, unsigned aNullID)
     {
+      theBoxMaxSize = aBoxMaxSize;
       theBoxSize = theIDs.size();
       theMolSize.resize(theBoxSize);
       theMols.resize(theBoxSize);
@@ -311,7 +312,7 @@ public:
     }
   Point& getPoint(unsigned aBox, unsigned anIndex)
     {
-      return theInfo[aBox][getMol(aBox, anIndex)].point;
+      return theInfo[aBox][getMol(aBox, anIndex)-aBox*theBoxMaxSize].point;
     }
   unsigned short getID() const
     {
@@ -588,33 +589,38 @@ public:
     }
   void setTarMols(std::vector<unsigned>& aTarMols,
                   std::vector<unsigned>& aRands,
-                  std::vector<unsigned>& anAdjoins,
-                  std::vector<unsigned>& aMols,
-                  unsigned& aMolSize)
+                  const std::vector<unsigned>& anAdjoins,
+                  const std::vector<unsigned>& aMols,
+                  const unsigned& aMolSize,
+                  const unsigned& anOffset)
     {
       if(aTarMols.size() < aMolSize)
         {
           aTarMols.resize(aMolSize);
-          aRands.resize(std::min(unsigned(10000), aMolSize*10));
+          aRands.resize(std::min(unsigned(100000), unsigned(100000)));
           for(unsigned i(0); i != aRands.size(); ++i)
             {
               aRands[i] = gsl_rng_uniform_int(theRng, theAdjoinSize);
             }
         }
-      unsigned j(gsl_rng_uniform_int(theRng, aRands.size()));
-      for(unsigned i(0); i != aMolSize; ++i, ++j)
+      if(aRands.size())
         {
-          while(j == aRands.size())
+          unsigned j(gsl_rng_uniform_int(theRng, aRands.size()));
+          for(unsigned i(0); i != aMolSize; ++i, ++j)
             {
-              j = gsl_rng_uniform_int(theRng, aRands.size());
+              while(j == aRands.size())
+                {
+                  j = gsl_rng_uniform_int(theRng, aRands.size());
+                }
+              aTarMols[i] = anAdjoins[aMols[i]*theAdjoinSize+aRands[j]]-
+                anOffset;
             }
-          aTarMols[i] = anAdjoins[aMols[i]*theAdjoinSize+aRands[j]];
         }
     }
   void walkBox(std::vector<unsigned short>& anIDs,
-               std::vector<unsigned>& aTarMols,
+               const std::vector<unsigned>& aTarMols,
                std::vector<unsigned>& aMols,
-               unsigned& aMolSize)
+               const unsigned& aMolSize)
     {
       const unsigned beginMolSize(aMolSize);
       for(unsigned i(0); i < beginMolSize && i < aMolSize; ++i)
@@ -636,7 +642,7 @@ public:
       for(unsigned i(0); i != theBoxSize; ++i)
         {
           setTarMols(theTarMols[i], theRands[i], theAdjoins[i],
-                     theMols[i], theMolSize[i]);
+                     theMols[i], theMolSize[i], i*theBoxMaxSize);
           walkBox(theIDs[i], theTarMols[i], theMols[i], theMolSize[i]);
         } 
 
@@ -1908,15 +1914,14 @@ private:
   const unsigned short theID;
   unsigned lipStartMol;
   unsigned theAdjoinSize;
+  unsigned theBoxMaxSize;
+  unsigned theBoxSize;
   unsigned theCollision;
   unsigned theDimension;
-  std::vector<unsigned> theInitMolSize;
-  std::vector<unsigned> theMolSize;
   unsigned theNullMol;
   unsigned theNullID;
   unsigned theSpeciesSize;
   unsigned vacStartMol;
-  unsigned theBoxSize;
   int thePolymerDirectionality;
   unsigned short theVacantID;
   double D;
@@ -1933,6 +1938,8 @@ private:
   SpatiocyteStepper* theStepper;
   Variable* theVariable;
   Tag theNullTag;
+  std::vector<unsigned> theInitMolSize;
+  std::vector<unsigned> theMolSize;
   std::vector<bool> theFinalizeReactions;
   std::vector<unsigned> collisionCnts;
   std::vector<unsigned> theMultiscaleBindIDs;

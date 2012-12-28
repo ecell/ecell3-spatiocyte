@@ -134,9 +134,11 @@ public:
                                 std::vector<std::vector<unsigned short> >* anIDs,
                                 std::vector<std::vector<VoxelInfo> >* anInfo,
                                 std::vector<std::vector<unsigned> >* anAdjoins,
+                                unsigned aBoxMaxSize,
                                 unsigned anAdjoiningMolSize,
                                 unsigned aNullMol, unsigned aNullID)
     {
+      theBoxMaxSize = aBoxMaxSize;
       theIDs = anIDs;
       theInfo = anInfo;
       theAdjoins = anAdjoins;
@@ -214,6 +216,7 @@ protected:
   bool isPriorityQueued;
   int thePriority;
   unsigned theAdjoinSize;
+  unsigned theBoxMaxSize;
   unsigned theNullMol;
   unsigned theNullID;
   double theInterval;
