@@ -977,9 +977,9 @@ void SpatiocyteStepper::setLatticeProperties()
       std::cout << "ERROR: too many voxels (" << max*2 << ") more than " <<
         UINT_MAX << std::endl;
     }
-  theBoxRows = 5;
-  theBoxCols = 5;
-  theBoxLayers = 5;
+  theBoxRows = 2;
+  theBoxCols = 2;
+  theBoxLayers = 2;
   theBoxSize = theBoxRows*theBoxCols*theBoxLayers;
   theBoxRowSize = theRowSize/theBoxRows;
   theBoxColSize = theColSize/theBoxCols;

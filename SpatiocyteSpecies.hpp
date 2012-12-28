@@ -127,6 +127,8 @@ public:
       theBoxMaxSize = aBoxMaxSize;
       theBoxSize = theIDs.size();
       theMolSize.resize(theBoxSize);
+      theLastMolSize.resize(theBoxSize);
+      theCnt.resize(theBoxSize);
       theMols.resize(theBoxSize);
       theTarMols.resize(theBoxSize);
       theRands.resize(theBoxSize);
@@ -591,8 +593,7 @@ public:
                   std::vector<unsigned>& aRands,
                   const std::vector<unsigned>& anAdjoins,
                   const std::vector<unsigned>& aMols,
-                  const unsigned& aMolSize,
-                  const unsigned& anOffset)
+                  const unsigned aMolSize)
     {
       if(aTarMols.size() < aMolSize)
         {
@@ -612,27 +613,45 @@ public:
                 {
                   j = gsl_rng_uniform_int(theRng, aRands.size());
                 }
-              aTarMols[i] = anAdjoins[aMols[i]*theAdjoinSize+aRands[j]]-
-                anOffset;
+              aTarMols[i] = anAdjoins[aMols[i]*theAdjoinSize+aRands[j]];
             }
         }
     }
   void walkBox(std::vector<unsigned short>& anIDs,
-               const std::vector<unsigned>& aTarMols,
                std::vector<unsigned>& aMols,
-               const unsigned& aMolSize)
+               const std::vector<unsigned>& aTarMols,
+               const unsigned currBox, unsigned& aLastMolSize,
+               unsigned& aMolSize, unsigned& i)
     {
-      const unsigned beginMolSize(aMolSize);
-      for(unsigned i(0); i < beginMolSize && i < aMolSize; ++i)
+      i = 0;
+      for(; i < aLastMolSize; ++i)
         {
-          if(anIDs[aTarMols[i]] == theVacantID)
+          const unsigned aTar(aTarMols[i]);
+          const unsigned aTarMol(aTar%theBoxMaxSize);
+          if(aTar/theBoxMaxSize == currBox)
             {
-              if(theWalkProbability == 1 ||
-                 gsl_rng_uniform(theRng) < theWalkProbability)
+              if(anIDs[aTarMol] == theVacantID)
                 {
-                  anIDs[aTarMols[i]] = theID;
-                  anIDs[aMols[i]] = theVacantID;
-                  aMols[i] = aTarMols[i];
+                  if(theWalkProbability == 1 ||
+                     gsl_rng_uniform(theRng) < theWalkProbability)
+                    {
+                      anIDs[aTarMol] = theID;
+                      anIDs[aMols[i]] = theVacantID;
+                      aMols[i] = aTarMol;
+                    }
+                }
+            }
+          else
+            {
+              const unsigned aBox(aTar/theBoxMaxSize);
+              if(theIDs[aBox][aTarMol] == theVacantID)
+                {
+                  if(theWalkProbability == 1 ||
+                     gsl_rng_uniform(theRng) < theWalkProbability)
+                    {
+                      addMol(aBox, aTarMol, getTag(currBox, i));
+                      removeMolIndex(currBox, i);
+                    }
                 }
             }
         }
@@ -641,10 +660,15 @@ public:
     {
       for(unsigned i(0); i != theBoxSize; ++i)
         {
+          theLastMolSize[i] = theMolSize[i];
+        }
+      for(unsigned i(0); i != theBoxSize; ++i)
+        {
           setTarMols(theTarMols[i], theRands[i], theAdjoins[i],
-                     theMols[i], theMolSize[i], i*theBoxMaxSize);
-          walkBox(theIDs[i], theTarMols[i], theMols[i], theMolSize[i]);
-        } 
+                     theMols[i], theLastMolSize[i]);
+          walkBox(theIDs[i], theMols[i], theTarMols[i], i, theLastMolSize[i],
+                  theMolSize[i], theCnt[i]);
+        }
 
           /*
           else
@@ -1258,34 +1282,38 @@ public:
         }
         */
     }
-  void removeMolIndex(unsigned anIndex)
+  void removeMolIndex(const unsigned aBox, const unsigned anIndex)
     {
-      /*
       if(!isVacant)
         {
-          theIDs[theMols[anIndex]] = theVacantID;
-          softRemoveMolIndex(anIndex);
+          theIDs[aBox][theMols[aBox][anIndex]] = theVacantID;
+          softRemoveMolIndex(aBox, anIndex);
         }
-        */
     }
-  void softRemoveMolIndex(unsigned anIndex)
+  void softRemoveMolIndex(const unsigned aBox, const unsigned anIndex)
     {
-      /*
       if(isMultiscale)
         {
+          /*
           removeMultiscaleMol(theMols[anIndex]);
+          */
         }
       if(!isVacant)
         {
-          theMols[anIndex] = theMols[--theMolSize];
+          theMols[aBox][anIndex] = theMols[aBox][--theMolSize[aBox]];
+          if(theMolSize[aBox]+1 == theLastMolSize[aBox])
+            {
+              theTarMols[aBox][anIndex] = theTarMols[aBox][theMolSize[aBox]];
+              --theLastMolSize[aBox];
+              --theCnt[aBox];
+            }
           if(isTagged)
             {
-              theTags[anIndex] = theTags[theMolSize];
+              theTags[aBox][anIndex] = theTags[aBox][theMolSize[aBox]];
             }
-          theVariable->setValue(theMolSize);
+          //theVariable->setValue(size());
           return;
         }
-        */
     }
   //Used to remove all molecules and free memory used to store the molecules
   void clearMols()
@@ -1938,7 +1966,9 @@ private:
   SpatiocyteStepper* theStepper;
   Variable* theVariable;
   Tag theNullTag;
+  std::vector<unsigned> theCnt;
   std::vector<unsigned> theInitMolSize;
+  std::vector<unsigned> theLastMolSize;
   std::vector<unsigned> theMolSize;
   std::vector<bool> theFinalizeReactions;
   std::vector<unsigned> collisionCnts;
