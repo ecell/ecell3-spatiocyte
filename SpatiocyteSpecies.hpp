@@ -614,6 +614,7 @@ public:
                   j = gsl_rng_uniform_int(theRng, aRands.size());
                 }
               aTarMols[i] = anAdjoins[aMols[i]*theAdjoinSize+aRands[j]];
+              //aTarMols[i] = anAdjoins[aMols[i]*theAdjoinSize+gsl_rng_uniform_int(theRng, theAdjoinSize)];
             }
         }
     }

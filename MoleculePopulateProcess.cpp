@@ -271,6 +271,7 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
          !OriginX && !OriginY && !OriginZ)
         {
           for(unsigned i(0); i != theIDs->size(); ++i)
+          //for(unsigned i(13); i != 14;  ++i)
             {
               unsigned int aSize(aSpecies->getPopulateMolSize(i));
               int availableVoxelSize(aVacantSpecies->size(i));
