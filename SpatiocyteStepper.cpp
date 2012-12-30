@@ -977,13 +977,25 @@ void SpatiocyteStepper::setLatticeProperties()
       std::cout << "ERROR: too many voxels (" << max*2 << ") more than " <<
         UINT_MAX << std::endl;
     }
-  theBoxRows = 3;
-  theBoxCols = 3;
-  theBoxLayers = 3;
+  theBoxRows = 1;
+  theBoxCols = 1;
+  theBoxLayers = 1;
   theBoxSize = theBoxRows*theBoxCols*theBoxLayers;
   theRowSize = theTotalRowSize/theBoxRows;
   theColSize = theTotalColSize/theBoxCols;
   theLayerSize = theTotalLayerSize/theBoxLayers;
+  if(theRowSize%2 != 0)
+    {
+      ++theRowSize;
+    }
+  if(theColSize%2 != 0)
+    {
+      ++theColSize;
+    }
+  if(theLayerSize%2 != 0)
+    {
+      ++theLayerSize;
+    }
   theTotalRowSize = theRowSize*theBoxRows;
   theTotalColSize = theColSize*theBoxCols;
   theTotalLayerSize = theLayerSize*theBoxLayers;
@@ -1430,23 +1442,24 @@ bool SpatiocyteStepper::isRemovableEdgeMol(unsigned aMol, Comp* aComp)
     }
 }
 
-void SpatiocyteStepper::concatenateVoxel(unsigned src, unsigned anIndex)
+void SpatiocyteStepper::concatenateVoxel(const unsigned src,
+                                         const unsigned anIndex)
 {
-  unsigned aCol(anIndex/(theRowSize*theLayerSize)); 
-  unsigned aLayer((anIndex%(theRowSize*theLayerSize))/theRowSize); 
-  unsigned aRow((anIndex%(theRowSize*theLayerSize))%theRowSize); 
-  unsigned bCol(src/(theBoxRows*theBoxLayers)); 
-  unsigned bLayer((src%(theBoxRows*theBoxLayers))/theBoxRows); 
-  unsigned bRow((src%(theBoxRows*theBoxLayers))%theBoxRows); 
+  const unsigned aCol(anIndex/(theRowSize*theLayerSize)); 
+  const unsigned aLayer((anIndex%(theRowSize*theLayerSize))/theRowSize); 
+  const unsigned aRow((anIndex%(theRowSize*theLayerSize))%theRowSize); 
+  const unsigned bCol(src/(theBoxRows*theBoxLayers)); 
+  const unsigned bLayer((src%(theBoxRows*theBoxLayers))/theBoxRows); 
+  const unsigned bRow((src%(theBoxRows*theBoxLayers))%theBoxRows); 
   if(aRow > 0)
     { 
       concatenateRows(src, src, anIndex, aRow-1, aLayer, aCol);
     } 
   else if(bRow > 0)
     {
-      unsigned tar(bRow-1+
-                   theBoxRows*bLayer+
-                   theBoxRows*theBoxLayers*bCol);
+      const unsigned tar(bRow-1+
+                         theBoxRows*bLayer+
+                         theBoxRows*theBoxLayers*bCol);
       concatenateRows(src, tar, anIndex, theRowSize-1, aLayer, aCol);
     }
   if(aLayer > 0)
@@ -1455,9 +1468,9 @@ void SpatiocyteStepper::concatenateVoxel(unsigned src, unsigned anIndex)
     }
   else if(bLayer > 0)
     {
-      unsigned tar(bRow+
-                   theBoxRows*(bLayer-1)+
-                   theBoxRows*theBoxLayers*bCol);
+      const unsigned tar(bRow+
+                         theBoxRows*(bLayer-1)+
+                         theBoxRows*theBoxLayers*bCol);
       concatenateLayers(src, tar, anIndex, aRow, theLayerSize-1, aCol); 
     }
   if(aCol > 0)
@@ -1466,129 +1479,62 @@ void SpatiocyteStepper::concatenateVoxel(unsigned src, unsigned anIndex)
     }
   else if(bCol > 0)
     {
-      unsigned tar(bRow+
-                   theBoxRows*bLayer+
-                   theBoxRows*theBoxLayers*(bCol-1));
+      const unsigned tar(bRow+
+                         theBoxRows*bLayer+
+                         theBoxRows*theBoxLayers*(bCol-1));
       concatenateCols(src, tar, anIndex, aRow, aLayer, theColSize-1); 
     }
 }
 
-void SpatiocyteStepper::concatenateRows(unsigned src,
-                                        unsigned tar,
-                                        unsigned a,
-                                        unsigned aRow,
-                                        unsigned aLayer,
-                                        unsigned aCol)
+void SpatiocyteStepper::concatenateRows(const unsigned src,
+                                        const unsigned tar,
+                                        const unsigned a,
+                                        const unsigned aRow,
+                                        const unsigned aLayer,
+                                        const unsigned aCol)
 {
-  unsigned b(aRow+ 
-             theRowSize*aLayer+ 
-             theRowSize*theLayerSize*aCol);
+  const unsigned b(aRow+ 
+                   theRowSize*aLayer+ 
+                   theRowSize*theLayerSize*aCol);
   theAdjoins[src][a*theAdjoinSize+NORTH] = b+tar*theBoxMaxSize;
   theAdjoins[tar][b*theAdjoinSize+SOUTH] = a+src*theBoxMaxSize;
 }
 
-void SpatiocyteStepper::concatenateBoxLayers(unsigned src,
-                                          unsigned tar,
-                                          unsigned a,
-                                          unsigned aRow,
-                                          unsigned aLayer,
-                                          unsigned aCol)
+void SpatiocyteStepper::concatenateLayers(const unsigned src,
+                                          const unsigned tar,
+                                          const unsigned a,
+                                          const unsigned aRow,
+                                          const unsigned aLayer,
+                                          const unsigned aCol)
 {
-  unsigned b(aRow+
-             theRowSize*aLayer+
-             theRowSize*theLayerSize*aCol);
-  unsigned bCol(tar/(theBoxRows*theBoxLayers)); 
-  unsigned bLayer((tar%(theBoxRows*theBoxLayers))/theBoxRows); 
-  unsigned bRow((tar%(theBoxRows*theBoxLayers))%theBoxRows); 
+  const unsigned b(aRow+
+                   theRowSize*aLayer+
+                   theRowSize*theLayerSize*aCol);
+  const unsigned bCol(tar/(theBoxRows*theBoxLayers)); 
+  const unsigned bLayer((tar%(theBoxRows*theBoxLayers))/theBoxRows); 
+  const unsigned bRow((tar%(theBoxRows*theBoxLayers))%theBoxRows); 
   if((aLayer+1)%2+(aCol)%2 == 1)
     {
       theAdjoins[src][a*theAdjoinSize+VENTRALN] = b+tar*theBoxMaxSize;
       theAdjoins[tar][b*theAdjoinSize+DORSALS] = a+src*theBoxMaxSize;
       if(aRow < theRowSize-1)
         {
-          unsigned c(aRow+1+ 
-                     theRowSize*aLayer+
-                     theRowSize*theLayerSize*aCol);
-          theAdjoins[src][a*theAdjoinSize+VENTRALS] = c+tar*theBoxMaxSize;
-          theAdjoins[tar][c*theAdjoinSize+DORSALN] = a+src*theBoxMaxSize;
-        }
-      /*
-      else if(bRow < theBoxRows-1)
-        {
-          tar = bRow+1+
-                theBoxRows*bLayer+
-                theBoxRows*theBoxLayers*bCol;
-          unsigned c(0+ 
-                     theRowSize*aLayer+
-                     theRowSize*theLayerSize*aCol);
-          theAdjoins[src][a*theAdjoinSize+VENTRALS] = c+tar*theBoxMaxSize;
-          theAdjoins[tar][c*theAdjoinSize+DORSALN] = a+src*theBoxMaxSize;
-        }
-        */
-    }
-  else
-    {
-      theAdjoins[src][a*theAdjoinSize+VENTRALS] = b+tar*theBoxMaxSize;
-      theAdjoins[tar][b*theAdjoinSize+DORSALN] = a+src*theBoxMaxSize;
-      if(aRow > 0)
-        {
-          unsigned c(aRow-1+ 
-                     theRowSize*aLayer+
-                     theRowSize*theLayerSize*aCol);
-          theAdjoins[src][a*theAdjoinSize+VENTRALN] = c+tar*theBoxMaxSize;
-          theAdjoins[tar][c*theAdjoinSize+DORSALS] = a+src*theBoxMaxSize;
-        }
-      /*
-      else if(bRow > 0)
-        {
-          tar = bRow-1+
-                theBoxRows*bLayer+
-                theBoxRows*theBoxLayers*bCol;
-          unsigned c(theRowSize-1+ 
-                     theRowSize*aLayer+
-                     theRowSize*theLayerSize*aCol);
-          theAdjoins[src][a*theAdjoinSize+VENTRALN] = c+tar*theBoxMaxSize;
-          theAdjoins[tar][c*theAdjoinSize+DORSALS] = a+src*theBoxMaxSize;
-        }
-        */
-    }
-}
-
-void SpatiocyteStepper::concatenateLayers(unsigned src,
-                                          unsigned tar,
-                                          unsigned a,
-                                          unsigned aRow,
-                                          unsigned aLayer,
-                                          unsigned aCol)
-{
-  unsigned b(aRow+
-             theRowSize*aLayer+
-             theRowSize*theLayerSize*aCol);
-  unsigned bCol(tar/(theBoxRows*theBoxLayers)); 
-  unsigned bLayer((tar%(theBoxRows*theBoxLayers))/theBoxRows); 
-  unsigned bRow((tar%(theBoxRows*theBoxLayers))%theBoxRows); 
-  if((aLayer+1)%2+(aCol)%2 == 1)
-    {
-      theAdjoins[src][a*theAdjoinSize+VENTRALN] = b+tar*theBoxMaxSize;
-      theAdjoins[tar][b*theAdjoinSize+DORSALS] = a+src*theBoxMaxSize;
-      if(aRow < theRowSize-1)
-        {
-          unsigned c(aRow+1+ 
-                     theRowSize*aLayer+
-                     theRowSize*theLayerSize*aCol);
+          const unsigned c(aRow+1+ 
+                           theRowSize*aLayer+
+                           theRowSize*theLayerSize*aCol);
           theAdjoins[src][a*theAdjoinSize+VENTRALS] = c+tar*theBoxMaxSize;
           theAdjoins[tar][c*theAdjoinSize+DORSALN] = a+src*theBoxMaxSize;
         }
       else if(bRow < theBoxRows-1)
         {
-          tar = bRow+1+
-                theBoxRows*bLayer+
-                theBoxRows*theBoxLayers*bCol;
-          unsigned c(0+ 
-                     theRowSize*aLayer+
-                     theRowSize*theLayerSize*aCol);
-          theAdjoins[src][a*theAdjoinSize+VENTRALS] = c+tar*theBoxMaxSize;
-          theAdjoins[tar][c*theAdjoinSize+DORSALN] = a+src*theBoxMaxSize;
+          const unsigned c(0+ 
+                           theRowSize*aLayer+
+                           theRowSize*theLayerSize*aCol);
+          const unsigned tarc(bRow+1+
+                              theBoxRows*bLayer+
+                              theBoxRows*theBoxLayers*bCol);
+          theAdjoins[src][a*theAdjoinSize+VENTRALS] = c+tarc*theBoxMaxSize;
+          theAdjoins[tarc][c*theAdjoinSize+DORSALN] = a+src*theBoxMaxSize;
         }
     }
   else
@@ -1597,40 +1543,40 @@ void SpatiocyteStepper::concatenateLayers(unsigned src,
       theAdjoins[tar][b*theAdjoinSize+DORSALN] = a+src*theBoxMaxSize;
       if(aRow > 0)
         {
-          unsigned c(aRow-1+ 
-                     theRowSize*aLayer+
-                     theRowSize*theLayerSize*aCol);
+          const unsigned c(aRow-1+ 
+                           theRowSize*aLayer+
+                           theRowSize*theLayerSize*aCol);
           theAdjoins[src][a*theAdjoinSize+VENTRALN] = c+tar*theBoxMaxSize;
           theAdjoins[tar][c*theAdjoinSize+DORSALS] = a+src*theBoxMaxSize;
         }
       else if(bRow > 0)
         {
-          tar = bRow-1+
-                theBoxRows*bLayer+
-                theBoxRows*theBoxLayers*bCol;
-          unsigned c(theRowSize-1+ 
-                     theRowSize*aLayer+
-                     theRowSize*theLayerSize*aCol);
-          theAdjoins[src][a*theAdjoinSize+VENTRALN] = c+tar*theBoxMaxSize;
-          theAdjoins[tar][c*theAdjoinSize+DORSALS] = a+src*theBoxMaxSize;
+          const unsigned c(theRowSize-1+ 
+                           theRowSize*aLayer+
+                           theRowSize*theLayerSize*aCol);
+          const unsigned tarc(bRow-1+
+                              theBoxRows*bLayer+
+                              theBoxRows*theBoxLayers*bCol);
+          theAdjoins[src][a*theAdjoinSize+VENTRALN] = c+tarc*theBoxMaxSize;
+          theAdjoins[tarc][c*theAdjoinSize+DORSALS] = a+src*theBoxMaxSize;
         }
     }
 }
 
 
-void SpatiocyteStepper::concatenateCols(unsigned src,
-                                        unsigned tar,
-                                        unsigned a,
-                                        unsigned aRow,
-                                        unsigned aLayer,
-                                        unsigned aCol)
+void SpatiocyteStepper::concatenateCols(const unsigned src,
+                                        const unsigned tar,
+                                        const unsigned a,
+                                        const unsigned aRow,
+                                        const unsigned aLayer,
+                                        const unsigned aCol)
 {
-  unsigned b(aRow+
-             theRowSize*aLayer+
-             theRowSize*theLayerSize*aCol);
-  unsigned bCol(tar/(theBoxRows*theBoxLayers)); 
-  unsigned bLayer((tar%(theBoxRows*theBoxLayers))/theBoxRows); 
-  unsigned bRow((tar%(theBoxRows*theBoxLayers))%theBoxRows); 
+  const unsigned b(aRow+
+                   theRowSize*aLayer+
+                   theRowSize*theLayerSize*aCol);
+  const unsigned bCol(tar/(theBoxRows*theBoxLayers)); 
+  const unsigned bLayer((tar%(theBoxRows*theBoxLayers))/theBoxRows); 
+  const unsigned bRow((tar%(theBoxRows*theBoxLayers))%theBoxRows); 
   if(aLayer%2 == 0)
     {
       if((aCol+1)%2 == 1)
@@ -1639,46 +1585,42 @@ void SpatiocyteStepper::concatenateCols(unsigned src,
           theAdjoins[tar][b*theAdjoinSize+SE] = a+src*theBoxMaxSize;
           if(aRow < theRowSize - 1)
             {
-              unsigned c(aRow+1+ 
-                         theRowSize*aLayer+
-                         theRowSize*theLayerSize*aCol);
+              const unsigned c(aRow+1+ 
+                               theRowSize*aLayer+
+                               theRowSize*theLayerSize*aCol);
               theAdjoins[src][a*theAdjoinSize+SW] = c+tar*theBoxMaxSize;
               theAdjoins[tar][c*theAdjoinSize+NE] = a+src*theBoxMaxSize;
             }
-          /*
           else if(bRow < theBoxRows-1)
             {
-              tar = bRow+1+
-                    theBoxRows*bLayer+
-                    theBoxRows*theBoxLayers*bCol;
-              unsigned c(0+ 
-                         theRowSize*aLayer+
-                         theRowSize*theLayerSize*aCol);
-              theAdjoins[src][a*theAdjoinSize+SW] = c+tar*theBoxMaxSize;
-              theAdjoins[tar][c*theAdjoinSize+NE] = a+src*theBoxMaxSize;
+              const unsigned c(0+ 
+                               theRowSize*aLayer+
+                               theRowSize*theLayerSize*aCol);
+              const unsigned tarc(bRow+1+
+                                  theBoxRows*bLayer+
+                                  theBoxRows*theBoxLayers*bCol);
+              theAdjoins[src][a*theAdjoinSize+SW] = c+tarc*theBoxMaxSize;
+              theAdjoins[tarc][c*theAdjoinSize+NE] = a+src*theBoxMaxSize;
             }
-            */
           if(aLayer < theLayerSize-1)
             {
-              unsigned c(aRow+ 
-                         theRowSize*(aLayer+1)+
-                         theRowSize*theLayerSize*aCol);
+              const unsigned c(aRow+ 
+                               theRowSize*(aLayer+1)+
+                               theRowSize*theLayerSize*aCol);
               theAdjoins[src][a*theAdjoinSize+WEST] = c+tar*theBoxMaxSize;
               theAdjoins[tar][c*theAdjoinSize+EAST] = a+src*theBoxMaxSize;
             }
-          /*
           else if(bLayer < theBoxLayers-1)
             {
-              tar = bRow+
-                    theBoxRows*(bLayer+1)+
-                    theBoxRows*theBoxLayers*bCol;
-              unsigned c(aRow+
-                         0+
-                         theRowSize*theLayerSize*aCol);
-              theAdjoins[src][a*theAdjoinSize+WEST] = c+tar*theBoxMaxSize;
-              theAdjoins[tar][c*theAdjoinSize+EAST] = a+src*theBoxMaxSize;
+              const unsigned c(aRow+
+                               0+
+                               theRowSize*theLayerSize*aCol);
+              const unsigned tarc(bRow+
+                                  theBoxRows*(bLayer+1)+
+                                  theBoxRows*theBoxLayers*bCol);
+              theAdjoins[src][a*theAdjoinSize+WEST] = c+tarc*theBoxMaxSize;
+              theAdjoins[tarc][c*theAdjoinSize+EAST] = a+src*theBoxMaxSize;
             }
-            */
         }
       else
         {
@@ -1686,46 +1628,42 @@ void SpatiocyteStepper::concatenateCols(unsigned src,
           theAdjoins[tar][b*theAdjoinSize+NE] = a+src*theBoxMaxSize;
           if(aRow > 0)
             {
-              unsigned c(aRow-1+ 
-                         theRowSize*aLayer+
-                         theRowSize*theLayerSize*aCol);
+              const unsigned c(aRow-1+ 
+                               theRowSize*aLayer+
+                               theRowSize*theLayerSize*aCol);
               theAdjoins[src][a*theAdjoinSize+NW] = c+tar*theBoxMaxSize;
               theAdjoins[tar][c*theAdjoinSize+SE] = a+src*theBoxMaxSize;
             }
-          /*
           else if(bRow > 0)
             {
-              tar = bRow-1+
-                    theBoxRows*bLayer+
-                    theBoxRows*theBoxLayers*bCol;
-              unsigned c(theRowSize-1+ 
-                         theRowSize*aLayer+
-                         theRowSize*theLayerSize*aCol);
-              theAdjoins[src][a*theAdjoinSize+NW] = c+tar*theBoxMaxSize;
-              theAdjoins[tar][c*theAdjoinSize+SE] = a+src*theBoxMaxSize;
+              const unsigned c(theRowSize-1+ 
+                               theRowSize*aLayer+
+                               theRowSize*theLayerSize*aCol);
+              const unsigned tarc(bRow-1+
+                                  theBoxRows*bLayer+
+                                  theBoxRows*theBoxLayers*bCol);
+              theAdjoins[src][a*theAdjoinSize+NW] = c+tarc*theBoxMaxSize;
+              theAdjoins[tarc][c*theAdjoinSize+SE] = a+src*theBoxMaxSize;
             }
-            */
           if(aLayer > 0)
             {
-              unsigned c(aRow+ 
-                         theRowSize*(aLayer-1)+
-                         theRowSize*theLayerSize*aCol);
+              const unsigned c(aRow+ 
+                               theRowSize*(aLayer-1)+
+                               theRowSize*theLayerSize*aCol);
               theAdjoins[src][a*theAdjoinSize+WEST] = c+tar*theBoxMaxSize;
               theAdjoins[tar][c*theAdjoinSize+EAST] = a+src*theBoxMaxSize;
             }
-          /*
           else if(bLayer > 0)
             {
-              tar = bRow+
-                    theBoxRows*(bLayer-1)+
-                    theBoxRows*theBoxLayers*bCol;
-              unsigned c(aRow+ 
-                         theRowSize*(theLayerSize-1)+
-                         theRowSize*theLayerSize*aCol);
-              theAdjoins[src][a*theAdjoinSize+WEST] = c+tar*theBoxMaxSize;
-              theAdjoins[tar][c*theAdjoinSize+EAST] = a+src*theBoxMaxSize;
+              const unsigned c(aRow+ 
+                               theRowSize*(theLayerSize-1)+
+                               theRowSize*theLayerSize*aCol);
+              const unsigned tarc(bRow+
+                                  theBoxRows*(bLayer-1)+
+                                  theBoxRows*theBoxLayers*bCol);
+              theAdjoins[src][a*theAdjoinSize+WEST] = c+tarc*theBoxMaxSize;
+              theAdjoins[tarc][c*theAdjoinSize+EAST] = a+src*theBoxMaxSize;
             }
-            */
         }
     }
   else
@@ -1736,46 +1674,42 @@ void SpatiocyteStepper::concatenateCols(unsigned src,
           theAdjoins[tar][b*theAdjoinSize+NE] = a+src*theBoxMaxSize;
           if(aRow > 0)
             {
-              unsigned c(aRow-1+ 
-                         theRowSize*aLayer+
-                         theRowSize*theLayerSize*aCol);
+              const unsigned c(aRow-1+ 
+                               theRowSize*aLayer+
+                               theRowSize*theLayerSize*aCol);
               theAdjoins[src][a*theAdjoinSize+NW] = c+tar*theBoxMaxSize;
               theAdjoins[tar][c*theAdjoinSize+SE] = a+src*theBoxMaxSize;
             }
-          /*
           else if(bRow > 0)
             {
-              tar = bRow-1+
-                    theBoxRows*bLayer+
-                    theBoxRows*theBoxLayers*bCol;
-              unsigned c(theRowSize-1+ 
-                         theRowSize*aLayer+
-                         theRowSize*theLayerSize*aCol);
-              theAdjoins[src][a*theAdjoinSize+NW] = c+tar*theBoxMaxSize;
-              theAdjoins[tar][c*theAdjoinSize+SE] = a+src*theBoxMaxSize;
+              const unsigned c(theRowSize-1+ 
+                               theRowSize*aLayer+
+                               theRowSize*theLayerSize*aCol);
+              const unsigned tarc(bRow-1+
+                                  theBoxRows*bLayer+
+                                  theBoxRows*theBoxLayers*bCol);
+              theAdjoins[src][a*theAdjoinSize+NW] = c+tarc*theBoxMaxSize;
+              theAdjoins[tarc][c*theAdjoinSize+SE] = a+src*theBoxMaxSize;
             }
-            */
           if(aLayer < theLayerSize-1)
             {
-              unsigned c(aRow+ 
-                         theRowSize*(aLayer+1)+
-                         theRowSize*theLayerSize*aCol);
+              const unsigned c(aRow+ 
+                               theRowSize*(aLayer+1)+
+                               theRowSize*theLayerSize*aCol);
               theAdjoins[src][a*theAdjoinSize+WEST] = c+tar*theBoxMaxSize;
               theAdjoins[tar][c*theAdjoinSize+EAST] = a+src*theBoxMaxSize;
             }
-          /*
           else if(bLayer < theBoxLayers-1)
             {
-              tar = bRow+
-                    theBoxRows*(bLayer+1)+
-                    theBoxRows*theBoxLayers*bCol;
-              unsigned c(aRow+
-                         0+
-                         theRowSize*theLayerSize*aCol);
-              theAdjoins[src][a*theAdjoinSize+WEST] = c+tar*theBoxMaxSize;
-              theAdjoins[tar][c*theAdjoinSize+EAST] = a+src*theBoxMaxSize;
+              const unsigned c(aRow+
+                               0+
+                               theRowSize*theLayerSize*aCol);
+              const unsigned tarc(bRow+
+                                  theBoxRows*(bLayer+1)+
+                                  theBoxRows*theBoxLayers*bCol);
+              theAdjoins[src][a*theAdjoinSize+WEST] = c+tarc*theBoxMaxSize;
+              theAdjoins[tarc][c*theAdjoinSize+EAST] = a+src*theBoxMaxSize;
             }
-            */
         }
       else
         {
@@ -1783,46 +1717,42 @@ void SpatiocyteStepper::concatenateCols(unsigned src,
           theAdjoins[tar][b*theAdjoinSize+SE] = a+src*theBoxMaxSize;
           if(aRow < theRowSize - 1)
             {
-              unsigned c(aRow+1+ 
-                         theRowSize*aLayer+
-                         theRowSize*theLayerSize*aCol);
+              const unsigned c(aRow+1+ 
+                               theRowSize*aLayer+
+                               theRowSize*theLayerSize*aCol);
               theAdjoins[src][a*theAdjoinSize+SW] = c+tar*theBoxMaxSize;
               theAdjoins[tar][c*theAdjoinSize+NE] = a+src*theBoxMaxSize;
             }
-          /*
           else if(bRow < theBoxRows-1)
             {
-              tar = bRow+1+
-                    theBoxRows*bLayer+
-                    theBoxRows*theBoxLayers*bCol;
-              unsigned c(0+ 
-                         theRowSize*aLayer+
-                         theRowSize*theLayerSize*aCol);
-              theAdjoins[src][a*theAdjoinSize+SW] = c+tar*theBoxMaxSize;
-              theAdjoins[tar][c*theAdjoinSize+NE] = a+src*theBoxMaxSize;
+              const unsigned c(0+ 
+                               theRowSize*aLayer+
+                               theRowSize*theLayerSize*aCol);
+              const unsigned tarc(bRow+1+
+                                  theBoxRows*bLayer+
+                                  theBoxRows*theBoxLayers*bCol);
+              theAdjoins[src][a*theAdjoinSize+SW] = c+tarc*theBoxMaxSize;
+              theAdjoins[tarc][c*theAdjoinSize+NE] = a+src*theBoxMaxSize;
             }
-            */
           if(aLayer > 0)
             {
-              unsigned c(aRow+ 
-                         theRowSize*(aLayer-1)+
-                         theRowSize*theLayerSize*aCol);
+              const unsigned c(aRow+ 
+                               theRowSize*(aLayer-1)+
+                               theRowSize*theLayerSize*aCol);
               theAdjoins[src][a*theAdjoinSize+WEST] = c+tar*theBoxMaxSize;
               theAdjoins[tar][c*theAdjoinSize+EAST] = a+src*theBoxMaxSize;
             }
-          /*
           else if(bLayer > 0)
             {
-              tar = bRow+
-                    theBoxRows*(bLayer-1)+
-                    theBoxRows*theBoxLayers*bCol;
-              unsigned c(aRow+ 
-                         theRowSize*(theLayerSize-1)+
-                         theRowSize*theLayerSize*aCol);
-              theAdjoins[src][a*theAdjoinSize+WEST] = c+tar*theBoxMaxSize;
-              theAdjoins[tar][c*theAdjoinSize+EAST] = a+src*theBoxMaxSize;
+              const unsigned c(aRow+ 
+                               theRowSize*(theLayerSize-1)+
+                               theRowSize*theLayerSize*aCol);
+              const unsigned tarc(bRow+
+                                  theBoxRows*(bLayer-1)+
+                                  theBoxRows*theBoxLayers*bCol);
+              theAdjoins[src][a*theAdjoinSize+WEST] = c+tarc*theBoxMaxSize;
+              theAdjoins[tarc][c*theAdjoinSize+EAST] = a+src*theBoxMaxSize;
             }
-            */
         }
     }
 }

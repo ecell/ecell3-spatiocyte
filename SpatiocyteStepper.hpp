@@ -157,13 +157,13 @@ private:
   void setSurfaceVoxelProperties(Comp*);
   void setSurfaceCompProperties(Comp*);
   void setVolumeCompProperties(Comp*);
-  void concatenateVoxel(unsigned, unsigned);
-  void concatenateLayers(unsigned, unsigned, unsigned,
-                         unsigned, unsigned, unsigned);
-  void concatenateRows(unsigned, unsigned, unsigned,
-                       unsigned, unsigned, unsigned);
-  void concatenateCols(unsigned, unsigned, unsigned,
-                       unsigned, unsigned, unsigned);
+  void concatenateVoxel(const unsigned, const unsigned);
+  void concatenateLayers(const unsigned, const unsigned, const unsigned,
+                         const unsigned, const unsigned, const unsigned);
+  void concatenateRows(const unsigned, const unsigned, const unsigned,
+                         const unsigned, const unsigned, const unsigned);
+  void concatenateCols(const unsigned, const unsigned, const unsigned,
+                         const unsigned, const unsigned, const unsigned);
   void replaceVoxel(unsigned, unsigned);
   void replaceUniVoxel(unsigned, unsigned);
   void setMinMaxSurfaceDimensions(unsigned, Comp*);
