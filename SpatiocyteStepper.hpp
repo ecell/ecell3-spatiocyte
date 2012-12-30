@@ -164,8 +164,10 @@ private:
                          const unsigned, const unsigned, const unsigned);
   void concatenateCols(const unsigned, const unsigned, const unsigned,
                          const unsigned, const unsigned, const unsigned);
-  void replaceVoxel(unsigned, unsigned);
-  void replaceUniVoxel(unsigned, unsigned);
+  void replaceVoxel(const unsigned, const unsigned, const unsigned,
+                    const unsigned);
+  void replaceUniVoxel(const unsigned, const unsigned, const unsigned,
+                    const unsigned);
   void setMinMaxSurfaceDimensions(unsigned, Comp*);
   bool isInsideMol(unsigned, Comp*, double);
   bool isSurfaceVoxel(unsigned short&, unsigned, Comp*);

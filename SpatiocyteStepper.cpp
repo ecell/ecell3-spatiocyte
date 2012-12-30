@@ -45,7 +45,6 @@ LIBECS_DM_INIT(SpatiocyteStepper, Stepper);
 
 void SpatiocyteStepper::initialize()
 {
-  std::cout << "in" << std::endl;
   if(isInitialized)
     {
       return;
@@ -977,9 +976,9 @@ void SpatiocyteStepper::setLatticeProperties()
       std::cout << "ERROR: too many voxels (" << max*2 << ") more than " <<
         UINT_MAX << std::endl;
     }
-  theBoxRows = 1;
-  theBoxCols = 1;
-  theBoxLayers = 1;
+  theBoxRows = 4;
+  theBoxCols = 4;
+  theBoxLayers = 4;
   theBoxSize = theBoxRows*theBoxCols*theBoxLayers;
   theRowSize = theTotalRowSize/theBoxRows;
   theColSize = theTotalColSize/theBoxCols;
@@ -1334,12 +1333,10 @@ void SpatiocyteStepper::constructLattice()
             }
         }
     }
-  /*
   if(aRootComp->geometry == CUBOID)
     {
       concatenatePeriodicSurfaces();
     }
-    */
 }
 
 void SpatiocyteStepper::setPeriodicEdge()
@@ -2139,86 +2136,130 @@ void SpatiocyteStepper::coord2global(unsigned aMol,
 
 void SpatiocyteStepper::concatenatePeriodicSurfaces()
 {
-  /*
   Comp* aRootComp(theComps[0]);
-  for(unsigned i(0); i<=theTotalRowSize*theTotalLayerSize*theTotalColSize-theTotalRowSize;
-      i+=theTotalRowSize)
+  //concatenate periodic rows
+  for(unsigned i(0); i != theBoxLayers; ++i)
     {
-      unsigned j(i+theTotalRowSize-1);
-      unsigned srcMol(coord2row(i)+ 
-                            theTotalRowSize*coord2layer(i)+ 
-                            theTotalRowSize*theTotalLayerSize*coord2col(i)); 
-      unsigned destMol(coord2row(j)+
-                             theTotalRowSize*coord2layer(i)+
-                             theTotalRowSize*theTotalLayerSize*coord2col(i)); 
-      if(aRootComp->xyPlane == UNIPERIODIC)
-        { 
-          replaceUniVoxel(srcMol, destMol);
-        }
-      else if(aRootComp->xyPlane == PERIODIC)
-        { 
-          replaceVoxel(srcMol, destMol);
-        }
-      else if(!isPeriodicEdge)
+      for(unsigned j(0); j != theBoxCols; ++j)
         {
-          //We cannot have valid voxels pointing to itself it it is not periodic
-          //to avoid incorrect homodimerization reaction. So we set such
-          //molecules to null ID.
-          theIDs[srcMol] = theNullID;
-          theIDs[destMol] = theNullID;
+          const unsigned boxA(0+
+                              theBoxRows*i+
+                              theBoxRows*theBoxLayers*j);
+          const unsigned boxB(theBoxRows-1+
+                              theBoxRows*i+
+                              theBoxRows*theBoxLayers*j);
+          for(unsigned k(0); k != theLayerSize; ++k)
+            {
+              for(unsigned l(0); l != theColSize; ++l)
+                { 
+                  unsigned A(0+ 
+                             theRowSize*k+ 
+                             theRowSize*theLayerSize*l);
+                  unsigned B(theRowSize-1+ 
+                             theRowSize*k+ 
+                             theRowSize*theLayerSize*l);
+                  if(aRootComp->xyPlane == UNIPERIODIC)
+                    { 
+                      replaceUniVoxel(boxA, boxB, A, B);
+                    }
+                  else if(aRootComp->xyPlane == PERIODIC)
+                    { 
+                      replaceVoxel(boxA, boxB, A, B);
+                    }
+                  else if(!isPeriodicEdge)
+                    {
+                      //We cannot have valid voxels pointing to itself it it
+                      //is not periodic o avoid incorrect homodimerization
+                      //reaction. So we set such molecules to null ID.
+                      theIDs[boxA][A] = theNullID;
+                      theIDs[boxB][B] = theNullID;
+                    }
+                }
+            }
         }
     }
-  for(unsigned i(0); i<=theTotalRowSize*theTotalLayerSize*(theTotalColSize-1)+theTotalRowSize;)
+  //concatenate periodic layers
+  for(unsigned i(0); i != theBoxRows; ++i)
     {
-      unsigned j(theTotalRowSize*(theTotalLayerSize-1)+i);
-      unsigned srcMol(coord2row(i)+
-                            theTotalRowSize*coord2layer(i)+ 
-                            theTotalRowSize*theTotalLayerSize*coord2col(i)); 
-      unsigned destMol(coord2row(i)+
-                             theTotalRowSize*coord2layer(j)+ 
-                             theTotalRowSize*theTotalLayerSize*coord2col(i)); 
-      if(aRootComp->xzPlane == UNIPERIODIC)
-        { 
-          replaceUniVoxel(srcMol, destMol);
-        }
-      else if(aRootComp->xzPlane == PERIODIC)
-        { 
-          replaceVoxel(srcMol, destMol);
-        }
-      else if(!isPeriodicEdge)
+      for(unsigned j(0); j != theBoxCols; ++j)
         {
-          theIDs[srcMol] = theNullID;
-          theIDs[destMol] = theNullID;
-        }
-      ++i;
-      if(coord2layer(i) != 0)
-        {
-          i += (theTotalLayerSize-1)*theTotalRowSize;
+          const unsigned boxA(i+
+                              theBoxRows*0+
+                              theBoxRows*theBoxLayers*j);
+          const unsigned boxB(i+
+                              theBoxRows*(theBoxLayers-1)+
+                              theBoxRows*theBoxLayers*j);
+          for(unsigned k(0); k != theRowSize; ++k)
+            {
+              for(unsigned l(0); l != theColSize; ++l)
+                { 
+                  unsigned A(k+ 
+                             theRowSize*0+ 
+                             theRowSize*theLayerSize*l);
+                  unsigned B(k+ 
+                             theRowSize*(theLayerSize-1)+ 
+                             theRowSize*theLayerSize*l);
+                  if(aRootComp->xzPlane == UNIPERIODIC)
+                    { 
+                      replaceUniVoxel(boxA, boxB, A, B);
+                    }
+                  else if(aRootComp->xzPlane == PERIODIC)
+                    { 
+                      replaceVoxel(boxA, boxB, A, B);
+                    }
+                  else if(!isPeriodicEdge)
+                    {
+                      //We cannot have valid voxels pointing to itself it it
+                      //is not periodic o avoid incorrect homodimerization
+                      //reaction. So we set such molecules to null ID.
+                      theIDs[boxA][A] = theNullID;
+                      theIDs[boxB][B] = theNullID;
+                    }
+                }
+            }
         }
     }
-  for(unsigned i(0); i!=theTotalRowSize*theTotalLayerSize; ++i)
+  //concatenate periodic cols
+  for(unsigned i(0); i != theBoxRows; ++i)
     {
-      unsigned srcMol(coord2row(i)+
-                            theTotalRowSize*coord2layer(i)+ 
-                            theTotalRowSize*theTotalLayerSize*0); 
-      unsigned destMol(coord2row(i)+
-                             theTotalRowSize*coord2layer(i)+ 
-                             theTotalRowSize*theTotalLayerSize*(theTotalColSize-1)); 
-      if(aRootComp->yzPlane == UNIPERIODIC)
-        { 
-          replaceUniVoxel(srcMol, destMol);
-        }
-      else if(aRootComp->yzPlane == PERIODIC)
-        { 
-          replaceVoxel(srcMol, destMol);
-        }
-      else if(!isPeriodicEdge)
+      for(unsigned j(0); j != theBoxLayers; ++j)
         {
-          theIDs[srcMol] = theNullID;
-          theIDs[destMol] = theNullID;
+          const unsigned boxA(i+
+                              theBoxRows*j+
+                              theBoxRows*theBoxLayers*0);
+          const unsigned boxB(i+
+                              theBoxRows*j+
+                              theBoxRows*theBoxLayers*(theBoxCols-1));
+          for(unsigned k(0); k != theRowSize; ++k)
+            {
+              for(unsigned l(0); l != theLayerSize; ++l)
+                { 
+                  unsigned A(k+ 
+                             theRowSize*l+ 
+                             theRowSize*theLayerSize*0);
+                  unsigned B(k+ 
+                             theRowSize*l+ 
+                             theRowSize*theLayerSize*(theColSize-1));
+                  if(aRootComp->yzPlane == UNIPERIODIC)
+                    { 
+                      replaceUniVoxel(boxA, boxB, A, B);
+                    }
+                  else if(aRootComp->yzPlane == PERIODIC)
+                    { 
+                      replaceVoxel(boxA, boxB, A, B);
+                    }
+                  else if(!isPeriodicEdge)
+                    {
+                      //We cannot have valid voxels pointing to itself it it
+                      //is not periodic o avoid incorrect homodimerization
+                      //reaction. So we set such molecules to null ID.
+                      theIDs[boxA][A] = theNullID;
+                      theIDs[boxB][B] = theNullID;
+                    }
+                }
+            }
         }
     }
-*/
 }
 
 unsigned SpatiocyteStepper::coord2row(unsigned aMol)
@@ -2236,55 +2277,71 @@ unsigned SpatiocyteStepper::coord2col(unsigned aMol)
   return aMol/(theTotalRowSize*theTotalLayerSize);
 }
 
-void SpatiocyteStepper::replaceVoxel(unsigned src, unsigned dest)
+void SpatiocyteStepper::replaceVoxel(const unsigned boxA,
+                                     const unsigned boxB,
+                                     const unsigned A,
+                                     const unsigned B)
 {
-  /*
-  unsigned short& aSrcVoxel(theIDs[src]);
-  unsigned short& aDestVoxel(theIDs[dest]);
-  if(aSrcVoxel != theNullID && aDestVoxel != theNullID)
+  const unsigned short& idA(theIDs[boxA][A]);
+  unsigned short& idB(theIDs[boxB][B]);
+  const unsigned absA(A+boxA*theBoxMaxSize);
+  const unsigned absB(B+boxB*theBoxMaxSize);
+  if(idA != theNullID && idB != theNullID)
     {
-      for(unsigned j(0); j!=theAdjoinSize; ++j)
+      for(unsigned j(0); j != theAdjoinSize; ++j)
         {
-          if(theAdjoins[src*theAdjoinSize+j] == src && theAdjoins[dest*theAdjoinSize+j] != dest)
+          if(theAdjoins[boxA][A*theAdjoinSize+j] == absA &&
+             theAdjoins[boxB][B*theAdjoinSize+j] != absB)
             {
-              theAdjoins[src*theAdjoinSize+j] = theAdjoins[dest*theAdjoinSize+j];
-              for(unsigned k(0); k!=theAdjoinSize; ++k)
+              theAdjoins[boxA][A*theAdjoinSize+j] = 
+                theAdjoins[boxB][B*theAdjoinSize+j];
+              for(unsigned k(0); k != theAdjoinSize; ++k)
                 {
-                  if(theAdjoins[theAdjoins[dest*theAdjoinSize+j]*theAdjoinSize+k] == dest)
+                  const unsigned box(theAdjoins[boxB][B*theAdjoinSize+j]/
+                                     theBoxMaxSize);
+                  const unsigned adj(theAdjoins[boxB][B*theAdjoinSize+j]%
+                                      theBoxMaxSize);
+                  if(theAdjoins[box][adj*theAdjoinSize+k] == absB)
                     {
-                      theAdjoins[theAdjoins[dest*theAdjoinSize+j]*theAdjoinSize+k] = src;
+                      theAdjoins[box][adj*theAdjoinSize+k] = absA;
                     }
                 }
             }
         }
-      aDestVoxel = theNullID;
+      idB = theNullID;
     }
-    */
 }
 
-void SpatiocyteStepper::replaceUniVoxel(unsigned src, unsigned dest)
+void SpatiocyteStepper::replaceUniVoxel(const unsigned boxA,
+                                        const unsigned boxB,
+                                        const unsigned A,
+                                        const unsigned B)
 {
-  /*
-  unsigned short& aSrcVoxel(theIDs[src]);
-  unsigned short& aDestVoxel(theIDs[dest]);
-  if(aSrcVoxel != theNullID && aDestVoxel != theNullID)
+  const unsigned short& idA(theIDs[boxA][A]);
+  unsigned short& idB(theIDs[boxB][B]);
+  const unsigned absA(A+boxA*theBoxMaxSize);
+  const unsigned absB(B+boxB*theBoxMaxSize);
+  if(idA != theNullID && idB != theNullID)
     {
-      for(unsigned j(0); j!=theAdjoinSize; ++j)
+      for(unsigned j(0); j != theAdjoinSize; ++j)
         {
-          if(theAdjoins[src*theAdjoinSize+j] == src)
+          if(theAdjoins[boxA][A*theAdjoinSize+j] == absA)
             {
-              for(unsigned k(0); k!=theAdjoinSize; ++k)
+              for(unsigned k(0); k != theAdjoinSize; ++k)
                 {
-                  if(theAdjoins[theAdjoins[dest*theAdjoinSize+j]*theAdjoinSize+k] == dest)
+                  const unsigned box(theAdjoins[boxB][B*theAdjoinSize+j]/
+                                     theBoxMaxSize);
+                  const unsigned adj(theAdjoins[boxB][B*theAdjoinSize+j]%
+                                      theBoxMaxSize);
+                  if(theAdjoins[box][adj*theAdjoinSize+k] == absB)
                     {
-                      theAdjoins[theAdjoins[dest*theAdjoinSize+j]*theAdjoinSize+k] = src;
+                      theAdjoins[box][adj*theAdjoinSize+k] = absA;
                     }
                 }
             }
         }
-      aDestVoxel = theNullID;
+      idB = theNullID;
     }
-    */
 }
 
 void SpatiocyteStepper::shuffleAdjoins()
