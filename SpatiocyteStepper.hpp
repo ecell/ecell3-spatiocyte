@@ -33,6 +33,7 @@
 #define __SpatiocyteStepper_hpp
 
 #include <Stepper.hpp>
+#include <sys/sysinfo.h> //get_nprocs()
 #include "SpatiocyteCommon.hpp"
 
 LIBECS_DM_CLASS(SpatiocyteStepper, Stepper)
@@ -54,6 +55,7 @@ public:
     SearchVacant(false),
     LatticeType(HCP_LATTICE),
     theBoxSize(8),
+    theThreadSize(4),
     VoxelRadius(10e-9),
     nVoxelRadius(0.5) {}
   virtual ~SpatiocyteStepper() {}
@@ -105,13 +107,17 @@ public:
   void updateSpecies();
   void finalizeSpecies();
   unsigned getStartMol();
-
+  void startThread(pthread_t, unsigned);
   virtual GET_METHOD(Real, TimeScale)
   {
       return 0.0;
   }
+  void constructLattice(unsigned);
+  void allocateLattice(unsigned);
+  void constructLattice();
 
 private:
+  void initializeThreads();
   void setCompsCenterPoint();
   void setIntersectingCompartmentList();
   void setIntersectingParent();
@@ -135,7 +141,6 @@ private:
   void setCompProperties();
   void initSpecies();
   void readjustSurfaceBoundarySizes();
-  void constructLattice();
   void compartmentalizeLattice();
   void concatenatePeriodicSurfaces();
   void registerComps();
@@ -185,15 +190,22 @@ private:
   unsigned coord2layer(unsigned);
   Comp* registerComp(System*, std::vector<Comp*>*);
   Variable* getVariable(System*, String const&);
+  void startThreadsA();
+  void startThreadsB();
+  void setBoundaries();
 private:
   bool isInitialized;
   bool isPeriodicEdge;
   bool SearchVacant;
+  char flagA;
+  char flagB;
   unsigned short theNullID;
   unsigned LatticeType; 
+  unsigned nThreadsRunning;
   unsigned theAdjoinSize;
   unsigned theBioSpeciesSize;
   unsigned theBoxSize;
+  unsigned theThreadSize;
   unsigned theCellShape;
   unsigned theColSize;
   unsigned theRowSize;
@@ -221,6 +233,7 @@ private:
   std::vector<std::vector<unsigned> > theAdjoins;
   std::vector<Process*> theExternInterruptedProcesses;
   std::vector<std::vector<unsigned> > theCoordMols;
+  std::vector<Thread*> theThreads;
 };
 
 #endif /* __SpatiocyteStepper_hpp */

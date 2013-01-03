@@ -28,14 +28,15 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
-
 #include <time.h>
+#include <pthread.h>
 #include <gsl/gsl_randist.h>
 #include <libecs/Model.hpp>
 #include <libecs/System.hpp>
 #include <libecs/Process.hpp>
 #include <libecs/Stepper.hpp>
 #include <libecs/VariableReference.hpp>
+#include "Thread.hpp"
 #include "SpatiocyteStepper.hpp"
 #include "SpatiocyteSpecies.hpp"
 #include "SpatiocyteProcessInterface.hpp"
@@ -60,6 +61,7 @@ void SpatiocyteStepper::initialize()
     } 
   std::cout << "1. checking model..." << std::endl;
   checkModel();
+  initializeThreads();
   //We need a Comp tree to assign the voxels to each Comp
   //and get the available number of vacant voxels. The compartmentalized
   //vacant voxels are needed to randomly place molecules according to the
@@ -78,7 +80,13 @@ void SpatiocyteStepper::initialize()
   std::cout << "5. initializing processes the second time..." << std::endl;
   initializeSecond();
   std::cout << "6. constructing lattice..." << std::endl;
-  constructLattice();
+  startThreadsA();
+  startThreadsB();
+  //constructLattice();
+  //waitThreads();
+  //constructLattice();
+  setBoundaries();
+  std::cout << "8" << std::endl;
   std::cout << "7. setting intersecting compartment list..." << std::endl;
   setIntersectingCompartmentList();
   std::cout << "8. compartmentalizing lattice..." << std::endl;
@@ -108,6 +116,53 @@ void SpatiocyteStepper::initialize()
     std::endl;
   printProcessParameters();
   std::cout << "19. simulation is started..." << std::endl;
+}
+
+void SpatiocyteStepper::startThreadsA()
+{
+  nThreadsRunning = 0;
+  flagA = FLAG_RUN;
+  barrier();
+  while(ACCESS_ONCE(nThreadsRunning) < theThreadSize)
+    {
+      continue;
+    }
+  flagA = FLAG_STOP;
+}
+
+void SpatiocyteStepper::startThreadsB()
+{
+  nThreadsRunning = 0;
+  flagB = FLAG_RUN;
+  barrier();
+  while(ACCESS_ONCE(nThreadsRunning) < theThreadSize)
+    {
+      continue;
+    }
+  flagB = FLAG_STOP;
+}
+
+void SpatiocyteStepper::initializeThreads()
+{
+  pthread_setconcurrency(theThreadSize); 
+  nThreadsRunning = 0;
+  flagA = FLAG_STOP;
+  flagB = FLAG_STOP;
+  for(unsigned i(0); i != theThreadSize; ++i)
+    {
+      Thread* aThread(new Thread(i, nThreadsRunning, flagA, flagB, *this));
+      aThread->create();
+      theThreads.push_back(aThread);
+    }
+  //Wait until all threads have been created:
+  while(ACCESS_ONCE(nThreadsRunning) < theThreadSize)
+    {
+      continue;
+    }
+}
+
+void SpatiocyteStepper::startThread(pthread_t anID, unsigned aProcID)
+{
 }
 
 void SpatiocyteStepper::interrupt(Time aTime)
@@ -976,9 +1031,9 @@ void SpatiocyteStepper::setLatticeProperties()
       std::cout << "ERROR: too many voxels (" << max*2 << ") more than " <<
         UINT_MAX << std::endl;
     }
-  theBoxRows = 4;
-  theBoxCols = 4;
-  theBoxLayers = 4;
+  theBoxRows = 2;
+  theBoxCols = 2;
+  theBoxLayers = 2;
   theBoxSize = theBoxRows*theBoxCols*theBoxLayers;
   theRowSize = theTotalRowSize/theBoxRows;
   theColSize = theTotalColSize/theBoxCols;
@@ -1025,13 +1080,6 @@ void SpatiocyteStepper::setLatticeProperties()
   theAdjoins.resize(theBoxSize);
   theInfo.resize(theBoxSize);
   theNullMol = 0;
-  for(unsigned i(0); i != theBoxSize; ++i)
-    {
-      theIDs[i].resize(theRowSize*theLayerSize*theColSize);
-      theInfo[i].resize(theRowSize*theLayerSize*theColSize);
-      theAdjoins[i].resize(theIDs[i].size()*theAdjoinSize);
-      theIDs[i][theNullMol] = theNullID;
-    }
   //Initialize the null coord:
 }
 
@@ -1281,6 +1329,13 @@ void SpatiocyteStepper::constructLattice()
   const unsigned aSize(theRowSize*theColSize*theLayerSize);
   for(unsigned i(0); i != theBoxSize; ++i)
     {
+      theIDs[i].resize(aSize);
+      theInfo[i].resize(aSize);
+      theAdjoins[i].resize(aSize*theAdjoinSize);
+      theIDs[i][theNullMol] = theNullID;
+    }
+  for(unsigned i(0); i != theBoxSize; ++i)
+    {
       std::vector<unsigned short>& anIDs(theIDs[i]);
       std::vector<VoxelInfo>& anInfo(theInfo[i]);
       std::vector<unsigned>& anAdjoins(theAdjoins[i]);
@@ -1333,7 +1388,85 @@ void SpatiocyteStepper::constructLattice()
             }
         }
     }
-  if(aRootComp->geometry == CUBOID)
+}
+
+void SpatiocyteStepper::allocateLattice(unsigned anID)
+{ 
+  const unsigned aSize(theRowSize*theColSize*theLayerSize);
+  for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+    {
+      theIDs[i].resize(aSize);
+      theInfo[i].resize(aSize);
+      theAdjoins[i].resize(aSize*theAdjoinSize);
+      theIDs[i][theNullMol] = theNullID;
+    }
+}
+
+void SpatiocyteStepper::constructLattice(unsigned anID)
+{ 
+  Comp* aRootComp(theComps[0]);
+  const unsigned short rootID(aRootComp->vacantSpecies->getID());
+  const unsigned aSize(theRowSize*theColSize*theLayerSize);
+  for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+    {
+      std::vector<unsigned short>& anIDs(theIDs[i]);
+      std::vector<VoxelInfo>& anInfo(theInfo[i]);
+      std::vector<unsigned>& anAdjoins(theAdjoins[i]);
+      unsigned bc(i/(theBoxRows*theBoxLayers)); 
+      unsigned bl((i%(theBoxRows*theBoxLayers))/theBoxRows); 
+      unsigned br((i%(theBoxRows*theBoxLayers))%theBoxRows); 
+      unsigned offset(i*theBoxMaxSize);
+      for(unsigned j(0); j != aSize;  ++j)
+        { 
+          unsigned aCol(j/(theRowSize*theLayerSize)); 
+          unsigned aLayer((j%(theRowSize*theLayerSize))/theRowSize); 
+          unsigned aRow((j%(theRowSize*theLayerSize))%theRowSize); 
+          aCol += bc*theColSize;
+          aRow += br*theRowSize;
+          aLayer += bl*theLayerSize;
+          unsigned k(aRow+ 
+                     theTotalRowSize*aLayer+ 
+                     theTotalRowSize*theTotalLayerSize*aCol);
+          /*
+          anInfo[j].point.y = (aCol%2)*theHCPl+theHCPy*aLayer;
+          anInfo[j].point.z = aRow*2*nVoxelRadius+((aLayer+aCol)%2)*nVoxelRadius;
+          anInfo[j].point.x = aCol*theHCPx;
+          */
+          anInfo[j].diffuseSize = theAdjoinSize;
+          anInfo[j].adjoinSize = theAdjoinSize;
+          anInfo[j].coord = k;
+          if(aRootComp->geometry == CUBOID || isInsideMol(k, aRootComp, 0))
+            {
+              //By default, the voxel is vacant and we set it to the root id:
+              anIDs[j] = rootID;
+              for(unsigned l(0); l != theAdjoinSize; ++l)
+                { 
+                  // By default let the adjoin voxel pointer point to the 
+                  // source voxel (i.e., itself)
+                  anAdjoins[j*theAdjoinSize+l] = j+offset;
+                  //anAdjoins[j*theAdjoinSize+l] = j;
+                }
+              concatenateVoxel(i, j);
+            }
+          else
+            {
+              //We set id = theNullID if it is an invalid voxel,
+              //i.e., no molecules will occupy it:
+              anIDs[j] = theNullID;
+              //Concatenate some of the null voxels close to the surface
+              if(isInsideMol(k, aRootComp, 4))
+                {
+                  concatenateVoxel(i, j);
+                }
+            }
+        }
+    }
+}
+
+void SpatiocyteStepper::setBoundaries()
+{
+  //if the root comp is cuboid:
+  if(theComps[0]->geometry == CUBOID)
     {
       concatenatePeriodicSurfaces();
     }

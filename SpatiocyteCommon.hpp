@@ -41,6 +41,7 @@
 
 class SpatiocyteProcessInterface;
 class Species;
+class Thread;
 //struct Subunit;
 typedef PriorityQueue<SpatiocyteProcessInterface*> ProcessPriorityQueue;
 typedef ProcessPriorityQueue::ID ProcessID;
