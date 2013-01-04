@@ -86,6 +86,12 @@ protected:
          }
        theStepper.constructLattice(theID);
        __sync_fetch_and_add(&nThreadsRunning, 1);
+       while(ACCESS_ONCE(flagA) == FLAG_STOP)
+         {
+           continue;
+         }
+       theStepper.concatenateLattice(theID);
+       __sync_fetch_and_add(&nThreadsRunning, 1);
      }
 private: 
    static void* enter(void* arg)

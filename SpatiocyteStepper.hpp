@@ -114,6 +114,7 @@ public:
   }
   void constructLattice(unsigned);
   void allocateLattice(unsigned);
+  void concatenateLattice(unsigned);
   void constructLattice();
 
 private:

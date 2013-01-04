@@ -82,8 +82,7 @@ void SpatiocyteStepper::initialize()
   std::cout << "6. constructing lattice..." << std::endl;
   startThreadsA();
   startThreadsB();
-  //constructLattice();
-  //waitThreads();
+  startThreadsA();
   //constructLattice();
   setBoundaries();
   std::cout << "8" << std::endl;
@@ -1373,19 +1372,20 @@ void SpatiocyteStepper::constructLattice()
                   anAdjoins[j*theAdjoinSize+l] = j+offset;
                   //anAdjoins[j*theAdjoinSize+l] = j;
                 }
-              concatenateVoxel(i, j);
             }
           else
             {
               //We set id = theNullID if it is an invalid voxel,
               //i.e., no molecules will occupy it:
               anIDs[j] = theNullID;
-              //Concatenate some of the null voxels close to the surface
-              if(isInsideMol(k, aRootComp, 4))
-                {
-                  concatenateVoxel(i, j);
-                }
             }
+        }
+    }
+  for(unsigned i(0); i != theBoxSize; ++i)
+    {
+      for(unsigned j(0); j != aSize;  ++j)
+        { 
+          concatenateVoxel(i, j);
         }
     }
 }
@@ -1446,19 +1446,25 @@ void SpatiocyteStepper::constructLattice(unsigned anID)
                   anAdjoins[j*theAdjoinSize+l] = j+offset;
                   //anAdjoins[j*theAdjoinSize+l] = j;
                 }
-              concatenateVoxel(i, j);
             }
           else
             {
               //We set id = theNullID if it is an invalid voxel,
               //i.e., no molecules will occupy it:
               anIDs[j] = theNullID;
-              //Concatenate some of the null voxels close to the surface
-              if(isInsideMol(k, aRootComp, 4))
-                {
-                  concatenateVoxel(i, j);
-                }
             }
+        }
+    }
+}
+
+void SpatiocyteStepper::concatenateLattice(unsigned anID)
+{ 
+  const unsigned aSize(theRowSize*theColSize*theLayerSize);
+  for(unsigned i(0); i != theBoxSize; ++i)
+    {
+      for(unsigned j(0); j != aSize;  ++j)
+        { 
+          concatenateVoxel(i, j);
         }
     }
 }
