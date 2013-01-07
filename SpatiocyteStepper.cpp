@@ -61,7 +61,7 @@ void SpatiocyteStepper::initialize()
     } 
   std::cout << "1. checking model..." << std::endl;
   checkModel();
-  initializeThreads();
+  //initializeThreads();
   //We need a Comp tree to assign the voxels to each Comp
   //and get the available number of vacant voxels. The compartmentalized
   //vacant voxels are needed to randomly place molecules according to the
@@ -80,12 +80,11 @@ void SpatiocyteStepper::initialize()
   std::cout << "5. initializing processes the second time..." << std::endl;
   initializeSecond();
   std::cout << "6. constructing lattice..." << std::endl;
-  startThreadsA();
-  startThreadsB();
-  startThreadsA();
-  //constructLattice();
+  //startThreadsA();
+  //startThreadsB();
+  constructLattice();
   setBoundaries();
-  std::cout << "8" << std::endl;
+  checkLattice();
   std::cout << "7. setting intersecting compartment list..." << std::endl;
   setIntersectingCompartmentList();
   std::cout << "8. compartmentalizing lattice..." << std::endl;
@@ -198,17 +197,17 @@ void SpatiocyteStepper::updateSpecies()
 
 unsigned SpatiocyteStepper::getRowSize()
 {
-  return theTotalRowSize;
+  return theTotalRows;
 }
 
 unsigned SpatiocyteStepper::getLayerSize()
 {
-  return theTotalLayerSize;
+  return theTotalLayers;
 }
 
 unsigned SpatiocyteStepper::getColSize()
 {
-  return theTotalColSize;
+  return theTotalCols;
 }
 
 unsigned SpatiocyteStepper::getLatticeSize()
@@ -281,8 +280,8 @@ bool SpatiocyteStepper::isBoundaryMol(unsigned aMol,
     {
       //If the voxel is on one of the 6 cuboid surfaces:
       if(aRow == 1 || aLayer == 1 || aCol == 1 ||
-         aRow == theTotalRowSize-2 || aLayer == theTotalLayerSize-2 || 
-         aCol == theTotalColSize-2)
+         aRow == theTotalRows-2 || aLayer == theTotalLayers-2 || 
+         aCol == theTotalCols-2)
         {
           return true;
         }
@@ -294,15 +293,15 @@ bool SpatiocyteStepper::isBoundaryMol(unsigned aMol,
       if((aRow <= 1 && aCol <= 1) ||
          (aRow <= 1 && aLayer <= 1) ||
          (aCol <= 1 && aLayer <= 1) ||
-         (aRow <= 1 && aCol >= theTotalColSize-2) ||
-         (aRow <= 1 && aLayer >= theTotalLayerSize-2) ||
-         (aCol <= 1 && aRow >= theTotalRowSize-2) ||
-         (aCol <= 1 && aLayer >= theTotalLayerSize-2) ||
-         (aLayer <= 1 && aRow >= theTotalRowSize-2) ||
-         (aLayer <= 1 && aCol >= theTotalColSize-2) ||
-         (aRow >= theTotalRowSize-2 && aCol >= theTotalColSize-2) ||
-         (aRow >= theTotalRowSize-2 && aLayer >= theTotalLayerSize-2) ||
-         (aCol >= theTotalColSize-2 && aLayer >= theTotalLayerSize-2))
+         (aRow <= 1 && aCol >= theTotalCols-2) ||
+         (aRow <= 1 && aLayer >= theTotalLayers-2) ||
+         (aCol <= 1 && aRow >= theTotalRows-2) ||
+         (aCol <= 1 && aLayer >= theTotalLayers-2) ||
+         (aLayer <= 1 && aRow >= theTotalRows-2) ||
+         (aLayer <= 1 && aCol >= theTotalCols-2) ||
+         (aRow >= theTotalRows-2 && aCol >= theTotalCols-2) ||
+         (aRow >= theTotalRows-2 && aLayer >= theTotalLayers-2) ||
+         (aCol >= theTotalCols-2 && aLayer >= theTotalLayers-2))
         {
           return true;
         }
@@ -329,37 +328,37 @@ unsigned SpatiocyteStepper::getPeriodicMol(unsigned aMol,
     }
   if(aRow == 1+adj)
     {
-      nextRow = theTotalRowSize-(3+adj);
+      nextRow = theTotalRows-(3+adj);
       --anOrigin->row;
     }
-  else if(aRow == theTotalRowSize-(2+adj))
+  else if(aRow == theTotalRows-(2+adj))
     {
       nextRow = 2+adj;
       ++anOrigin->row;
     }
   if(aLayer == 1+adj)
     {
-      nextLayer = theTotalLayerSize-(3+adj);
+      nextLayer = theTotalLayers-(3+adj);
       --anOrigin->layer;
     }
-  else if(aLayer == theTotalLayerSize-(2+adj))
+  else if(aLayer == theTotalLayers-(2+adj))
     {
       nextLayer = 2+adj;
       ++anOrigin->layer;
     }
   if(aCol == 1+adj)
     {
-      nextCol = theTotalColSize-(3+adj);
+      nextCol = theTotalCols-(3+adj);
       --anOrigin->col;
     }
-  else if(aCol == theTotalColSize-(2+adj))
+  else if(aCol == theTotalCols-(2+adj))
     {
       nextCol = 2+adj;
       ++anOrigin->col;
     }
   if(nextRow != aRow || nextCol != aCol || nextLayer != aLayer)
     {
-      return nextRow+theTotalRowSize*nextLayer+theTotalRowSize*theTotalLayerSize*nextCol;
+      return nextRow+theTotalRows*nextLayer+theTotalRows*theTotalLayers*nextCol;
     }
   return theNullMol;
 }
@@ -373,9 +372,9 @@ Point SpatiocyteStepper::getPeriodicPoint(unsigned aMol,
     {
       adj = 0;
     }
-  unsigned row(theTotalRowSize-(3+adj)-(1+adj));
-  unsigned layer(theTotalLayerSize-(3+adj)-(1+adj));
-  unsigned col(theTotalColSize-(3+adj)-(1+adj));
+  unsigned row(theTotalRows-(3+adj)-(1+adj));
+  unsigned layer(theTotalLayers-(3+adj)-(1+adj));
+  unsigned col(theTotalCols-(3+adj)-(1+adj));
   unsigned aGlobalCol;
   unsigned aGlobalLayer;
   unsigned aGlobalRow;
@@ -471,6 +470,26 @@ void SpatiocyteStepper::checkModel()
 
 void SpatiocyteStepper::checkLattice()
 {
+  unsigned cnt(0);
+  for(unsigned i(0); i != theBoxSize; ++i)
+    {
+      std::vector<unsigned>& anAdjoins(theAdjoins[i]);
+      unsigned offset(i*theBoxMaxSize);
+      for(unsigned j(0); j != theIDs[i].size();  ++j)
+        { 
+          for(unsigned l(0); l != theAdjoinSize; ++l)
+            { 
+              if(anAdjoins[j*theAdjoinSize+l] == j+offset)
+                {
+                  theSpecies[1]->addMol(i, j);
+                  cnt++;
+                }
+            }
+        }
+    }
+  theSpecies[1]->setIsPopulated();
+  std::cout << "cnt:" << cnt << std::endl;
+
   /*
   std::vector<int> list;
   for(unsigned i(0); i!=theSpecies.size(); ++i)
@@ -996,17 +1015,17 @@ void SpatiocyteStepper::setLatticeProperties()
   switch(LatticeType)
     {
     case HCP_LATTICE: 
-      theTotalRowSize = (unsigned)rint((theCenterPoint.z)/
+      theTotalRows = (unsigned)rint((theCenterPoint.z)/
                                       (nVoxelRadius));
-      theTotalLayerSize = (unsigned)rint((theCenterPoint.y*2)/theHCPy);
-      theTotalColSize = (unsigned)rint((theCenterPoint.x*2)/theHCPx);
+      theTotalLayers = (unsigned)rint((theCenterPoint.y*2)/theHCPy);
+      theTotalCols = (unsigned)rint((theCenterPoint.x*2)/theHCPx);
       break;
     case CUBIC_LATTICE:
-      theTotalRowSize = (unsigned)rint((theCenterPoint.z)/
+      theTotalRows = (unsigned)rint((theCenterPoint.z)/
                                       (nVoxelRadius));
-      theTotalLayerSize = (unsigned)rint((theCenterPoint.y)/
+      theTotalLayers = (unsigned)rint((theCenterPoint.y)/
                                       (nVoxelRadius));
-      theTotalColSize = (unsigned)rint((theCenterPoint.x)/
+      theTotalCols = (unsigned)rint((theCenterPoint.x)/
                                       (nVoxelRadius));
       break;
     }
@@ -1019,59 +1038,120 @@ void SpatiocyteStepper::setLatticeProperties()
       //We need to increase the row, layer and col size by 2 because
       //the entire volume must be surrounded by nullID voxels to avoid
       //self-homodimerization reaction.
-      theTotalRowSize += 2;
-      theTotalColSize += 2;
-      theTotalLayerSize += 2;
-      readjustSurfaceBoundarySizes(); 
-    }
-  double max(theTotalRowSize*theTotalColSize*theTotalLayerSize);
-  if(max*2 > UINT_MAX)
-    {
-      std::cout << "ERROR: too many voxels (" << max*2 << ") more than " <<
-        UINT_MAX << std::endl;
+      theTotalRows += 2;
+      theTotalCols += 2;
+      theTotalLayers += 2;
+      readjustSurfaceBoundarySizes();
     }
   theBoxRows = 2;
   theBoxCols = 2;
   theBoxLayers = 2;
   theBoxSize = theBoxRows*theBoxCols*theBoxLayers;
-  theRowSize = theTotalRowSize/theBoxRows;
-  theColSize = theTotalColSize/theBoxCols;
-  theLayerSize = theTotalLayerSize/theBoxLayers;
-  if(theRowSize%2 != 0)
+  theRows.resize(theBoxSize);
+  theCols.resize(theBoxSize);
+  theLayers.resize(theBoxSize);
+  theBoxMaxSize = 0;
+  unsigned aBoxRowSize(theTotalRows/theBoxRows);
+  unsigned aBoxColSize(theTotalCols/theBoxCols);
+  unsigned aBoxLayerSize(theTotalLayers/theBoxLayers);
+  if(theBoxRows > 1 && aBoxRowSize%2 != 0)
     {
-      ++theRowSize;
+      if((aBoxRowSize+1)*(theBoxRows-1) < theTotalRows)
+        {
+          aBoxRowSize++;
+        }
+      else
+        {
+          aBoxRowSize--;
+        }
     }
-  if(theColSize%2 != 0)
+  if(theBoxLayers > 1 && aBoxLayerSize%2 != 0)
     {
-      ++theColSize;
+      if((aBoxLayerSize+1)*(theBoxLayers-1) < theTotalLayers)
+        {
+          aBoxLayerSize++;
+        }
+      else
+        {
+          aBoxLayerSize--;
+        }
     }
-  if(theLayerSize%2 != 0)
+  if(theBoxCols > 1 && aBoxColSize%2 != 0)
     {
-      ++theLayerSize;
+      if((aBoxColSize+1)*(theBoxCols-1) < theTotalCols)
+        {
+          aBoxColSize++;
+        }
+      else
+        {
+          aBoxColSize--;
+        }
     }
-  theTotalRowSize = theRowSize*theBoxRows;
-  theTotalColSize = theColSize*theBoxCols;
-  theTotalLayerSize = theLayerSize*theBoxLayers;
-  theBoxMaxSize = theRowSize*theColSize*theLayerSize*2;
+  for(unsigned i(0); i != theBoxRows; ++i)
+    {
+      unsigned rowSize(aBoxRowSize);
+      if(i == theBoxRows-1)
+        {
+          rowSize = theTotalRows-(aBoxRowSize*(theBoxRows-1));
+        }
+      for(unsigned j(0); j != theBoxLayers; ++j)
+        {
+          unsigned layerSize(aBoxLayerSize);
+          if(j == theBoxLayers-1)
+            {
+              layerSize = theTotalLayers-(aBoxLayerSize*(theBoxLayers-1));
+            }
+          for(unsigned k(0); k != theBoxCols; ++k)
+            { 
+              unsigned colSize(aBoxColSize);
+              if(k == theBoxCols-1)
+                {
+                  colSize = theTotalCols-(aBoxColSize*(theBoxCols-1)); 
+                }
+              const unsigned box(i+
+                                 theBoxRows*j+
+                                 theBoxRows*theBoxLayers*k);
+              theRows[box] = rowSize;
+              theLayers[box] = layerSize;
+              theCols[box] = colSize;
+            }
+        }
+    }
+  const unsigned box(theBoxRows-1+
+                     theBoxRows*(theBoxLayers-1)+
+                     theBoxRows*theBoxLayers*(theBoxCols-1));
+  /*
+  std::cout << "aBoxRowSize;" << theRows[box] << std::endl;
+  std::cout << "aBoxColSize;" << theCols[box] << std::endl;
+  std::cout << "aBoxLayerSize;" << theLayers[box] << std::endl;
+  */
+  theBoxMaxSize = 2*std::max(aBoxRowSize, theRows[box])*
+    std::max(aBoxColSize, theCols[box])*std::max(aBoxLayerSize, theLayers[box]);
+  double max(theTotalRows*theTotalCols*theTotalLayers);
+  if(max*2 > UINT_MAX)
+    {
+      std::cout << "ERROR: too many voxels (" << max*2 << ") more than " <<
+        UINT_MAX << std::endl;
+    }
 
   /*
-  unsigned totalVoxels(theTotalRowSize*theTotalColSize*theTotalLayerSize);
+  unsigned totalVoxels(theTotalRows*theTotalCols*theTotalLayers);
   unsigned boxVoxels(totalVoxels/theBoxSize);
   unsigned idealSides(pow(boxVoxels, 1.0/3.0));
-  theRowSize = idealSides;
-  theColSize = idealSides;
-  theLayerSize = idealSides;
-  if(theTotalRowSize <= idealSize)
+  theRows[i] = idealSides;
+  theCols[i] = idealSides;
+  theLayers[i] = idealSides;
+  if(theTotalRows <= idealSize)
     {
-      theRowSize = theTotalRowSize;
+      theRows[i] = theTotalRows;
     }
-  if(theTotalColSize <= idealSize)
+  if(theTotalCols <= idealSize)
     {
-      theColSize = theTotalColSize;
+      theCols[i] = theTotalCols;
     }
-  if(theTotalLayerSize <= idealSize)
+  if(theTotalLayers <= idealSize)
     {
-      theLayerSize = theTotalLayerSize;
+      theLayers[i] = theTotalLayers;
     }
     */
 
@@ -1149,11 +1229,11 @@ void SpatiocyteStepper::printSimulationParameters()
     " m" << std::endl;
   std::cout << "   Simulation length:" << theCenterPoint.x*2*VoxelRadius*2 <<
     " m" << std::endl;
-  std::cout << "   Layer size:" << theTotalLayerSize << std::endl;
-  std::cout << "   Row size:" << theTotalRowSize << std::endl;
-  std::cout << "   Column size:" << theTotalColSize << std::endl;
+  std::cout << "   Layer size:" << theTotalLayers << std::endl;
+  std::cout << "   Row size:" << theTotalRows << std::endl;
+  std::cout << "   Column size:" << theTotalCols << std::endl;
   std::cout << "   Total allocated voxels:" << 
-    theTotalRowSize*theTotalLayerSize*theTotalColSize << std::endl;
+    theTotalRows*theTotalLayers*theTotalCols << std::endl;
   for(unsigned i(0); i != theComps.size(); ++i)
     {
       Comp* aComp(theComps[i]);
@@ -1238,30 +1318,30 @@ void SpatiocyteStepper::readjustSurfaceBoundarySizes()
     {
       if(aRootComp->xyPlane == REFLECTIVE)
         {
-          theTotalRowSize += 2;
+          theTotalRows += 2;
         }
       else if(aRootComp->xyPlane == REMOVE_UPPER ||
               aRootComp->xyPlane == REMOVE_LOWER)
         {
-          theTotalRowSize += 1;
+          theTotalRows += 1;
         }
       if(aRootComp->yzPlane == REFLECTIVE)
         {
-          theTotalColSize += 2;
+          theTotalCols += 2;
         }
       else if(aRootComp->yzPlane == REMOVE_UPPER ||
               aRootComp->yzPlane == REMOVE_LOWER)
         {
-          theTotalColSize += 1;
+          theTotalCols += 1;
         }
       if(aRootComp->xzPlane == REFLECTIVE)
         {
-          theTotalLayerSize += 2;
+          theTotalLayers += 2;
         }
       else if(aRootComp->xzPlane == REMOVE_UPPER ||
               aRootComp->xzPlane == REMOVE_LOWER)
         {
-          theTotalLayerSize += 1;
+          theTotalLayers += 1;
         }
     }
   else
@@ -1272,51 +1352,51 @@ void SpatiocyteStepper::readjustSurfaceBoundarySizes()
       //sized if the system uses periodic boundary conditions.
       if(aRootComp->yzPlane == PERIODIC)
         { 
-          if(theTotalColSize%2 != 1)
+          if(theTotalCols%2 != 1)
             {
-              theTotalColSize += 1;
+              theTotalCols += 1;
             }
           else
             {
-              theTotalColSize += 2;
+              theTotalCols += 2;
             }
         }
       if(aRootComp->xzPlane == PERIODIC)
         {
-          if(theTotalLayerSize%2 != 1)
+          if(theTotalLayers%2 != 1)
             {
-              theTotalLayerSize +=1;
+              theTotalLayers +=1;
             }
           else
             {
-              theTotalLayerSize += 2;
+              theTotalLayers += 2;
             }
         }
       if(aRootComp->xyPlane == PERIODIC)
         {
-          if(theTotalRowSize%2 != 1)
+          if(theTotalRows%2 != 1)
             {
-              theTotalRowSize += 1;
+              theTotalRows += 1;
             }
           else
             {
-              theTotalRowSize += 2;
+              theTotalRows += 2;
             }
         }
     }
   if(isPeriodicEdge)
     {
-      if(theTotalColSize%2 == 1)
+      if(theTotalCols%2 == 1)
         {
-          theTotalColSize += 1;
+          theTotalCols += 1;
         }
-      if(theTotalLayerSize%2 == 1)
+      if(theTotalLayers%2 == 1)
         {
-          theTotalLayerSize +=1;
+          theTotalLayers +=1;
         }
-      if(theTotalRowSize%2 == 1)
+      if(theTotalRows%2 == 1)
         {
-          theTotalRowSize += 1;
+          theTotalRows += 1;
         }
     }
 }
@@ -1325,9 +1405,9 @@ void SpatiocyteStepper::constructLattice()
 { 
   Comp* aRootComp(theComps[0]);
   const unsigned short rootID(aRootComp->vacantSpecies->getID());
-  const unsigned aSize(theRowSize*theColSize*theLayerSize);
   for(unsigned i(0); i != theBoxSize; ++i)
     {
+      const unsigned aSize(theRows[i]*theCols[i]*theLayers[i]);
       theIDs[i].resize(aSize);
       theInfo[i].resize(aSize);
       theAdjoins[i].resize(aSize*theAdjoinSize);
@@ -1338,21 +1418,33 @@ void SpatiocyteStepper::constructLattice()
       std::vector<unsigned short>& anIDs(theIDs[i]);
       std::vector<VoxelInfo>& anInfo(theInfo[i]);
       std::vector<unsigned>& anAdjoins(theAdjoins[i]);
-      unsigned bc(i/(theBoxRows*theBoxLayers)); 
-      unsigned bl((i%(theBoxRows*theBoxLayers))/theBoxRows); 
-      unsigned br((i%(theBoxRows*theBoxLayers))%theBoxRows); 
-      unsigned offset(i*theBoxMaxSize);
-      for(unsigned j(0); j != aSize;  ++j)
+      const unsigned bc(i/(theBoxRows*theBoxLayers)); 
+      const unsigned bl((i%(theBoxRows*theBoxLayers))/theBoxRows); 
+      const unsigned br((i%(theBoxRows*theBoxLayers))%theBoxRows); 
+      const unsigned offset(i*theBoxMaxSize);
+      unsigned aCol(0);
+      unsigned aLayer(0);
+      unsigned aRow(0);
+      for(unsigned m(0); m != bc; ++m)
+        {
+          aCol += theCols[m];
+        }
+      for(unsigned m(0); m != br; ++m)
+        {
+          aRow += theRows[m];
+        }
+      for(unsigned m(0); m != bl; ++m)
+        {
+          aLayer += theLayers[m];
+        }
+      for(unsigned j(0); j != anIDs.size();  ++j)
         { 
-          unsigned aCol(j/(theRowSize*theLayerSize)); 
-          unsigned aLayer((j%(theRowSize*theLayerSize))/theRowSize); 
-          unsigned aRow((j%(theRowSize*theLayerSize))%theRowSize); 
-          aCol += bc*theColSize;
-          aRow += br*theRowSize;
-          aLayer += bl*theLayerSize;
-          unsigned k(aRow+ 
-                     theTotalRowSize*aLayer+ 
-                     theTotalRowSize*theTotalLayerSize*aCol);
+          unsigned col(aCol+j/(theRows[i]*theLayers[i])); 
+          unsigned layer(aLayer+(j%(theRows[i]*theLayers[i]))/theRows[i]); 
+          unsigned row(aRow+(j%(theRows[i]*theLayers[i]))%theRows[i]); 
+          const unsigned k(row+ 
+                           theTotalRows*layer+ 
+                           theTotalRows*theTotalLayers*col);
           /*
           anInfo[j].point.y = (aCol%2)*theHCPl+theHCPy*aLayer;
           anInfo[j].point.z = aRow*2*nVoxelRadius+((aLayer+aCol)%2)*nVoxelRadius;
@@ -1383,7 +1475,7 @@ void SpatiocyteStepper::constructLattice()
     }
   for(unsigned i(0); i != theBoxSize; ++i)
     {
-      for(unsigned j(0); j != aSize;  ++j)
+      for(unsigned j(0); j != theIDs[i].size();  ++j)
         { 
           concatenateVoxel(i, j);
         }
@@ -1392,9 +1484,9 @@ void SpatiocyteStepper::constructLattice()
 
 void SpatiocyteStepper::allocateLattice(unsigned anID)
 { 
-  const unsigned aSize(theRowSize*theColSize*theLayerSize);
   for(unsigned i(anID*2); i != (anID*2)+2; ++i)
     {
+      const unsigned aSize(theRows[i]*theCols[i]*theLayers[i]);
       theIDs[i].resize(aSize);
       theInfo[i].resize(aSize);
       theAdjoins[i].resize(aSize*theAdjoinSize);
@@ -1403,30 +1495,41 @@ void SpatiocyteStepper::allocateLattice(unsigned anID)
 }
 
 void SpatiocyteStepper::constructLattice(unsigned anID)
-{ 
+{
   Comp* aRootComp(theComps[0]);
   const unsigned short rootID(aRootComp->vacantSpecies->getID());
-  const unsigned aSize(theRowSize*theColSize*theLayerSize);
   for(unsigned i(anID*2); i != (anID*2)+2; ++i)
     {
       std::vector<unsigned short>& anIDs(theIDs[i]);
       std::vector<VoxelInfo>& anInfo(theInfo[i]);
       std::vector<unsigned>& anAdjoins(theAdjoins[i]);
-      unsigned bc(i/(theBoxRows*theBoxLayers)); 
-      unsigned bl((i%(theBoxRows*theBoxLayers))/theBoxRows); 
-      unsigned br((i%(theBoxRows*theBoxLayers))%theBoxRows); 
-      unsigned offset(i*theBoxMaxSize);
-      for(unsigned j(0); j != aSize;  ++j)
+      const unsigned bc(i/(theBoxRows*theBoxLayers)); 
+      const unsigned bl((i%(theBoxRows*theBoxLayers))/theBoxRows); 
+      const unsigned br((i%(theBoxRows*theBoxLayers))%theBoxRows); 
+      const unsigned offset(i*theBoxMaxSize);
+      unsigned aCol(0);
+      unsigned aLayer(0);
+      unsigned aRow(0);
+      for(unsigned m(0); m != bc; ++m)
+        {
+          aCol += theCols[m];
+        }
+      for(unsigned m(0); m != br; ++m)
+        {
+          aRow += theRows[m];
+        }
+      for(unsigned m(0); m != bl; ++m)
+        {
+          aLayer += theLayers[m];
+        }
+      for(unsigned j(0); j != anIDs.size();  ++j)
         { 
-          unsigned aCol(j/(theRowSize*theLayerSize)); 
-          unsigned aLayer((j%(theRowSize*theLayerSize))/theRowSize); 
-          unsigned aRow((j%(theRowSize*theLayerSize))%theRowSize); 
-          aCol += bc*theColSize;
-          aRow += br*theRowSize;
-          aLayer += bl*theLayerSize;
-          unsigned k(aRow+ 
-                     theTotalRowSize*aLayer+ 
-                     theTotalRowSize*theTotalLayerSize*aCol);
+          unsigned col(aCol+j/(theRows[i]*theLayers[i])); 
+          unsigned layer(aLayer+(j%(theRows[i]*theLayers[i]))/theRows[i]); 
+          unsigned row(aRow+(j%(theRows[i]*theLayers[i]))%theRows[i]); 
+          const unsigned k(row+ 
+                           theTotalRows*layer+ 
+                           theTotalRows*theTotalLayers*col);
           /*
           anInfo[j].point.y = (aCol%2)*theHCPl+theHCPy*aLayer;
           anInfo[j].point.z = aRow*2*nVoxelRadius+((aLayer+aCol)%2)*nVoxelRadius;
@@ -1459,11 +1562,10 @@ void SpatiocyteStepper::constructLattice(unsigned anID)
 
 void SpatiocyteStepper::concatenateLattice(unsigned anID)
 { 
-  const unsigned aSize(theRowSize*theColSize*theLayerSize);
   for(unsigned i(0); i != theBoxSize; ++i)
     {
-      for(unsigned j(0); j != aSize;  ++j)
-        { 
+      for(unsigned j(0); j != theIDs[i].size();  ++j)
+        {
           concatenateVoxel(i, j);
         }
     }
@@ -1493,15 +1595,15 @@ bool SpatiocyteStepper::isPeriodicEdgeMol(unsigned aMol, Comp* aComp)
      ((aRow <= 1 && aCol <= 1) ||
       (aRow <= 1 && aLayer <= 1) ||
       (aCol <= 1 && aLayer <= 1) ||
-      (aRow <= 1 && aCol >= theTotalColSize-2) ||
-      (aRow <= 1 && aLayer >= theTotalLayerSize-2) ||
-      (aCol <= 1 && aRow >= theTotalRowSize-2) ||
-      (aCol <= 1 && aLayer >= theTotalLayerSize-2) ||
-      (aLayer <= 1 && aRow >= theTotalRowSize-2) ||
-      (aLayer <= 1 && aCol >= theTotalColSize-2) ||
-      (aRow >= theTotalRowSize-2 && aCol >= theTotalColSize-2) ||
-      (aRow >= theTotalRowSize-2 && aLayer >= theTotalLayerSize-2) ||
-      (aCol >= theTotalColSize-2 && aLayer >= theTotalLayerSize-2)))
+      (aRow <= 1 && aCol >= theTotalCols-2) ||
+      (aRow <= 1 && aLayer >= theTotalLayers-2) ||
+      (aCol <= 1 && aRow >= theTotalRows-2) ||
+      (aCol <= 1 && aLayer >= theTotalLayers-2) ||
+      (aLayer <= 1 && aRow >= theTotalRows-2) ||
+      (aLayer <= 1 && aCol >= theTotalCols-2) ||
+      (aRow >= theTotalRows-2 && aCol >= theTotalCols-2) ||
+      (aRow >= theTotalRows-2 && aLayer >= theTotalLayers-2) ||
+      (aCol >= theTotalCols-2 && aLayer >= theTotalLayers-2)))
     {
       return true;
     }
@@ -1578,47 +1680,47 @@ bool SpatiocyteStepper::isRemovableEdgeMol(unsigned aMol, Comp* aComp)
     }
 }
 
-void SpatiocyteStepper::concatenateVoxel(const unsigned src,
-                                         const unsigned anIndex)
+void SpatiocyteStepper::concatenateVoxel(const unsigned aBox,
+                                         const unsigned aMol)
 {
-  const unsigned aCol(anIndex/(theRowSize*theLayerSize)); 
-  const unsigned aLayer((anIndex%(theRowSize*theLayerSize))/theRowSize); 
-  const unsigned aRow((anIndex%(theRowSize*theLayerSize))%theRowSize); 
-  const unsigned bCol(src/(theBoxRows*theBoxLayers)); 
-  const unsigned bLayer((src%(theBoxRows*theBoxLayers))/theBoxRows); 
-  const unsigned bRow((src%(theBoxRows*theBoxLayers))%theBoxRows); 
+  const unsigned aCol(aMol/(theRows[aBox]*theLayers[aBox])); 
+  const unsigned aLayer((aMol%(theRows[aBox]*theLayers[aBox]))/theRows[aBox]); 
+  const unsigned aRow((aMol%(theRows[aBox]*theLayers[aBox]))%theRows[aBox]); 
+  const unsigned bCol(aBox/(theBoxRows*theBoxLayers)); 
+  const unsigned bLayer((aBox%(theBoxRows*theBoxLayers))/theBoxRows); 
+  const unsigned bRow((aBox%(theBoxRows*theBoxLayers))%theBoxRows); 
   if(aRow > 0)
     { 
-      concatenateRows(src, src, anIndex, aRow-1, aLayer, aCol);
+      concatenateRows(aBox, aBox, aMol, aRow-1, aLayer, aCol);
     } 
   else if(bRow > 0)
     {
       const unsigned tar(bRow-1+
                          theBoxRows*bLayer+
                          theBoxRows*theBoxLayers*bCol);
-      concatenateRows(src, tar, anIndex, theRowSize-1, aLayer, aCol);
+      concatenateRows(aBox, tar, aMol, theRows[tar]-1, aLayer, aCol);
     }
   if(aLayer > 0)
     {
-      concatenateLayers(src, src, anIndex, aRow, aLayer-1, aCol); 
+      concatenateLayers(aBox, aBox, aMol, aRow, aLayer-1, aCol); 
     }
   else if(bLayer > 0)
     {
       const unsigned tar(bRow+
                          theBoxRows*(bLayer-1)+
                          theBoxRows*theBoxLayers*bCol);
-      concatenateLayers(src, tar, anIndex, aRow, theLayerSize-1, aCol); 
+      concatenateLayers(aBox, tar, aMol, aRow, theLayers[tar]-1, aCol); 
     }
   if(aCol > 0)
     { 
-      concatenateCols(src, src, anIndex, aRow, aLayer, aCol-1); 
+      concatenateCols(aBox, aBox, aMol, aRow, aLayer, aCol-1); 
     }
   else if(bCol > 0)
     {
       const unsigned tar(bRow+
                          theBoxRows*bLayer+
                          theBoxRows*theBoxLayers*(bCol-1));
-      concatenateCols(src, tar, anIndex, aRow, aLayer, theColSize-1); 
+      concatenateCols(aBox, tar, aMol, aRow, aLayer, theCols[tar]-1); 
     }
 }
 
@@ -1630,8 +1732,8 @@ void SpatiocyteStepper::concatenateRows(const unsigned src,
                                         const unsigned aCol)
 {
   const unsigned b(aRow+ 
-                   theRowSize*aLayer+ 
-                   theRowSize*theLayerSize*aCol);
+                   theRows[tar]*aLayer+ 
+                   theRows[tar]*theLayers[tar]*aCol);
   theAdjoins[src][a*theAdjoinSize+NORTH] = b+tar*theBoxMaxSize;
   theAdjoins[tar][b*theAdjoinSize+SOUTH] = a+src*theBoxMaxSize;
 }
@@ -1644,8 +1746,8 @@ void SpatiocyteStepper::concatenateLayers(const unsigned src,
                                           const unsigned aCol)
 {
   const unsigned b(aRow+
-                   theRowSize*aLayer+
-                   theRowSize*theLayerSize*aCol);
+                   theRows[tar]*aLayer+
+                   theRows[tar]*theLayers[tar]*aCol);
   const unsigned bCol(tar/(theBoxRows*theBoxLayers)); 
   const unsigned bLayer((tar%(theBoxRows*theBoxLayers))/theBoxRows); 
   const unsigned bRow((tar%(theBoxRows*theBoxLayers))%theBoxRows); 
@@ -1653,22 +1755,22 @@ void SpatiocyteStepper::concatenateLayers(const unsigned src,
     {
       theAdjoins[src][a*theAdjoinSize+VENTRALN] = b+tar*theBoxMaxSize;
       theAdjoins[tar][b*theAdjoinSize+DORSALS] = a+src*theBoxMaxSize;
-      if(aRow < theRowSize-1)
+      if(aRow < theRows[tar]-1)
         {
           const unsigned c(aRow+1+ 
-                           theRowSize*aLayer+
-                           theRowSize*theLayerSize*aCol);
+                           theRows[tar]*aLayer+
+                           theRows[tar]*theLayers[tar]*aCol);
           theAdjoins[src][a*theAdjoinSize+VENTRALS] = c+tar*theBoxMaxSize;
           theAdjoins[tar][c*theAdjoinSize+DORSALN] = a+src*theBoxMaxSize;
         }
       else if(bRow < theBoxRows-1)
         {
-          const unsigned c(0+ 
-                           theRowSize*aLayer+
-                           theRowSize*theLayerSize*aCol);
           const unsigned tarc(bRow+1+
                               theBoxRows*bLayer+
                               theBoxRows*theBoxLayers*bCol);
+          const unsigned c(0+ 
+                           theRows[tarc]*aLayer+
+                           theRows[tarc]*theLayers[tarc]*aCol);
           theAdjoins[src][a*theAdjoinSize+VENTRALS] = c+tarc*theBoxMaxSize;
           theAdjoins[tarc][c*theAdjoinSize+DORSALN] = a+src*theBoxMaxSize;
         }
@@ -1680,19 +1782,19 @@ void SpatiocyteStepper::concatenateLayers(const unsigned src,
       if(aRow > 0)
         {
           const unsigned c(aRow-1+ 
-                           theRowSize*aLayer+
-                           theRowSize*theLayerSize*aCol);
+                           theRows[tar]*aLayer+
+                           theRows[tar]*theLayers[tar]*aCol);
           theAdjoins[src][a*theAdjoinSize+VENTRALN] = c+tar*theBoxMaxSize;
           theAdjoins[tar][c*theAdjoinSize+DORSALS] = a+src*theBoxMaxSize;
         }
       else if(bRow > 0)
         {
-          const unsigned c(theRowSize-1+ 
-                           theRowSize*aLayer+
-                           theRowSize*theLayerSize*aCol);
           const unsigned tarc(bRow-1+
                               theBoxRows*bLayer+
                               theBoxRows*theBoxLayers*bCol);
+          const unsigned c(theRows[tarc]-1+ 
+                           theRows[tarc]*aLayer+
+                           theRows[tarc]*theLayers[tarc]*aCol);
           theAdjoins[src][a*theAdjoinSize+VENTRALN] = c+tarc*theBoxMaxSize;
           theAdjoins[tarc][c*theAdjoinSize+DORSALS] = a+src*theBoxMaxSize;
         }
@@ -1708,8 +1810,8 @@ void SpatiocyteStepper::concatenateCols(const unsigned src,
                                         const unsigned aCol)
 {
   const unsigned b(aRow+
-                   theRowSize*aLayer+
-                   theRowSize*theLayerSize*aCol);
+                   theRows[tar]*aLayer+
+                   theRows[tar]*theLayers[tar]*aCol);
   const unsigned bCol(tar/(theBoxRows*theBoxLayers)); 
   const unsigned bLayer((tar%(theBoxRows*theBoxLayers))/theBoxRows); 
   const unsigned bRow((tar%(theBoxRows*theBoxLayers))%theBoxRows); 
@@ -1719,41 +1821,41 @@ void SpatiocyteStepper::concatenateCols(const unsigned src,
         {
           theAdjoins[src][a*theAdjoinSize+NW] = b+tar*theBoxMaxSize;
           theAdjoins[tar][b*theAdjoinSize+SE] = a+src*theBoxMaxSize;
-          if(aRow < theRowSize - 1)
+          if(aRow < theRows[tar] - 1)
             {
               const unsigned c(aRow+1+ 
-                               theRowSize*aLayer+
-                               theRowSize*theLayerSize*aCol);
+                               theRows[tar]*aLayer+
+                               theRows[tar]*theLayers[tar]*aCol);
               theAdjoins[src][a*theAdjoinSize+SW] = c+tar*theBoxMaxSize;
               theAdjoins[tar][c*theAdjoinSize+NE] = a+src*theBoxMaxSize;
             }
           else if(bRow < theBoxRows-1)
             {
-              const unsigned c(0+ 
-                               theRowSize*aLayer+
-                               theRowSize*theLayerSize*aCol);
               const unsigned tarc(bRow+1+
                                   theBoxRows*bLayer+
                                   theBoxRows*theBoxLayers*bCol);
+              const unsigned c(0+ 
+                               theRows[tarc]*aLayer+
+                               theRows[tarc]*theLayers[tarc]*aCol);
               theAdjoins[src][a*theAdjoinSize+SW] = c+tarc*theBoxMaxSize;
               theAdjoins[tarc][c*theAdjoinSize+NE] = a+src*theBoxMaxSize;
             }
-          if(aLayer < theLayerSize-1)
+          if(aLayer < theLayers[tar]-1)
             {
               const unsigned c(aRow+ 
-                               theRowSize*(aLayer+1)+
-                               theRowSize*theLayerSize*aCol);
+                               theRows[tar]*(aLayer+1)+
+                               theRows[tar]*theLayers[tar]*aCol);
               theAdjoins[src][a*theAdjoinSize+WEST] = c+tar*theBoxMaxSize;
               theAdjoins[tar][c*theAdjoinSize+EAST] = a+src*theBoxMaxSize;
             }
           else if(bLayer < theBoxLayers-1)
             {
-              const unsigned c(aRow+
-                               0+
-                               theRowSize*theLayerSize*aCol);
               const unsigned tarc(bRow+
                                   theBoxRows*(bLayer+1)+
                                   theBoxRows*theBoxLayers*bCol);
+              const unsigned c(aRow+
+                               0+
+                               theRows[tarc]*theLayers[tarc]*aCol);
               theAdjoins[src][a*theAdjoinSize+WEST] = c+tarc*theBoxMaxSize;
               theAdjoins[tarc][c*theAdjoinSize+EAST] = a+src*theBoxMaxSize;
             }
@@ -1765,38 +1867,38 @@ void SpatiocyteStepper::concatenateCols(const unsigned src,
           if(aRow > 0)
             {
               const unsigned c(aRow-1+ 
-                               theRowSize*aLayer+
-                               theRowSize*theLayerSize*aCol);
+                               theRows[tar]*aLayer+
+                               theRows[tar]*theLayers[tar]*aCol);
               theAdjoins[src][a*theAdjoinSize+NW] = c+tar*theBoxMaxSize;
               theAdjoins[tar][c*theAdjoinSize+SE] = a+src*theBoxMaxSize;
             }
           else if(bRow > 0)
             {
-              const unsigned c(theRowSize-1+ 
-                               theRowSize*aLayer+
-                               theRowSize*theLayerSize*aCol);
               const unsigned tarc(bRow-1+
                                   theBoxRows*bLayer+
                                   theBoxRows*theBoxLayers*bCol);
+              const unsigned c(theRows[tarc]-1+ 
+                               theRows[tarc]*aLayer+
+                               theRows[tarc]*theLayers[tarc]*aCol);
               theAdjoins[src][a*theAdjoinSize+NW] = c+tarc*theBoxMaxSize;
               theAdjoins[tarc][c*theAdjoinSize+SE] = a+src*theBoxMaxSize;
             }
           if(aLayer > 0)
             {
               const unsigned c(aRow+ 
-                               theRowSize*(aLayer-1)+
-                               theRowSize*theLayerSize*aCol);
+                               theRows[tar]*(aLayer-1)+
+                               theRows[tar]*theLayers[tar]*aCol);
               theAdjoins[src][a*theAdjoinSize+WEST] = c+tar*theBoxMaxSize;
               theAdjoins[tar][c*theAdjoinSize+EAST] = a+src*theBoxMaxSize;
             }
           else if(bLayer > 0)
             {
-              const unsigned c(aRow+ 
-                               theRowSize*(theLayerSize-1)+
-                               theRowSize*theLayerSize*aCol);
               const unsigned tarc(bRow+
                                   theBoxRows*(bLayer-1)+
                                   theBoxRows*theBoxLayers*bCol);
+              const unsigned c(aRow+ 
+                               theRows[tarc]*(theLayers[tarc]-1)+
+                               theRows[tarc]*theLayers[tarc]*aCol);
               theAdjoins[src][a*theAdjoinSize+WEST] = c+tarc*theBoxMaxSize;
               theAdjoins[tarc][c*theAdjoinSize+EAST] = a+src*theBoxMaxSize;
             }
@@ -1811,38 +1913,38 @@ void SpatiocyteStepper::concatenateCols(const unsigned src,
           if(aRow > 0)
             {
               const unsigned c(aRow-1+ 
-                               theRowSize*aLayer+
-                               theRowSize*theLayerSize*aCol);
+                               theRows[tar]*aLayer+
+                               theRows[tar]*theLayers[tar]*aCol);
               theAdjoins[src][a*theAdjoinSize+NW] = c+tar*theBoxMaxSize;
               theAdjoins[tar][c*theAdjoinSize+SE] = a+src*theBoxMaxSize;
             }
           else if(bRow > 0)
             {
-              const unsigned c(theRowSize-1+ 
-                               theRowSize*aLayer+
-                               theRowSize*theLayerSize*aCol);
               const unsigned tarc(bRow-1+
                                   theBoxRows*bLayer+
                                   theBoxRows*theBoxLayers*bCol);
+              const unsigned c(theRows[tarc]-1+ 
+                               theRows[tarc]*aLayer+
+                               theRows[tarc]*theLayers[tarc]*aCol);
               theAdjoins[src][a*theAdjoinSize+NW] = c+tarc*theBoxMaxSize;
               theAdjoins[tarc][c*theAdjoinSize+SE] = a+src*theBoxMaxSize;
             }
-          if(aLayer < theLayerSize-1)
+          if(aLayer < theLayers[tar]-1)
             {
               const unsigned c(aRow+ 
-                               theRowSize*(aLayer+1)+
-                               theRowSize*theLayerSize*aCol);
+                               theRows[tar]*(aLayer+1)+
+                               theRows[tar]*theLayers[tar]*aCol);
               theAdjoins[src][a*theAdjoinSize+WEST] = c+tar*theBoxMaxSize;
               theAdjoins[tar][c*theAdjoinSize+EAST] = a+src*theBoxMaxSize;
             }
           else if(bLayer < theBoxLayers-1)
             {
-              const unsigned c(aRow+
-                               0+
-                               theRowSize*theLayerSize*aCol);
               const unsigned tarc(bRow+
                                   theBoxRows*(bLayer+1)+
                                   theBoxRows*theBoxLayers*bCol);
+              const unsigned c(aRow+
+                               0+
+                               theRows[tarc]*theLayers[tarc]*aCol);
               theAdjoins[src][a*theAdjoinSize+WEST] = c+tarc*theBoxMaxSize;
               theAdjoins[tarc][c*theAdjoinSize+EAST] = a+src*theBoxMaxSize;
             }
@@ -1851,41 +1953,41 @@ void SpatiocyteStepper::concatenateCols(const unsigned src,
         {
           theAdjoins[src][a*theAdjoinSize+NW] = b+tar*theBoxMaxSize;
           theAdjoins[tar][b*theAdjoinSize+SE] = a+src*theBoxMaxSize;
-          if(aRow < theRowSize - 1)
+          if(aRow < theRows[tar] - 1)
             {
               const unsigned c(aRow+1+ 
-                               theRowSize*aLayer+
-                               theRowSize*theLayerSize*aCol);
+                               theRows[tar]*aLayer+
+                               theRows[tar]*theLayers[tar]*aCol);
               theAdjoins[src][a*theAdjoinSize+SW] = c+tar*theBoxMaxSize;
               theAdjoins[tar][c*theAdjoinSize+NE] = a+src*theBoxMaxSize;
             }
           else if(bRow < theBoxRows-1)
             {
-              const unsigned c(0+ 
-                               theRowSize*aLayer+
-                               theRowSize*theLayerSize*aCol);
               const unsigned tarc(bRow+1+
                                   theBoxRows*bLayer+
                                   theBoxRows*theBoxLayers*bCol);
+              const unsigned c(0+ 
+                               theRows[tarc]*aLayer+
+                               theRows[tarc]*theLayers[tarc]*aCol);
               theAdjoins[src][a*theAdjoinSize+SW] = c+tarc*theBoxMaxSize;
               theAdjoins[tarc][c*theAdjoinSize+NE] = a+src*theBoxMaxSize;
             }
           if(aLayer > 0)
             {
               const unsigned c(aRow+ 
-                               theRowSize*(aLayer-1)+
-                               theRowSize*theLayerSize*aCol);
+                               theRows[tar]*(aLayer-1)+
+                               theRows[tar]*theLayers[tar]*aCol);
               theAdjoins[src][a*theAdjoinSize+WEST] = c+tar*theBoxMaxSize;
               theAdjoins[tar][c*theAdjoinSize+EAST] = a+src*theBoxMaxSize;
             }
           else if(bLayer > 0)
             {
-              const unsigned c(aRow+ 
-                               theRowSize*(theLayerSize-1)+
-                               theRowSize*theLayerSize*aCol);
               const unsigned tarc(bRow+
                                   theBoxRows*(bLayer-1)+
                                   theBoxRows*theBoxLayers*bCol);
+              const unsigned c(aRow+ 
+                               theRows[tarc]*(theLayers[tarc]-1)+
+                               theRows[tarc]*theLayers[tarc]*aCol);
               theAdjoins[src][a*theAdjoinSize+WEST] = c+tarc*theBoxMaxSize;
               theAdjoins[tarc][c*theAdjoinSize+EAST] = a+src*theBoxMaxSize;
             }
@@ -2204,7 +2306,7 @@ unsigned SpatiocyteStepper::global2coord(unsigned aGlobalRow,
                                              unsigned aGlobalLayer,
                                              unsigned aGlobalCol)
 {
-  return aGlobalRow+theTotalRowSize*aGlobalLayer+theTotalRowSize*theTotalLayerSize*aGlobalCol;
+  return aGlobalRow+theTotalRows*aGlobalLayer+theTotalRows*theTotalLayers*aGlobalCol;
 }
 
 void SpatiocyteStepper::point2global(Point aPoint, 
@@ -2245,17 +2347,17 @@ void SpatiocyteStepper::point2global(Point aPoint,
   aGlobalRow = (unsigned)row;
   aGlobalLayer = (unsigned)layer;
   aGlobalCol = (unsigned)col;
-  if(aGlobalCol >= theTotalColSize)
+  if(aGlobalCol >= theTotalCols)
     {
-      aGlobalCol = theTotalColSize-1;
+      aGlobalCol = theTotalCols-1;
     }
-  if(aGlobalRow >= theTotalRowSize)
+  if(aGlobalRow >= theTotalRows)
     {
-      aGlobalRow = theTotalRowSize-1;
+      aGlobalRow = theTotalRows-1;
     }
-  if(aGlobalLayer >= theTotalLayerSize)
+  if(aGlobalLayer >= theTotalLayers)
     {
-      aGlobalLayer = theTotalLayerSize-1;
+      aGlobalLayer = theTotalLayers-1;
     }
 }
 
@@ -2264,9 +2366,9 @@ void SpatiocyteStepper::coord2global(unsigned aMol,
                                      unsigned& aGlobalLayer,
                                      unsigned& aGlobalCol) 
 {
-  aGlobalCol = (aMol)/(theTotalRowSize*theTotalLayerSize);
-  aGlobalLayer = ((aMol)%(theTotalRowSize*theTotalLayerSize))/theTotalRowSize;
-  aGlobalRow = ((aMol)%(theTotalRowSize*theTotalLayerSize))%theTotalRowSize;
+  aGlobalCol = (aMol)/(theTotalRows*theTotalLayers);
+  aGlobalLayer = ((aMol)%(theTotalRows*theTotalLayers))/theTotalRows;
+  aGlobalRow = ((aMol)%(theTotalRows*theTotalLayers))%theTotalRows;
 }
 
 
@@ -2287,16 +2389,16 @@ void SpatiocyteStepper::concatenatePeriodicSurfaces()
           const unsigned boxB(theBoxRows-1+
                               theBoxRows*i+
                               theBoxRows*theBoxLayers*j);
-          for(unsigned k(0); k != theLayerSize; ++k)
+          for(unsigned k(0); k != theLayers[boxA]; ++k)
             {
-              for(unsigned l(0); l != theColSize; ++l)
+              for(unsigned l(0); l != theCols[boxA]; ++l)
                 { 
                   unsigned A(0+ 
-                             theRowSize*k+ 
-                             theRowSize*theLayerSize*l);
-                  unsigned B(theRowSize-1+ 
-                             theRowSize*k+ 
-                             theRowSize*theLayerSize*l);
+                             theRows[boxA]*k+ 
+                             theRows[boxA]*theLayers[boxA]*l);
+                  unsigned B(theRows[boxB]-1+ 
+                             theRows[boxB]*k+ 
+                             theRows[boxB]*theLayers[boxB]*l);
                   if(aRootComp->xyPlane == UNIPERIODIC)
                     { 
                       replaceUniVoxel(boxA, boxB, A, B);
@@ -2328,16 +2430,16 @@ void SpatiocyteStepper::concatenatePeriodicSurfaces()
           const unsigned boxB(i+
                               theBoxRows*(theBoxLayers-1)+
                               theBoxRows*theBoxLayers*j);
-          for(unsigned k(0); k != theRowSize; ++k)
+          for(unsigned k(0); k != theRows[boxA]; ++k)
             {
-              for(unsigned l(0); l != theColSize; ++l)
+              for(unsigned l(0); l != theCols[boxA]; ++l)
                 { 
                   unsigned A(k+ 
-                             theRowSize*0+ 
-                             theRowSize*theLayerSize*l);
+                             theRows[boxA]*0+ 
+                             theRows[boxA]*theLayers[boxA]*l);
                   unsigned B(k+ 
-                             theRowSize*(theLayerSize-1)+ 
-                             theRowSize*theLayerSize*l);
+                             theRows[boxB]*(theLayers[boxB]-1)+ 
+                             theRows[boxB]*theLayers[boxB]*l);
                   if(aRootComp->xzPlane == UNIPERIODIC)
                     { 
                       replaceUniVoxel(boxA, boxB, A, B);
@@ -2369,16 +2471,16 @@ void SpatiocyteStepper::concatenatePeriodicSurfaces()
           const unsigned boxB(i+
                               theBoxRows*j+
                               theBoxRows*theBoxLayers*(theBoxCols-1));
-          for(unsigned k(0); k != theRowSize; ++k)
+          for(unsigned k(0); k != theRows[boxA]; ++k)
             {
-              for(unsigned l(0); l != theLayerSize; ++l)
+              for(unsigned l(0); l != theLayers[boxA]; ++l)
                 { 
                   unsigned A(k+ 
-                             theRowSize*l+ 
-                             theRowSize*theLayerSize*0);
+                             theRows[boxA]*l+ 
+                             theRows[boxA]*theLayers[boxA]*0);
                   unsigned B(k+ 
-                             theRowSize*l+ 
-                             theRowSize*theLayerSize*(theColSize-1));
+                             theRows[boxB]*l+ 
+                             theRows[boxB]*theLayers[boxB]*(theCols[boxB]-1));
                   if(aRootComp->yzPlane == UNIPERIODIC)
                     { 
                       replaceUniVoxel(boxA, boxB, A, B);
@@ -2403,17 +2505,17 @@ void SpatiocyteStepper::concatenatePeriodicSurfaces()
 
 unsigned SpatiocyteStepper::coord2row(unsigned aMol)
 {
-  return (aMol%(theTotalRowSize*theTotalLayerSize))%theTotalRowSize;
+  return (aMol%(theTotalRows*theTotalLayers))%theTotalRows;
 }
 
 unsigned SpatiocyteStepper::coord2layer(unsigned aMol)
 {
-  return (aMol%(theTotalRowSize*theTotalLayerSize))/theTotalRowSize;
+  return (aMol%(theTotalRows*theTotalLayers))/theTotalRows;
 }
 
 unsigned SpatiocyteStepper::coord2col(unsigned aMol)
 {
-  return aMol/(theTotalRowSize*theTotalLayerSize);
+  return aMol/(theTotalRows*theTotalLayers);
 }
 
 void SpatiocyteStepper::replaceVoxel(const unsigned boxA,

@@ -208,12 +208,9 @@ private:
   unsigned theBoxSize;
   unsigned theThreadSize;
   unsigned theCellShape;
-  unsigned theColSize;
-  unsigned theRowSize;
-  unsigned theLayerSize;
-  unsigned theTotalColSize;
-  unsigned theTotalLayerSize;
-  unsigned theTotalRowSize;
+  unsigned theTotalCols;
+  unsigned theTotalLayers;
+  unsigned theTotalRows;
   unsigned theBoxMaxSize;
   unsigned theBoxCols;
   unsigned theBoxRows;
@@ -234,6 +231,9 @@ private:
   std::vector<std::vector<unsigned> > theAdjoins;
   std::vector<Process*> theExternInterruptedProcesses;
   std::vector<std::vector<unsigned> > theCoordMols;
+  std::vector<unsigned> theCols;
+  std::vector<unsigned> theRows;
+  std::vector<unsigned> theLayers;
   std::vector<Thread*> theThreads;
 };
 

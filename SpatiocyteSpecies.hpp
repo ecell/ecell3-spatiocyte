@@ -598,10 +598,14 @@ public:
       if(aTarMols.size() < aMolSize)
         {
           aTarMols.resize(aMolSize);
-          aRands.resize(std::min(unsigned(100000), unsigned(100000)));
-          for(unsigned i(0); i != aRands.size(); ++i)
+          if(!aRands.size())
             {
-              aRands[i] = gsl_rng_uniform_int(theRng, theAdjoinSize);
+              aRands.resize(std::min(unsigned(10000000), unsigned(1000000)));
+              for(unsigned i(0); i != aRands.size(); ++i)
+                {
+                  aRands[i] = gsl_rng_uniform_int(theRng, theAdjoinSize);
+                }
+              std::cout << "random numbers initialized." << std::endl;
             }
         }
       if(aRands.size())
