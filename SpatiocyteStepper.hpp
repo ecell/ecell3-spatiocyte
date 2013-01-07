@@ -113,7 +113,6 @@ public:
       return 0.0;
   }
   void constructLattice(unsigned);
-  void allocateLattice(unsigned);
   void concatenateLattice(unsigned);
   void constructLattice();
 

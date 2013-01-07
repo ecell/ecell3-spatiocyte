@@ -61,7 +61,7 @@ void SpatiocyteStepper::initialize()
     } 
   std::cout << "1. checking model..." << std::endl;
   checkModel();
-  //initializeThreads();
+  initializeThreads();
   //We need a Comp tree to assign the voxels to each Comp
   //and get the available number of vacant voxels. The compartmentalized
   //vacant voxels are needed to randomly place molecules according to the
@@ -80,9 +80,12 @@ void SpatiocyteStepper::initialize()
   std::cout << "5. initializing processes the second time..." << std::endl;
   initializeSecond();
   std::cout << "6. constructing lattice..." << std::endl;
-  //startThreadsA();
-  //startThreadsB();
+  //constructLattice(0);
+  startThreadsA();
+  startThreadsB();
+  /*
   constructLattice();
+  */
   setBoundaries();
   checkLattice();
   std::cout << "7. setting intersecting compartment list..." << std::endl;
@@ -1482,8 +1485,10 @@ void SpatiocyteStepper::constructLattice()
     }
 }
 
-void SpatiocyteStepper::allocateLattice(unsigned anID)
-{ 
+void SpatiocyteStepper::constructLattice(unsigned anID)
+{
+  Comp* aRootComp(theComps[0]);
+  const unsigned short rootID(aRootComp->vacantSpecies->getID());
   for(unsigned i(anID*2); i != (anID*2)+2; ++i)
     {
       const unsigned aSize(theRows[i]*theCols[i]*theLayers[i]);
@@ -1492,12 +1497,6 @@ void SpatiocyteStepper::allocateLattice(unsigned anID)
       theAdjoins[i].resize(aSize*theAdjoinSize);
       theIDs[i][theNullMol] = theNullID;
     }
-}
-
-void SpatiocyteStepper::constructLattice(unsigned anID)
-{
-  Comp* aRootComp(theComps[0]);
-  const unsigned short rootID(aRootComp->vacantSpecies->getID());
   for(unsigned i(anID*2); i != (anID*2)+2; ++i)
     {
       std::vector<unsigned short>& anIDs(theIDs[i]);
@@ -1562,7 +1561,7 @@ void SpatiocyteStepper::constructLattice(unsigned anID)
 
 void SpatiocyteStepper::concatenateLattice(unsigned anID)
 { 
-  for(unsigned i(0); i != theBoxSize; ++i)
+  for(unsigned i(anID*2); i != (anID*2)+2; ++i)
     {
       for(unsigned j(0); j != theIDs[i].size();  ++j)
         {
