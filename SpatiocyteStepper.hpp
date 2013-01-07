@@ -53,6 +53,7 @@ public:
     isInitialized(false),
     isPeriodicEdge(false),
     SearchVacant(false),
+    theRunA(true),
     LatticeType(HCP_LATTICE),
     theBoxSize(8),
     theThreadSize(4),
@@ -107,7 +108,6 @@ public:
   void updateSpecies();
   void finalizeSpecies();
   unsigned getStartMol();
-  void startThread(pthread_t, unsigned);
   virtual GET_METHOD(Real, TimeScale)
   {
       return 0.0;
@@ -190,13 +190,13 @@ private:
   unsigned coord2layer(unsigned);
   Comp* registerComp(System*, std::vector<Comp*>*);
   Variable* getVariable(System*, String const&);
-  void startThreadsA();
-  void startThreadsB();
+  void runThreads();
   void setBoundaries();
 private:
   bool isInitialized;
   bool isPeriodicEdge;
   bool SearchVacant;
+  bool theRunA;
   char flagA;
   char flagB;
   unsigned short theNullID;

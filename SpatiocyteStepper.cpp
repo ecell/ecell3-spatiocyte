@@ -80,12 +80,8 @@ void SpatiocyteStepper::initialize()
   std::cout << "5. initializing processes the second time..." << std::endl;
   initializeSecond();
   std::cout << "6. constructing lattice..." << std::endl;
-  //constructLattice(0);
-  startThreadsA();
-  startThreadsB();
-  /*
-  constructLattice();
-  */
+  constructLattice(0);
+  concatenateLattice(0);
   setBoundaries();
   checkLattice();
   std::cout << "7. setting intersecting compartment list..." << std::endl;
@@ -119,51 +115,50 @@ void SpatiocyteStepper::initialize()
   std::cout << "19. simulation is started..." << std::endl;
 }
 
-void SpatiocyteStepper::startThreadsA()
+void SpatiocyteStepper::runThreads()
 {
   nThreadsRunning = 0;
-  flagA = FLAG_RUN;
-  barrier();
-  while(ACCESS_ONCE(nThreadsRunning) < theThreadSize)
+  if(theRunA)
     {
-      continue;
+      flagA = FLAG_RUN;
+      barrier();
+      while(ACCESS_ONCE(nThreadsRunning) < theThreadSize-1)
+        {
+          continue;
+        }
+      flagA = FLAG_STOP;
+      theRunA = false;
     }
-  flagA = FLAG_STOP;
-}
-
-void SpatiocyteStepper::startThreadsB()
-{
-  nThreadsRunning = 0;
-  flagB = FLAG_RUN;
-  barrier();
-  while(ACCESS_ONCE(nThreadsRunning) < theThreadSize)
+  else
     {
-      continue;
+      flagB = FLAG_RUN;
+      barrier();
+      while(ACCESS_ONCE(nThreadsRunning) < theThreadSize-1)
+        {
+          continue;
+        }
+      flagB = FLAG_STOP;
+      theRunA = true;
     }
-  flagB = FLAG_STOP;
 }
 
 void SpatiocyteStepper::initializeThreads()
 {
-  pthread_setconcurrency(theThreadSize); 
+  pthread_setconcurrency(theThreadSize-1); 
   nThreadsRunning = 0;
   flagA = FLAG_STOP;
   flagB = FLAG_STOP;
-  for(unsigned i(0); i != theThreadSize; ++i)
+  for(unsigned i(1); i != theThreadSize; ++i)
     {
       Thread* aThread(new Thread(i, nThreadsRunning, flagA, flagB, *this));
       aThread->create();
       theThreads.push_back(aThread);
     }
   //Wait until all threads have been created:
-  while(ACCESS_ONCE(nThreadsRunning) < theThreadSize)
+  while(ACCESS_ONCE(nThreadsRunning) < theThreadSize-1)
     {
       continue;
     }
-}
-
-void SpatiocyteStepper::startThread(pthread_t anID, unsigned aProcID)
-{
 }
 
 void SpatiocyteStepper::interrupt(Time aTime)
@@ -1487,6 +1482,10 @@ void SpatiocyteStepper::constructLattice()
 
 void SpatiocyteStepper::constructLattice(unsigned anID)
 {
+  if(!anID)
+    {
+      runThreads();
+    }
   Comp* aRootComp(theComps[0]);
   const unsigned short rootID(aRootComp->vacantSpecies->getID());
   for(unsigned i(anID*2); i != (anID*2)+2; ++i)
@@ -1561,6 +1560,10 @@ void SpatiocyteStepper::constructLattice(unsigned anID)
 
 void SpatiocyteStepper::concatenateLattice(unsigned anID)
 { 
+  if(!anID)
+    {
+      runThreads();
+    }
   for(unsigned i(anID*2); i != (anID*2)+2; ++i)
     {
       for(unsigned j(0); j != theIDs[i].size();  ++j)
