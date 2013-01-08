@@ -479,13 +479,13 @@ void SpatiocyteStepper::checkLattice()
             { 
               if(anAdjoins[j*theAdjoinSize+l] == j+offset)
                 {
-                  theSpecies[1]->addMol(i, j);
+                  //theSpecies[1]->addMol(i, j);
                   cnt++;
                 }
             }
         }
     }
-  theSpecies[1]->setIsPopulated();
+  //theSpecies[1]->setIsPopulated();
   std::cout << "cnt:" << cnt << std::endl;
 
   /*
@@ -1041,9 +1041,9 @@ void SpatiocyteStepper::setLatticeProperties()
       theTotalLayers += 2;
       readjustSurfaceBoundarySizes();
     }
-  theBoxRows = 2;
-  theBoxCols = 2;
-  theBoxLayers = 2;
+  theBoxRows = 4;
+  theBoxCols = 4;
+  theBoxLayers = 4;
   theBoxSize = theBoxRows*theBoxCols*theBoxLayers;
   theRows.resize(theBoxSize);
   theCols.resize(theBoxSize);
@@ -1488,7 +1488,7 @@ void SpatiocyteStepper::constructLattice(unsigned anID)
     }
   Comp* aRootComp(theComps[0]);
   const unsigned short rootID(aRootComp->vacantSpecies->getID());
-  for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+  for(unsigned i(anID*16); i != (anID*16)+16; ++i)
     {
       const unsigned aSize(theRows[i]*theCols[i]*theLayers[i]);
       theIDs[i].resize(aSize);
@@ -1496,7 +1496,7 @@ void SpatiocyteStepper::constructLattice(unsigned anID)
       theAdjoins[i].resize(aSize*theAdjoinSize);
       theIDs[i][theNullMol] = theNullID;
     }
-  for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+  for(unsigned i(anID*16); i != (anID*16)+16; ++i)
     {
       std::vector<unsigned short>& anIDs(theIDs[i]);
       std::vector<VoxelInfo>& anInfo(theInfo[i]);
@@ -1564,7 +1564,7 @@ void SpatiocyteStepper::concatenateLattice(unsigned anID)
     {
       runThreads();
     }
-  for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+  for(unsigned i(anID*16); i != (anID*16)+16; ++i)
     {
       for(unsigned j(0); j != theIDs[i].size();  ++j)
         {

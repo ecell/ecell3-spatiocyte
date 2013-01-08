@@ -55,7 +55,7 @@ String int2str(int anInt)
  * that theMols list is not updated when other species diffuse on it. 
  * There are four possible types of vacant species:
  * 1. !isDiffusiveVacant && !isReactiveVacant: a vacant species
- *    whose theMols list and theMolSize are never updated. This is
+ *    whose theMols list are never updated. This is
  *    the most basic version. This vacant species never diffuses, or reacts
  *    using SNRP. 
  * 2. !isDiffusiveVacant && isReactiveVacant: a vacant species which is a
@@ -126,7 +126,6 @@ public:
     {
       theBoxMaxSize = aBoxMaxSize;
       theBoxSize = theIDs.size();
-      theMolSize.resize(theBoxSize);
       theLastMolSize.resize(theBoxSize);
       theCnt.resize(theBoxSize);
       theMols.resize(theBoxSize);
@@ -142,7 +141,6 @@ public:
       unsigned bal(anInitMolSize%theBoxSize);
       for(unsigned i(0); i != theBoxSize; ++i)
         {
-          theMolSize[i] = 0;
           theInitMolSize[i] = anInitMolSize/theBoxSize;
           if(bal)
             {
@@ -297,7 +295,7 @@ public:
     }
   unsigned size(unsigned aBox) const
     {
-      return theMolSize[aBox];
+      return theMols[aBox].size();
     }
   unsigned size() const
     {
@@ -376,7 +374,7 @@ public:
     {
       for(unsigned i(0); i != theBoxSize; ++i)
         {
-          theInitMolSize[i] = theMolSize[i];
+          theInitMolSize[i] = theMols[i].size();
         }
       getVariable()->setValue(size());
     }
@@ -409,7 +407,7 @@ public:
             {
               for(unsigned i(0); i != theBoxSize; ++i)
                 {
-                  for(unsigned j(0); j != theMolSize[i]; ++j)
+                  for(unsigned j(0); j != theMols[i].size(); ++j)
                     {
                       theTags[i][j].origin = getMol(i, j);
                     }
@@ -530,7 +528,7 @@ public:
     {
       for(unsigned i(0); i != theBoxSize; ++i)
         {
-          if(theInitMolSize[i] != theMolSize[i])
+          if(theInitMolSize[i] != theMols[i].size())
             {
               return false;
             }
@@ -626,7 +624,7 @@ public:
                std::vector<unsigned>& aMols,
                const std::vector<unsigned>& aTarMols,
                const unsigned currBox, unsigned& aLastMolSize,
-               unsigned& aMolSize, unsigned& i)
+               unsigned& i)
     {
       i = 0;
       for(; i < aLastMolSize; ++i)
@@ -665,14 +663,14 @@ public:
     {
       for(unsigned i(0); i != theBoxSize; ++i)
         {
-          theLastMolSize[i] = theMolSize[i];
+          theLastMolSize[i] = theMols[i].size();
         }
       for(unsigned i(0); i != theBoxSize; ++i)
         {
           setTarMols(theTarMols[i], theRands[i], theAdjoins[i],
                      theMols[i], theLastMolSize[i]);
           walkBox(theIDs[i], theMols[i], theTarMols[i], i, theLastMolSize[i],
-                  theMolSize[i], theCnt[i]);
+                  theCnt[i]);
         }
 
           /*
@@ -1019,7 +1017,7 @@ public:
     }
   Tag& getTag(unsigned aBox, unsigned anIndex)
     {
-      if(isTagged && anIndex != theMolSize[aBox])
+      if(isTagged && anIndex != theMols[aBox].size())
         {
           return theTags[aBox][anIndex];
         }
@@ -1052,24 +1050,18 @@ public:
     }
   void doAddMol(unsigned aBox, unsigned aMol, Tag& aTag)
     {
-      ++theMolSize[aBox]; 
-      if(theMolSize[aBox] > theMols[aBox].size())
-        {
-          theMols[aBox].resize(theMolSize[aBox]);
-          theTags[aBox].resize(theMolSize[aBox]);
-        }
-      theMols[aBox][theMolSize[aBox]-1] = aMol;
+      theMols[aBox].push_back(aMol);
       if(isTagged)
         {
           //If it is theNullTag:
           if(aTag.origin == theNullMol)
             {
-              Tag aNewTag = {getMol(aBox, theMolSize[aBox]-1), theNullID};
-              theTags[aBox][theMolSize[aBox]-1] = aNewTag;
+              Tag aNewTag = {getMol(aBox, theMols[aBox].size()-1), theNullID};
+              theTags[aBox].push_back(aNewTag);
             }
           else
             {
-              theTags[aBox][theMolSize[aBox]-1] = aTag;
+              theTags[aBox].push_back(aTag);
             }
         }
       theVariable->setValue(size());
@@ -1175,7 +1167,6 @@ public:
     {
       theIDs[aBox][aMol] = theID;
       (*theCompMols)[aBox].push_back(aMol);
-      ++theMolSize[aBox];
       //TODO: synchronize for multip
       theVariable->addValue(1);
     }
@@ -1224,29 +1215,29 @@ public:
     */
   unsigned getMolIndexFast(unsigned aBox, unsigned aMol)
     {
-      for(unsigned i(0); i < theMolSize[aBox]; ++i)
+      for(unsigned i(0); i < theMols[aBox].size(); ++i)
         {
           if(theMols[aBox][i] == aMol)
             {
               return i;
             }
         }
-      return theMolSize[aBox];
+      return theMols[aBox].size();
     }
   unsigned getMolIndex(unsigned aBox, unsigned aMol)
     {
       unsigned index(getMolIndexFast(aBox, aMol));
-      if(index == theMolSize[aBox])
+      if(index == theMols[aBox].size())
         { 
           if(isDiffusiveVacant || isReactiveVacant)
             {
               updateVacantMols();
             }
           index = getMolIndexFast(aBox, aMol);
-          if(index == theMolSize[aBox])
+          if(index == theMols[aBox].size())
             { 
               std::cout << "error in getting the index:" << getIDString() <<
-               " size:" << theMolSize[aBox] << std::endl;
+               " size:" << theMols[aBox].size() << std::endl;
               return 0;
             }
         }
@@ -1305,16 +1296,19 @@ public:
         }
       if(!isVacant)
         {
-          theMols[aBox][anIndex] = theMols[aBox][--theMolSize[aBox]];
-          if(theMolSize[aBox]+1 == theLastMolSize[aBox])
+          theMols[aBox][anIndex] = theMols[aBox].back();
+          theMols[aBox].pop_back();
+          if(theMols[aBox].size()+1 == theLastMolSize[aBox])
             {
-              theTarMols[aBox][anIndex] = theTarMols[aBox][theMolSize[aBox]];
+              theTarMols[aBox][anIndex] = theTarMols[aBox].back();
+              theTarMols[aBox].pop_back();
               --theLastMolSize[aBox];
               --theCnt[aBox];
             }
           if(isTagged)
             {
-              theTags[aBox][anIndex] = theTags[aBox][theMolSize[aBox]];
+              theTags[aBox][anIndex] = theTags[aBox].back();
+              theTags.pop_back();
             }
           //theVariable->setValue(size());
           return;
@@ -1326,7 +1320,6 @@ public:
       for(unsigned i(0); i != theBoxSize; ++i)
         {
           theMols[i].resize(0);
-          theMolSize[i] = 0;
         }
       theVariable->setValue(0);
     }
@@ -1348,7 +1341,7 @@ public:
     }
   int getPopulateMolSize(unsigned aBox)
     {
-      return theInitMolSize[aBox]-theMolSize[aBox];
+      return theInitMolSize[aBox]-theMols[aBox].size();
     }
   int getTotalPopulateMolSize()
     {
@@ -1508,7 +1501,7 @@ public:
     }
   unsigned getRandomIndex(unsigned aBox)
     {
-      return gsl_rng_uniform_int(theRng, theMolSize[aBox]);
+      return gsl_rng_uniform_int(theRng, theMols[aBox].size());
     }
   unsigned getRandomMol(unsigned aBox)
     {
@@ -1974,7 +1967,6 @@ private:
   std::vector<unsigned> theCnt;
   std::vector<unsigned> theInitMolSize;
   std::vector<unsigned> theLastMolSize;
-  std::vector<unsigned> theMolSize;
   std::vector<bool> theFinalizeReactions;
   std::vector<unsigned> collisionCnts;
   std::vector<unsigned> theMultiscaleBindIDs;
