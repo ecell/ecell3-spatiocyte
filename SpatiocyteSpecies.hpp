@@ -590,34 +590,27 @@ public:
   void setTarMols(std::vector<unsigned>& aTarMols,
                   std::vector<unsigned>& aRands,
                   const std::vector<unsigned>& anAdjoins,
-                  const std::vector<unsigned>& aMols,
-                  const unsigned aMolSize)
+                  const std::vector<unsigned>& aMols)
     {
-      if(aTarMols.size() < aMolSize)
+      if(!aRands.size())
         {
-          aTarMols.resize(aMolSize);
-          if(!aRands.size())
+          aRands.resize(std::min(unsigned(10000000), unsigned(1000000)));
+          for(unsigned i(0); i != aRands.size(); ++i)
             {
-              aRands.resize(std::min(unsigned(10000000), unsigned(1000000)));
-              for(unsigned i(0); i != aRands.size(); ++i)
-                {
-                  aRands[i] = gsl_rng_uniform_int(theRng, theAdjoinSize);
-                }
-              std::cout << "random numbers initialized." << std::endl;
+              aRands[i] = gsl_rng_uniform_int(theRng, theAdjoinSize);
             }
+          std::cout << "random numbers initialized." << std::endl;
         }
-      if(aRands.size())
+      aTarMols.resize(0);
+      unsigned j(gsl_rng_uniform_int(theRng, aRands.size()));
+      for(unsigned i(0); i != aMols.size(); ++i, ++j)
         {
-          unsigned j(gsl_rng_uniform_int(theRng, aRands.size()));
-          for(unsigned i(0); i != aMolSize; ++i, ++j)
+          while(j == aRands.size())
             {
-              while(j == aRands.size())
-                {
-                  j = gsl_rng_uniform_int(theRng, aRands.size());
-                }
-              aTarMols[i] = anAdjoins[aMols[i]*theAdjoinSize+aRands[j]];
-              //aTarMols[i] = anAdjoins[aMols[i]*theAdjoinSize+gsl_rng_uniform_int(theRng, theAdjoinSize)];
+              j = gsl_rng_uniform_int(theRng, aRands.size());
             }
+          aTarMols.push_back(anAdjoins[aMols[i]*theAdjoinSize+aRands[j]]);
+          //aTarMols[i] = anAdjoins[aMols[i]*theAdjoinSize+gsl_rng_uniform_int(theRng, theAdjoinSize)];
         }
     }
   void walkBox(std::vector<unsigned short>& anIDs,
@@ -667,8 +660,7 @@ public:
         }
       for(unsigned i(0); i != theBoxSize; ++i)
         {
-          setTarMols(theTarMols[i], theRands[i], theAdjoins[i],
-                     theMols[i], theLastMolSize[i]);
+          setTarMols(theTarMols[i], theRands[i], theAdjoins[i], theMols[i]);
           walkBox(theIDs[i], theMols[i], theTarMols[i], i, theLastMolSize[i],
                   theCnt[i]);
         }
