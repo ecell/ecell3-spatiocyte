@@ -659,100 +659,32 @@ public:
             }
         }
     }
-  void setAdjTars(std::vector<unsigned>& aMols,
-               std::vector<unsigned>& aTars,
-               std::vector<std::vector<std::vector<unsigned> > >& aNextMols,
-               std::vector<std::vector<std::vector<unsigned> > >& aNextTars,
-               const unsigned currBox,
-               const std::vector<unsigned>& aRands,
-               const std::vector<unsigned>& anAdjoins)
+  void updateAdjMols(std::vector<std::vector<unsigned> >& aBoxAdjMols,
+                     std::vector<unsigned>& aMols,
+                     const std::vector<unsigned>& anAdjBoxes)
     {
       for(unsigned i(0); i != theBoxSize; ++i)
         {
-          std::vector<unsigned>& anAdjMols(anAdjBoxMols[i]);
-          std::vector<unsigned>& anAdjTars(anAdjBoxTars[i]);
-          anAdjTars.resize(0);
-          unsigned j(gsl_rng_uniform_int(theRng, aRands.size()));
-          for(unsigned i(0); i < anAdjMols.size(); ++i)
+          std::vector<unsigned>& adjMols(aBoxAdjMols[i]);
+          for(unsigned j(0); j < adjMols.size(); ++j)
             {
-              unsigned& aMol(anAdjMols[i]);
-              while(j == aRands.size())
-                {
-                  j = gsl_rng_uniform_int(theRng, aRands.size());
-                }
-              const unsigned aTar(anAdjoins[aMol*theAdjoinSize+
-                                  gsl_rng_uniform_int(theRng, theAdjoinSize)]);
-              if(aTar/theBoxMaxSize == currBox) 
-                {
-                  aTars.push_back(aTar);
-                }
-              else
-                {
-                  aNextMols[aTar/theBoxMaxSize][currBox].push_back(aMol);
-                  aNextTars[aTar/theBoxMaxSize][currBox].push_back(aTar);
-                  aMol = aMols.back();
-                  aMols.pop_back();
-                  --i;
-                }
-
-
-              const unsigned aTar(aTars[j]);
-              const unsigned aTarMol(aTar%theBoxMaxSize);
-              if(anIDs[aTarMol] == theVacantID)
-                {
-                  if(theWalkProbability == 1 ||
-                     gsl_rng_uniform(theRng) < theWalkProbability)
-                    {
-                      anIDs[aTarMol] = theID;
-                      theIDs[i][aMols[j]] = theVacantID;
-                      aMols[j] = aMols.back();
-                      aMols.pop_back();
-                    }
-                }
+              aMols.push_back(adjMols[i]);
             }
-        }
-
-
-
-
-      //TODO: get j from another rand list
-      unsigned j(gsl_rng_uniform_int(theRng, aRands.size()));
-      for(unsigned i(0); i < aMols.size(); ++i, ++j)
-        {
-          unsigned& aMol(aMols[i]);
-          while(j == aRands.size())
-            {
-              j = gsl_rng_uniform_int(theRng, aRands.size());
-            }
-          //const unsigned aTar(anAdjoins[aMol*theAdjoinSize+aRands[j]]);
-          const unsigned aTar(anAdjoins[aMol*theAdjoinSize+
-                              gsl_rng_uniform_int(theRng, theAdjoinSize)]);
-          if(aTar/theBoxMaxSize == currBox) 
-            {
-              aTars.push_back(aTar);
-            }
-          else
-            {
-              aNextMols[aTar/theBoxMaxSize][currBox].push_back(aMol);
-              aNextTars[aTar/theBoxMaxSize][currBox].push_back(aTar);
-              aMol = aMols.back();
-              aMols.pop_back();
-              --i;
-            }
+          adjMols.resize(0);
         }
     }
-  void walkAdjMols(std::vector<std::vector<unsigned> >& anAdjMols,
-                   std::vector<std::vector<unsigned> >& anAdjTars,
+  void walkAdjMols(std::vector<std::vector<unsigned> >& aBoxAdjMols,
+                   std::vector<std::vector<unsigned> >& aBoxAdjTars,
                    std::vector<unsigned short>& anIDs,
                    const std::vector<unsigned>& anAdjBoxes)
     {
       for(unsigned i(0); i != theBoxSize; ++i)
         {
-          std::vector<unsigned>& aMols(anAdjMols[i]);
-          std::vector<unsigned>& aTars(anAdjTars[i]);
-          for(unsigned j(0); j < aMols.size(); ++j)
+          std::vector<unsigned>& adjMols(aBoxAdjMols[i]);
+          std::vector<unsigned>& adjTars(aBoxAdjTars[i]);
+          for(unsigned j(0); j < adjMols.size(); ++j)
             {
-              const unsigned aTar(aTars[j]);
+              const unsigned aTar(adjTars[j]);
               const unsigned aTarMol(aTar%theBoxMaxSize);
               if(anIDs[aTarMol] == theVacantID)
                 {
@@ -760,12 +692,13 @@ public:
                      gsl_rng_uniform(theRng) < theWalkProbability)
                     {
                       anIDs[aTarMol] = theID;
-                      theIDs[i][aMols[j]] = theVacantID;
-                      aMols[j] = aMols.back();
-                      aMols.pop_back();
+                      theIDs[i][adjMols[j]] = theVacantID;
+                      adjMols[j] = adjMols.back();
+                      adjMols.pop_back();
                     }
                 }
             }
+          adjTars.resize(0);
         }
     }
   void walkMols(std::vector<unsigned>& aMols,
@@ -798,8 +731,7 @@ public:
         }
       for(unsigned i(0); i != theBoxSize; ++i)
         {
-          setAdjTars(theMols[i], theTars[i], theNextMols, theNextTars, i,
-                     theRands[i], theAdjoins[i]);
+          updateAdjMols(theNextMols[i], theMols[i], theAdjBoxes[i]);
         }
       for(unsigned i(0); i != theBoxSize; ++i)
         {
