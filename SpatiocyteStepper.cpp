@@ -244,7 +244,8 @@ Species* SpatiocyteStepper::addSpecies(Variable* aVariable)
   if(aSpeciesIter == theSpecies.end())
     {
       Species *aSpecies(new Species(this, aVariable, theSpecies.size(),
-                          getRng(), VoxelRadius, theIDs, theInfo, theAdjoins));
+                          getRng(), VoxelRadius, theIDs, theInfo, theAdjoins,
+                          theAdjBoxes));
       theSpecies.push_back(aSpecies);
       return aSpecies;
     }
@@ -744,7 +745,8 @@ void SpatiocyteStepper::registerComps()
   //Create one last species to represent a NULL Comp. This is for
   //voxels that do not belong to any Comps:
   Species* aSpecies(new Species(this, NULL, theSpecies.size(), getRng(),
-                                VoxelRadius, theIDs, theInfo, theAdjoins));
+                                VoxelRadius, theIDs, theInfo, theAdjoins,
+                                theAdjBoxes));
   theSpecies.push_back(aSpecies);
   aSpecies->setComp(NULL);
   theNullID = aSpecies->getID(); 
@@ -1041,9 +1043,9 @@ void SpatiocyteStepper::setLatticeProperties()
       theTotalLayers += 2;
       readjustSurfaceBoundarySizes();
     }
-  theBoxRows = 4;
-  theBoxCols = 4;
-  theBoxLayers = 4;
+  theBoxRows = 2;
+  theBoxCols = 2;
+  theBoxLayers = 2;
   theBoxSize = theBoxRows*theBoxCols*theBoxLayers;
   theRows.resize(theBoxSize);
   theCols.resize(theBoxSize);
@@ -1115,6 +1117,7 @@ void SpatiocyteStepper::setLatticeProperties()
             }
         }
     }
+  setAdjBoxes();
   const unsigned box(theBoxRows-1+
                      theBoxRows*(theBoxLayers-1)+
                      theBoxRows*theBoxLayers*(theBoxCols-1));
@@ -1159,6 +1162,173 @@ void SpatiocyteStepper::setLatticeProperties()
   theNullMol = 0;
   //Initialize the null coord:
 }
+
+void SpatiocyteStepper::setAdjBoxes()
+{
+  Comp* aRootComp(theComps[0]);
+  theAdjBoxes.resize(theBoxSize);
+  for(unsigned i(0); i != theBoxSize; ++i)
+    {
+      const unsigned bc(i/(theBoxRows*theBoxLayers)); 
+      const unsigned bl((i%(theBoxRows*theBoxLayers))/theBoxRows); 
+      const unsigned br((i%(theBoxRows*theBoxLayers))%theBoxRows); 
+      std::vector<unsigned> cols;
+      std::vector<unsigned> rows;
+      std::vector<unsigned> layers;
+      if(std::find(cols.begin(), cols.end(), bc) == cols.end())
+        {
+          cols.push_back(bc);
+        }
+      if(theBoxCols != 1)
+        {
+          if(!bc)
+            {
+              if(aRootComp->geometry == CUBOID &&
+                 aRootComp->yzPlane == PERIODIC)
+                {
+                  if(std::find(cols.begin(), cols.end(), theBoxCols-1) ==
+                     cols.end())
+                    {
+                      cols.push_back(theBoxCols-1);
+                    }
+                }
+            }
+          else
+            {
+              if(std::find(cols.begin(), cols.end(), bc-1) == cols.end())
+                {
+                  cols.push_back(bc-1);
+                }
+            }
+          if(bc == theBoxCols-1)
+            {
+              if(aRootComp->geometry == CUBOID &&
+                 aRootComp->yzPlane == PERIODIC && theBoxCols > 2)
+                {
+                  if(std::find(cols.begin(), cols.end(), 0) == cols.end())
+                    {
+                      cols.push_back(0);
+                    }
+                }
+            }
+          else
+            {
+              if(std::find(cols.begin(), cols.end(), bc+1) == cols.end())
+                {
+                  cols.push_back(bc+1);
+                }
+            }
+        }
+      if(std::find(rows.begin(), rows.end(), br) == rows.end())
+        {
+          rows.push_back(br);
+        }
+      if(theBoxRows != 1)
+        {
+          if(!br)
+            {
+              if(aRootComp->geometry == CUBOID &&
+                 aRootComp->xyPlane == PERIODIC)
+                {
+                  if(std::find(rows.begin(), rows.end(), theBoxRows-1) ==
+                     rows.end())
+                    {
+                      rows.push_back(theBoxRows-1);
+                    }
+                }
+            }
+          else
+            {
+              if(std::find(rows.begin(), rows.end(), br-1) == rows.end())
+                {
+                  rows.push_back(br-1);
+                }
+            }
+          if(br == theBoxRows-1)
+            {
+              if(aRootComp->geometry == CUBOID &&
+                 aRootComp->xyPlane == PERIODIC && theBoxRows > 2)
+                {
+                  if(std::find(rows.begin(), rows.end(), 0) == rows.end())
+                    {
+                      rows.push_back(0);
+                    }
+                }
+            }
+          else
+            {
+              if(std::find(rows.begin(), rows.end(), br+1) == rows.end())
+                {
+                  rows.push_back(br+1);
+                }
+            }
+        }
+      if(std::find(layers.begin(), layers.end(), bl) == layers.end())
+        {
+          layers.push_back(bl);
+        }
+      if(theBoxLayers != 1)
+        {
+          if(!bl)
+            {
+              if(aRootComp->geometry == CUBOID &&
+                 aRootComp->xzPlane == PERIODIC)
+                {
+                  if(std::find(layers.begin(), layers.end(), theBoxLayers-1) ==
+                     layers.end())
+                    {
+                      layers.push_back(theBoxLayers-1);
+                    }
+                }
+            }
+          else
+            {
+              if(std::find(layers.begin(), layers.end(), bl-1) == layers.end())
+                {
+                  layers.push_back(bl-1);
+                }
+            }
+          if(bl == theBoxLayers-1)
+            {
+              if(aRootComp->geometry == CUBOID &&
+                 aRootComp->xzPlane == PERIODIC && theBoxLayers > 2)
+                {
+                  if(std::find(layers.begin(), layers.end(), 0) == layers.end())
+                    {
+                      layers.push_back(0);
+                    }
+                }
+            }
+          else
+            {
+              if(std::find(layers.begin(), layers.end(), bl+1) == layers.end())
+                {
+                  layers.push_back(bl+1);
+                }
+            }
+        }
+      for(unsigned j(0); j != rows.size(); ++j)
+        {
+          const unsigned aRow(rows[j]);
+          for(unsigned k(0); k != cols.size(); ++k)
+            {
+              const unsigned aCol(cols[k]);
+              for(unsigned l(0); l != layers.size(); ++l)
+                {
+                  const unsigned aLayer(layers[l]); 
+                  const unsigned box(aRow+
+                                     theBoxRows*aLayer+
+                                     theBoxRows*theBoxLayers*aCol);
+                  if(box != i)
+                    {
+                      theAdjBoxes[i].push_back(box);
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 void SpatiocyteStepper::storeSimulationParameters()
 {
@@ -1488,7 +1658,7 @@ void SpatiocyteStepper::constructLattice(unsigned anID)
     }
   Comp* aRootComp(theComps[0]);
   const unsigned short rootID(aRootComp->vacantSpecies->getID());
-  for(unsigned i(anID*16); i != (anID*16)+16; ++i)
+  for(unsigned i(anID*2); i != (anID*2)+2; ++i)
     {
       const unsigned aSize(theRows[i]*theCols[i]*theLayers[i]);
       theIDs[i].resize(aSize);
@@ -1496,7 +1666,7 @@ void SpatiocyteStepper::constructLattice(unsigned anID)
       theAdjoins[i].resize(aSize*theAdjoinSize);
       theIDs[i][theNullMol] = theNullID;
     }
-  for(unsigned i(anID*16); i != (anID*16)+16; ++i)
+  for(unsigned i(anID*2); i != (anID*2)+2; ++i)
     {
       std::vector<unsigned short>& anIDs(theIDs[i]);
       std::vector<VoxelInfo>& anInfo(theInfo[i]);
@@ -1564,7 +1734,7 @@ void SpatiocyteStepper::concatenateLattice(unsigned anID)
     {
       runThreads();
     }
-  for(unsigned i(anID*16); i != (anID*16)+16; ++i)
+  for(unsigned i(anID*2); i != (anID*2)+2; ++i)
     {
       for(unsigned j(0); j != theIDs[i].size();  ++j)
         {

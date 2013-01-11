@@ -192,6 +192,7 @@ private:
   Variable* getVariable(System*, String const&);
   void runThreads();
   void setBoundaries();
+  void setAdjBoxes();
 private:
   bool isInitialized;
   bool isPeriodicEdge;
@@ -230,6 +231,7 @@ private:
   std::vector<std::vector<unsigned> > theAdjoins;
   std::vector<Process*> theExternInterruptedProcesses;
   std::vector<std::vector<unsigned> > theCoordMols;
+  std::vector<std::vector<unsigned> > theAdjBoxes;
   std::vector<unsigned> theCols;
   std::vector<unsigned> theRows;
   std::vector<unsigned> theLayers;
