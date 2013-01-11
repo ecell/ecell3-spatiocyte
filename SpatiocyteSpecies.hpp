@@ -28,6 +28,9 @@
 #include <algorithm>
 #include <Variable.hpp>
 #include <gsl/gsl_randist.h>
+#include <RandomLib/Random.hpp>
+#include <RandomLib/NormalDistribution.hpp>
+#include <RandomLib/RandomSelect.hpp>
 #include "SpatiocyteCommon.hpp"
 #include "SpatiocyteStepper.hpp"
 #include "SpatiocyteProcessInterface.hpp"
@@ -106,7 +109,6 @@ public:
     isTagged(false),
     isVacant(false),
     theID(anID),
-    theRandSteps(10000),
     theCollision(0),
     D(0),
     theDiffuseRadius(voxelRadius),
@@ -114,8 +116,7 @@ public:
     theMolRadius(voxelRadius),
     theVoxelRadius(voxelRadius),
     theWalkProbability(1),
-    //theRng(gsl_rng_alloc(gsl_rng_ranlxs2)),
-    theRng(aRng),
+    theRng(gsl_rng_alloc(gsl_rng_ranlxs2)),
     thePopulateProcess(NULL),
     theStepper(aStepper),
     theVariable(aVariable),
@@ -139,7 +140,7 @@ public:
       theRands.resize(theBoxSize);
       theInitMolSize.resize(theBoxSize),
       theTags.resize(theBoxSize);
-      theRandCnts.resize(theBoxSize);
+      rng.Reseed();
       unsigned anInitMolSize(0);
       if(getVariable())
         {
@@ -148,7 +149,6 @@ public:
       unsigned bal(anInitMolSize%theBoxSize);
       for(unsigned i(0); i != theBoxSize; ++i)
         {
-          theRandCnts[i] = 0;
           theInitMolSize[i] = anInitMolSize/theBoxSize;
           theNextMols[i].resize(theBoxSize);
           theNextTars[i].resize(theBoxSize);
@@ -426,11 +426,11 @@ public:
         }
       if(size() && theDiffusionInterval != libecs::INF)
         {
-          std::cout << getIDString() << std::endl;
           for(unsigned i(0); i != theBoxSize; ++i)
             {
-              setTars(theMols[i], theTars[i], theNextMols, theNextTars,
-                      theRandCnts[i], i, theRands[i], theAdjoins[i]);
+              setRands(theRands[i]);
+              setTars(theMols[i], theTars[i], theNextMols, theNextTars, i,
+                      theRands[i], theAdjoins[i]);
             }
         }
     }
@@ -606,34 +606,35 @@ public:
       std::cout << "error in species add collision" << std::endl;
       */
     }
-  void setRands(std::vector<unsigned>& aRands, const unsigned aSize)
+  void setRands(std::vector<unsigned>& aRands)
     {
-      aRands.resize(aSize*theRandSteps);
+      aRands.resize(1000000);
       for(unsigned i(0); i != aRands.size(); ++i)
         {
-          aRands[i] = gsl_rng_uniform_int(theRng, theAdjoinSize);
+          //aRands[i] = gsl_rng_uniform_int(theRng, theAdjoinSize);
+          aRands[i] = rng.IntegerC(unsigned(0), unsigned(theAdjoinSize-1));
         }
+      std::cout << "random numbers initialized." << std::endl;
     }
   void setTars(std::vector<unsigned>& aMols,
                std::vector<unsigned>& aTars,
                std::vector<std::vector<std::vector<unsigned> > >& aNextMols,
                std::vector<std::vector<std::vector<unsigned> > >& aNextTars,
-               unsigned& aRandCnt,
                const unsigned currBox,
-               std::vector<unsigned>& aRands,
+               const std::vector<unsigned>& aRands,
                const std::vector<unsigned>& anAdjoins)
     {
-      if(aRandCnt+aMols.size() > aRands.size())
-        {
-          setRands(aRands, aMols.size());
-          aRandCnt = 0;
-        }
       aTars.resize(0);
       //TODO: get j from another rand list
-      for(unsigned i(0); i < aMols.size(); ++i, ++aRandCnt)
+      unsigned j(gsl_rng_uniform_int(theRng, aRands.size()));
+      for(unsigned i(0); i < aMols.size(); ++i, ++j)
         {
           unsigned& aMol(aMols[i]);
-          const unsigned aTar(anAdjoins[aMol*theAdjoinSize+aRands[aRandCnt]]);
+          while(j == aRands.size())
+            {
+              j = gsl_rng_uniform_int(theRng, aRands.size());
+            }
+          const unsigned aTar(anAdjoins[aMol*theAdjoinSize+aRands[j]]);
           //const unsigned aTar(anAdjoins[aMol*theAdjoinSize+
           //                    gsl_rng_uniform_int(theRng, theAdjoinSize)]);
           if(aTar/theBoxMaxSize == currBox) 
@@ -730,8 +731,8 @@ public:
         }
       for(unsigned i(0); i != theBoxSize; ++i)
         {
-          setTars(theMols[i], theTars[i], theNextMols, theNextTars,
-                  theRandCnts[i], i, theRands[i], theAdjoins[i]);
+          setTars(theMols[i], theTars[i], theNextMols, theNextTars, i,
+                  theRands[i], theAdjoins[i]);
         }
 
           /*
@@ -1999,7 +2000,6 @@ private:
   bool isTagged;
   bool isVacant;
   const unsigned short theID;
-  const unsigned theRandSteps;
   unsigned lipStartMol;
   unsigned theAdjoinSize;
   unsigned theBoxMaxSize;
@@ -2035,7 +2035,6 @@ private:
   std::vector<unsigned> theMultiscaleIDs;
   std::vector<unsigned> theMultiscaleUnbindIDs;
   std::vector<unsigned> thePopulatableMols;
-  std::vector<unsigned> theRandCnts;
   std::vector<std::vector<Tag> > theTags;
   std::vector<double> theBendAngles;
   std::vector<double> theReactionProbabilities;
@@ -2057,6 +2056,7 @@ private:
   std::vector<std::vector<VoxelInfo> >& theInfo;
   std::vector<std::vector<unsigned short> >& theIDs;
   std::vector<std::vector<unsigned> > theIntersectLipids;
+  RandomLib::Random rng;          // Create r
 };
 
 
