@@ -428,8 +428,7 @@ public:
           for(unsigned i(0); i != theBoxSize; ++i)
             {
               setRands(theRands[i]);
-              setTars(theMols[i], theTars[i], theNextMols, theNextTars, i,
-                      theRands[i], theAdjoins[i]);
+              setTars(theTars[i], theRands[i], theAdjoins[i], theMols[i]);
             }
         }
     }
@@ -610,11 +609,94 @@ public:
       aRands.resize(1000000);
       for(unsigned i(0); i != aRands.size(); ++i)
         {
-          //aRands[i] = gsl_rng_uniform_int(theRng, theAdjoinSize);
-          aRands[i] = rng.IntegerC(unsigned(0), unsigned(theAdjoinSize-1));
+          aRands[i] = gsl_rng_uniform_int(theRng, theAdjoinSize);
+          //aRands[i] = rng.IntegerC(unsigned(0), unsigned(theAdjoinSize-1));
         }
       std::cout << "random numbers initialized." << std::endl;
     }
+    void setTars(std::vector<unsigned>& aTarMols,
+                  std::vector<unsigned>& aRands,
+                  const std::vector<unsigned>& anAdjoins,
+                  const std::vector<unsigned>& aMols)
+    {
+      if(!aRands.size())
+        {
+          aRands.resize(10000000);
+          for(unsigned i(0); i != aRands.size(); ++i)
+            {
+              aRands[i] = gsl_rng_uniform_int(theRng, theAdjoinSize);
+            }
+          std::cout << "random numbers initialized." << std::endl;
+        }
+      aTarMols.resize(0);
+      unsigned j(gsl_rng_uniform_int(theRng, aRands.size()));
+      for(unsigned i(0); i != aMols.size(); ++i, ++j)
+        {
+          while(j == aRands.size())
+            {
+              j = gsl_rng_uniform_int(theRng, aRands.size());
+            }
+          aTarMols.push_back(anAdjoins[aMols[i]*theAdjoinSize+aRands[j]]);
+          //aTarMols[i] = anAdjoins[aMols[i]*theAdjoinSize+gsl_rng_uniform_int(theRng, theAdjoinSize)];
+        }
+    }
+  void walkBox(std::vector<unsigned short>& anIDs,
+               std::vector<unsigned>& aMols,
+               std::vector<unsigned>& aTarMols,
+               const unsigned currBox, unsigned& aLastMolSize,
+               unsigned& i)
+    {
+      for(i = 0; i < aLastMolSize; ++i)
+        {
+          const unsigned aTar(aTarMols[i]);
+          const unsigned aTarMol(aTar%theBoxMaxSize);
+          if(aTar/theBoxMaxSize == currBox)
+            {
+              if(anIDs[aTarMol] == theVacantID)
+                {
+                  if(theWalkProbability == 1 ||
+                     gsl_rng_uniform(theRng) < theWalkProbability)
+                    {
+                      anIDs[aTarMol] = theID;
+                      anIDs[aMols[i]] = theVacantID;
+                      aMols[i] = aTarMol;
+                    }
+                }
+            }
+          else
+            {
+              const unsigned aBox(aTar/theBoxMaxSize);
+              if(theIDs[aBox][aTarMol] == theVacantID)
+                {
+                  if(theWalkProbability == 1 ||
+                     gsl_rng_uniform(theRng) < theWalkProbability)
+                    {
+                      anIDs[aTarMol] = theID;
+                      theMols[aBox].push_back(aTarMol); 
+                      aMols[i] = aMols.back();
+                      aMols.pop_back();
+                      aTarMols[i] = aTarMols.back();
+                      --i;
+                    }
+                }
+            }
+        }
+    }
+  void walk()
+    {
+      for(unsigned i(0); i != theBoxSize; ++i)
+        {
+          theLastMolSize[i] = theMols[i].size();
+        }
+      for(unsigned i(0); i != theBoxSize; ++i)
+        {
+          setTars(theTars[i], theRands[i], theAdjoins[i], theMols[i]);
+          walkBox(theIDs[i], theMols[i], theTars[i], i, theLastMolSize[i],
+                  theCnt[i]);
+        }
+    }
+  /*
+
   void setTars(std::vector<unsigned>& aMols,
                std::vector<unsigned>& aTars,
                std::vector<std::vector<std::vector<unsigned> > >& aNextMols,
@@ -626,18 +708,16 @@ public:
       aTars.resize(0);
       //TODO: get j from another rand list
       //unsigned j(gsl_rng_uniform_int(theRng, aRands.size()));
-      for(unsigned i(0); i < aMols.size(); ++i/*, ++j*/)
+      for(unsigned i(0); i < aMols.size(); ++i, ++j)
         {
           unsigned& aMol(aMols[i]);
-          /*
           while(j == aRands.size())
             {
               j = gsl_rng_uniform_int(theRng, aRands.size());
             }
-            */
-          //const unsigned aTar(anAdjoins[aMol*theAdjoinSize+aRands[j]]);
-          const unsigned aTar(anAdjoins[aMol*theAdjoinSize+
-                              gsl_rng_uniform_int(theRng, theAdjoinSize)]);
+          const unsigned aTar(anAdjoins[aMol*theAdjoinSize+aRands[j]]);
+          //const unsigned aTar(anAdjoins[aMol*theAdjoinSize+
+          //                    gsl_rng_uniform_int(theRng, theAdjoinSize)]);
           //const unsigned aTar(anAdjoins[aMol*theAdjoinSize+
           //                    rng.IntegerC(unsigned(0), unsigned(theAdjoinSize-1))]);
           if(aTar/theBoxMaxSize == currBox) 
@@ -738,65 +818,8 @@ public:
                   theRands[i], theAdjoins[i]);
         }
 
-          /*
-          else
-            {
-              unsigned targetMol(theTars[i]);
-              if(theIDs[theTars[i]].id == theComp->interfaceID)
-                {
-                  unsigned diffuseSize(theIDs[targetMol].diffuseSize);
-                  unsigned range(theInfo[targetMol].adjoinSize-diffuseSize);
-                  unsigned index(gsl_rng_uniform_int(theRng, range));
-                  targetMol = theAdjoins[targetMol*theAdjoinSize+diffuseSize+index];
-                }
-              const unsigned short& targetID(theIDs[targetMol].id);
-              if(theDiffusionInfluencedReactions[targetID])
-                {
-                  //If it meets the reaction probability:
-                  if(gsl_rng_uniform(theRng) < 
-                     theReactionProbabilities[targetID])
-                    { 
-                      Species* targetSpecies(theStepper->id2species(targetID));
-                      unsigned targetIndex(0);
-                      if(targetSpecies->getIsMultiscale() && theVacantSpecies ==
-                         targetSpecies->getMultiscaleVacantSpecies())
-                        {
-                          //Set an invalid index if the target molecule is
-                          //an implicitly represented multiscale molecule:
-                          targetIndex = targetSpecies->size();
-                        }
-                      else
-                        { 
-                          targetIndex = targetSpecies->getMolIndex(targetMol);
-                        }
-                      if(theCollision)
-                        { 
-                          ++collisionCnts[i];
-                          targetSpecies->addCollision(targetMol);
-                          if(theCollision != 2)
-                            {
-                              return;
-                            }
-                        }
-                      unsigned aMolSize(theMolSize);
-                      react(theMols[i], targetMol, i, targetIndex,
-                            targetSpecies);
-                      //If the reaction is successful, the last molecule of this
-                      //species will replace the pointer of i, so we need to 
-                      //decrement i to perform the diffusion on it. However, if
-                      //theMolSize didn't decrease, that means the
-                      //currently walked molecule was a product of this
-                      //reaction and so we don't need to walk it again by
-                      //decrementing i.
-                      if(theMolSize < aMolSize)
-                        {
-                          --i;
-                        }
-                    }
-                }
-            }
-            */
     }
+  */
   void walkMultiscale()
     {
       /*
