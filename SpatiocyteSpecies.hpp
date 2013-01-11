@@ -28,9 +28,8 @@
 #include <algorithm>
 #include <Variable.hpp>
 #include <gsl/gsl_randist.h>
-#include <RandomLib/Random.hpp>
-#include <RandomLib/NormalDistribution.hpp>
-#include <RandomLib/RandomSelect.hpp>
+#include "RandomLib/Random.hpp"
+#include "RandomLib/Random.cpp"
 #include "SpatiocyteCommon.hpp"
 #include "SpatiocyteStepper.hpp"
 #include "SpatiocyteProcessInterface.hpp"
@@ -626,17 +625,21 @@ public:
     {
       aTars.resize(0);
       //TODO: get j from another rand list
-      unsigned j(gsl_rng_uniform_int(theRng, aRands.size()));
-      for(unsigned i(0); i < aMols.size(); ++i, ++j)
+      //unsigned j(gsl_rng_uniform_int(theRng, aRands.size()));
+      for(unsigned i(0); i < aMols.size(); ++i/*, ++j*/)
         {
           unsigned& aMol(aMols[i]);
+          /*
           while(j == aRands.size())
             {
               j = gsl_rng_uniform_int(theRng, aRands.size());
             }
-          const unsigned aTar(anAdjoins[aMol*theAdjoinSize+aRands[j]]);
+            */
+          //const unsigned aTar(anAdjoins[aMol*theAdjoinSize+aRands[j]]);
+          const unsigned aTar(anAdjoins[aMol*theAdjoinSize+
+                              gsl_rng_uniform_int(theRng, theAdjoinSize)]);
           //const unsigned aTar(anAdjoins[aMol*theAdjoinSize+
-          //                    gsl_rng_uniform_int(theRng, theAdjoinSize)]);
+          //                    rng.IntegerC(unsigned(0), unsigned(theAdjoinSize-1))]);
           if(aTar/theBoxMaxSize == currBox) 
             {
               aTars.push_back(aTar);
