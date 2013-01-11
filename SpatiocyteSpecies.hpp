@@ -642,7 +642,7 @@ public:
     }
   void walkBox(std::vector<unsigned short>& anIDs,
                std::vector<unsigned>& aMols,
-               std::vector<unsigned>& aTarMols,
+               const std::vector<unsigned>& aTarMols,
                const unsigned currBox, unsigned& aLastMolSize,
                unsigned& i)
     {
@@ -671,12 +671,8 @@ public:
                   if(theWalkProbability == 1 ||
                      gsl_rng_uniform(theRng) < theWalkProbability)
                     {
-                      anIDs[aTarMol] = theID;
-                      theMols[aBox].push_back(aTarMol); 
-                      aMols[i] = aMols.back();
-                      aMols.pop_back();
-                      aTarMols[i] = aTarMols.back();
-                      --i;
+                      addMol(aBox, aTarMol, getTag(currBox, i));
+                      removeMolIndex(currBox, i);
                     }
                 }
             }
