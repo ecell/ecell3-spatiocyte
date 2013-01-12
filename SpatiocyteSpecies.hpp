@@ -427,8 +427,8 @@ public:
         {
           for(unsigned i(0); i != theBoxSize; ++i)
             {
-              setRands(theRands[i]);
-              setTars(theTars[i], theRands[i], theAdjoins[i], theMols[i]);
+              //setRands(theRands[i]);
+              setTars(theTars[i], theAdjoins[i], theMols[i]);
             }
         }
     }
@@ -614,55 +614,38 @@ public:
         }
       std::cout << "random numbers initialized." << std::endl;
     }
-    void setTars(std::vector<unsigned>& aTarMols,
-                  std::vector<unsigned>& aRands,
-                  const std::vector<unsigned>& anAdjoins,
-                  const std::vector<unsigned>& aMols)
+  void setTars(std::vector<unsigned>& aTarMols,
+               const std::vector<unsigned>& anAdjoins,
+               const std::vector<unsigned>& aMols)
     {
-      if(!aRands.size())
+      aTarMols.resize(aMols.size());
+      for(unsigned i(0); i != aMols.size(); ++i)
         {
-          aRands.resize(10000000);
-          for(unsigned i(0); i != aRands.size(); ++i)
-            {
-              aRands[i] = gsl_rng_uniform_int(theRng, theAdjoinSize);
-            }
-          std::cout << "random numbers initialized." << std::endl;
-        }
-      aTarMols.resize(0);
-      unsigned j(gsl_rng_uniform_int(theRng, aRands.size()));
-      for(unsigned i(0); i != aMols.size(); ++i, ++j)
-        {
-          while(j == aRands.size())
-            {
-              j = gsl_rng_uniform_int(theRng, aRands.size());
-            }
-          aTarMols.push_back(anAdjoins[aMols[i]*theAdjoinSize+aRands[j]]);
+          aTarMols[i] = anAdjoins[aMols[i]*theAdjoinSize+rng.IntegerC(11)];
+          //aRands[j] = rng.IntegerC(unsigned(0), unsigned(11));
+          //aTarMols[i] = anAdjoins[aMols[i]*theAdjoinSize+rng.IntegerC(unsigned(0), unsigned(theAdjoinSize-1))];
+          //aTarMols.push_back(anAdjoins[aMols[i]*theAdjoinSize+aRands[j]]);
           //aTarMols[i] = anAdjoins[aMols[i]*theAdjoinSize+gsl_rng_uniform_int(theRng, theAdjoinSize)];
         }
     }
   void walkBox(std::vector<unsigned short>& anIDs,
                std::vector<unsigned>& aMols,
                const std::vector<unsigned>& aTarMols,
-               const unsigned currBox, unsigned& aLastMolSize,
-               unsigned& i)
+               const unsigned currBox)
     {
-      for(i = 0; i < aLastMolSize; ++i)
+      for(unsigned i(0); i < aMols.size(); ++i)
         {
-          const unsigned aTar(aTarMols[i]);
-          const unsigned aTarMol(aTar%theBoxMaxSize);
-          if(aTar/theBoxMaxSize == currBox)
+          const unsigned aTarMol(aTarMols[i]%theBoxMaxSize);
+          if(aTarMols[i]/theBoxMaxSize == currBox)
             {
               if(anIDs[aTarMol] == theVacantID)
                 {
-                  if(theWalkProbability == 1 ||
-                     gsl_rng_uniform(theRng) < theWalkProbability)
-                    {
-                      anIDs[aTarMol] = theID;
-                      anIDs[aMols[i]] = theVacantID;
-                      aMols[i] = aTarMol;
-                    }
+                  anIDs[aTarMol] = theID;
+                  anIDs[aMols[i]] = theVacantID;
+                  aMols[i] = aTarMol;
                 }
             }
+          /*
           else
             {
               const unsigned aBox(aTar/theBoxMaxSize);
@@ -676,19 +659,21 @@ public:
                     }
                 }
             }
+            */
         }
     }
   void walk()
     {
+      /*
       for(unsigned i(0); i != theBoxSize; ++i)
         {
           theLastMolSize[i] = theMols[i].size();
         }
+        */
       for(unsigned i(0); i != theBoxSize; ++i)
         {
-          setTars(theTars[i], theRands[i], theAdjoins[i], theMols[i]);
-          walkBox(theIDs[i], theMols[i], theTars[i], i, theLastMolSize[i],
-                  theCnt[i]);
+          walkBox(theIDs[i], theMols[i], theTars[i], i);
+          setTars(theTars[i], theAdjoins[i], theMols[i]);
         }
     }
   /*
