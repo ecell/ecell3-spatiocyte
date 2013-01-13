@@ -622,18 +622,16 @@ public:
       for(unsigned i(0); i != aMols.size(); ++i)
         {
           aTarMols[i] = anAdjoins[aMols[i]*theAdjoinSize+rng.IntegerC(11)];
-          //aRands[j] = rng.IntegerC(unsigned(0), unsigned(11));
-          //aTarMols[i] = anAdjoins[aMols[i]*theAdjoinSize+rng.IntegerC(unsigned(0), unsigned(theAdjoinSize-1))];
-          //aTarMols.push_back(anAdjoins[aMols[i]*theAdjoinSize+aRands[j]]);
-          //aTarMols[i] = anAdjoins[aMols[i]*theAdjoinSize+gsl_rng_uniform_int(theRng, theAdjoinSize)];
         }
     }
   void walkBox(std::vector<unsigned short>& anIDs,
                std::vector<unsigned>& aMols,
                const std::vector<unsigned>& aTarMols,
-               const unsigned currBox)
+               const unsigned currBox,
+               unsigned& aLastMolSize,
+               unsigned& i)
     {
-      for(unsigned i(0); i < aMols.size(); ++i)
+      for(i = 0; i < aLastMolSize; ++i)
         {
           const unsigned aTarMol(aTarMols[i]%theBoxMaxSize);
           if(aTarMols[i]/theBoxMaxSize == currBox)
@@ -645,34 +643,27 @@ public:
                   aMols[i] = aTarMol;
                 }
             }
-          /*
           else
             {
-              const unsigned aBox(aTar/theBoxMaxSize);
+              const unsigned aBox(aTarMols[i]/theBoxMaxSize);
               if(theIDs[aBox][aTarMol] == theVacantID)
                 {
-                  if(theWalkProbability == 1 ||
-                     gsl_rng_uniform(theRng) < theWalkProbability)
-                    {
-                      addMol(aBox, aTarMol, getTag(currBox, i));
-                      removeMolIndex(currBox, i);
-                    }
+                  addMol(aBox, aTarMol, getTag(currBox, i));
+                  removeMolIndex(currBox, i);
                 }
             }
-            */
         }
     }
   void walk()
     {
-      /*
       for(unsigned i(0); i != theBoxSize; ++i)
         {
           theLastMolSize[i] = theMols[i].size();
         }
-        */
       for(unsigned i(0); i != theBoxSize; ++i)
         {
-          walkBox(theIDs[i], theMols[i], theTars[i], i);
+          walkBox(theIDs[i], theMols[i], theTars[i], i, theLastMolSize[i],
+                  theCnt[i]);
           setTars(theTars[i], theAdjoins[i], theMols[i]);
         }
     }
