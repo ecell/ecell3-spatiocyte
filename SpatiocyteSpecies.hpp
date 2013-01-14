@@ -134,8 +134,6 @@ public:
       theCnt.resize(theBoxSize);
       theMols.resize(theBoxSize);
       theTars.resize(theBoxSize);
-      theNextMols.resize(theBoxSize);
-      theNextTars.resize(theBoxSize);
       theRands.resize(theBoxSize);
       theInitMolSize.resize(theBoxSize),
       theTags.resize(theBoxSize);
@@ -149,12 +147,22 @@ public:
       for(unsigned i(0); i != theBoxSize; ++i)
         {
           theInitMolSize[i] = anInitMolSize/theBoxSize;
-          theNextMols[i].resize(theBoxSize);
-          theNextTars[i].resize(theBoxSize);
           if(bal)
             {
               theInitMolSize[i] += 1;
               --bal;
+            }
+        }
+      theNextMols.resize(2);
+      theNextTars.resize(2);
+      for(unsigned i(0); i != 2; ++i)
+        {
+          theNextMols[i].resize(theBoxSize);
+          theNextTars[i].resize(theBoxSize);
+          for(unsigned j(0); j != theBoxSize; ++j)
+            {
+              theNextMols[i][j].resize(theBoxSize);
+              theNextTars[i][j].resize(theBoxSize);
             }
         }
       theAdjoinSize = anAdjoinSize;
@@ -423,25 +431,13 @@ public:
                 }
             }
         }
+      isToggled = false;
       if(size() && theDiffusionInterval != libecs::INF)
         {
           for(unsigned i(0); i != theBoxSize; ++i)
             {
-              std::cout << "i:" << i << std::endl;
-              std::cout << "mol size before:" << theMols[i].size() << " tar" << theTars[i].size() << std::endl;
-              setTars(theMols[i], theTars[i], theNextMols, theNextTars, i,
+              setTars(theMols[i], theTars[i], theNextMols[0], theNextTars[0], i,
                       theAdjoins[i]);
-              std::cout << "mol size after:" << theMols[i].size() << " tar" << theTars[i].size() << std::endl;
-            }
-          for(unsigned i(0); i != theBoxSize; ++i)
-            {
-              std::cout << "i:" << i << std::endl;
-              std::cout << "mol size before:" << theMols[i].size() << " tar" << theTars[i].size() << std::endl;
-              for(unsigned j(0); j != theAdjBoxes[i].size(); ++j)
-                {
-                  std::cout << "j:" << j << " adj:" << theAdjBoxes[i][j] << std::endl;
-                  std::cout << "next mols:" << theNextMols[i][theAdjBoxes[i][j]].size() << " tar:" << theNextTars[i][theAdjBoxes[i][j]].size() << std::endl;
-                }
             }
         }
     }
@@ -617,74 +613,6 @@ public:
       std::cout << "error in species add collision" << std::endl;
       */
     }
-  /*
-  void setTars(std::vector<unsigned>& aTarMols,
-               const std::vector<unsigned>& anAdjoins,
-               const std::vector<unsigned>& aMols)
-    {
-      aTarMols.resize(aMols.size());
-      for(unsigned i(0); i != aMols.size(); ++i)
-        {
-          aTarMols[i] = anAdjoins[aMols[i]*theAdjoinSize+rng.IntegerC(11)];
-        }
-    }
-  void walkBox(std::vector<unsigned short>& anIDs,
-               std::vector<unsigned>& aMols,
-               const std::vector<unsigned>& aTarMols,
-               const unsigned currBox,
-               unsigned& aLastMolSize,
-               unsigned& i)
-    {
-      for(i = 0; i < aLastMolSize; ++i)
-        {
-          const unsigned aTarMol(aTarMols[i]%theBoxMaxSize);
-          if(aTarMols[i]/theBoxMaxSize == currBox)
-            {
-              if(anIDs[aTarMol] == theVacantID)
-                {
-                  anIDs[aTarMol] = theID;
-                  anIDs[aMols[i]] = theVacantID;
-                  aMols[i] = aTarMol;
-                }
-            }
-          else
-            {
-              const unsigned aBox(aTarMols[i]/theBoxMaxSize);
-              if(theIDs[aBox][aTarMol] == theVacantID)
-                {
-                  addMol(aBox, aTarMol, getTag(currBox, i));
-                  removeMolIndex(currBox, i);
-                }
-            }
-        }
-    }
-  void walk()
-    {
-      for(unsigned i(0); i != theBoxSize; ++i)
-        {
-          theLastMolSize[i] = theMols[i].size();
-        }
-      for(unsigned i(0); i != theBoxSize; ++i)
-        {
-          walkBox(theIDs[i], theMols[i], theTars[i], i, theLastMolSize[i],
-                  theCnt[i]);
-          setTars(theTars[i], theAdjoins[i], theMols[i]);
-        }
-    }
-  */
-
-  /*
-  void setTars(std::vector<unsigned>& aTarMols,
-               const std::vector<unsigned>& anAdjoins,
-               const std::vector<unsigned>& aMols)
-    {
-      aTarMols.resize(aMols.size());
-      for(unsigned i(0); i != aMols.size(); ++i)
-        {
-          aTarMols[i] = anAdjoins[aMols[i]*theAdjoinSize+rng.IntegerC(11)];
-        }
-    }
-    */
   void setTars(std::vector<unsigned>& aMols,
                std::vector<unsigned>& aTars,
                std::vector<std::vector<std::vector<unsigned> > >& aNextMols,
@@ -697,9 +625,6 @@ public:
         {
           unsigned& aMol(aMols[i]);
           const unsigned aTar(anAdjoins[aMol*theAdjoinSize+rng.IntegerC(11)]);
-          //const unsigned aTar(anAdjoins[aMol*theAdjoinSize+aRands[j]]);
-          //const unsigned aTar(anAdjoins[aMol*theAdjoinSize+
-          //                    gsl_rng_uniform_int(theRng, theAdjoinSize)]);
           if(aTar/theBoxMaxSize == currBox) 
             {
               aTars[i] = aTar;
@@ -779,22 +704,33 @@ public:
     }
   void walk()
     {
+      unsigned a(0);
+      unsigned b(1);
+      if(isToggled)
+        {
+          a = 1;
+          b = 0;
+          isToggled = false;
+        }
+      else
+        {
+          isToggled = true;
+        }
       for(unsigned i(0); i != theBoxSize; ++i)
         {
           walkMols(theMols[i], theTars[i], theIDs[i]);
-          walkAdjMols(theMols[i], theNextMols[i], theNextTars[i], theIDs[i],
-                      theAdjBoxes[i]);
+          walkAdjMols(theMols[i], theNextMols[a][i], theNextTars[a][i],
+                      theIDs[i], theAdjBoxes[i]);
         }
       for(unsigned i(0); i != theBoxSize; ++i)
         {
-          updateAdjMols(theNextMols, theMols[i], i, theAdjBoxes[i]);
+          updateAdjMols(theNextMols[a], theMols[i], i, theAdjBoxes[i]);
         }
       for(unsigned i(0); i != theBoxSize; ++i)
         {
-          setTars(theMols[i], theTars[i], theNextMols, theNextTars, i,
+          setTars(theMols[i], theTars[i], theNextMols[b], theNextTars[b], i,
                   theAdjoins[i]);
         }
-
     }
   void walkMultiscale()
     {
@@ -2000,6 +1936,7 @@ private:
   bool isSubunitInitialized;
   bool isTag;
   bool isTagged;
+  bool isToggled;
   bool isVacant;
   const unsigned short theID;
   unsigned lipStartMol;
@@ -2051,8 +1988,8 @@ private:
   std::vector<std::vector<unsigned> > theMols;
   std::vector<std::vector<unsigned> > theTars;
   std::vector<std::vector<unsigned> > theRands;
-  std::vector<std::vector<std::vector<unsigned> > > theNextMols;
-  std::vector<std::vector<std::vector<unsigned> > > theNextTars;
+  std::vector<std::vector<std::vector<std::vector<unsigned> > > > theNextMols;
+  std::vector<std::vector<std::vector<std::vector<unsigned> > > > theNextTars;
   std::vector<std::vector<unsigned> >& theAdjoins;
   std::vector<std::vector<unsigned> >& theAdjBoxes;
   std::vector<std::vector<VoxelInfo> >& theInfo;
