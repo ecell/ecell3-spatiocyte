@@ -192,7 +192,8 @@ public:
     }
   void walk() const
     {
-      theDiffusionSpecies->walk();
+      theDiffusionSpecies->walk(0, 0, 1);
+      theDiffusionSpecies->walkSecond(0, 0, 1);
     }
   void walkVacant() const
     {

@@ -620,14 +620,14 @@ public:
                const unsigned currBox,
                const std::vector<unsigned>& anAdjoins)
     {
-      aTars.resize(aMols.size());
+      aTars.resize(0);
       for(unsigned i(0); i < aMols.size(); ++i)
         {
           unsigned& aMol(aMols[i]);
           const unsigned aTar(anAdjoins[aMol*theAdjoinSize+rng.IntegerC(11)]);
           if(aTar/theBoxMaxSize == currBox) 
             {
-              aTars[i] = aTar;
+              aTars.push_back(aTar);
             }
           else
             {
@@ -639,20 +639,24 @@ public:
             }
         }
     }
-  void updateAdjMols(std::vector<std::vector<std::vector<unsigned> > >&
-                     aBoxAdjMols,
-                     std::vector<unsigned>& aMols,
-                     unsigned currBox,
-                     const std::vector<unsigned>& anAdjBoxes)
+  void walkMols(std::vector<unsigned>& aMols,
+                const std::vector<unsigned>& aTars,
+                std::vector<unsigned short>& anIDs)
     {
-      for(unsigned i(0); i != anAdjBoxes.size(); ++i)
+      for(unsigned i(0); i < aMols.size(); ++i)
         {
-          std::vector<unsigned>& adjMols(aBoxAdjMols[anAdjBoxes[i]][currBox]);
-          for(unsigned j(0); j < adjMols.size(); ++j)
+          const unsigned aTar(aTars[i]);
+          const unsigned aTarMol(aTar%theBoxMaxSize);
+          if(anIDs[aTarMol] == theVacantID)
             {
-              aMols.push_back(adjMols[j]);
+              if(theWalkProbability == 1 ||
+                 gsl_rng_uniform(theRng) < theWalkProbability)
+                {
+                  anIDs[aTarMol] = theID;
+                  anIDs[aMols[i]] = theVacantID;
+                  aMols[i] = aTarMol;
+                }
             }
-          adjMols.resize(0);
         }
     }
   void walkAdjMols(std::vector<unsigned>& aMols,
@@ -682,51 +686,64 @@ public:
           adjTars.resize(0);
         }
     }
-  void walkMols(std::vector<unsigned>& aMols,
-                const std::vector<unsigned>& aTars,
-                std::vector<unsigned short>& anIDs)
+  void updateAdjMols(std::vector<std::vector<std::vector<unsigned> > >&
+                     aBoxAdjMols,
+                     std::vector<unsigned>& aMols,
+                     unsigned currBox,
+                     const std::vector<unsigned>& anAdjBoxes)
     {
-      for(unsigned i(0); i < aMols.size(); ++i)
+      for(unsigned i(0); i != anAdjBoxes.size(); ++i)
         {
-          const unsigned aTar(aTars[i]);
-          const unsigned aTarMol(aTar%theBoxMaxSize);
-          if(anIDs[aTarMol] == theVacantID)
+          std::vector<unsigned>& adjMols(aBoxAdjMols[anAdjBoxes[i]][currBox]);
+          for(unsigned j(0); j < adjMols.size(); ++j)
             {
-              if(theWalkProbability == 1 ||
-                 gsl_rng_uniform(theRng) < theWalkProbability)
-                {
-                  anIDs[aTarMol] = theID;
-                  anIDs[aMols[i]] = theVacantID;
-                  aMols[i] = aTarMol;
-                }
+              aMols.push_back(adjMols[j]);
             }
+          adjMols.resize(0);
         }
     }
-  void walk()
+  void walk(const unsigned anID, unsigned a, unsigned b)
     {
-      unsigned a(0);
-      unsigned b(1);
-      if(isToggled)
+      if(!anID)
         {
-          a = 1;
-          b = 0;
-          isToggled = false;
+          if(isToggled)
+            {
+              a = 1;
+              b = 0;
+            }
+          theStepper->runThreads();
         }
-      else
-        {
-          isToggled = true;
-        }
-      for(unsigned i(0); i != theBoxSize; ++i)
+      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
         {
           walkMols(theMols[i], theTars[i], theIDs[i]);
+        }
+      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+        {
           walkAdjMols(theMols[i], theNextMols[a][i], theNextTars[a][i],
                       theIDs[i], theAdjBoxes[i]);
         }
-      for(unsigned i(0); i != theBoxSize; ++i)
+    }
+  void walkSecond(const unsigned anID, unsigned a, unsigned b)
+    {
+      if(!anID)
+        {
+          if(isToggled)
+            {
+              a = 1;
+              b = 0;
+              isToggled = false;
+            }
+          else
+            {
+              isToggled = true;
+            }
+          theStepper->runThreads();
+        }
+      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
         {
           updateAdjMols(theNextMols[a], theMols[i], i, theAdjBoxes[i]);
         }
-      for(unsigned i(0); i != theBoxSize; ++i)
+      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
         {
           setTars(theMols[i], theTars[i], theNextMols[b], theNextTars[b], i,
                   theAdjoins[i]);

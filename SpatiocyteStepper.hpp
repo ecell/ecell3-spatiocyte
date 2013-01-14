@@ -115,6 +115,7 @@ public:
   void constructLattice(unsigned);
   void concatenateLattice(unsigned);
   void constructLattice();
+  void runThreads();
 
 private:
   void initializeThreads();
@@ -190,7 +191,6 @@ private:
   unsigned coord2layer(unsigned);
   Comp* registerComp(System*, std::vector<Comp*>*);
   Variable* getVariable(System*, String const&);
-  void runThreads();
   void setBoundaries();
   void setAdjBoxes();
 private:

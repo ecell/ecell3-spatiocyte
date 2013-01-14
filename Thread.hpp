@@ -36,6 +36,7 @@
 #include <sstream>
 #include <pthread.h>
 #include "SpatiocyteStepper.hpp"
+#include "SpatiocyteSpecies.hpp"
 
 #define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
 #define barrier() __asm__ __volatile__("": : :"memory")
@@ -47,12 +48,13 @@ class Thread
 { 
 public: 
   Thread(unsigned anID, unsigned& aThreadsRunning, char& aFlagA, char& aFlagB,
-         SpatiocyteStepper& aStepper):
+         std::vector<Species*>& aSpecies, SpatiocyteStepper& aStepper):
     theID(anID),
     theStepper(aStepper),
     nThreadsRunning(aThreadsRunning),
     flagA(aFlagA),
-    flagB(aFlagB)
+    flagB(aFlagB),
+    theSpecies(aSpecies)
   {
     std::ostringstream fileName;
     fileName << "thread" << anID << ".out" << std::ends;
@@ -86,13 +88,33 @@ protected:
          }
        theStepper.concatenateLattice(theID);
        __sync_fetch_and_add(&nThreadsRunning, 1);
-       /*
-       while(ACCESS_ONCE(flagA) == FLAG_STOP)
+       for(;;)
          {
-           continue;
+           while(ACCESS_ONCE(flagA) == FLAG_STOP)
+             {
+               continue;
+             }
+           theSpecies[0]->walk(theID, 0, 1);
+           __sync_fetch_and_add(&nThreadsRunning, 1);
+           while(ACCESS_ONCE(flagB) == FLAG_STOP)
+             {
+               continue;
+             }
+           theSpecies[0]->walkSecond(theID, 0, 1);
+           __sync_fetch_and_add(&nThreadsRunning, 1);
+           while(ACCESS_ONCE(flagA) == FLAG_STOP)
+             {
+               continue;
+             }
+           theSpecies[0]->walk(theID, 1, 0);
+           __sync_fetch_and_add(&nThreadsRunning, 1);
+           while(ACCESS_ONCE(flagB) == FLAG_STOP)
+             {
+               continue;
+             }
+           theSpecies[0]->walkSecond(theID, 1, 0);
+           __sync_fetch_and_add(&nThreadsRunning, 1);
          }
-       __sync_fetch_and_add(&nThreadsRunning, 1);
-       */
      }
 private: 
    static void* enter(void* arg)
@@ -107,6 +129,7 @@ private:
   char& flagA;
   char& flagB;
   std::ofstream out;
+  std::vector<Species*>& theSpecies;
 };
 
 #endif /* __Thread_hpp */

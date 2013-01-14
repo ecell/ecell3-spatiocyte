@@ -150,7 +150,8 @@ void SpatiocyteStepper::initializeThreads()
   flagB = FLAG_STOP;
   for(unsigned i(1); i != theThreadSize; ++i)
     {
-      Thread* aThread(new Thread(i, nThreadsRunning, flagA, flagB, *this));
+      Thread* aThread(new Thread(i, nThreadsRunning, flagA, flagB, theSpecies,
+                                 *this));
       aThread->create();
       theThreads.push_back(aThread);
     }
