@@ -835,7 +835,7 @@ public:
           theStepper->runThreads();
         }
       //for(unsigned i(0); i != theBoxSize; ++i)
-      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+      for(unsigned i(anID*4); i != (anID*4)+4; ++i)
         {
           updateBoxMols(theBorderMols[r][i], theBorderTars[r][i], theMols[i],
                         theTars[i], theAdjBoxes[i]);
