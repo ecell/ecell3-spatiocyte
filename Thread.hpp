@@ -100,19 +100,7 @@ protected:
              {
                continue;
              }
-           theSpecies[0]->walkSecond(theID, 0, 1);
-           __sync_fetch_and_add(&nThreadsRunning, 1);
-           while(ACCESS_ONCE(flagA) == FLAG_STOP)
-             {
-               continue;
-             }
            theSpecies[0]->walk(theID, 1, 0);
-           __sync_fetch_and_add(&nThreadsRunning, 1);
-           while(ACCESS_ONCE(flagB) == FLAG_STOP)
-             {
-               continue;
-             }
-           theSpecies[0]->walkSecond(theID, 1, 0);
            __sync_fetch_and_add(&nThreadsRunning, 1);
          }
      }

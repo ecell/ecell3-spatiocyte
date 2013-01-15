@@ -135,8 +135,10 @@ public:
       theMols.resize(theBoxSize);
       theTars.resize(theBoxSize);
       theRands.resize(theBoxSize);
-      theInitMolSize.resize(theBoxSize),
+      theInitMolSize.resize(theBoxSize);
       theTags.resize(theBoxSize);
+      theRepeatAdjMols.resize(theBoxSize);
+      theRepeatAdjTars.resize(theBoxSize);
       rng.Reseed();
       unsigned anInitMolSize(0);
       if(getVariable())
@@ -147,22 +149,36 @@ public:
       for(unsigned i(0); i != theBoxSize; ++i)
         {
           theInitMolSize[i] = anInitMolSize/theBoxSize;
+          theRepeatAdjMols[i].resize(theBoxSize);
+          theRepeatAdjTars[i].resize(theBoxSize);
           if(bal)
             {
               theInitMolSize[i] += 1;
               --bal;
             }
         }
-      theNextMols.resize(2);
-      theNextTars.resize(2);
+      theAdjMols.resize(2);
+      theAdjTars.resize(2);
+      theAdjAdjMols.resize(2);
+      theAdjAdjTars.resize(2);
+      theBorderMols.resize(2);
+      theBorderTars.resize(2);
       for(unsigned i(0); i != 2; ++i)
         {
-          theNextMols[i].resize(theBoxSize);
-          theNextTars[i].resize(theBoxSize);
+          theAdjMols[i].resize(theBoxSize);
+          theAdjTars[i].resize(theBoxSize);
+          theAdjAdjMols[i].resize(theBoxSize);
+          theAdjAdjTars[i].resize(theBoxSize);
+          theBorderMols[i].resize(theBoxSize);
+          theBorderTars[i].resize(theBoxSize);
           for(unsigned j(0); j != theBoxSize; ++j)
             {
-              theNextMols[i][j].resize(theBoxSize);
-              theNextTars[i][j].resize(theBoxSize);
+              theAdjMols[i][j].resize(theBoxSize);
+              theAdjTars[i][j].resize(theBoxSize);
+              theAdjAdjMols[i][j].resize(theBoxSize);
+              theAdjAdjTars[i][j].resize(theBoxSize);
+              theBorderMols[i][j].resize(theBoxSize);
+              theBorderTars[i][j].resize(theBoxSize);
             }
         }
       theAdjoinSize = anAdjoinSize;
@@ -436,7 +452,7 @@ public:
         {
           for(unsigned i(0); i != theBoxSize; ++i)
             {
-              setTars(theMols[i], theTars[i], theNextMols[0], theNextTars[0], i,
+              setTars(theMols[i], theTars[i], theAdjMols[0], theAdjTars[0], i,
                       theAdjoins[i]);
             }
         }
@@ -681,72 +697,174 @@ public:
                   aMols.push_back(aTarMol);
                   adjMols[j] = adjMols.back();
                   adjMols.pop_back();
+                  adjTars[j] = adjTars.back();
+                  adjTars.pop_back();
+                  --j;
                 }
             }
           adjTars.resize(0);
         }
     }
-  void updateAdjMols(std::vector<std::vector<std::vector<unsigned> > >&
-                     aBoxAdjMols,
-                     std::vector<unsigned>& aMols,
-                     unsigned currBox,
-                     const std::vector<unsigned>& anAdjBoxes)
+  void setAdjTars(std::vector<std::vector<std::vector<unsigned> > >&
+                  aBorderMols,
+                  std::vector<std::vector<std::vector<unsigned> > >&
+                  aBorderTars,
+                  std::vector<std::vector<std::vector<unsigned> > >&
+                  anAdjAdjMols,
+                  std::vector<std::vector<std::vector<unsigned> > >&
+                  anAdjAdjTars,
+                  std::vector<std::vector<unsigned> >& aRepeatAdjMols,
+                  std::vector<std::vector<unsigned> >& aRepeatAdjTars,
+                  std::vector<std::vector<unsigned> >& anAdjMols,
+                  const std::vector<unsigned>& anAdjBoxes,
+                  const unsigned currBox)
+
     {
       for(unsigned i(0); i != anAdjBoxes.size(); ++i)
         {
-          std::vector<unsigned>& adjMols(aBoxAdjMols[anAdjBoxes[i]][currBox]);
+          const unsigned adjBox(anAdjBoxes[i]);
+          const std::vector<unsigned>& anAdjoins(theAdjoins[adjBox]);
+          std::vector<unsigned>& adjMols(anAdjMols[adjBox]);
           for(unsigned j(0); j < adjMols.size(); ++j)
             {
-              aMols.push_back(adjMols[j]);
+              const unsigned aMol(adjMols[j]);
+              const unsigned aTar(anAdjoins[aMol*theAdjoinSize+
+                                  rng.IntegerC(11)]);
+              const unsigned aBox(aTar/theBoxMaxSize);
+              if(aBox == currBox) 
+                {
+                  aRepeatAdjMols[adjBox].push_back(aMol);
+                  aRepeatAdjTars[adjBox].push_back(aTar);
+                }
+              else if(aBox == adjBox)
+                {
+                  aBorderMols[adjBox][currBox].push_back(aMol);
+                  aBorderTars[adjBox][currBox].push_back(aTar);
+                }
+              else
+                {
+                  anAdjAdjMols[aBox][currBox].push_back(theBoxMaxSize*adjBox+
+                                                         aMol);
+                  anAdjAdjTars[aBox][currBox].push_back(aTar);
+                }
             }
           adjMols.resize(0);
         }
     }
-  void walk(const unsigned anID, unsigned a, unsigned b)
+
+  void updateBoxMols(std::vector<std::vector<unsigned> >& aBorderMols,
+                     std::vector<std::vector<unsigned> >& aBorderTars,
+                     std::vector<unsigned>& aMols,
+                     std::vector<unsigned>& aTars,
+                     const std::vector<unsigned>& anAdjBoxes)
     {
-      if(!anID)
+      for(unsigned i(0); i != anAdjBoxes.size(); ++i)
         {
-          if(isToggled)
+          const unsigned adjBox(anAdjBoxes[i]);
+          std::vector<unsigned>& borderMols(aBorderMols[adjBox]);
+          std::vector<unsigned>& borderTars(aBorderTars[adjBox]);
+          for(unsigned j(0); j < borderMols.size(); ++j)
             {
-              a = 1;
-              b = 0;
+              aMols.push_back(borderMols[j]);
+              aTars.push_back(borderTars[j]);
             }
-          theStepper->runThreads();
-        }
-      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
-        {
-          walkMols(theMols[i], theTars[i], theIDs[i]);
-        }
-      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
-        {
-          walkAdjMols(theMols[i], theNextMols[a][i], theNextTars[a][i],
-                      theIDs[i], theAdjBoxes[i]);
+          borderMols.resize(0);
+          borderTars.resize(0);
         }
     }
-  void walkSecond(const unsigned anID, unsigned a, unsigned b)
+  void updateAdjMols(std::vector<std::vector<unsigned> >& aRepeatAdjMols,
+                     std::vector<std::vector<unsigned> >& aRepeatAdjTars,
+                     std::vector<std::vector<unsigned> >& anAdjMols,
+                     std::vector<std::vector<unsigned> >& anAdjTars,
+                     const std::vector<unsigned>& anAdjBoxes)
+    {
+      for(unsigned i(0); i != anAdjBoxes.size(); ++i)
+        {
+          const unsigned adjBox(anAdjBoxes[i]);
+          std::vector<unsigned>& repeatAdjMols(aRepeatAdjMols[adjBox]);
+          std::vector<unsigned>& repeatAdjTars(aRepeatAdjTars[adjBox]);
+          std::vector<unsigned>& adjMols(anAdjMols[adjBox]);
+          std::vector<unsigned>& adjTars(anAdjTars[adjBox]);
+          for(unsigned j(0); j != repeatAdjMols.size(); ++j)
+            {
+              adjMols.push_back(repeatAdjMols[i]);
+              adjTars.push_back(repeatAdjTars[i]);
+            }
+          repeatAdjMols.resize(0);
+          repeatAdjTars.resize(0);
+        }
+    }
+  void updateAdjAdjMols(std::vector<std::vector<unsigned> >& anAdjAdjMols,
+                        std::vector<std::vector<unsigned> >& anAdjAdjTars,
+                        std::vector<std::vector<unsigned> >& anAdjMols,
+                        std::vector<std::vector<unsigned> >& anAdjTars)
+
+    {
+      //for(unsigned i(0); i != anAdjAdjBoxes.size(); ++i)
+      for(unsigned i(0); i != theBoxSize; ++i)
+        {
+          //const unsigned adjAdjBox(anAdjAdjBoxes[i]);
+          const unsigned adjAdjBox(i);
+          std::vector<unsigned>& adjAdjMols(anAdjAdjMols[adjAdjBox]);
+          std::vector<unsigned>& adjAdjTars(anAdjAdjTars[adjAdjBox]);
+          for(unsigned j(0); j != adjAdjMols.size(); ++j)
+            {
+              const unsigned aMol(adjAdjMols[j]);
+              const unsigned aBox(aMol/theBoxMaxSize);
+              const unsigned a(aMol%theBoxMaxSize);
+              const unsigned b(aMol-theBoxMaxSize*aBox);
+              if(a != b)
+                {
+                  std::cout << "--------------------------------------------------------------------------" << std::endl;
+                }
+              anAdjMols[aBox].push_back(b);
+              anAdjTars[aBox].push_back(adjAdjTars[j]);
+            }
+          adjAdjMols.resize(0);
+          adjAdjTars.resize(0);
+        }
+    }
+  void walk(const unsigned anID, unsigned r, unsigned w)
     {
       if(!anID)
         {
           if(isToggled)
             {
-              a = 1;
-              b = 0;
+              r = 1;
+              w = 0;
               isToggled = false;
             }
           else
             {
               isToggled = true;
             }
-          theStepper->runThreads();
+          //theStepper->runThreads();
         }
-      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+      for(unsigned i(0); i != theBoxSize; ++i)
+      //for(unsigned i(anID*2); i != (anID*2)+2; ++i)
         {
-          updateAdjMols(theNextMols[a], theMols[i], i, theAdjBoxes[i]);
-        }
-      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
-        {
-          setTars(theMols[i], theTars[i], theNextMols[b], theNextTars[b], i,
+          std::cout << "i:" << i << std::endl;
+          updateBoxMols(theBorderMols[r][i], theBorderTars[r][i], theMols[i],
+                        theTars[i], theAdjBoxes[i]);
+          std::cout << "a" << std::endl;
+          walkMols(theMols[i], theTars[i], theIDs[i]);
+          std::cout << "b" << std::endl;
+          updateAdjMols(theRepeatAdjMols[i], theRepeatAdjTars[i],
+                        theAdjMols[r][i], theAdjTars[r][i], theAdjBoxes[i]);
+          std::cout << "c" << std::endl;
+          updateAdjAdjMols(theAdjAdjMols[r][i], theAdjAdjTars[r][i],
+                        theAdjMols[r][i], theAdjTars[r][i]);
+          std::cout << "d" << std::endl;
+          walkAdjMols(theMols[i], theAdjMols[r][i], theAdjTars[r][i],
+                      theIDs[i], theAdjBoxes[i]);
+          std::cout << "e" << std::endl;
+          setAdjTars(theBorderMols[w], theBorderTars[w], theAdjAdjMols[w],
+                     theAdjAdjTars[w], theRepeatAdjMols[i],
+                     theRepeatAdjTars[i], theAdjMols[r][i], theAdjBoxes[i], i);
+          std::cout << "f" << std::endl;
+          setTars(theMols[i], theTars[i], theAdjMols[w], theAdjTars[w], i,
                   theAdjoins[i]);
+          std::cout << "g" << std::endl;
         }
     }
   void walkMultiscale()
@@ -2005,10 +2123,17 @@ private:
   std::vector<std::vector<unsigned> > theMols;
   std::vector<std::vector<unsigned> > theTars;
   std::vector<std::vector<unsigned> > theRands;
-  std::vector<std::vector<std::vector<std::vector<unsigned> > > > theNextMols;
-  std::vector<std::vector<std::vector<std::vector<unsigned> > > > theNextTars;
+  std::vector<std::vector<std::vector<std::vector<unsigned> > > > theAdjMols;
+  std::vector<std::vector<std::vector<std::vector<unsigned> > > > theAdjTars;
+  std::vector<std::vector<std::vector<std::vector<unsigned> > > > theAdjAdjMols;
+  std::vector<std::vector<std::vector<std::vector<unsigned> > > > theAdjAdjTars;
+  std::vector<std::vector<std::vector<std::vector<unsigned> > > > theBorderMols;
+  std::vector<std::vector<std::vector<std::vector<unsigned> > > > theBorderTars;
+  std::vector<std::vector<std::vector<unsigned> > > theRepeatAdjMols;
+  std::vector<std::vector<std::vector<unsigned> > > theRepeatAdjTars;
   std::vector<std::vector<unsigned> >& theAdjoins;
   std::vector<std::vector<unsigned> >& theAdjBoxes;
+  std::vector<std::vector<unsigned> > theAdjAdjBoxes;
   std::vector<std::vector<VoxelInfo> >& theInfo;
   std::vector<std::vector<unsigned short> >& theIDs;
   std::vector<std::vector<unsigned> > theIntersectLipids;
