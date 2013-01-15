@@ -59,7 +59,7 @@ plot_data(Nc, data_C,'kx')
 loglog(X, 0.19*X, 'b-')
 
 
-plot_data(Nv, data_Vspatiocyte,'r.')
+#plot_data(Nv, data_Vspatiocyte,'r.')
 plot_data(Nv, data_VspatiocyteOld,'k.')
 plot_data(Nv, data_VspatiocytePrevious,'k.')
 

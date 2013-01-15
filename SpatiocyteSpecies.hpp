@@ -787,8 +787,8 @@ public:
           std::vector<unsigned>& adjTars(anAdjTars[adjBox]);
           for(unsigned j(0); j != repeatAdjMols.size(); ++j)
             {
-              adjMols.push_back(repeatAdjMols[i]);
-              adjTars.push_back(repeatAdjTars[i]);
+              adjMols.push_back(repeatAdjMols[j]);
+              adjTars.push_back(repeatAdjTars[j]);
             }
           repeatAdjMols.resize(0);
           repeatAdjTars.resize(0);
@@ -811,13 +811,7 @@ public:
             {
               const unsigned aMol(adjAdjMols[j]);
               const unsigned aBox(aMol/theBoxMaxSize);
-              const unsigned a(aMol%theBoxMaxSize);
-              const unsigned b(aMol-theBoxMaxSize*aBox);
-              if(a != b)
-                {
-                  std::cout << "--------------------------------------------------------------------------" << std::endl;
-                }
-              anAdjMols[aBox].push_back(b);
+              anAdjMols[aBox].push_back(aMol-theBoxMaxSize*aBox);
               anAdjTars[aBox].push_back(adjAdjTars[j]);
             }
           adjAdjMols.resize(0);
@@ -843,28 +837,20 @@ public:
       for(unsigned i(0); i != theBoxSize; ++i)
       //for(unsigned i(anID*2); i != (anID*2)+2; ++i)
         {
-          std::cout << "i:" << i << std::endl;
           updateBoxMols(theBorderMols[r][i], theBorderTars[r][i], theMols[i],
                         theTars[i], theAdjBoxes[i]);
-          std::cout << "a" << std::endl;
           walkMols(theMols[i], theTars[i], theIDs[i]);
-          std::cout << "b" << std::endl;
           updateAdjMols(theRepeatAdjMols[i], theRepeatAdjTars[i],
                         theAdjMols[r][i], theAdjTars[r][i], theAdjBoxes[i]);
-          std::cout << "c" << std::endl;
           updateAdjAdjMols(theAdjAdjMols[r][i], theAdjAdjTars[r][i],
                         theAdjMols[r][i], theAdjTars[r][i]);
-          std::cout << "d" << std::endl;
           walkAdjMols(theMols[i], theAdjMols[r][i], theAdjTars[r][i],
                       theIDs[i], theAdjBoxes[i]);
-          std::cout << "e" << std::endl;
           setAdjTars(theBorderMols[w], theBorderTars[w], theAdjAdjMols[w],
                      theAdjAdjTars[w], theRepeatAdjMols[i],
                      theRepeatAdjTars[i], theAdjMols[r][i], theAdjBoxes[i], i);
-          std::cout << "f" << std::endl;
           setTars(theMols[i], theTars[i], theAdjMols[w], theAdjTars[w], i,
                   theAdjoins[i]);
-          std::cout << "g" << std::endl;
         }
     }
   void walkMultiscale()
