@@ -56,7 +56,7 @@ public:
     theRunA(true),
     LatticeType(HCP_LATTICE),
     theBoxSize(8),
-    theThreadSize(2),
+    theThreadSize(6),
     VoxelRadius(10e-9),
     nVoxelRadius(0.5) {}
   virtual ~SpatiocyteStepper() {}
@@ -116,7 +116,7 @@ public:
   void concatenateLattice(unsigned);
   void constructLattice();
   void runThreads();
-
+  unsigned getBoxSize();
 private:
   void initializeThreads();
   void setCompsCenterPoint();

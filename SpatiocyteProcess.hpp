@@ -136,7 +136,8 @@ public:
                                 std::vector<std::vector<unsigned> >* anAdjoins,
                                 unsigned aBoxMaxSize,
                                 unsigned anAdjoiningMolSize,
-                                unsigned aNullMol, unsigned aNullID)
+                                unsigned aNullMol, unsigned aNullID,
+                                Thread* aThread)
     {
       theBoxMaxSize = aBoxMaxSize;
       theIDs = anIDs;
@@ -145,6 +146,7 @@ public:
       theAdjoinSize = anAdjoiningMolSize;
       theNullMol = aNullMol;
       theNullID = aNullID;
+      theThread = aThread;
     }
   Time getTime() const
     {
@@ -233,6 +235,7 @@ protected:
   VariableReferenceVector theNegativeVariableReferences;
   VariableReferenceVector theZeroVariableReferences;
   VariableReferenceVector theSortedVariableReferences;
+  Thread* theThread;
 };
 
 #endif /* __SpatiocyteProcess_hpp */

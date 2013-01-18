@@ -148,12 +148,15 @@ void SpatiocyteStepper::initializeThreads()
   nThreadsRunning = 0;
   flagA = FLAG_STOP;
   flagB = FLAG_STOP;
-  for(unsigned i(1); i != theThreadSize; ++i)
+  theThreads.resize(theThreadSize);
+  for(unsigned i(0); i != theThreadSize; ++i)
     {
-      Thread* aThread(new Thread(i, nThreadsRunning, flagA, flagB, theSpecies,
-                                 *this));
-      aThread->create();
-      theThreads.push_back(aThread);
+      theThreads[i] = new Thread(i, nThreadsRunning, flagA, flagB, theSpecies,
+                                 *this);
+      if(i)
+        {
+          theThreads[i]->create();
+        }
     }
   //Wait until all threads have been created:
   while(ACCESS_ONCE(nThreadsRunning) < theThreadSize-1)
@@ -183,6 +186,12 @@ void SpatiocyteStepper::finalizeSpecies()
     {
       (*i)->finalizeSpecies();
     }
+  theThreads[0]->initializeLists();
+}
+
+unsigned SpatiocyteStepper::getBoxSize()
+{
+  return theBoxSize;
 }
 
 void SpatiocyteStepper::updateSpecies()
@@ -549,7 +558,7 @@ void SpatiocyteStepper::broadcastLatticeProperties()
         aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
       aProcess->setLatticeProperties(&theIDs, &theInfo, &theAdjoins,
                                      theAdjoinSize, theBoxMaxSize, theNullMol,
-                                     theNullID);
+                                     theNullID, theThreads[0]);
     }
 }
 
@@ -1657,10 +1666,14 @@ void SpatiocyteStepper::constructLattice(unsigned anID)
     {
       runThreads();
     }
+  else
+    {
+      return;
+    }
   Comp* aRootComp(theComps[0]);
   const unsigned short rootID(aRootComp->vacantSpecies->getID());
-  //for(unsigned i(0); i != theBoxSize; ++i)
-  for(unsigned i(anID*4); i != (anID*4)+4; ++i)
+  for(unsigned i(0); i != theBoxSize; ++i)
+  //for(unsigned i(anID*2); i != (anID*2)+2; ++i)
     {
       const unsigned aSize(theRows[i]*theCols[i]*theLayers[i]);
       theIDs[i].resize(aSize);
@@ -1668,7 +1681,8 @@ void SpatiocyteStepper::constructLattice(unsigned anID)
       theAdjoins[i].resize(aSize*theAdjoinSize);
       theIDs[i][theNullMol] = theNullID;
     }
-  for(unsigned i(anID*4); i != (anID*4)+4; ++i)
+  for(unsigned i(0); i != theBoxSize; ++i)
+  //for(unsigned i(anID*2); i != (anID*2)+2; ++i)
     {
       std::vector<unsigned short>& anIDs(theIDs[i]);
       std::vector<VoxelInfo>& anInfo(theInfo[i]);
@@ -1736,7 +1750,12 @@ void SpatiocyteStepper::concatenateLattice(unsigned anID)
     {
       runThreads();
     }
-  for(unsigned i(anID*4); i != (anID*4)+4; ++i)
+  else
+    {
+      return;
+    }
+  for(unsigned i(0); i != theBoxSize; ++i)
+  //for(unsigned i(anID*2); i != (anID*2)+2; ++i)
     {
       for(unsigned j(0); j != theIDs[i].size();  ++j)
         {

@@ -43,7 +43,6 @@
 #define FLAG_STOP 0
 #define FLAG_RUN  1
 
-
 class Thread
 { 
 public: 
@@ -73,43 +72,121 @@ public:
     {
       pthread_join(theThreadID, NULL);
     }
+  void initializeLists()
+    {
+      theBoxSize = theStepper.getBoxSize();
+      if(!theID)
+        {
+          theStepper.runThreads();
+        }
+      theRng.Reseed();
+      theAdjMols.resize(2);
+      theAdjTars.resize(2);
+      theAdjAdjMols.resize(2);
+      theAdjAdjTars.resize(2);
+      theBorderMols.resize(2);
+      theBorderTars.resize(2);
+      theRepeatAdjMols.resize(theBoxSize);
+      theRepeatAdjTars.resize(theBoxSize);
+      for(unsigned i(0); i != 2; ++i)
+        {
+          theAdjMols[i].resize(theBoxSize);
+          theAdjTars[i].resize(theBoxSize);
+          theAdjAdjMols[i].resize(theBoxSize);
+          theAdjAdjTars[i].resize(theBoxSize);
+          theBorderMols[i].resize(theBoxSize);
+          theBorderTars[i].resize(theBoxSize);
+        }
+      theSpecies[0]->initializeLists(theID, theRng, theMols, theTars,
+                                     theAdjMols, theAdjTars, theAdjoins);
+    }
+  void walk()
+    {
+      if(!theID)
+        {
+          theStepper.runThreads();
+          //setTars(theMols, theTars, theID, theAdjoins, theRng);
+          //theSpecies[0]->walk(theID, 1, 0, theRng, theMols, theTars, theAdjMols, theAdjTars, theAdjoins);
+        }
+      theSpecies[0]->walk(theID, 1, 0, theRng, theMols, theTars, theAdjMols, theAdjTars, theAdjoins);
+    }
 protected:
-   virtual void work()
-     {
-       while(ACCESS_ONCE(flagA) == FLAG_STOP)
-         {
-           continue;
-         }
-       theStepper.constructLattice(theID);
-       __sync_fetch_and_add(&nThreadsRunning, 1);
-       while(ACCESS_ONCE(flagB) == FLAG_STOP)
-         {
-           continue;
-         }
-       theStepper.concatenateLattice(theID);
-       __sync_fetch_and_add(&nThreadsRunning, 1);
-       for(;;)
-         {
-           while(ACCESS_ONCE(flagA) == FLAG_STOP)
-             {
-               continue;
-             }
-           theSpecies[0]->walk(theID, 0, 1);
-           __sync_fetch_and_add(&nThreadsRunning, 1);
-           while(ACCESS_ONCE(flagB) == FLAG_STOP)
-             {
-               continue;
-             }
-           theSpecies[0]->walk(theID, 1, 0);
-           __sync_fetch_and_add(&nThreadsRunning, 1);
-         }
-     }
+  static void setTars(std::vector<unsigned>& aMols,
+                      std::vector<unsigned>& aTars,
+                      const unsigned currBox,
+                      const std::vector<unsigned>& anAdjoins,
+                      RandomLib::Random& aRng)
+    {
+      aTars.resize(aMols.size());
+      for(unsigned i(0); i < aMols.size(); ++i)
+        {
+          unsigned& aMol(aMols[i]);
+          const unsigned aTar(anAdjoins[aMol*12+aRng.IntegerC(11)]);
+          aTars[i] = aTar;
+        }
+    }
+  virtual void work()
+    {
+      while(ACCESS_ONCE(flagA) == FLAG_STOP)
+        {
+          continue;
+        }
+      theStepper.constructLattice(theID);
+      __sync_fetch_and_add(&nThreadsRunning, 1);
+      while(ACCESS_ONCE(flagB) == FLAG_STOP)
+        {
+          continue;
+        }
+      theStepper.concatenateLattice(theID);
+      __sync_fetch_and_add(&nThreadsRunning, 1);
+      while(ACCESS_ONCE(flagA) == FLAG_STOP)
+        {
+          continue;
+        }
+      initializeLists();
+      __sync_fetch_and_add(&nThreadsRunning, 1);
+      for(;;)
+        {
+          while(ACCESS_ONCE(flagB) == FLAG_STOP)
+            {
+              continue;
+            }
+          __sync_fetch_and_add(&nThreadsRunning, 1);
+          walk();
+          /*
+          for(unsigned i(0); i != 800; ++i)
+            {
+              aTars.resize(0);
+              for(unsigned j(0); j != 100; ++j)
+                {
+                  aTars.push_back(j);
+                }
+            }
+            */
+          while(ACCESS_ONCE(flagA) == FLAG_STOP)
+            {
+              continue;
+            }
+          __sync_fetch_and_add(&nThreadsRunning, 1);
+          walk();
+          /*
+          for(unsigned i(0); i != 800; ++i)
+            {
+              aTars.resize(0);
+              for(unsigned j(0); j != 100; ++j)
+                {
+                  aTars.push_back(j);
+                }
+            }
+            */
+        }
+    }
 private: 
-   static void* enter(void* arg)
-     {
-       ((Thread*)arg)->work();
-       return NULL;
-     }
+  static void* enter(void* arg)
+    {
+      ((Thread*)arg)->work();
+      return NULL;
+    }
   pthread_t theThreadID;
   unsigned theID;
   SpatiocyteStepper& theStepper;
@@ -118,6 +195,19 @@ private:
   char& flagB;
   std::ofstream out;
   std::vector<Species*>& theSpecies;
+  std::vector<unsigned> theTars;
+  std::vector<unsigned> theMols;
+  std::vector<unsigned> theAdjoins;
+  RandomLib::Random theRng;
+  unsigned theBoxSize;
+  std::vector<std::vector<std::vector<unsigned> > > theAdjMols;
+  std::vector<std::vector<std::vector<unsigned> > > theAdjTars;
+  std::vector<std::vector<std::vector<unsigned> > > theAdjAdjMols;
+  std::vector<std::vector<std::vector<unsigned> > > theAdjAdjTars;
+  std::vector<std::vector<std::vector<unsigned> > > theBorderMols;
+  std::vector<std::vector<std::vector<unsigned> > > theBorderTars;
+  std::vector<std::vector<unsigned> > theRepeatAdjMols;
+  std::vector<std::vector<unsigned> > theRepeatAdjTars;
 };
 
 #endif /* __Thread_hpp */

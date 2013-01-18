@@ -36,6 +36,7 @@
 #include <MethodProxy.hpp>
 #include "SpatiocyteProcess.hpp"
 #include "SpatiocyteSpecies.hpp"
+#include "Thread.hpp"
 
 LIBECS_DM_CLASS(DiffusionProcess, SpatiocyteProcess)
 { 
@@ -192,7 +193,17 @@ public:
     }
   void walk() const
     {
-      theDiffusionSpecies->walk(0, 0, 1);
+      theThread->walk();
+      /*
+      for(unsigned i(0); i != 800; ++i)
+        {
+          aTars.resize(0);
+          for(unsigned j(0); j != 100; ++j)
+            {
+              aTars.push_back(j);
+            }
+        }
+        */
     }
   void walkVacant() const
     {

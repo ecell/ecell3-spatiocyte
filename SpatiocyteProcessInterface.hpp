@@ -55,7 +55,8 @@ public:
   virtual void setLatticeProperties(std::vector<std::vector<unsigned short> >*,
                                     std::vector<std::vector<VoxelInfo> >*,
                                     std::vector<std::vector<unsigned> >*,
-                                    unsigned, unsigned, unsigned, unsigned) = 0;
+                                    unsigned, unsigned, unsigned, unsigned,
+                                    Thread*) = 0;
   virtual void substrateValueChanged(Time) = 0;
   virtual void fire() = 0;
   virtual unsigned getLatticeResizeMol(unsigned) = 0;

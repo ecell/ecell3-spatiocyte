@@ -36,6 +36,7 @@
 #include "SpatiocyteNextReactionProcess.hpp"
 #include "DiffusionInfluencedReactionProcess.hpp"
 #include "MoleculePopulateProcessInterface.hpp"
+#include "Svector.hpp"
 
 static double getDistance(Point& aSourcePoint, Point& aDestPoint)
 {
@@ -134,6 +135,7 @@ public:
       theCnt.resize(theBoxSize);
       theMols.resize(theBoxSize);
       theTars.resize(theBoxSize);
+      theVals.resize(theBoxSize);
       theRands.resize(theBoxSize);
       theInitMolSize.resize(theBoxSize);
       theTags.resize(theBoxSize);
@@ -448,13 +450,30 @@ public:
             }
         }
       isToggled = false;
-      if(size() && theDiffusionInterval != libecs::INF)
+    }
+  void initializeLists(unsigned anID, 
+                       RandomLib::Random& aRng,
+                       std::vector<unsigned>& aMols,
+                       std::vector<unsigned>& aTars,
+                       std::vector<std::vector<std::vector<unsigned> > >& anAdjMols,
+                       std::vector<std::vector<std::vector<unsigned> > >& anAdjTars,
+                       std::vector<unsigned>& anAdjoins)
+    {
+      if(theDiffusionInterval != libecs::INF)
         {
-          for(unsigned i(0); i != theBoxSize; ++i)
+          std::cout << "Initializing:" << anID << std::endl;
+          aMols.resize(theMols[anID].size());
+          for(unsigned i(0); i != theMols[anID].size(); ++i)
             {
-              setTars(theMols[i], theTars[i], theAdjMols[0], theAdjTars[0], i,
-                      theAdjoins[i]);
+              aMols[i] = theMols[anID][i];
             }
+          anAdjoins.resize(theAdjoins[anID].size());
+          for(unsigned i(0); i != theAdjoins[anID].size(); ++i)
+            {
+              anAdjoins[i] = theAdjoins[anID][i];
+            } 
+          setTars(aMols, aTars, anAdjMols[0], anAdjTars[0], anID, anAdjoins,
+                  aRng);
         }
     }
   unsigned getCollisionCnt(unsigned anIndex)
@@ -629,18 +648,20 @@ public:
       std::cout << "error in species add collision" << std::endl;
       */
     }
+  /*
   void setTars(std::vector<unsigned>& aMols,
                std::vector<unsigned>& aTars,
                std::vector<std::vector<std::vector<unsigned> > >& aNextMols,
                std::vector<std::vector<std::vector<unsigned> > >& aNextTars,
                const unsigned currBox,
-               const std::vector<unsigned>& anAdjoins)
+               const std::vector<unsigned>& anAdjoins,
+               RandomLib::Random& aRng)
     {
       aTars.resize(0);
       for(unsigned i(0); i < aMols.size(); ++i)
         {
           unsigned& aMol(aMols[i]);
-          const unsigned aTar(anAdjoins[aMol*theAdjoinSize+rng.IntegerC(11)]);
+          const unsigned aTar(anAdjoins[aMol*theAdjoinSize+aRng.IntegerC(11)]);
           if(aTar/theBoxMaxSize == currBox) 
             {
               aTars.push_back(aTar);
@@ -655,6 +676,7 @@ public:
             }
         }
     }
+    */
   void walkMols(std::vector<unsigned>& aMols,
                 const std::vector<unsigned>& aTars,
                 std::vector<unsigned short>& anIDs)
@@ -818,8 +840,52 @@ public:
           adjAdjTars.resize(0);
         }
     }
-  void walk(const unsigned anID, unsigned r, unsigned w)
+  void setTars(std::vector<unsigned>& aMols,
+               std::vector<unsigned>& aTars,
+               std::vector<std::vector<unsigned> >& anAdjMols,
+               std::vector<std::vector<unsigned> >& anAdjTars,
+               const unsigned currBox,
+               const std::vector<unsigned>& anAdjoins,
+               RandomLib::Random& aRng)
     {
+      aTars.resize(0);
+      for(unsigned i(0); i < aMols.size(); ++i)
+        {
+          unsigned& aMol(aMols[i]);
+          const unsigned aTar(anAdjoins[aMol*theAdjoinSize+aRng.IntegerC(11)]);
+          if(aTar/theBoxMaxSize == currBox) 
+            {
+              aTars.push_back(aTar);
+            }
+          else
+            {
+              anAdjMols[aTar/theBoxMaxSize].push_back(aMol);
+              anAdjTars[aTar/theBoxMaxSize].push_back(aTar);
+              aMol = aMols.back();
+              aMols.pop_back();
+              --i;
+            }
+        }
+    }
+  void walk(const unsigned anID, unsigned r, unsigned w,
+            RandomLib::Random& aRng,
+            std::vector<unsigned>& aMols,
+            std::vector<unsigned>& aTars,
+            std::vector<std::vector<std::vector<unsigned> > >& anAdjMols,
+            std::vector<std::vector<std::vector<unsigned> > >& anAdjTars,
+            std::vector<unsigned>& anAdjoins)
+    {
+      setTars(aMols, aTars, anAdjMols[w], anAdjTars[w], anID, anAdjoins, aRng);
+      //setTars(theMols[anID], theTars[anID], theAdjMols[w], theAdjTars[w], anID, theAdjoins[anID], aRng);
+      //setTars(aMols, aTars, anID, anAdjoins, aRng);
+      //setTars(theMols[anID], theTars[anID], anID, theAdjoins[anID], aRng);
+      /*
+      for(unsigned i(0); i != 6; ++i)
+        {
+          setTars(theMols[i], theTars[i], anID, theAdjoins[i], aRng);
+        }
+        */
+      /*
       if(!anID)
         {
           if(isToggled)
@@ -835,23 +901,42 @@ public:
           theStepper->runThreads();
         }
       //for(unsigned i(0); i != theBoxSize; ++i)
-      for(unsigned i(anID*4); i != (anID*4)+4; ++i)
+      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
         {
           updateBoxMols(theBorderMols[r][i], theBorderTars[r][i], theMols[i],
                         theTars[i], theAdjBoxes[i]);
+        }
+      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+        {
           walkMols(theMols[i], theTars[i], theIDs[i]);
+        }
+      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+        {
           updateAdjMols(theRepeatAdjMols[i], theRepeatAdjTars[i],
                         theAdjMols[r][i], theAdjTars[r][i], theAdjBoxes[i]);
+        }
+      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+        {
           updateAdjAdjMols(theAdjAdjMols[r][i], theAdjAdjTars[r][i],
                         theAdjMols[r][i], theAdjTars[r][i]);
+        }
+      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+        {
           walkAdjMols(theMols[i], theAdjMols[r][i], theAdjTars[r][i],
                       theIDs[i], theAdjBoxes[i]);
+        }
+      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+        {
           setAdjTars(theBorderMols[w], theBorderTars[w], theAdjAdjMols[w],
                      theAdjAdjTars[w], theRepeatAdjMols[i],
                      theRepeatAdjTars[i], theAdjMols[r][i], theAdjBoxes[i], i);
+        }
+      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+        {
           setTars(theMols[i], theTars[i], theAdjMols[w], theAdjTars[w], i,
                   theAdjoins[i]);
         }
+        */
     }
   void walkMultiscale()
     {
@@ -2109,6 +2194,7 @@ private:
   std::vector<std::vector<unsigned> > theMols;
   std::vector<std::vector<unsigned> > theTars;
   std::vector<std::vector<unsigned> > theRands;
+  std::vector<Svector> theVals;
   std::vector<std::vector<std::vector<std::vector<unsigned> > > > theAdjMols;
   std::vector<std::vector<std::vector<std::vector<unsigned> > > > theAdjTars;
   std::vector<std::vector<std::vector<std::vector<unsigned> > > > theAdjAdjMols;
