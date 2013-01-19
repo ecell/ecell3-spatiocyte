@@ -235,6 +235,7 @@ void Species::walkAdjMols(const unsigned currBox, const unsigned r,
     }
 }
 
+
 void Species::walk(const unsigned anID, unsigned r, unsigned w,
            RandomLib::Random& aRng,
            std::vector<unsigned>& aMols,
@@ -321,5 +322,24 @@ void Species::walk(const unsigned anID, unsigned r, unsigned w,
               theAdjoins[i]);
     }
     */
+}
+
+void Species::updateMols()
+{
+  if(isDiffusiveVacant || isReactiveVacant)
+    {
+      updateVacantMols();
+    }
+  else if(isTag)
+    {
+      updateTagMols();
+    }
+  if(!theID)
+    {
+      for(unsigned i(0); i != theThreads.size(); ++i)
+        {
+          theThreads[i]->updateMols(theMols[i]);
+        }
+    }
 }
 

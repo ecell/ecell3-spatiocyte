@@ -106,6 +106,13 @@ public:
     {
       theIDs[aMol] = anID;
     }
+  void updateMols(std::vector<unsigned>& aMols)
+    {
+      if(theMols.size())
+        {
+          aMols = theMols;
+        }
+    }
   void initialize();
   void initializeLists();
   void walk();

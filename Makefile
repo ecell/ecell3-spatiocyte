@@ -57,7 +57,7 @@ SpatiocyteStepper.so: 	SpatiocyteStepper.cpp
 	$(ECELL3_DMC) -o SpatiocyteStepper.so --ldflags=Thread.so SpatiocyteStepper.cpp
 
 VisualizationLogProcess.so: 	VisualizationLogProcess.cpp
-	$(ECELL3_DMC) -o VisualizationLogProcess.so --ldflags=SpatiocyteProcess.so VisualizationLogProcess.cpp
+	$(ECELL3_DMC) -o VisualizationLogProcess.so --ldflags="SpatiocyteProcess.so Species.so" VisualizationLogProcess.cpp
 
 H5VisualizationLogProcess.so: 	H5VisualizationLogProcess.cpp
 	$(ECELL3_DMC) -o H5VisualizationLogProcess.so --ldflags=SpatiocyteProcess.so --ldflags=-lhdf5 --ldflags=-lhdf5_cpp H5VisualizationLogProcess.cpp

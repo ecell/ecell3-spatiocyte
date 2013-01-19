@@ -1089,17 +1089,7 @@ public:
   //If it isReactiveVacant it will only be called by SNRP when it is substrate
   //If it isDiffusiveVacant it will only be called by DiffusionProcess before
   //being diffused. So we need to only check if it isVacant:
-  void updateMols()
-    {
-      if(isDiffusiveVacant || isReactiveVacant)
-        {
-          updateVacantMols();
-        }
-      else if(isTag)
-        {
-          updateTagMols();
-        }
-    }
+  void updateMols();
   //If it isReactiveVacant it will only be called by SNRP when it is substrate:
   void updateMolSize()
     {

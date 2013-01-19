@@ -56,7 +56,7 @@ public:
     theRunA(true),
     LatticeType(HCP_LATTICE),
     theBoxSize(8),
-    theThreadSize(1),
+    theThreadSize(2),
     VoxelRadius(10e-9),
     nVoxelRadius(0.5) {}
   virtual ~SpatiocyteStepper() {}

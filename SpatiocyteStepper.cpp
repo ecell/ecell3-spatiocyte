@@ -1055,7 +1055,7 @@ void SpatiocyteStepper::setLatticeProperties()
       readjustSurfaceBoundarySizes();
     }
   theBoxRows = 1;
-  theBoxCols = 1;
+  theBoxCols = 2;
   theBoxLayers = 1;
   theBoxSize = theBoxRows*theBoxCols*theBoxLayers;
   theRows.resize(theBoxSize);
