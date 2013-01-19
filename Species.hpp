@@ -21,8 +21,8 @@
 //
 
 
-#ifndef __SpatiocyteSpecies_hpp
-#define __SpatiocyteSpecies_hpp
+#ifndef __Species_hpp
+#define __Species_hpp
 
 #include <sstream>
 #include <algorithm>
@@ -36,7 +36,7 @@
 #include "SpatiocyteNextReactionProcess.hpp"
 #include "DiffusionInfluencedReactionProcess.hpp"
 #include "MoleculePopulateProcessInterface.hpp"
-#include "Svector.hpp"
+#include "Thread.hpp"
 
 static double getDistance(Point& aSourcePoint, Point& aDestPoint)
 {
@@ -127,15 +127,16 @@ public:
     theIDs(anIDs) {}
   ~Species() {}
   void initialize(int speciesSize, unsigned aBoxMaxSize, int anAdjoinSize,
-                  unsigned aNullMol, unsigned aNullID)
+                  unsigned aNullMol, unsigned aNullID, 
+                  std::vector<Thread*> aThreads)
     {
+      theThreads = aThreads;
       theBoxMaxSize = aBoxMaxSize;
       theBoxSize = theIDs.size();
       theLastMolSize.resize(theBoxSize);
       theCnt.resize(theBoxSize);
       theMols.resize(theBoxSize);
       theTars.resize(theBoxSize);
-      theVals.resize(theBoxSize);
       theRands.resize(theBoxSize);
       theInitMolSize.resize(theBoxSize);
       theTags.resize(theBoxSize);
@@ -457,7 +458,9 @@ public:
                        std::vector<unsigned>& aTars,
                        std::vector<std::vector<std::vector<unsigned> > >& anAdjMols,
                        std::vector<std::vector<std::vector<unsigned> > >& anAdjTars,
-                       std::vector<unsigned>& anAdjoins)
+                       std::vector<unsigned>& anAdjoins,
+                       std::vector<unsigned short>& anIDs,
+                       std::vector<unsigned>& anAdjBoxes)
     {
       if(theDiffusionInterval != libecs::INF)
         {
@@ -472,8 +475,9 @@ public:
             {
               anAdjoins[i] = theAdjoins[anID][i];
             } 
-          setTars(aMols, aTars, anAdjMols[0], anAdjTars[0], anID, anAdjoins,
-                  aRng);
+          anAdjBoxes = theAdjBoxes[anID];
+          anIDs = theIDs[anID];
+          setTars(anID, 0, aMols, aTars, anAdjMols[0], anAdjTars[0], anAdjoins, aRng);
         }
     }
   unsigned getCollisionCnt(unsigned anIndex)
@@ -677,6 +681,7 @@ public:
         }
     }
     */
+  /*
   void walkMols(std::vector<unsigned>& aMols,
                 const std::vector<unsigned>& aTars,
                 std::vector<unsigned short>& anIDs)
@@ -697,6 +702,15 @@ public:
             }
         }
     }
+    */
+  void walkMols(std::vector<unsigned>& aMols,
+                const std::vector<unsigned>& aTars,
+                std::vector<unsigned short>& anIDs);
+  void walkAdjMols(const unsigned currBox, const unsigned r,
+                          std::vector<unsigned>& aMols,
+                          std::vector<unsigned short>& anIDs,
+                          const std::vector<unsigned>& anAdjBoxes);
+  /*
   void walkAdjMols(std::vector<unsigned>& aMols,
                    std::vector<std::vector<unsigned> >& aBoxAdjMols,
                    std::vector<std::vector<unsigned> >& aBoxAdjTars, 
@@ -727,6 +741,19 @@ public:
           adjTars.resize(0);
         }
     }
+    */
+  void setAdjTars(const unsigned currBox, const unsigned r,
+                std::vector<std::vector<unsigned> >& aBorderMols,
+                std::vector<std::vector<unsigned> >& aBorderTars,
+                std::vector<std::vector<unsigned> >& anAdjAdjMols,
+                std::vector<std::vector<unsigned> >& anAdjAdjTars,
+                std::vector<std::vector<unsigned> >& aRepeatAdjMols,
+                std::vector<std::vector<unsigned> >& aRepeatAdjTars,
+                const std::vector<unsigned>& anAdjBoxes,
+                const std::vector<unsigned>& anAdjoins,
+                RandomLib::Random& aRng);
+
+  /*
   void setAdjTars(std::vector<std::vector<std::vector<unsigned> > >&
                   aBorderMols,
                   std::vector<std::vector<std::vector<unsigned> > >&
@@ -773,7 +800,9 @@ public:
           adjMols.resize(0);
         }
     }
+    */
 
+  /*
   void updateBoxMols(std::vector<std::vector<unsigned> >& aBorderMols,
                      std::vector<std::vector<unsigned> >& aBorderTars,
                      std::vector<unsigned>& aMols,
@@ -794,6 +823,8 @@ public:
           borderTars.resize(0);
         }
     }
+    */
+  /*
   void updateAdjMols(std::vector<std::vector<unsigned> >& aRepeatAdjMols,
                      std::vector<std::vector<unsigned> >& aRepeatAdjTars,
                      std::vector<std::vector<unsigned> >& anAdjMols,
@@ -816,6 +847,17 @@ public:
           repeatAdjTars.resize(0);
         }
     }
+    */
+  void updateAdjMols(const unsigned currBox, const unsigned r,
+                     std::vector<std::vector<unsigned> >& aRepeatAdjMols,
+                     std::vector<std::vector<unsigned> >& aRepeatAdjTars,
+                     /*
+                      * std::vector<std::vector<unsigned> >& anAdjMols,
+                      * std::vector<std::vector<unsigned> >& anAdjTars,
+                      */
+                     const std::vector<unsigned>& anAdjBoxes);
+  void updateAdjAdjMols(const unsigned currBox, const unsigned r);
+  /*
   void updateAdjAdjMols(std::vector<std::vector<unsigned> >& anAdjAdjMols,
                         std::vector<std::vector<unsigned> >& anAdjAdjTars,
                         std::vector<std::vector<unsigned> >& anAdjMols,
@@ -840,104 +882,34 @@ public:
           adjAdjTars.resize(0);
         }
     }
-  void setTars(std::vector<unsigned>& aMols,
+    */
+  void setTars(const unsigned currBox,
+               const unsigned w,
+               std::vector<unsigned>& aMols,
                std::vector<unsigned>& aTars,
-               std::vector<std::vector<unsigned> >& anAdjMols,
-               std::vector<std::vector<unsigned> >& anAdjTars,
-               const unsigned currBox,
+               std::vector<std::vector<unsigned> >&,
+               std::vector<std::vector<unsigned> >&,
                const std::vector<unsigned>& anAdjoins,
-               RandomLib::Random& aRng)
-    {
-      aTars.resize(0);
-      for(unsigned i(0); i < aMols.size(); ++i)
-        {
-          unsigned& aMol(aMols[i]);
-          const unsigned aTar(anAdjoins[aMol*theAdjoinSize+aRng.IntegerC(11)]);
-          if(aTar/theBoxMaxSize == currBox) 
-            {
-              aTars.push_back(aTar);
-            }
-          else
-            {
-              anAdjMols[aTar/theBoxMaxSize].push_back(aMol);
-              anAdjTars[aTar/theBoxMaxSize].push_back(aTar);
-              aMol = aMols.back();
-              aMols.pop_back();
-              --i;
-            }
-        }
-    }
+               RandomLib::Random& aRng);
+  void updateBoxMols(const unsigned currBox, const unsigned r,
+                   std::vector<unsigned>& aMols,
+                   std::vector<unsigned>& aTars,
+                   const std::vector<unsigned>& anAdjBoxes);
   void walk(const unsigned anID, unsigned r, unsigned w,
-            RandomLib::Random& aRng,
-            std::vector<unsigned>& aMols,
-            std::vector<unsigned>& aTars,
-            std::vector<std::vector<std::vector<unsigned> > >& anAdjMols,
-            std::vector<std::vector<std::vector<unsigned> > >& anAdjTars,
-            std::vector<unsigned>& anAdjoins)
-    {
-      setTars(aMols, aTars, anAdjMols[w], anAdjTars[w], anID, anAdjoins, aRng);
-      //setTars(theMols[anID], theTars[anID], theAdjMols[w], theAdjTars[w], anID, theAdjoins[anID], aRng);
-      //setTars(aMols, aTars, anID, anAdjoins, aRng);
-      //setTars(theMols[anID], theTars[anID], anID, theAdjoins[anID], aRng);
-      /*
-      for(unsigned i(0); i != 6; ++i)
-        {
-          setTars(theMols[i], theTars[i], anID, theAdjoins[i], aRng);
-        }
-        */
-      /*
-      if(!anID)
-        {
-          if(isToggled)
-            {
-              r = 1;
-              w = 0;
-              isToggled = false;
-            }
-          else
-            {
-              isToggled = true;
-            }
-          theStepper->runThreads();
-        }
-      //for(unsigned i(0); i != theBoxSize; ++i)
-      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
-        {
-          updateBoxMols(theBorderMols[r][i], theBorderTars[r][i], theMols[i],
-                        theTars[i], theAdjBoxes[i]);
-        }
-      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
-        {
-          walkMols(theMols[i], theTars[i], theIDs[i]);
-        }
-      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
-        {
-          updateAdjMols(theRepeatAdjMols[i], theRepeatAdjTars[i],
-                        theAdjMols[r][i], theAdjTars[r][i], theAdjBoxes[i]);
-        }
-      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
-        {
-          updateAdjAdjMols(theAdjAdjMols[r][i], theAdjAdjTars[r][i],
-                        theAdjMols[r][i], theAdjTars[r][i]);
-        }
-      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
-        {
-          walkAdjMols(theMols[i], theAdjMols[r][i], theAdjTars[r][i],
-                      theIDs[i], theAdjBoxes[i]);
-        }
-      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
-        {
-          setAdjTars(theBorderMols[w], theBorderTars[w], theAdjAdjMols[w],
-                     theAdjAdjTars[w], theRepeatAdjMols[i],
-                     theRepeatAdjTars[i], theAdjMols[r][i], theAdjBoxes[i], i);
-        }
-      for(unsigned i(anID*2); i != (anID*2)+2; ++i)
-        {
-          setTars(theMols[i], theTars[i], theAdjMols[w], theAdjTars[w], i,
-                  theAdjoins[i]);
-        }
-        */
-    }
+           RandomLib::Random& aRng,
+           std::vector<unsigned>& aMols,
+           std::vector<unsigned>& aTars,
+           std::vector<std::vector<std::vector<unsigned> > >& anAdjMols,
+           std::vector<std::vector<std::vector<unsigned> > >& anAdjTars,
+           std::vector<std::vector<std::vector<unsigned> > >& anAdjAdjMols,
+           std::vector<std::vector<std::vector<unsigned> > >& anAdjAdjTars,
+           std::vector<std::vector<std::vector<unsigned> > >& aBorderMols,
+           std::vector<std::vector<std::vector<unsigned> > >& aBorderTars,
+           std::vector<std::vector<unsigned> >& aRepeatAdjMols,
+           std::vector<std::vector<unsigned> >& aRepeatAdjTars,
+           std::vector<unsigned>& anAdjoins,
+           std::vector<unsigned short>& anIDs,
+           std::vector<unsigned>& anAdjBoxes);
   void walkMultiscale()
     {
       /*
@@ -2194,7 +2166,6 @@ private:
   std::vector<std::vector<unsigned> > theMols;
   std::vector<std::vector<unsigned> > theTars;
   std::vector<std::vector<unsigned> > theRands;
-  std::vector<Svector> theVals;
   std::vector<std::vector<std::vector<std::vector<unsigned> > > > theAdjMols;
   std::vector<std::vector<std::vector<std::vector<unsigned> > > > theAdjTars;
   std::vector<std::vector<std::vector<std::vector<unsigned> > > > theAdjAdjMols;
@@ -2210,8 +2181,8 @@ private:
   std::vector<std::vector<unsigned short> >& theIDs;
   std::vector<std::vector<unsigned> > theIntersectLipids;
   RandomLib::Random rng;          // Create r
+  std::vector<Thread*> theThreads;
 };
 
-
-#endif /* __SpatiocyteSpecies_hpp */
+#endif /* __Species_hpp */
 

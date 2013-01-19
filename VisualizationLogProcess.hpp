@@ -35,7 +35,7 @@
 #include <fstream> //provides ofstream
 #include <MethodProxy.hpp>
 #include "SpatiocyteProcess.hpp"
-#include "SpatiocyteSpecies.hpp"
+#include "Species.hpp"
 
 LIBECS_DM_CLASS(VisualizationLogProcess, SpatiocyteProcess)
 { 

@@ -2,6 +2,8 @@ OBJS=\
 SpatiocyteVisualizer
 
 DMS=\
+Species\
+Thread\
 SpatiocyteStepper\
 SpatiocyteProcess\
 VisualizationLogProcess\
@@ -47,6 +49,12 @@ OBJECTS=${OBJS:=.o}
 SOS=${DMS:=.so}
 
 all:	$(SPATIOCYTE) $(SOS) 
+
+Thread.so: 	Thread.cpp
+	$(ECELL3_DMC) -o Thread.so --ldflags=Species.so Thread.cpp
+
+SpatiocyteStepper.so: 	SpatiocyteStepper.cpp
+	$(ECELL3_DMC) -o SpatiocyteStepper.so --ldflags=Thread.so SpatiocyteStepper.cpp
 
 VisualizationLogProcess.so: 	VisualizationLogProcess.cpp
 	$(ECELL3_DMC) -o VisualizationLogProcess.so --ldflags=SpatiocyteProcess.so VisualizationLogProcess.cpp

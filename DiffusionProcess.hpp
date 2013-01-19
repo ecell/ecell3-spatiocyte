@@ -35,7 +35,7 @@
 #include <sstream>
 #include <MethodProxy.hpp>
 #include "SpatiocyteProcess.hpp"
-#include "SpatiocyteSpecies.hpp"
+#include "Species.hpp"
 #include "Thread.hpp"
 
 LIBECS_DM_CLASS(DiffusionProcess, SpatiocyteProcess)

@@ -38,7 +38,7 @@
 #include <libecs/VariableReference.hpp>
 #include "Thread.hpp"
 #include "SpatiocyteStepper.hpp"
-#include "SpatiocyteSpecies.hpp"
+#include "Species.hpp"
 #include "SpatiocyteProcessInterface.hpp"
 #include "ReactionProcessInterface.hpp"
 
@@ -186,6 +186,7 @@ void SpatiocyteStepper::finalizeSpecies()
     {
       (*i)->finalizeSpecies();
     }
+  theThreads[0]->initialize();
   theThreads[0]->initializeLists();
 }
 
@@ -540,7 +541,7 @@ void SpatiocyteStepper::initSpecies()
       i != theSpecies.end(); ++i)
     {
       (*i)->initialize(theSpecies.size(), theBoxMaxSize, theAdjoinSize,
-                       theNullMol, theNullID);
+                       theNullMol, theNullID, theThreads);
     }
   for(std::vector<Comp*>::const_iterator i(theComps.begin());
       i != theComps.end(); ++i)
@@ -1053,9 +1054,9 @@ void SpatiocyteStepper::setLatticeProperties()
       theTotalLayers += 2;
       readjustSurfaceBoundarySizes();
     }
-  theBoxRows = 2;
-  theBoxCols = 2;
-  theBoxLayers = 2;
+  theBoxRows = 1;
+  theBoxCols = 1;
+  theBoxLayers = 1;
   theBoxSize = theBoxRows*theBoxCols*theBoxLayers;
   theRows.resize(theBoxSize);
   theCols.resize(theBoxSize);

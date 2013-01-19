@@ -29,7 +29,7 @@
 //
 
 #include "SpatiocyteProcess.hpp"
-#include "SpatiocyteSpecies.hpp"
+#include "Species.hpp"
 
 LIBECS_DM_INIT(SpatiocyteProcess, Process);
 
