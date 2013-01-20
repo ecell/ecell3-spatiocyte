@@ -481,9 +481,8 @@ public:
               anAdjBoxes[i] = theAdjBoxes[anID][i];
             } 
           anIDs = theIDs[anID];
-          //setTars(anID, 0, aMols, aTars, anAdjMols[0], anAdjTars[0], anAdjoins, aRng);
-          setTars(theMols[anID], theTars[anID], theAdjMols[0], theAdjTars[0],
-                  anID, theAdjoins[anID]);
+          setTars(anID, 0, aMols, aTars, anAdjMols[0], anAdjTars[0], anAdjoins, aRng);
+          //setTars(theMols[anID], theTars[anID], theAdjMols[0], theAdjTars[0], anID, theAdjoins[anID]);
         }
     }
   unsigned getCollisionCnt(unsigned anIndex)
@@ -658,7 +657,6 @@ public:
       std::cout << "error in species add collision" << std::endl;
       */
     }
-  /*
   void walkMols(std::vector<unsigned>& aMols,
                 const std::vector<unsigned>& aTars,
                 std::vector<unsigned short>& anIDs);
@@ -693,7 +691,6 @@ public:
                    std::vector<unsigned>& aMols,
                    std::vector<unsigned>& aTars,
                    const std::vector<unsigned>& anAdjBoxes);
-           */
   void walk(const unsigned anID, unsigned r, unsigned w,
            RandomLib::Random& aRng,
            std::vector<unsigned>& aMols,
@@ -709,6 +706,7 @@ public:
            std::vector<unsigned>& anAdjoins,
            std::vector<unsigned short>& anIDs,
            std::vector<unsigned>& anAdjBoxes);
+  /*
   void setTars(std::vector<unsigned>& aMols,
                std::vector<unsigned>& aTars,
                std::vector<std::vector<std::vector<unsigned> > >& aNextMols,
@@ -750,6 +748,7 @@ public:
                         std::vector<std::vector<unsigned> >& anAdjAdjTars,
                         std::vector<std::vector<unsigned> >& anAdjMols,
                         std::vector<std::vector<unsigned> >& anAdjTars);
+                        */
 
   void walkMultiscale()
     {

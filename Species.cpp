@@ -32,7 +32,7 @@
 
 //all writing -> local
 //all reading -> shared
-/*
+
 void Species::updateBoxMols(const unsigned currBox, const unsigned r,
                             std::vector<unsigned>& aMols,
                             std::vector<unsigned>& aTars,
@@ -225,8 +225,6 @@ void Species::walkAdjMols(const unsigned currBox, const unsigned r,
       adjTars.resize(0);
     }
 }
-*/
-
 
 void Species::walk(const unsigned anID, unsigned r, unsigned w,
            RandomLib::Random& aRng,
@@ -244,7 +242,6 @@ void Species::walk(const unsigned anID, unsigned r, unsigned w,
            std::vector<unsigned short>& anIDs,
            std::vector<unsigned>& anAdjBoxes)
 {
-  /*
   updateBoxMols(anID, r, aMols, aTars, anAdjBoxes);
   walkMols(aMols, aTars, anIDs);
   updateAdjMols(anID, r, aRepeatAdjMols, aRepeatAdjTars, anAdjBoxes);
@@ -254,43 +251,22 @@ void Species::walk(const unsigned anID, unsigned r, unsigned w,
              anAdjAdjTars[w], aRepeatAdjMols, aRepeatAdjTars, anAdjBoxes,
              anAdjoins, aRng);
   setTars(anID, w, aMols, aTars, anAdjMols[w], anAdjTars[w], anAdjoins, aRng);
-  */
-  //for(unsigned i(0); i != theBoxSize; ++i)
-  for(unsigned i(anID); i != (anID)+1; ++i)
-    {
-      updateBoxMols(theBorderMols[r][i], theBorderTars[r][i], theMols[i],
-                    theTars[i], theAdjBoxes[i]);
-    }
-  for(unsigned i(anID); i != (anID)+1; ++i)
-    {
-      walkMols(theMols[i], theTars[i], theIDs[i]);
-    }
-  for(unsigned i(anID); i != (anID)+1; ++i)
-    {
-      updateAdjMols(theRepeatAdjMols[i], theRepeatAdjTars[i],
-                    theAdjMols[r][i], theAdjTars[r][i], theAdjBoxes[i]);
-    }
-  for(unsigned i(anID); i != (anID)+1; ++i)
-    {
-      updateAdjAdjMols(theAdjAdjMols[r][i], theAdjAdjTars[r][i],
-                    theAdjMols[r][i], theAdjTars[r][i]);
-    }
-  for(unsigned i(anID); i != (anID)+1; ++i)
-    {
-      walkAdjMols(theMols[i], theAdjMols[r][i], theAdjTars[r][i],
-                  theIDs[i], theAdjBoxes[i]);
-    }
-  for(unsigned i(anID); i != (anID)+1; ++i)
-    {
-      setAdjTars(theBorderMols[w], theBorderTars[w], theAdjAdjMols[w],
-                 theAdjAdjTars[w], theRepeatAdjMols[i],
-                 theRepeatAdjTars[i], theAdjMols[r][i], theAdjBoxes[i], i);
-    }
-  for(unsigned i(anID); i != (anID)+1; ++i)
-    {
-      setTars(theMols[i], theTars[i], theAdjMols[w], theAdjTars[w], i,
-              theAdjoins[i]);
-    }
+  /*
+  updateBoxMols(theBorderMols[r][anID], theBorderTars[r][anID], theMols[anID],
+                theTars[anID], theAdjBoxes[anID]);
+  walkMols(theMols[anID], theTars[anID], theIDs[anID]);
+  updateAdjMols(theRepeatAdjMols[anID], theRepeatAdjTars[anID],
+                theAdjMols[r][anID], theAdjTars[r][anID], theAdjBoxes[anID]);
+  updateAdjAdjMols(theAdjAdjMols[r][anID], theAdjAdjTars[r][anID],
+                theAdjMols[r][anID], theAdjTars[r][anID]);
+  walkAdjMols(theMols[anID], theAdjMols[r][anID], theAdjTars[r][anID],
+              theIDs[anID], theAdjBoxes[anID]);
+  setAdjTars(theBorderMols[w], theBorderTars[w], theAdjAdjMols[w],
+             theAdjAdjTars[w], theRepeatAdjMols[anID], theRepeatAdjTars[anID],
+             theAdjMols[r][anID], theAdjBoxes[anID], anID);
+  setTars(theMols[anID], theTars[anID], theAdjMols[w], theAdjTars[w], anID,
+          theAdjoins[anID]);
+          */
 }
 
 void Species::updateMols()
@@ -303,7 +279,6 @@ void Species::updateMols()
     {
       updateTagMols();
     }
-  /*
   if(!theID)
     {
       for(unsigned i(0); i != theThreads.size(); ++i)
@@ -311,9 +286,10 @@ void Species::updateMols()
           theThreads[i]->updateMols(theMols[i]);
         }
     }
-    */
 }
 
+
+/*
 void Species::setTars(std::vector<unsigned>& aMols,
            std::vector<unsigned>& aTars,
            std::vector<std::vector<std::vector<unsigned> > >& aNextMols,
@@ -503,3 +479,4 @@ void Species::updateAdjAdjMols(std::vector<std::vector<unsigned> >& anAdjAdjMols
       adjAdjTars.resize(0);
     }
 }
+*/
