@@ -76,6 +76,78 @@ public:
     {
       pthread_join(theThreadID, NULL);
     }
+  unsigned getBorderMolsSize(unsigned r)
+    {
+      unsigned aSize(0);
+      for(unsigned i(0); i != theBoxSize; ++i)
+        {
+          aSize += theBorderMols[r][i].size();
+        }
+      return aSize;
+    }
+  unsigned getBorderTarsSize(unsigned r)
+    {
+      unsigned aSize(0);
+      for(unsigned i(0); i != theBoxSize; ++i)
+        {
+          aSize += theBorderTars[r][i].size();
+        }
+      return aSize;
+    }
+  unsigned getAdjMolsSize(unsigned r)
+    {
+      unsigned aSize(0);
+      for(unsigned i(0); i != theBoxSize; ++i)
+        {
+          aSize += theAdjMols[r][i].size();
+        }
+      return aSize;
+    }
+  unsigned getAdjTarsSize(unsigned r)
+    {
+      unsigned aSize(0);
+      for(unsigned i(0); i != theBoxSize; ++i)
+        {
+          aSize += theAdjTars[r][i].size();
+        }
+      return aSize;
+    }
+  unsigned getAdjAdjMolsSize(unsigned r)
+    {
+      unsigned aSize(0);
+      for(unsigned i(0); i != theBoxSize; ++i)
+        {
+          aSize += theAdjAdjMols[r][i].size();
+        }
+      return aSize;
+    }
+  unsigned getAdjAdjTarsSize(unsigned r)
+    {
+      unsigned aSize(0);
+      for(unsigned i(0); i != theBoxSize; ++i)
+        {
+          aSize += theAdjAdjTars[r][i].size();
+        }
+      return aSize;
+    }
+  unsigned getRepeatAdjMolsSize()
+    {
+      unsigned aSize(0);
+      for(unsigned i(0); i != theBoxSize; ++i)
+        {
+          aSize += theRepeatAdjMols[i].size();
+        }
+      return aSize;
+    }
+  unsigned getRepeatAdjTarsSize()
+    {
+      unsigned aSize(0);
+      for(unsigned i(0); i != theBoxSize; ++i)
+        {
+          aSize += theRepeatAdjTars[i].size();
+        }
+      return aSize;
+    }
   std::vector<unsigned>& getBorderMols(unsigned aBox, unsigned r)
     {
       return theBorderMols[r][aBox];

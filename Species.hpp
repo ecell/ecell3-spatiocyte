@@ -480,7 +480,11 @@ public:
             {
               anAdjBoxes[i] = theAdjBoxes[anID][i];
             } 
-          anIDs = theIDs[anID];
+          anIDs.resize(theIDs[anID].size());
+          for(unsigned i(0); i != theIDs[anID].size(); ++i)
+            {
+              anIDs[i] = theIDs[anID][i];
+            } 
           setTars(anID, 0, aMols, aTars, anAdjMols[0], anAdjTars[0], anAdjoins, aRng);
           //setTars(theMols[anID], theTars[anID], theAdjMols[0], theAdjTars[0], anID, theAdjoins[anID]);
         }
