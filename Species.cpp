@@ -32,6 +32,7 @@
 
 //all writing -> local
 //all reading -> shared
+/*
 void Species::updateBoxMols(const unsigned currBox, const unsigned r,
                             std::vector<unsigned>& aMols,
                             std::vector<unsigned>& aTars,
@@ -79,10 +80,6 @@ void Species::walkMols(std::vector<unsigned>& aMols,
 void Species::updateAdjMols(const unsigned currBox, const unsigned r,
                             std::vector<std::vector<unsigned> >& aRepeatAdjMols,
                             std::vector<std::vector<unsigned> >& aRepeatAdjTars,
-                            /*
-                            std::vector<std::vector<unsigned> >& anAdjMols,
-                            std::vector<std::vector<unsigned> >& anAdjTars,
-                            */
                             const std::vector<unsigned>& anAdjBoxes)
 {
   for(unsigned i(0); i != anAdjBoxes.size(); ++i)
@@ -90,10 +87,6 @@ void Species::updateAdjMols(const unsigned currBox, const unsigned r,
       const unsigned adjBox(anAdjBoxes[i]);
       std::vector<unsigned>& repeatAdjMols(aRepeatAdjMols[adjBox]);
       std::vector<unsigned>& repeatAdjTars(aRepeatAdjTars[adjBox]);
-      /*
-      std::vector<unsigned>& adjMols(anAdjMols[adjBox]);
-      std::vector<unsigned>& adjTars(anAdjTars[adjBox]);
-      */
       std::vector<unsigned>& adjMols(theThreads[adjBox
                                      ]->getAdjMols(currBox, r));
       std::vector<unsigned>& adjTars(theThreads[adjBox
@@ -151,8 +144,6 @@ void Species::setTars(const unsigned currBox,
         }
       else
         {
-          //theThreads[aTar/theBoxMaxSize]->pushAdj(currBox, w, aMol, aTar);
-          //theThreads[aTar/theBoxMaxSize/(theBoxSize/theThreads.size())]->pushAdj(currBox, w, aMol, aTar);
           anAdjMols[aTar/theBoxMaxSize].push_back(aMol);
           anAdjTars[aTar/theBoxMaxSize].push_back(aTar);
           aMol = aMols.back();
@@ -234,6 +225,7 @@ void Species::walkAdjMols(const unsigned currBox, const unsigned r,
       adjTars.resize(0);
     }
 }
+*/
 
 
 void Species::walk(const unsigned anID, unsigned r, unsigned w,
@@ -252,6 +244,7 @@ void Species::walk(const unsigned anID, unsigned r, unsigned w,
            std::vector<unsigned short>& anIDs,
            std::vector<unsigned>& anAdjBoxes)
 {
+  /*
   updateBoxMols(anID, r, aMols, aTars, anAdjBoxes);
   walkMols(aMols, aTars, anIDs);
   updateAdjMols(anID, r, aRepeatAdjMols, aRepeatAdjTars, anAdjBoxes);
@@ -260,68 +253,44 @@ void Species::walk(const unsigned anID, unsigned r, unsigned w,
   setAdjTars(anID, r, aBorderMols[w], aBorderTars[w], anAdjAdjMols[w],
              anAdjAdjTars[w], aRepeatAdjMols, aRepeatAdjTars, anAdjBoxes,
              anAdjoins, aRng);
-  setTars(anID, w, aMols, aTars, anAdjMols[r], anAdjTars[r], anAdjoins, aRng);
-  //setTars(theMols[anID], theTars[anID], theAdjMols[w][anID], theAdjTars[w][anID], anID, theAdjoins[anID], aRng);
-  //setTars(aMols, aTars, anID, anAdjoins, aRng);
-  //setTars(theMols[anID], theTars[anID], anID, theAdjoins[anID], aRng);
-  /*
-  for(unsigned i(0); i != 6; ++i)
-    {
-      setTars(theMols[i], theTars[i], anID, theAdjoins[i], aRng);
-    }
-    */
-  /*
-  if(!anID)
-    {
-      if(isToggled)
-        {
-          r = 1;
-          w = 0;
-          isToggled = false;
-        }
-      else
-        {
-          isToggled = true;
-        }
-      theStepper->runThreads();
-    }
+  setTars(anID, w, aMols, aTars, anAdjMols[w], anAdjTars[w], anAdjoins, aRng);
+  */
   //for(unsigned i(0); i != theBoxSize; ++i)
-  for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+  for(unsigned i(anID); i != (anID)+1; ++i)
     {
       updateBoxMols(theBorderMols[r][i], theBorderTars[r][i], theMols[i],
                     theTars[i], theAdjBoxes[i]);
     }
-  for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+  for(unsigned i(anID); i != (anID)+1; ++i)
     {
       walkMols(theMols[i], theTars[i], theIDs[i]);
     }
-  for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+  for(unsigned i(anID); i != (anID)+1; ++i)
     {
       updateAdjMols(theRepeatAdjMols[i], theRepeatAdjTars[i],
                     theAdjMols[r][i], theAdjTars[r][i], theAdjBoxes[i]);
     }
-  for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+  for(unsigned i(anID); i != (anID)+1; ++i)
     {
       updateAdjAdjMols(theAdjAdjMols[r][i], theAdjAdjTars[r][i],
                     theAdjMols[r][i], theAdjTars[r][i]);
     }
-  for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+  for(unsigned i(anID); i != (anID)+1; ++i)
     {
       walkAdjMols(theMols[i], theAdjMols[r][i], theAdjTars[r][i],
                   theIDs[i], theAdjBoxes[i]);
     }
-  for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+  for(unsigned i(anID); i != (anID)+1; ++i)
     {
       setAdjTars(theBorderMols[w], theBorderTars[w], theAdjAdjMols[w],
                  theAdjAdjTars[w], theRepeatAdjMols[i],
                  theRepeatAdjTars[i], theAdjMols[r][i], theAdjBoxes[i], i);
     }
-  for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+  for(unsigned i(anID); i != (anID)+1; ++i)
     {
       setTars(theMols[i], theTars[i], theAdjMols[w], theAdjTars[w], i,
               theAdjoins[i]);
     }
-    */
 }
 
 void Species::updateMols()
@@ -334,6 +303,7 @@ void Species::updateMols()
     {
       updateTagMols();
     }
+  /*
   if(!theID)
     {
       for(unsigned i(0); i != theThreads.size(); ++i)
@@ -341,5 +311,195 @@ void Species::updateMols()
           theThreads[i]->updateMols(theMols[i]);
         }
     }
+    */
 }
 
+void Species::setTars(std::vector<unsigned>& aMols,
+           std::vector<unsigned>& aTars,
+           std::vector<std::vector<std::vector<unsigned> > >& aNextMols,
+           std::vector<std::vector<std::vector<unsigned> > >& aNextTars,
+           const unsigned currBox,
+           const std::vector<unsigned>& anAdjoins)
+{
+  aTars.resize(0);
+  for(unsigned i(0); i < aMols.size(); ++i)
+    {
+      unsigned& aMol(aMols[i]);
+      const unsigned aTar(anAdjoins[aMol*theAdjoinSize+rng.IntegerC(11)]);
+      if(aTar/theBoxMaxSize == currBox) 
+        {
+          aTars.push_back(aTar);
+        }
+      else
+        {
+          aNextMols[aTar/theBoxMaxSize][currBox].push_back(aMol);
+          aNextTars[aTar/theBoxMaxSize][currBox].push_back(aTar);
+          aMol = aMols.back();
+          aMols.pop_back();
+          --i;
+        }
+    }
+}
+void Species::walkMols(std::vector<unsigned>& aMols,
+            const std::vector<unsigned>& aTars,
+            std::vector<unsigned short>& anIDs)
+{
+  for(unsigned i(0); i < aMols.size(); ++i)
+    {
+      const unsigned aTar(aTars[i]);
+      const unsigned aTarMol(aTar%theBoxMaxSize);
+      if(anIDs[aTarMol] == theVacantID)
+        {
+          if(theWalkProbability == 1 ||
+             gsl_rng_uniform(theRng) < theWalkProbability)
+            {
+              anIDs[aTarMol] = theID;
+              anIDs[aMols[i]] = theVacantID;
+              aMols[i] = aTarMol;
+            }
+        }
+    }
+}
+void Species::walkAdjMols(std::vector<unsigned>& aMols,
+               std::vector<std::vector<unsigned> >& aBoxAdjMols,
+               std::vector<std::vector<unsigned> >& aBoxAdjTars, 
+               std::vector<unsigned short>& anIDs,
+               const std::vector<unsigned>& anAdjBoxes)
+{
+  for(unsigned i(0); i != anAdjBoxes.size(); ++i)
+    {
+      const unsigned aBox(anAdjBoxes[i]);
+      std::vector<unsigned>& adjMols(aBoxAdjMols[aBox]);
+      std::vector<unsigned>& adjTars(aBoxAdjTars[aBox]);
+      for(unsigned j(0); j < adjMols.size(); ++j)
+        {
+          const unsigned aTar(adjTars[j]);
+          const unsigned aTarMol(aTar%theBoxMaxSize);
+          if(anIDs[aTarMol] == theVacantID)
+            {
+              anIDs[aTarMol] = theID;
+              theIDs[aBox][adjMols[j]] = theVacantID;
+              aMols.push_back(aTarMol);
+              adjMols[j] = adjMols.back();
+              adjMols.pop_back();
+              adjTars[j] = adjTars.back();
+              adjTars.pop_back();
+              --j;
+            }
+        }
+      adjTars.resize(0);
+    }
+}
+void Species::setAdjTars(std::vector<std::vector<std::vector<unsigned> > >&
+              aBorderMols,
+              std::vector<std::vector<std::vector<unsigned> > >&
+              aBorderTars,
+              std::vector<std::vector<std::vector<unsigned> > >&
+              anAdjAdjMols,
+              std::vector<std::vector<std::vector<unsigned> > >&
+              anAdjAdjTars,
+              std::vector<std::vector<unsigned> >& aRepeatAdjMols,
+              std::vector<std::vector<unsigned> >& aRepeatAdjTars,
+              std::vector<std::vector<unsigned> >& anAdjMols,
+              const std::vector<unsigned>& anAdjBoxes,
+              const unsigned currBox)
+
+{
+  for(unsigned i(0); i != anAdjBoxes.size(); ++i)
+    {
+      const unsigned adjBox(anAdjBoxes[i]);
+      const std::vector<unsigned>& anAdjoins(theAdjoins[adjBox]);
+      std::vector<unsigned>& adjMols(anAdjMols[adjBox]);
+      for(unsigned j(0); j < adjMols.size(); ++j)
+        {
+          const unsigned aMol(adjMols[j]);
+          const unsigned aTar(anAdjoins[aMol*theAdjoinSize+
+                              rng.IntegerC(11)]);
+          const unsigned aBox(aTar/theBoxMaxSize);
+          if(aBox == currBox) 
+            {
+              aRepeatAdjMols[adjBox].push_back(aMol);
+              aRepeatAdjTars[adjBox].push_back(aTar);
+            }
+          else if(aBox == adjBox)
+            {
+              aBorderMols[adjBox][currBox].push_back(aMol);
+              aBorderTars[adjBox][currBox].push_back(aTar);
+            }
+          else
+            {
+              anAdjAdjMols[aBox][currBox].push_back(theBoxMaxSize*adjBox+
+                                                     aMol);
+              anAdjAdjTars[aBox][currBox].push_back(aTar);
+            }
+        }
+      adjMols.resize(0);
+    }
+}
+
+void Species::updateBoxMols(std::vector<std::vector<unsigned> >& aBorderMols,
+                 std::vector<std::vector<unsigned> >& aBorderTars,
+                 std::vector<unsigned>& aMols,
+                 std::vector<unsigned>& aTars,
+                 const std::vector<unsigned>& anAdjBoxes)
+{
+  for(unsigned i(0); i != anAdjBoxes.size(); ++i)
+    {
+      const unsigned adjBox(anAdjBoxes[i]);
+      std::vector<unsigned>& borderMols(aBorderMols[adjBox]);
+      std::vector<unsigned>& borderTars(aBorderTars[adjBox]);
+      for(unsigned j(0); j < borderMols.size(); ++j)
+        {
+          aMols.push_back(borderMols[j]);
+          aTars.push_back(borderTars[j]);
+        }
+      borderMols.resize(0);
+      borderTars.resize(0);
+    }
+}
+void Species::updateAdjMols(std::vector<std::vector<unsigned> >& aRepeatAdjMols,
+                 std::vector<std::vector<unsigned> >& aRepeatAdjTars,
+                 std::vector<std::vector<unsigned> >& anAdjMols,
+                 std::vector<std::vector<unsigned> >& anAdjTars,
+                 const std::vector<unsigned>& anAdjBoxes)
+{
+  for(unsigned i(0); i != anAdjBoxes.size(); ++i)
+    {
+      const unsigned adjBox(anAdjBoxes[i]);
+      std::vector<unsigned>& repeatAdjMols(aRepeatAdjMols[adjBox]);
+      std::vector<unsigned>& repeatAdjTars(aRepeatAdjTars[adjBox]);
+      std::vector<unsigned>& adjMols(anAdjMols[adjBox]);
+      std::vector<unsigned>& adjTars(anAdjTars[adjBox]);
+      for(unsigned j(0); j != repeatAdjMols.size(); ++j)
+        {
+          adjMols.push_back(repeatAdjMols[j]);
+          adjTars.push_back(repeatAdjTars[j]);
+        }
+      repeatAdjMols.resize(0);
+      repeatAdjTars.resize(0);
+    }
+}
+void Species::updateAdjAdjMols(std::vector<std::vector<unsigned> >& anAdjAdjMols,
+                    std::vector<std::vector<unsigned> >& anAdjAdjTars,
+                    std::vector<std::vector<unsigned> >& anAdjMols,
+                    std::vector<std::vector<unsigned> >& anAdjTars)
+
+{
+  //for(unsigned i(0); i != anAdjAdjBoxes.size(); ++i)
+  for(unsigned i(0); i != theBoxSize; ++i)
+    {
+      //const unsigned adjAdjBox(anAdjAdjBoxes[i]);
+      const unsigned adjAdjBox(i);
+      std::vector<unsigned>& adjAdjMols(anAdjAdjMols[adjAdjBox]);
+      std::vector<unsigned>& adjAdjTars(anAdjAdjTars[adjAdjBox]);
+      for(unsigned j(0); j != adjAdjMols.size(); ++j)
+        {
+          const unsigned aMol(adjAdjMols[j]);
+          const unsigned aBox(aMol/theBoxMaxSize);
+          anAdjMols[aBox].push_back(aMol-theBoxMaxSize*aBox);
+          anAdjTars[aBox].push_back(adjAdjTars[j]);
+        }
+      adjAdjMols.resize(0);
+      adjAdjTars.resize(0);
+    }
+}

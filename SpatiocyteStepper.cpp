@@ -115,44 +115,16 @@ void SpatiocyteStepper::initialize()
   std::cout << "19. simulation is started..." << std::endl;
 }
 
-void SpatiocyteStepper::runThreads()
-{
-  nThreadsRunning = 0;
-  if(theRunA)
-    {
-      flagA = FLAG_RUN;
-      barrier();
-      while(ACCESS_ONCE(nThreadsRunning) < theThreadSize-1)
-        {
-          continue;
-        }
-      flagA = FLAG_STOP;
-      theRunA = false;
-    }
-  else
-    {
-      flagB = FLAG_RUN;
-      barrier();
-      while(ACCESS_ONCE(nThreadsRunning) < theThreadSize-1)
-        {
-          continue;
-        }
-      flagB = FLAG_STOP;
-      theRunA = true;
-    }
-}
-
 void SpatiocyteStepper::initializeThreads()
 {
-  pthread_setconcurrency(theThreadSize-1); 
   nThreadsRunning = 0;
   flagA = FLAG_STOP;
   flagB = FLAG_STOP;
   theThreads.resize(theThreadSize);
   for(unsigned i(0); i != theThreadSize; ++i)
     {
-      theThreads[i] = new Thread(i, nThreadsRunning, flagA, flagB, theSpecies,
-                                 *this);
+      theThreads[i] = new Thread(i, theThreadSize, nThreadsRunning, flagA,
+                                 flagB, theSpecies, *this);
       if(i)
         {
           theThreads[i]->create();
@@ -1054,8 +1026,8 @@ void SpatiocyteStepper::setLatticeProperties()
       theTotalLayers += 2;
       readjustSurfaceBoundarySizes();
     }
-  theBoxRows = 1;
-  theBoxCols = 2;
+  theBoxRows = 5;
+  theBoxCols = 1;
   theBoxLayers = 1;
   theBoxSize = theBoxRows*theBoxCols*theBoxLayers;
   theRows.resize(theBoxSize);
@@ -1663,11 +1635,8 @@ void SpatiocyteStepper::constructLattice()
 
 void SpatiocyteStepper::constructLattice(unsigned anID)
 {
-  if(!anID)
-    {
-      runThreads();
-    }
-  else
+  theThreads[anID]->runThreads();
+  if(anID)
     {
       return;
     }
@@ -1743,15 +1712,13 @@ void SpatiocyteStepper::constructLattice(unsigned anID)
             }
         }
     }
+  theThreads[anID]->waitThreads();
 }
 
 void SpatiocyteStepper::concatenateLattice(unsigned anID)
 { 
-  if(!anID)
-    {
-      runThreads();
-    }
-  else
+  theThreads[anID]->runThreads();
+  if(anID)
     {
       return;
     }
@@ -1763,6 +1730,7 @@ void SpatiocyteStepper::concatenateLattice(unsigned anID)
           concatenateVoxel(i, j);
         }
     }
+  theThreads[anID]->waitThreads();
 }
 
 void SpatiocyteStepper::setBoundaries()

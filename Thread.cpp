@@ -32,10 +32,7 @@
 
 void Thread::initialize()
 {
-  if(!theID)
-    {
-      theStepper.runThreads();
-    }
+  runThreads();
   theBoxSize = theStepper.getBoxSize();
   theRng.Reseed();
   theAdjMols.resize(2);
@@ -55,21 +52,21 @@ void Thread::initialize()
       theBorderMols[i].resize(theBoxSize);
       theBorderTars[i].resize(theBoxSize);
     }
+  waitThreads();
 }
 
 void Thread::initializeLists()
 {
-  if(!theID)
-    {
-      theStepper.runThreads();
-    }
+  runThreads();
   theSpecies[0]->initializeLists(theID, theRng, theMols, theTars,
                                  theAdjMols, theAdjTars, theAdjoins, theIDs,
                                  theAdjBoxes);
+  waitThreads();
 }
 
 void Thread::walk()
 {
+  runThreads();
   unsigned r(0);
   unsigned w(1);
   if(isToggled)
@@ -81,13 +78,56 @@ void Thread::walk()
   else
     {
       isToggled = true;
-    }
-  if(!theID)
+    } 
+  theSpecies[0]->walk(theID, r, w, theRng, theMols, theTars, theAdjMols,
+                      theAdjTars, theAdjAdjMols, theAdjAdjTars, theBorderMols,
+                      theBorderTars, theRepeatAdjMols, theRepeatAdjTars,
+                      theAdjoins, theIDs, theAdjBoxes);
+  waitThreads();
+}
+void Thread::runThreads()
+{
+  if(theID)
     {
-      theStepper.runThreads();
-      //theSpecies[0]->walk(theID, 1, 0, theRng, theMols, theTars, theAdjMols, theAdjTars, theRepeatAdjMols, theRepeatAdjTars, theAdjoins, theIDs, theAdjBoxes);
+      return;
     }
-  theSpecies[0]->walk(theID, r, w, theRng, theMols, theTars, theAdjMols, theAdjTars, theAdjAdjMols, theAdjAdjTars, theBorderMols, theBorderTars, theRepeatAdjMols, theRepeatAdjTars, theAdjoins, theIDs, theAdjBoxes);
+  nThreadsRunning = 0;
+  if(isRunA)
+    {
+      flagA = FLAG_RUN;
+    }
+  else
+    {
+      flagB = FLAG_RUN;
+    }
+}
+
+void Thread::waitThreads()
+{
+  if(theID)
+    {
+      return;
+    }
+  if(isRunA)
+    {
+      barrier();
+      while(ACCESS_ONCE(nThreadsRunning) < theThreadSize-1)
+        {
+          continue;
+        }
+      flagA = FLAG_STOP;
+      isRunA = false;
+    }
+  else
+    {
+      barrier();
+      while(ACCESS_ONCE(nThreadsRunning) < theThreadSize-1)
+        {
+          continue;
+        }
+      flagB = FLAG_STOP;
+      isRunA = true;
+    }
 }
 
 void Thread::work()
@@ -122,14 +162,14 @@ void Thread::work()
         {
           continue;
         }
-      __sync_fetch_and_add(&nThreadsRunning, 1);
       walk();
+      __sync_fetch_and_add(&nThreadsRunning, 1);
       while(ACCESS_ONCE(flagB) == FLAG_STOP)
         {
           continue;
         }
-      __sync_fetch_and_add(&nThreadsRunning, 1);
       walk();
+      __sync_fetch_and_add(&nThreadsRunning, 1);
     }
 }
 

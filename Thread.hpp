@@ -46,15 +46,18 @@
 class Thread
 { 
 public: 
-  Thread(unsigned anID, unsigned& aThreadsRunning, char& aFlagA, char& aFlagB,
-         std::vector<Species*>& aSpecies, SpatiocyteStepper& aStepper):
+  Thread(unsigned anID, unsigned aThreadSize, unsigned& aThreadsRunning,
+         char& aFlagA, char& aFlagB, std::vector<Species*>& aSpecies,
+         SpatiocyteStepper& aStepper):
     theID(anID),
+    theThreadSize(aThreadSize),
     theStepper(aStepper),
     nThreadsRunning(aThreadsRunning),
     flagA(aFlagA),
     flagB(aFlagB),
     theSpecies(aSpecies),
-    isToggled(false)
+    isToggled(false),
+    isRunA(true)
   {
     std::ostringstream fileName;
     fileName << "thread" << anID << ".out" << std::ends;
@@ -113,6 +116,8 @@ public:
           aMols = theMols;
         }
     }
+  void runThreads();
+  void waitThreads();
   void initialize();
   void initializeLists();
   void walk();
@@ -124,7 +129,8 @@ protected:
       return NULL;
     }
   pthread_t theThreadID;
-  unsigned theID;
+  const unsigned theID;
+  const unsigned theThreadSize;
   SpatiocyteStepper& theStepper;
   unsigned& nThreadsRunning;
   char& flagA;
@@ -147,6 +153,9 @@ protected:
   std::vector<std::vector<unsigned> > theRepeatAdjMols;
   std::vector<std::vector<unsigned> > theRepeatAdjTars;
   bool isToggled;
+  unsigned startBox;
+  unsigned endBox;
+  bool isRunA;
 };
 
 #endif /* __Thread_hpp */
