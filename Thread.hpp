@@ -116,8 +116,9 @@ public:
           aMols = theMols;
         }
     }
-  void runThreads();
-  void waitThreads();
+  void runChildren();
+  void waitChildren();
+  void waitParent();
   void initialize();
   void initializeLists();
   void walk();

@@ -1635,7 +1635,7 @@ void SpatiocyteStepper::constructLattice()
 
 void SpatiocyteStepper::constructLattice(unsigned anID)
 {
-  theThreads[anID]->runThreads();
+  theThreads[anID]->runChildren();
   if(anID)
     {
       return;
@@ -1712,12 +1712,12 @@ void SpatiocyteStepper::constructLattice(unsigned anID)
             }
         }
     }
-  theThreads[anID]->waitThreads();
+  theThreads[anID]->waitChildren();
 }
 
 void SpatiocyteStepper::concatenateLattice(unsigned anID)
 { 
-  theThreads[anID]->runThreads();
+  theThreads[anID]->runChildren();
   if(anID)
     {
       return;
@@ -1730,7 +1730,7 @@ void SpatiocyteStepper::concatenateLattice(unsigned anID)
           concatenateVoxel(i, j);
         }
     }
-  theThreads[anID]->waitThreads();
+  theThreads[anID]->waitChildren();
 }
 
 void SpatiocyteStepper::setBoundaries()
