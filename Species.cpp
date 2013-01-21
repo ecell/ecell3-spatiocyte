@@ -124,49 +124,6 @@ void Species::updateAdjAdjMols(const unsigned currBox, const unsigned r)
     }
 }
 
-void Species::setAdjTars(const unsigned currBox, const unsigned r,
-                std::vector<std::vector<unsigned> >& aBorderMols,
-                std::vector<std::vector<unsigned> >& aBorderTars,
-                std::vector<std::vector<unsigned> >& anAdjAdjMols,
-                std::vector<std::vector<unsigned> >& anAdjAdjTars,
-                std::vector<std::vector<unsigned> >& aRepeatAdjMols,
-                std::vector<std::vector<unsigned> >& aRepeatAdjTars,
-                const std::vector<unsigned>& anAdjBoxes,
-                const std::vector<unsigned>& anAdjoins,
-                RandomLib::Random& aRng)
-
-{
-  for(unsigned i(0); i != anAdjBoxes.size(); ++i)
-    {
-      const unsigned adjBox(anAdjBoxes[i]);
-      //reading adjMols, so get it from the thread:
-      std::vector<unsigned>& adjMols(theThreads[adjBox
-                                     ]->getAdjMols(currBox, r));
-      for(unsigned j(0); j < adjMols.size(); ++j)
-        {
-          const unsigned aMol(adjMols[j]);
-          const unsigned aTar(anAdjoins[aMol*theAdjoinSize+aRng.IntegerC(11)]);
-          const unsigned aBox(aTar/theBoxMaxSize);
-          if(aBox == currBox) 
-            {
-              aRepeatAdjMols[adjBox].push_back(aMol);
-              aRepeatAdjTars[adjBox].push_back(aTar);
-            }
-          else if(aBox == adjBox)
-            {
-              aBorderMols[adjBox].push_back(aMol);
-              aBorderTars[adjBox].push_back(aTar);
-            }
-          else
-            {
-              anAdjAdjMols[aBox].push_back(theBoxMaxSize*adjBox+aMol);
-              anAdjAdjTars[aBox].push_back(aTar);
-            }
-        }
-      adjMols.resize(0);
-    }
-}
-
 void Species::walkAdjMols(const unsigned currBox, const unsigned r,
                           std::vector<unsigned>& aMols,
                           std::vector<unsigned short>& anIDs,
@@ -195,6 +152,49 @@ void Species::walkAdjMols(const unsigned currBox, const unsigned r,
             }
         }
       adjTars.resize(0);
+    }
+}
+
+void Species::setAdjTars(const unsigned currBox, const unsigned r,
+                std::vector<std::vector<unsigned> >& aBorderMols,
+                std::vector<std::vector<unsigned> >& aBorderTars,
+                std::vector<std::vector<unsigned> >& anAdjAdjMols,
+                std::vector<std::vector<unsigned> >& anAdjAdjTars,
+                std::vector<std::vector<unsigned> >& aRepeatAdjMols,
+                std::vector<std::vector<unsigned> >& aRepeatAdjTars,
+                const std::vector<unsigned>& anAdjBoxes,
+                RandomLib::Random& aRng)
+
+{
+  for(unsigned i(0); i != anAdjBoxes.size(); ++i)
+    {
+      const unsigned adjBox(anAdjBoxes[i]);
+      //reading adjMols, so get it from the thread:
+      std::vector<unsigned>& adjMols(theThreads[adjBox
+                                     ]->getAdjMols(currBox, r));
+      const std::vector<unsigned>& anAdjoins(theAdjoins[adjBox]);
+      for(unsigned j(0); j < adjMols.size(); ++j)
+        {
+          const unsigned aMol(adjMols[j]);
+          const unsigned aTar(anAdjoins[aMol*theAdjoinSize+aRng.IntegerC(11)]);
+          const unsigned aBox(aTar/theBoxMaxSize);
+          if(aBox == currBox) 
+            {
+              aRepeatAdjMols[adjBox].push_back(aMol);
+              aRepeatAdjTars[adjBox].push_back(aTar);
+            }
+          else if(aBox == adjBox)
+            {
+              aBorderMols[adjBox].push_back(aMol);
+              aBorderTars[adjBox].push_back(aTar);
+            }
+          else
+            {
+              anAdjAdjMols[aBox].push_back(theBoxMaxSize*adjBox+aMol);
+              anAdjAdjTars[aBox].push_back(aTar);
+            }
+        }
+      adjMols.resize(0);
     }
 }
 
@@ -247,14 +247,14 @@ void Species::walk(const unsigned anID, unsigned r, unsigned w,
   updateAdjMols(anID, r, aRepeatAdjMols, aRepeatAdjTars, anAdjBoxes);
   updateAdjAdjMols(anID, r); 
   walkAdjMols(anID, r, aMols, anIDs, anAdjBoxes);
-  setAdjTars(anID, r, aBorderMols[w], aBorderTars[w], anAdjAdjMols[w],
-             anAdjAdjTars[w], aRepeatAdjMols, aRepeatAdjTars, anAdjBoxes,
-             anAdjoins, aRng);
+  setAdjTars(anID, r, aBorderMols[w], aBorderTars[w], anAdjAdjMols[w], anAdjAdjTars[w], aRepeatAdjMols, aRepeatAdjTars, anAdjBoxes, aRng);
   setTars(anID, w, aMols, aTars, anAdjMols[w], anAdjTars[w], anAdjoins, aRng);
+  /*
   if(anID == 1)
     {
       std::cout << "m:" << aMols.size() << " t:" << aTars.size() << " bM0:" << theThreads[anID]->getBorderMolsSize(0) << " bM1:" << theThreads[anID]->getBorderMolsSize(1) << " bT0:" << theThreads[anID]->getBorderTarsSize(0) << " bT1:" << theThreads[anID]->getBorderTarsSize(1) << " aM0:" << theThreads[anID]->getAdjMolsSize(0) << " aM1:" << theThreads[anID]->getAdjMolsSize(1) << " aT0:" << theThreads[anID]->getAdjTarsSize(0) << " aT1:" << theThreads[anID]->getAdjTarsSize(1) <<  " aaM0:" << theThreads[anID]->getAdjAdjMolsSize(0) << " aaM1:" << theThreads[anID]->getAdjAdjMolsSize(1) << " aaT0:" << theThreads[anID]->getAdjAdjTarsSize(0) << " aaT1:" << theThreads[anID]->getAdjAdjTarsSize(1) << " raM:" << theThreads[anID]->getRepeatAdjMolsSize() << " raT:" << theThreads[anID]->getRepeatAdjTarsSize() << std::endl;
     }
+    */
 
 
   /*
@@ -285,7 +285,7 @@ void Species::updateMols()
     {
       updateTagMols();
     }
-  if(!theID)
+  if(!theID && theStepper->getCurrentTime() > 0)
     {
       for(unsigned i(0); i != theThreads.size(); ++i)
         {

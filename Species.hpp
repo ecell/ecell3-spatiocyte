@@ -676,7 +676,6 @@ public:
                 std::vector<std::vector<unsigned> >& aRepeatAdjMols,
                 std::vector<std::vector<unsigned> >& aRepeatAdjTars,
                 const std::vector<unsigned>& anAdjBoxes,
-                const std::vector<unsigned>& anAdjoins,
                 RandomLib::Random& aRng);
   void updateAdjMols(const unsigned currBox, const unsigned r,
                      std::vector<std::vector<unsigned> >& aRepeatAdjMols,

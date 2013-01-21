@@ -166,3 +166,23 @@ void Thread::work()
     }
 }
 
+
+void Thread::updateMols(std::vector<unsigned>& aMols)
+{
+  aMols.resize(theMols.size());
+  for(unsigned i(0); i != theMols.size(); ++i)
+    {
+      aMols[i] = theMols[i];
+    }
+  for(unsigned i(0); i != theBoxSize; ++i)
+    {
+      for(unsigned j(0); j != theAdjMols[0][i].size(); ++j)
+        {
+          aMols.push_back(theAdjMols[0][i][j]);
+        }
+      for(unsigned j(0); j != theAdjMols[1][i].size(); ++j)
+        {
+          aMols.push_back(theAdjMols[1][i][j]);
+        }
+    }
+}

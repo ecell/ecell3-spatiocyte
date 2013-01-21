@@ -181,13 +181,7 @@ public:
     {
       theIDs[aMol] = anID;
     }
-  void updateMols(std::vector<unsigned>& aMols)
-    {
-      if(theMols.size())
-        {
-          aMols = theMols;
-        }
-    }
+  void updateMols(std::vector<unsigned>& aMols);
   void runChildren();
   void waitChildren();
   void waitParent();
