@@ -460,7 +460,8 @@ public:
                        std::vector<std::vector<std::vector<unsigned> > >& anAdjTars,
                        std::vector<unsigned>& anAdjoins,
                        std::vector<unsigned short>& anIDs,
-                       std::vector<unsigned>& anAdjBoxes)
+                       std::vector<unsigned>& anAdjBoxes,
+                       std::vector<unsigned>& aRands)
     {
       if(theDiffusionInterval != libecs::INF)
         {
@@ -485,7 +486,8 @@ public:
             {
               anIDs[i] = theIDs[anID][i];
             } 
-          setTars(anID, 0, aMols, aTars, anAdjMols[0], anAdjTars[0], anAdjoins, aRng);
+          setRands(anID, 1, aMols.size(), anAdjBoxes, aRands, aRng);
+          setTars(anID, aMols, aTars, anAdjMols[0], anAdjTars[0], anAdjoins, aRands);
           //setTars(theMols[anID], theTars[anID], theAdjMols[0], theAdjTars[0], anID, theAdjoins[anID]);
         }
     }
@@ -661,6 +663,12 @@ public:
       std::cout << "error in species add collision" << std::endl;
       */
     }
+  void setRands(const unsigned currBox,
+                       const unsigned r,
+                       unsigned aSize,
+                       const std::vector<unsigned>& anAdjBoxes,
+                       std::vector<unsigned>& aRands,
+                       RandomLib::Random& aRng);
   void walkMols(std::vector<unsigned>& aMols,
                 const std::vector<unsigned>& aTars,
                 std::vector<unsigned short>& anIDs);
@@ -683,13 +691,12 @@ public:
                      const std::vector<unsigned>& anAdjBoxes);
   void updateAdjAdjMols(const unsigned currBox, const unsigned r);
   void setTars(const unsigned currBox,
-               const unsigned w,
                std::vector<unsigned>& aMols,
                std::vector<unsigned>& aTars,
                std::vector<std::vector<unsigned> >&,
                std::vector<std::vector<unsigned> >&,
                const std::vector<unsigned>& anAdjoins,
-               RandomLib::Random& aRng);
+               std::vector<unsigned>& aRands);
   void updateBoxMols(const unsigned currBox, const unsigned r,
                    std::vector<unsigned>& aMols,
                    std::vector<unsigned>& aTars,
@@ -706,9 +713,10 @@ public:
            std::vector<std::vector<std::vector<unsigned> > >& aBorderTars,
            std::vector<std::vector<unsigned> >& aRepeatAdjMols,
            std::vector<std::vector<unsigned> >& aRepeatAdjTars,
-           std::vector<unsigned>& anAdjoins,
+           const std::vector<unsigned>& anAdjoins,
            std::vector<unsigned short>& anIDs,
-           std::vector<unsigned>& anAdjBoxes);
+           const std::vector<unsigned>& anAdjBoxes,
+           std::vector<unsigned>& aRands);
   /*
   void setTars(std::vector<unsigned>& aMols,
                std::vector<unsigned>& aTars,

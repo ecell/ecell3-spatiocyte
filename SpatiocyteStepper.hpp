@@ -53,10 +53,9 @@ public:
     isInitialized(false),
     isPeriodicEdge(false),
     SearchVacant(false),
-    theRunA(true),
     LatticeType(HCP_LATTICE),
     theBoxSize(8),
-    theThreadSize(5),
+    theThreadSize(1),
     VoxelRadius(10e-9),
     nVoxelRadius(0.5) {}
   virtual ~SpatiocyteStepper() {}
@@ -196,7 +195,6 @@ private:
   bool isInitialized;
   bool isPeriodicEdge;
   bool SearchVacant;
-  bool theRunA;
   char flagA;
   char flagB;
   unsigned short theNullID;

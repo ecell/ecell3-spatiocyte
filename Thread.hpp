@@ -94,6 +94,10 @@ public:
         }
       return aSize;
     }
+  unsigned getAdjMolsSize(unsigned aBox, unsigned r)
+    {
+      return theAdjMols[r][aBox].size();
+    }
   unsigned getAdjMolsSize(unsigned r)
     {
       unsigned aSize(0);
@@ -188,6 +192,8 @@ public:
   void initialize();
   void initializeLists();
   void walk();
+  void walk(std::vector<std::vector<std::vector<unsigned> > >&, std::vector<std::vector<std::vector<unsigned> > >&);
+  void doWork();
 protected:
   void work();
   static void* enter(void* arg)
@@ -223,6 +229,7 @@ protected:
   unsigned startBox;
   unsigned endBox;
   bool isRunA;
+  std::vector<unsigned> theRands;
 };
 
 #endif /* __Thread_hpp */

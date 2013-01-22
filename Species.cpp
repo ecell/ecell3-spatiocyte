@@ -65,14 +65,10 @@ void Species::walkMols(std::vector<unsigned>& aMols,
       const unsigned aTar(aTars[i]);
       const unsigned aTarMol(aTar%theBoxMaxSize);
       if(anIDs[aTarMol] == theVacantID)
-        {
-          if(theWalkProbability == 1 ||
-             gsl_rng_uniform(theRng) < theWalkProbability)
-            {
-              anIDs[aTarMol] = theID;
-              anIDs[aMols[i]] = theVacantID;
-              aMols[i] = aTarMol;
-            }
+        { 
+          anIDs[aTarMol] = theID;
+          anIDs[aMols[i]] = theVacantID;
+          aMols[i] = aTarMol;
         }
     }
 }
@@ -198,34 +194,55 @@ void Species::setAdjTars(const unsigned currBox, const unsigned r,
     }
 }
 
+void Species::setRands(const unsigned currBox,
+                       const unsigned r,
+                       unsigned aSize,
+                       const std::vector<unsigned>& anAdjBoxes,
+                       std::vector<unsigned>& aRands,
+                       RandomLib::Random& aRng)
+
+{
+  for(unsigned i(0); i != anAdjBoxes.size(); ++i)
+    {
+      const unsigned adjBox(anAdjBoxes[i]);
+      aSize += theThreads[adjBox]->getAdjMolsSize(currBox, r);
+    }
+  aRands.resize(aSize);
+  for(unsigned i(0); i < aSize; ++i)
+    {
+      aRands[i] = aRng.IntegerC(11);
+    }
+}
+
 void Species::setTars(const unsigned currBox,
-                      const unsigned w,
                       std::vector<unsigned>& aMols,
                       std::vector<unsigned>& aTars,
                       std::vector<std::vector<unsigned> >& anAdjMols,
                       std::vector<std::vector<unsigned> >& anAdjTars,
                       const std::vector<unsigned>& anAdjoins,
-                      RandomLib::Random& aRng)
+                      std::vector<unsigned>& aRands)
 {
-  aTars.resize(0);
+  const unsigned aSize(aMols.size());
+  aTars.resize(aSize);
+  for(unsigned i(0); i < aSize; ++i)
+    {
+      aTars[i] = anAdjoins[aMols[i]*theAdjoinSize+aRands[i]];
+    }
   for(unsigned i(0); i < aMols.size(); ++i)
     {
-      unsigned& aMol(aMols[i]);
-      const unsigned aTar(anAdjoins[aMol*theAdjoinSize+aRng.IntegerC(11)]);
-      if(aTar/theBoxMaxSize == currBox) 
+      if(aTars[i]/theBoxMaxSize != currBox)
         {
-          aTars.push_back(aTar);
-        }
-      else
-        {
-          anAdjMols[aTar/theBoxMaxSize].push_back(aMol);
-          anAdjTars[aTar/theBoxMaxSize].push_back(aTar);
-          aMol = aMols.back();
+          anAdjMols[aTars[i]/theBoxMaxSize].push_back(aMols[i]);
+          anAdjTars[aTars[i]/theBoxMaxSize].push_back(aTars[i]);
+          aMols[i] = aMols.back();
           aMols.pop_back();
+          aTars[i] = aTars.back();
+          aTars.pop_back();
           --i;
         }
     }
 }
+
 void Species::walk(const unsigned anID, unsigned r, unsigned w,
            RandomLib::Random& aRng,
            std::vector<unsigned>& aMols,
@@ -238,17 +255,19 @@ void Species::walk(const unsigned anID, unsigned r, unsigned w,
            std::vector<std::vector<std::vector<unsigned> > >& aBorderTars,
            std::vector<std::vector<unsigned> >& aRepeatAdjMols,
            std::vector<std::vector<unsigned> >& aRepeatAdjTars,
-           std::vector<unsigned>& anAdjoins,
+           const std::vector<unsigned>& anAdjoins,
            std::vector<unsigned short>& anIDs,
-           std::vector<unsigned>& anAdjBoxes)
+           const std::vector<unsigned>& anAdjBoxes,
+           std::vector<unsigned>& aRands)
 {
   updateBoxMols(anID, r, aMols, aTars, anAdjBoxes);
   walkMols(aMols, aTars, anIDs);
   updateAdjMols(anID, r, aRepeatAdjMols, aRepeatAdjTars, anAdjBoxes);
   updateAdjAdjMols(anID, r); 
   walkAdjMols(anID, r, aMols, anIDs, anAdjBoxes);
+  setRands(anID, r, aMols.size(), anAdjBoxes, aRands, aRng);
   setAdjTars(anID, r, aBorderMols[w], aBorderTars[w], anAdjAdjMols[w], anAdjAdjTars[w], aRepeatAdjMols, aRepeatAdjTars, anAdjBoxes, aRng);
-  setTars(anID, w, aMols, aTars, anAdjMols[w], anAdjTars[w], anAdjoins, aRng);
+  setTars(anID, aMols, aTars, anAdjMols[w], anAdjTars[w], anAdjoins, aRands);
   /*
   if(anID == 1)
     {

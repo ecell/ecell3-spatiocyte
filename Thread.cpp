@@ -52,6 +52,7 @@ void Thread::initialize()
       theBorderMols[i].resize(theBoxSize);
       theBorderTars[i].resize(theBoxSize);
     }
+  //doWork();
   waitChildren();
 }
 
@@ -60,8 +61,22 @@ void Thread::initializeLists()
   runChildren();
   theSpecies[0]->initializeLists(theID, theRng, theMols, theTars,
                                  theAdjMols, theAdjTars, theAdjoins, theIDs,
-                                 theAdjBoxes);
+                                 theAdjBoxes, theRands);
   waitChildren();
+}
+
+void Thread::doWork()
+{
+  for(unsigned i(0); i != theBoxSize; ++i)
+    {
+      for(unsigned j(0); j != 20000; ++j)
+        {
+          theBorderMols[0][i].push_back(theRng.IntegerC(11));
+          theBorderMols[1][i].push_back(theRng.IntegerC(11));
+          theBorderTars[0][i].push_back(theRng.IntegerC(11));
+          theBorderTars[1][i].push_back(theRng.IntegerC(11));
+        }
+    }
 }
 
 void Thread::walk()
@@ -79,11 +94,28 @@ void Thread::walk()
     {
       isToggled = true;
     } 
-  theSpecies[0]->walk(theID, r, w, theRng, theMols, theTars, theAdjMols,
-                      theAdjTars, theAdjAdjMols, theAdjAdjTars, theBorderMols,
-                      theBorderTars, theRepeatAdjMols, theRepeatAdjTars,
-                      theAdjoins, theIDs, theAdjBoxes);
+  //if(!theID)
+    {
+  theSpecies[0]->walk(theID, r, w, theRng, theMols, theTars, theAdjMols, theAdjTars, theAdjAdjMols, theAdjAdjTars, theBorderMols, theBorderTars, theRepeatAdjMols, theRepeatAdjTars, theAdjoins, theIDs, theAdjBoxes, theRands);
+    }
   waitChildren();
+}
+void Thread::walk(std::vector<std::vector<std::vector<unsigned> > >& aBorderMols, std::vector<std::vector<std::vector<unsigned> > >& aBorderTars)
+{
+  unsigned r(0);
+  unsigned w(1);
+  if(isToggled)
+    {
+      r = 1;
+      w = 0;
+      isToggled = false;
+    }
+  else
+    {
+      isToggled = true;
+    } 
+  //theSpecies[0]->walk(theID, r, w, theRng, theMols, theTars, theBorderMols, theBorderTars, theAdjBoxes);
+  //theSpecies[0]->walk(theID, r, w, theRng, theMols, theTars, theAdjMols, theAdjTars, theAdjAdjMols, theAdjAdjTars, aBorderMols, aBorderTars, theRepeatAdjMols, theRepeatAdjTars, theAdjoins, theIDs, theAdjBoxes);
 }
 
 void Thread::runChildren()
@@ -147,6 +179,7 @@ void Thread::waitParent()
 void Thread::work()
 {
   waitParent();
+
   theStepper.constructLattice(theID);
   __sync_fetch_and_add(&nThreadsRunning, 1);
   waitParent();
@@ -158,11 +191,34 @@ void Thread::work()
   waitParent();
   initializeLists();
   __sync_fetch_and_add(&nThreadsRunning, 1);
+  waitParent();
+  /*
+  std::vector<std::vector<std::vector<unsigned> > > aBorderMols;
+  std::vector<std::vector<std::vector<unsigned> > > aBorderTars;
+  aBorderMols.resize(2);
+  aBorderTars.resize(2);
+  for(unsigned i(0); i != 2; ++i)
+    {
+      aBorderMols[i].resize(theBoxSize);
+      aBorderTars[i].resize(theBoxSize);
+    }
+  for(unsigned i(0); i != theBoxSize; ++i)
+    {
+      for(unsigned j(0); j != 20000; ++j)
+        {
+          aBorderMols[0][i].push_back(theRng.IntegerC(11));
+          aBorderMols[1][i].push_back(theRng.IntegerC(11));
+          aBorderTars[0][i].push_back(theRng.IntegerC(11));
+          aBorderTars[1][i].push_back(theRng.IntegerC(11));
+        }
+    }
+    */
   for(;;)
     {
-      waitParent();
+      //walk(aBorderMols, aBorderTars);
       walk();
       __sync_fetch_and_add(&nThreadsRunning, 1);
+      waitParent();
     }
 }
 
