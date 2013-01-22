@@ -215,6 +215,7 @@ protected:
   std::vector<unsigned> theAdjoins;
   std::vector<unsigned short> theIDs;
   std::vector<unsigned> theAdjBoxes;
+  std::vector<unsigned> theAdjAdjBoxes;
   RandomLib::Random theRng;
   unsigned theBoxSize;
   std::vector<std::vector<std::vector<unsigned> > > theAdjMols;

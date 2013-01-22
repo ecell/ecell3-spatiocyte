@@ -55,7 +55,7 @@ public:
     SearchVacant(false),
     LatticeType(HCP_LATTICE),
     theBoxSize(8),
-    theThreadSize(1),
+    theThreadSize(6),
     VoxelRadius(10e-9),
     nVoxelRadius(0.5) {}
   virtual ~SpatiocyteStepper() {}
@@ -191,6 +191,7 @@ private:
   Variable* getVariable(System*, String const&);
   void setBoundaries();
   void setAdjBoxes();
+  void setAdjAdjBoxes();
 private:
   bool isInitialized;
   bool isPeriodicEdge;
@@ -229,6 +230,7 @@ private:
   std::vector<Process*> theExternInterruptedProcesses;
   std::vector<std::vector<unsigned> > theCoordMols;
   std::vector<std::vector<unsigned> > theAdjBoxes;
+  std::vector<std::vector<unsigned> > theAdjAdjBoxes;
   std::vector<unsigned> theCols;
   std::vector<unsigned> theRows;
   std::vector<unsigned> theLayers;

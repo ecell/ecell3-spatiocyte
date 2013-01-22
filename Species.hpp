@@ -92,7 +92,8 @@ public:
           double voxelRadius, std::vector<std::vector<unsigned short> >& anIDs,
           std::vector<std::vector<VoxelInfo> >& anInfo,
           std::vector<std::vector<unsigned> >& anAdjoins,
-          std::vector<std::vector<unsigned> >& anAdjBoxes):
+          std::vector<std::vector<unsigned> >& anAdjBoxes,
+          std::vector<std::vector<unsigned> >& anAdjAdjBoxes):
     isCentered(false),
     isCompVacant(false),
     isDiffusing(false),
@@ -123,6 +124,7 @@ public:
     theCompMols(&theMols),
     theAdjoins(anAdjoins),
     theAdjBoxes(anAdjBoxes),
+    theAdjAdjBoxes(anAdjAdjBoxes),
     theInfo(anInfo),
     theIDs(anIDs) {}
   ~Species() {}
@@ -461,6 +463,7 @@ public:
                        std::vector<unsigned>& anAdjoins,
                        std::vector<unsigned short>& anIDs,
                        std::vector<unsigned>& anAdjBoxes,
+                       std::vector<unsigned>& anAdjAdjBoxes,
                        std::vector<unsigned>& aRands)
     {
       if(theDiffusionInterval != libecs::INF)
@@ -480,6 +483,11 @@ public:
           for(unsigned i(0); i != theAdjBoxes[anID].size(); ++i)
             {
               anAdjBoxes[i] = theAdjBoxes[anID][i];
+            } 
+          anAdjAdjBoxes.resize(theAdjAdjBoxes[anID].size());
+          for(unsigned i(0); i != theAdjAdjBoxes[anID].size(); ++i)
+            {
+              anAdjAdjBoxes[i] = theAdjAdjBoxes[anID][i];
             } 
           anIDs.resize(theIDs[anID].size());
           for(unsigned i(0); i != theIDs[anID].size(); ++i)
@@ -684,12 +692,13 @@ public:
                 std::vector<std::vector<unsigned> >& aRepeatAdjMols,
                 std::vector<std::vector<unsigned> >& aRepeatAdjTars,
                 const std::vector<unsigned>& anAdjBoxes,
-                RandomLib::Random& aRng);
+                unsigned startRand, std::vector<unsigned>& aRands);
   void updateAdjMols(const unsigned currBox, const unsigned r,
                      std::vector<std::vector<unsigned> >& aRepeatAdjMols,
                      std::vector<std::vector<unsigned> >& aRepeatAdjTars,
                      const std::vector<unsigned>& anAdjBoxes);
-  void updateAdjAdjMols(const unsigned currBox, const unsigned r);
+  void updateAdjAdjMols(const unsigned currBox, const unsigned r,
+                        const std::vector<unsigned>& anAdjAdjBoxes);
   void setTars(const unsigned currBox,
                std::vector<unsigned>& aMols,
                std::vector<unsigned>& aTars,
@@ -716,6 +725,7 @@ public:
            const std::vector<unsigned>& anAdjoins,
            std::vector<unsigned short>& anIDs,
            const std::vector<unsigned>& anAdjBoxes,
+           const std::vector<unsigned>& anAdjAdjBoxes,
            std::vector<unsigned>& aRands);
   /*
   void setTars(std::vector<unsigned>& aMols,
@@ -2017,7 +2027,7 @@ private:
   std::vector<std::vector<std::vector<unsigned> > > theRepeatAdjTars;
   std::vector<std::vector<unsigned> >& theAdjoins;
   std::vector<std::vector<unsigned> >& theAdjBoxes;
-  std::vector<std::vector<unsigned> > theAdjAdjBoxes;
+  std::vector<std::vector<unsigned> >& theAdjAdjBoxes;
   std::vector<std::vector<VoxelInfo> >& theInfo;
   std::vector<std::vector<unsigned short> >& theIDs;
   std::vector<std::vector<unsigned> > theIntersectLipids;

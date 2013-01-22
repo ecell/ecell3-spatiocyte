@@ -97,13 +97,12 @@ void Species::updateAdjMols(const unsigned currBox, const unsigned r,
     }
 }
 
-void Species::updateAdjAdjMols(const unsigned currBox, const unsigned r)
+void Species::updateAdjAdjMols(const unsigned currBox, const unsigned r,
+                               const std::vector<unsigned>& anAdjAdjBoxes)
 {
-  //for(unsigned i(0); i != anAdjAdjBoxes.size(); ++i)
-  for(unsigned i(0); i != theBoxSize; ++i)
+  for(unsigned i(0); i != anAdjAdjBoxes.size(); ++i)
     {
-      //const unsigned adjAdjBox(anAdjAdjBoxes[i]);
-      const unsigned adjAdjBox(i);
+      const unsigned adjAdjBox(anAdjAdjBoxes[i]);
       std::vector<unsigned>& adjAdjMols(theThreads[adjAdjBox
                                         ]->getAdjAdjMols(currBox, r));
       std::vector<unsigned>& adjAdjTars(theThreads[adjAdjBox
@@ -159,7 +158,8 @@ void Species::setAdjTars(const unsigned currBox, const unsigned r,
                 std::vector<std::vector<unsigned> >& aRepeatAdjMols,
                 std::vector<std::vector<unsigned> >& aRepeatAdjTars,
                 const std::vector<unsigned>& anAdjBoxes,
-                RandomLib::Random& aRng)
+                unsigned startRand,
+                std::vector<unsigned>& aRands)
 
 {
   for(unsigned i(0); i != anAdjBoxes.size(); ++i)
@@ -172,7 +172,7 @@ void Species::setAdjTars(const unsigned currBox, const unsigned r,
       for(unsigned j(0); j < adjMols.size(); ++j)
         {
           const unsigned aMol(adjMols[j]);
-          const unsigned aTar(anAdjoins[aMol*theAdjoinSize+aRng.IntegerC(11)]);
+          const unsigned aTar(anAdjoins[aMol*theAdjoinSize+aRands[startRand++]]);
           const unsigned aBox(aTar/theBoxMaxSize);
           if(aBox == currBox) 
             {
@@ -258,16 +258,17 @@ void Species::walk(const unsigned anID, unsigned r, unsigned w,
            const std::vector<unsigned>& anAdjoins,
            std::vector<unsigned short>& anIDs,
            const std::vector<unsigned>& anAdjBoxes,
+           const std::vector<unsigned>& anAdjAdjBoxes,
            std::vector<unsigned>& aRands)
 {
   updateBoxMols(anID, r, aMols, aTars, anAdjBoxes);
   walkMols(aMols, aTars, anIDs);
   updateAdjMols(anID, r, aRepeatAdjMols, aRepeatAdjTars, anAdjBoxes);
-  updateAdjAdjMols(anID, r); 
+  updateAdjAdjMols(anID, r, anAdjAdjBoxes); 
   walkAdjMols(anID, r, aMols, anIDs, anAdjBoxes);
   setRands(anID, r, aMols.size(), anAdjBoxes, aRands, aRng);
-  setAdjTars(anID, r, aBorderMols[w], aBorderTars[w], anAdjAdjMols[w], anAdjAdjTars[w], aRepeatAdjMols, aRepeatAdjTars, anAdjBoxes, aRng);
   setTars(anID, aMols, aTars, anAdjMols[w], anAdjTars[w], anAdjoins, aRands);
+  setAdjTars(anID, r, aBorderMols[w], aBorderTars[w], anAdjAdjMols[w], anAdjAdjTars[w], aRepeatAdjMols, aRepeatAdjTars, anAdjBoxes, aMols.size(), aRands);
   /*
   if(anID == 1)
     {

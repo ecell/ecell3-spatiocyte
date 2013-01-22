@@ -83,7 +83,7 @@ void SpatiocyteStepper::initialize()
   constructLattice(0);
   concatenateLattice(0);
   setBoundaries();
-  checkLattice();
+  //checkLattice();
   std::cout << "7. setting intersecting compartment list..." << std::endl;
   setIntersectingCompartmentList();
   std::cout << "8. compartmentalizing lattice..." << std::endl;
@@ -228,7 +228,7 @@ Species* SpatiocyteStepper::addSpecies(Variable* aVariable)
     {
       Species *aSpecies(new Species(this, aVariable, theSpecies.size(),
                           getRng(), VoxelRadius, theIDs, theInfo, theAdjoins,
-                          theAdjBoxes));
+                          theAdjBoxes, theAdjAdjBoxes));
       theSpecies.push_back(aSpecies);
       return aSpecies;
     }
@@ -729,7 +729,7 @@ void SpatiocyteStepper::registerComps()
   //voxels that do not belong to any Comps:
   Species* aSpecies(new Species(this, NULL, theSpecies.size(), getRng(),
                                 VoxelRadius, theIDs, theInfo, theAdjoins,
-                                theAdjBoxes));
+                                theAdjBoxes, theAdjAdjBoxes));
   theSpecies.push_back(aSpecies);
   aSpecies->setComp(NULL);
   theNullID = aSpecies->getID(); 
@@ -1026,7 +1026,7 @@ void SpatiocyteStepper::setLatticeProperties()
       theTotalLayers += 2;
       readjustSurfaceBoundarySizes();
     }
-  theBoxRows = 1;
+  theBoxRows = 6;
   theBoxCols = 1;
   theBoxLayers = 1;
   theBoxSize = theBoxRows*theBoxCols*theBoxLayers;
@@ -1101,6 +1101,7 @@ void SpatiocyteStepper::setLatticeProperties()
         }
     }
   setAdjBoxes();
+  setAdjAdjBoxes();
   const unsigned box(theBoxRows-1+
                      theBoxRows*(theBoxLayers-1)+
                      theBoxRows*theBoxLayers*(theBoxCols-1));
@@ -1145,6 +1146,48 @@ void SpatiocyteStepper::setLatticeProperties()
   theNullMol = 0;
   //Initialize the null coord:
 }
+
+void SpatiocyteStepper::setAdjAdjBoxes()
+{
+  Comp* aRootComp(theComps[0]);
+  theAdjAdjBoxes.resize(theBoxSize);
+  for(unsigned i(0); i != theBoxSize; ++i)
+    {
+      const unsigned boxA(i);
+      const std::vector<unsigned> adjBoxesA(theAdjBoxes[boxA]);
+      std::vector<unsigned> adjAdjA(theAdjAdjBoxes[boxA]);
+      for(unsigned j(0); j != adjBoxesA.size(); ++j)
+        {
+          const unsigned boxB(adjBoxesA[j]);
+          const std::vector<unsigned> adjBoxesB(theAdjBoxes[boxB]);
+          std::vector<unsigned> adjAdjB(theAdjAdjBoxes[boxB]);
+          for(unsigned k(0); k != adjBoxesB.size(); ++k)
+            {
+              const unsigned boxC(adjBoxesB[k]);
+              if(std::find(adjBoxesA.begin(), adjBoxesA.end(), boxC) !=
+                 adjBoxesA.end())
+                {
+                  if(std::find(adjAdjA.begin(), adjAdjA.end(), boxC) ==
+                     adjAdjA.end())
+                    {
+                      adjAdjA.push_back(boxC);
+                    }
+                  if(std::find(adjAdjB.begin(), adjAdjB.end(), boxC) ==
+                     adjAdjB.end())
+                    {
+                      adjAdjB.push_back(boxC);
+                    }
+                }
+            }
+        }
+      std::cout << "box:" << boxA << std::endl;
+      for(unsigned j(0); j != adjAdjA.size(); ++j)
+        {
+          std::cout << "     adjAdj:" << adjAdjA[j] << std::endl;
+        }
+    }
+}
+
 
 void SpatiocyteStepper::setAdjBoxes()
 {
@@ -1636,13 +1679,16 @@ void SpatiocyteStepper::constructLattice()
 void SpatiocyteStepper::constructLattice(unsigned anID)
 {
   theThreads[anID]->runChildren();
+  /*
   if(anID)
     {
       return;
     }
+    */
   Comp* aRootComp(theComps[0]);
   const unsigned short rootID(aRootComp->vacantSpecies->getID());
-  for(unsigned i(0); i != theBoxSize; ++i)
+  //for(unsigned i(0); i != theBoxSize; ++i)
+  for(unsigned i(anID); i != (anID)+1; ++i)
   //for(unsigned i(anID*2); i != (anID*2)+2; ++i)
     {
       const unsigned aSize(theRows[i]*theCols[i]*theLayers[i]);
@@ -1651,7 +1697,7 @@ void SpatiocyteStepper::constructLattice(unsigned anID)
       theAdjoins[i].resize(aSize*theAdjoinSize);
       theIDs[i][theNullMol] = theNullID;
     }
-  for(unsigned i(0); i != theBoxSize; ++i)
+  for(unsigned i(anID); i != (anID)+1; ++i)
   //for(unsigned i(anID*2); i != (anID*2)+2; ++i)
     {
       std::vector<unsigned short>& anIDs(theIDs[i]);
@@ -1718,11 +1764,14 @@ void SpatiocyteStepper::constructLattice(unsigned anID)
 void SpatiocyteStepper::concatenateLattice(unsigned anID)
 { 
   theThreads[anID]->runChildren();
+  /*
   if(anID)
     {
       return;
     }
-  for(unsigned i(0); i != theBoxSize; ++i)
+    */
+  for(unsigned i(anID); i != (anID)+1; ++i)
+  //for(unsigned i(0); i != theBoxSize; ++i)
   //for(unsigned i(anID*2); i != (anID*2)+2; ++i)
     {
       for(unsigned j(0); j != theIDs[i].size();  ++j)

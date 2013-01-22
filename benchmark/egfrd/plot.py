@@ -59,9 +59,10 @@ plot_data(Nc, data_C,'kx')
 loglog(X, 0.19*X, 'b-')
 
 
-#plot_data(Nv, data_Vspatiocyte,'r.')
+plot_data(Nv, data_Vspatiocyte,'r.')
 plot_data(Nv, data_VspatiocyteOld,'k.')
 plot_data(Nv, data_VspatiocytePrevious,'k.')
+loglog(X, 0.05*X, 'r-')
 
 figtext(.14, .4, r'(1) C = 50 nM')
 figtext(.8, .59, r'$t \  \propto \ N$', color='k')

@@ -61,7 +61,7 @@ void Thread::initializeLists()
   runChildren();
   theSpecies[0]->initializeLists(theID, theRng, theMols, theTars,
                                  theAdjMols, theAdjTars, theAdjoins, theIDs,
-                                 theAdjBoxes, theRands);
+                                 theAdjBoxes, theAdjAdjBoxes, theRands);
   waitChildren();
 }
 
@@ -96,7 +96,7 @@ void Thread::walk()
     } 
   //if(!theID)
     {
-  theSpecies[0]->walk(theID, r, w, theRng, theMols, theTars, theAdjMols, theAdjTars, theAdjAdjMols, theAdjAdjTars, theBorderMols, theBorderTars, theRepeatAdjMols, theRepeatAdjTars, theAdjoins, theIDs, theAdjBoxes, theRands);
+  theSpecies[0]->walk(theID, r, w, theRng, theMols, theTars, theAdjMols, theAdjTars, theAdjAdjMols, theAdjAdjTars, theBorderMols, theBorderTars, theRepeatAdjMols, theRepeatAdjTars, theAdjoins, theIDs, theAdjBoxes, theAdjAdjBoxes, theRands);
     }
   waitChildren();
 }
