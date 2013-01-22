@@ -1149,7 +1149,6 @@ void SpatiocyteStepper::setLatticeProperties()
 
 void SpatiocyteStepper::setAdjAdjBoxes()
 {
-  Comp* aRootComp(theComps[0]);
   theAdjAdjBoxes.resize(theBoxSize);
   for(unsigned i(0); i != theBoxSize; ++i)
     {

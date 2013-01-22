@@ -100,9 +100,11 @@ void Species::updateAdjMols(const unsigned currBox, const unsigned r,
 void Species::updateAdjAdjMols(const unsigned currBox, const unsigned r,
                                const std::vector<unsigned>& anAdjAdjBoxes)
 {
+  //for(unsigned i(0); i != theBoxSize; ++i)
   for(unsigned i(0); i != anAdjAdjBoxes.size(); ++i)
     {
       const unsigned adjAdjBox(anAdjAdjBoxes[i]);
+      //const unsigned adjAdjBox(i);
       std::vector<unsigned>& adjAdjMols(theThreads[adjAdjBox
                                         ]->getAdjAdjMols(currBox, r));
       std::vector<unsigned>& adjAdjTars(theThreads[adjAdjBox
@@ -210,7 +212,7 @@ void Species::setRands(const unsigned currBox,
   aRands.resize(aSize);
   for(unsigned i(0); i < aSize; ++i)
     {
-      aRands[i] = aRng.IntegerC(11);
+      aRands[i] = aRng.Integer(11);
     }
 }
 
