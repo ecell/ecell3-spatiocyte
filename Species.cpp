@@ -212,7 +212,7 @@ void Species::setRands(const unsigned currBox,
   aRands.resize(aSize);
   for(unsigned i(0); i < aSize; ++i)
     {
-      aRands[i] = aRng.Integer(11);
+      aRands[i] = aRng.Integer(2);
     }
 }
 
