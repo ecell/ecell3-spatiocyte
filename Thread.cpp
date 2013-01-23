@@ -142,7 +142,6 @@ void Thread::waitChildren()
           continue;
         }
       nThreadsRunning = 0;
-      //__sync_synchronize();
       if(isRunA)
         {
           flagA = FLAG_STOP;
@@ -153,6 +152,7 @@ void Thread::waitChildren()
           flagB = FLAG_STOP;
           isRunA = true;
         }
+      //__sync_synchronize();
     }
 }
 
@@ -181,36 +181,16 @@ void Thread::work()
   unsigned i(0);
   waitParent();
   theStepper.constructLattice(theID);
-  //__sync_fetch_and_add(&nThreadsRunning, 1);
-  i = __sync_fetch_and_add(&nThreadsRunning, 1);
-  if(i >= theThreadSize-1)
-    {
-      out << "bug i:" << i << std::endl;
-    }
+  __sync_fetch_and_add(&nThreadsRunning, 1);
   waitParent();
   theStepper.concatenateLattice(theID);
-  //__sync_fetch_and_add(&nThreadsRunning, 1);
-  i = __sync_fetch_and_add(&nThreadsRunning, 1);
-  if(i >= theThreadSize-1)
-    {
-      out << "bug i:" << i << std::endl;
-    }
+  __sync_fetch_and_add(&nThreadsRunning, 1);
   waitParent();
   initialize();
-  //__sync_fetch_and_add(&nThreadsRunning, 1);
-  i = __sync_fetch_and_add(&nThreadsRunning, 1);
-  if(i >= theThreadSize-1)
-    {
-      out << "bug i:" << i << std::endl;
-    }
+  __sync_fetch_and_add(&nThreadsRunning, 1);
   waitParent();
   initializeLists();
-  //__sync_fetch_and_add(&nThreadsRunning, 1);
-  i = __sync_fetch_and_add(&nThreadsRunning, 1);
-  if(i >= theThreadSize-1)
-    {
-      out << "bug i:" << i << std::endl;
-    }
+  __sync_fetch_and_add(&nThreadsRunning, 1);
   waitParent();
   /*
   std::vector<std::vector<std::vector<unsigned> > > aBorderMols;
@@ -237,12 +217,7 @@ void Thread::work()
     {
       //walk(aBorderMols, aBorderTars);
       walk();
-      //__sync_fetch_and_add(&nThreadsRunning, 1);
-      i = __sync_fetch_and_add(&nThreadsRunning, 1);
-      if(i >= theThreadSize-1)
-        {
-          out << "bug i:" << i << std::endl;
-        }
+      __sync_fetch_and_add(&nThreadsRunning, 1);
       waitParent();
     }
 }
