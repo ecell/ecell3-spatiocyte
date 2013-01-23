@@ -120,6 +120,7 @@ void SpatiocyteStepper::initializeThreads()
   nThreadsRunning = 0;
   flagA = FLAG_STOP;
   flagB = FLAG_STOP;
+  __sync_synchronize();
   theThreads.resize(theThreadSize);
   for(unsigned i(0); i != theThreadSize; ++i)
     {
@@ -129,11 +130,6 @@ void SpatiocyteStepper::initializeThreads()
         {
           theThreads[i]->create();
         }
-    }
-  //Wait until all threads have been created:
-  while(ACCESS_ONCE(nThreadsRunning) < theThreadSize-1)
-    {
-      continue;
     }
 }
 

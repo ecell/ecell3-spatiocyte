@@ -62,7 +62,6 @@ public:
     std::ostringstream fileName;
     fileName << "thread" << anID << ".out" << std::ends;
     out.open(fileName.str().c_str());
-    __sync_fetch_and_add(&nThreadsRunning, 1);
   }
   virtual ~Thread()
     {
