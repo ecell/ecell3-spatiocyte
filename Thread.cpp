@@ -137,12 +137,13 @@ void Thread::waitChildren()
 {
   if(!theID)
     {
-      barrier();
+      __sync_synchronize();
       while(ACCESS_ONCE(nThreadsRunning) < theThreadSize-1)
         {
           continue;
         }
       nThreadsRunning = 0;
+      __sync_synchronize();
       if(isRunA)
         {
           flagA = FLAG_STOP;
