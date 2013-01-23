@@ -122,16 +122,12 @@ void Thread::runChildren()
 {
   if(!theID)
     {
-      out << "run val:" << nThreadsRunning << std::endl << std::flush;
-      __sync_synchronize();
       if(isRunA)
         {
-          out << "run flagA" << std::endl << std::flush;
           flagA = FLAG_RUN;
         }
       else
         {
-          out << "run flagB" << std::endl << std::flush;
           flagB = FLAG_RUN;
         }
     }
@@ -141,23 +137,19 @@ void Thread::waitChildren()
 {
   if(!theID)
     {
-      out << "wait val:" << nThreadsRunning << std::endl << std::flush;
-      __sync_synchronize();
       while(ACCESS_ONCE(nThreadsRunning) < theThreadSize-1)
         {
           continue;
         }
       nThreadsRunning = 0;
-      __sync_synchronize();
+      //__sync_synchronize();
       if(isRunA)
         {
-          out << "stop flagA" << std::endl << std::flush;
           flagA = FLAG_STOP;
           isRunA = false;
         }
       else
         {
-          out << "stop flagB" << std::endl << std::flush;
           flagB = FLAG_STOP;
           isRunA = true;
         }
@@ -168,8 +160,6 @@ void Thread::waitParent()
 {
   if(isRunA)
     {
-      out << "wait flagA:" << nThreadsRunning << std::endl << std::flush;
-      __sync_synchronize();
       while(ACCESS_ONCE(flagA) == FLAG_STOP)
         {
           continue;
@@ -178,8 +168,6 @@ void Thread::waitParent()
     }
   else
     {
-      out << "wait flagB:" << nThreadsRunning << std::endl << std::flush;
-      __sync_synchronize();
       while(ACCESS_ONCE(flagB) == FLAG_STOP)
         {
           continue;
@@ -190,26 +178,40 @@ void Thread::waitParent()
 
 void Thread::work()
 {
+  unsigned i(0);
   waitParent();
-
   theStepper.constructLattice(theID);
-  out << "val before:" << __sync_fetch_and_add(&nThreadsRunning, 1) << std::endl << std::flush;
-  out << "val after:" << nThreadsRunning << std::endl << std::flush;
+  //__sync_fetch_and_add(&nThreadsRunning, 1);
+  i = __sync_fetch_and_add(&nThreadsRunning, 1);
+  if(i >= theThreadSize-1)
+    {
+      out << "bug i:" << i << std::endl;
+    }
   waitParent();
   theStepper.concatenateLattice(theID);
-  out << "val before:" << __sync_fetch_and_add(&nThreadsRunning, 1) << std::endl << std::flush;
-  out << "val after:" << nThreadsRunning << std::endl << std::flush;
+  //__sync_fetch_and_add(&nThreadsRunning, 1);
+  i = __sync_fetch_and_add(&nThreadsRunning, 1);
+  if(i >= theThreadSize-1)
+    {
+      out << "bug i:" << i << std::endl;
+    }
   waitParent();
   initialize();
-  out << "val before:" << __sync_fetch_and_add(&nThreadsRunning, 1) << std::endl << std::flush;
-  out << "val after:" << nThreadsRunning << std::endl << std::flush;
+  //__sync_fetch_and_add(&nThreadsRunning, 1);
+  i = __sync_fetch_and_add(&nThreadsRunning, 1);
+  if(i >= theThreadSize-1)
+    {
+      out << "bug i:" << i << std::endl;
+    }
   waitParent();
   initializeLists();
-  out << "val before:" << __sync_fetch_and_add(&nThreadsRunning, 1) << std::endl << std::flush;
-  out << "val after:" << nThreadsRunning << std::endl << std::flush;
-  out << "1" << std::endl << std::flush;
+  //__sync_fetch_and_add(&nThreadsRunning, 1);
+  i = __sync_fetch_and_add(&nThreadsRunning, 1);
+  if(i >= theThreadSize-1)
+    {
+      out << "bug i:" << i << std::endl;
+    }
   waitParent();
-  out << "2" << std::endl << std::flush;
   /*
   std::vector<std::vector<std::vector<unsigned> > > aBorderMols;
   std::vector<std::vector<std::vector<unsigned> > > aBorderTars;
@@ -233,14 +235,14 @@ void Thread::work()
     */
   for(;;)
     {
-  out << "3" << std::endl << std::flush;
       //walk(aBorderMols, aBorderTars);
       walk();
-  out << "4" << std::endl << std::flush;
-      //walk(aBorderMols, aBorderTars);
-  out << "val before:" << __sync_fetch_and_add(&nThreadsRunning, 1) << std::endl << std::flush;
-  out << "val after:" << nThreadsRunning << std::endl << std::flush;
-  out << "5" << std::endl << std::flush;
+      //__sync_fetch_and_add(&nThreadsRunning, 1);
+      i = __sync_fetch_and_add(&nThreadsRunning, 1);
+      if(i >= theThreadSize-1)
+        {
+          out << "bug i:" << i << std::endl;
+        }
       waitParent();
     }
 }
