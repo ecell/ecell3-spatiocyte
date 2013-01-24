@@ -115,6 +115,17 @@ void SpatiocyteStepper::initialize()
   std::cout << "19. simulation is started..." << std::endl;
 }
 
+SpatiocyteStepper::~SpatiocyteStepper()
+{
+  /*
+  for(unsigned i(1); i != theThreads.size(); ++i)
+    {
+      std::cout << "destructing" << i << std::endl;
+      theThreads[i]->joinChildren();
+    }
+    */
+}
+
 void SpatiocyteStepper::initializeThreads()
 {
   nThreadsRunning = 0;
@@ -1682,8 +1693,8 @@ void SpatiocyteStepper::constructLattice(unsigned anID)
     */
   Comp* aRootComp(theComps[0]);
   const unsigned short rootID(aRootComp->vacantSpecies->getID());
-  //for(unsigned i(0); i != theBoxSize; ++i)
-  for(unsigned i(anID); i != (anID)+1; ++i)
+  for(unsigned i(0); i != theBoxSize; ++i)
+  //for(unsigned i(anID); i != (anID)+1; ++i)
   //for(unsigned i(anID*2); i != (anID*2)+2; ++i)
     {
       const unsigned aSize(theRows[i]*theCols[i]*theLayers[i]);
@@ -1692,7 +1703,8 @@ void SpatiocyteStepper::constructLattice(unsigned anID)
       theAdjoins[i].resize(aSize*theAdjoinSize);
       theIDs[i][theNullMol] = theNullID;
     }
-  for(unsigned i(anID); i != (anID)+1; ++i)
+  for(unsigned i(0); i != theBoxSize; ++i)
+  //for(unsigned i(anID); i != (anID)+1; ++i)
   //for(unsigned i(anID*2); i != (anID*2)+2; ++i)
     {
       std::vector<unsigned short>& anIDs(theIDs[i]);
@@ -1765,8 +1777,8 @@ void SpatiocyteStepper::concatenateLattice(unsigned anID)
       return;
     }
     */
-  for(unsigned i(anID); i != (anID)+1; ++i)
-  //for(unsigned i(0); i != theBoxSize; ++i)
+  for(unsigned i(0); i != theBoxSize; ++i)
+  //for(unsigned i(anID); i != (anID)+1; ++i)
   //for(unsigned i(anID*2); i != (anID*2)+2; ++i)
     {
       for(unsigned j(0); j != theIDs[i].size();  ++j)

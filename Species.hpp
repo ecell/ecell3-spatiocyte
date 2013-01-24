@@ -133,6 +133,7 @@ public:
                   std::vector<Thread*> aThreads)
     {
       theThreads = aThreads;
+      theThreadSize = theThreads.size();
       theBoxMaxSize = aBoxMaxSize;
       theBoxSize = theIDs.size();
       theLastMolSize.resize(theBoxSize);
@@ -2033,6 +2034,7 @@ private:
   std::vector<std::vector<unsigned> > theIntersectLipids;
   RandomLib::Random rng;          // Create r
   std::vector<Thread*> theThreads;
+  unsigned theThreadSize;
 };
 
 #endif /* __Species_hpp */

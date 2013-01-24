@@ -33,24 +33,43 @@
 void Thread::initialize()
 {
   runChildren();
-  theBoxSize = theStepper.getBoxSize();
+  theTotalBoxSize = theStepper.getBoxSize();
+  theBoxSize = theTotalBoxSize/theThreadSize;
   theRng.Reseed();
-  theAdjMols.resize(2);
-  theAdjTars.resize(2);
-  theAdjAdjMols.resize(2);
-  theAdjAdjTars.resize(2);
-  theBorderMols.resize(2);
-  theBorderTars.resize(2);
+  theMols.resize(theBoxSize);
+  theTars.resize(theBoxSize);
+  theIDs.resize(theBoxSize);
+  theAdjoins.resize(theBoxSize);
+  theRands.resize(theBoxSize);
+  theAdjBoxes.resize(theBoxSize);
+  theAdjAdjBoxes.resize(theBoxSize);
+  theAdjMols.resize(theBoxSize);
+  theAdjTars.resize(theBoxSize);
+  theAdjAdjMols.resize(theBoxSize);
+  theAdjAdjTars.resize(theBoxSize);
+  theBorderMols.resize(theBoxSize);
+  theBorderTars.resize(theBoxSize);
   theRepeatAdjMols.resize(theBoxSize);
   theRepeatAdjTars.resize(theBoxSize);
-  for(unsigned i(0); i != 2; ++i)
+  for(unsigned i(0); i != theBoxSize; ++i)
     {
-      theAdjMols[i].resize(theBoxSize);
-      theAdjTars[i].resize(theBoxSize);
-      theAdjAdjMols[i].resize(theBoxSize);
-      theAdjAdjTars[i].resize(theBoxSize);
-      theBorderMols[i].resize(theBoxSize);
-      theBorderTars[i].resize(theBoxSize);
+      theAdjMols[i].resize(2);
+      theAdjTars[i].resize(2);
+      theAdjAdjMols[i].resize(2);
+      theAdjAdjTars[i].resize(2);
+      theBorderMols[i].resize(2);
+      theBorderTars[i].resize(2);
+      theRepeatAdjMols[i].resize(theTotalBoxSize);
+      theRepeatAdjTars[i].resize(theTotalBoxSize);
+      for(unsigned j(0); j != 2; ++j)
+        {
+          theAdjMols[i][j].resize(theTotalBoxSize);
+          theAdjTars[i][j].resize(theTotalBoxSize);
+          theAdjAdjMols[i][j].resize(theTotalBoxSize);
+          theAdjAdjTars[i][j].resize(theTotalBoxSize);
+          theBorderMols[i][j].resize(theTotalBoxSize);
+          theBorderTars[i][j].resize(theTotalBoxSize);
+        }
     }
   //doWork();
   waitChildren();
@@ -59,14 +78,19 @@ void Thread::initialize()
 void Thread::initializeLists()
 {
   runChildren();
-  theSpecies[0]->initializeLists(theID, theRng, theMols, theTars,
-                                 theAdjMols, theAdjTars, theAdjoins, theIDs,
-                                 theAdjBoxes, theAdjAdjBoxes, theRands);
+  for(unsigned i(0); i != theBoxSize; ++i)
+    {
+      theSpecies[0]->initializeLists((theID*theBoxSize)+i, theRng, theMols[i],
+                                     theTars[i], theAdjMols[i], theAdjTars[i],
+                                     theAdjoins[i], theIDs[i], theAdjBoxes[i],
+                                     theAdjAdjBoxes[i], theRands[i]);
+    }
   waitChildren();
 }
 
 void Thread::doWork()
 {
+  /*
   for(unsigned i(0); i != theBoxSize; ++i)
     {
       for(unsigned j(0); j != 20000; ++j)
@@ -77,6 +101,7 @@ void Thread::doWork()
           theBorderTars[1][i].push_back(theRng.IntegerC(11));
         }
     }
+    */
 }
 
 void Thread::walk()
@@ -96,26 +121,18 @@ void Thread::walk()
     } 
   //if(!theID)
     {
-  theSpecies[0]->walk(theID, r, w, theRng, theMols, theTars, theAdjMols, theAdjTars, theAdjAdjMols, theAdjAdjTars, theBorderMols, theBorderTars, theRepeatAdjMols, theRepeatAdjTars, theAdjoins, theIDs, theAdjBoxes, theAdjAdjBoxes, theRands);
+      for(unsigned i(0); i != theBoxSize; ++i)
+        {
+          theSpecies[0]->walk((theID*theBoxSize)+i, r, w, theRng, theMols[i],
+                              theTars[i], theAdjMols[i], theAdjTars[i],
+                              theAdjAdjMols[i], theAdjAdjTars[i],
+                              theBorderMols[i], theBorderTars[i],
+                              theRepeatAdjMols[i], theRepeatAdjTars[i],
+                              theAdjoins[i], theIDs[i], theAdjBoxes[i],
+                              theAdjAdjBoxes[i], theRands[i]);
+        }
     }
   waitChildren();
-}
-void Thread::walk(std::vector<std::vector<std::vector<unsigned> > >& aBorderMols, std::vector<std::vector<std::vector<unsigned> > >& aBorderTars)
-{
-  unsigned r(0);
-  unsigned w(1);
-  if(isToggled)
-    {
-      r = 1;
-      w = 0;
-      isToggled = false;
-    }
-  else
-    {
-      isToggled = true;
-    } 
-  //theSpecies[0]->walk(theID, r, w, theRng, theMols, theTars, theBorderMols, theBorderTars, theAdjBoxes);
-  //theSpecies[0]->walk(theID, r, w, theRng, theMols, theTars, theAdjMols, theAdjTars, theAdjAdjMols, theAdjAdjTars, aBorderMols, aBorderTars, theRepeatAdjMols, theRepeatAdjTars, theAdjoins, theIDs, theAdjBoxes);
 }
 
 void Thread::runChildren()
@@ -178,7 +195,6 @@ void Thread::waitParent()
 
 void Thread::work()
 {
-  unsigned i(0);
   waitParent();
   theStepper.constructLattice(theID);
   __sync_fetch_and_add(&nThreadsRunning, 1);
@@ -223,22 +239,22 @@ void Thread::work()
 }
 
 
-void Thread::updateMols(std::vector<unsigned>& aMols)
+void Thread::updateMols(std::vector<unsigned>& aMols, unsigned aBoxID)
 {
-  aMols.resize(theMols.size());
-  for(unsigned i(0); i != theMols.size(); ++i)
+  aMols.resize(theMols[aBoxID].size());
+  for(unsigned i(0); i != theMols[aBoxID].size(); ++i)
     {
-      aMols[i] = theMols[i];
+      aMols[i] = theMols[aBoxID][i];
     }
-  for(unsigned i(0); i != theBoxSize; ++i)
+  for(unsigned i(0); i != theTotalBoxSize; ++i)
     {
-      for(unsigned j(0); j != theAdjMols[0][i].size(); ++j)
+      for(unsigned j(0); j != theAdjMols[aBoxID][0][i].size(); ++j)
         {
-          aMols.push_back(theAdjMols[0][i][j]);
+          aMols.push_back(theAdjMols[aBoxID][0][i][j]);
         }
-      for(unsigned j(0); j != theAdjMols[1][i].size(); ++j)
+      for(unsigned j(0); j != theAdjMols[aBoxID][1][i].size(); ++j)
         {
-          aMols.push_back(theAdjMols[1][i][j]);
+          aMols.push_back(theAdjMols[aBoxID][1][i][j]);
         }
     }
 }

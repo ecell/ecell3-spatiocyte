@@ -55,10 +55,10 @@ public:
     SearchVacant(false),
     LatticeType(HCP_LATTICE),
     theBoxSize(8),
-    theThreadSize(6),
+    theThreadSize(1),
     VoxelRadius(10e-9),
     nVoxelRadius(0.5) {}
-  virtual ~SpatiocyteStepper() {}
+  virtual ~SpatiocyteStepper();
   virtual void initialize();
   // need to check interrupt when we suddenly stop the simulation, do we
   // need to update the priority queue?

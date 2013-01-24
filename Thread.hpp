@@ -71,127 +71,133 @@ public:
     {
       pthread_create(&theThreadID, NULL, enter, this);
     }
-  void wait()
+  void joinChildren()
     {
       pthread_join(theThreadID, NULL);
     }
-  unsigned getBorderMolsSize(unsigned r)
+  unsigned getBorderMolsSize(unsigned r, unsigned aBoxID)
     {
       unsigned aSize(0);
-      for(unsigned i(0); i != theBoxSize; ++i)
+      for(unsigned i(0); i != theTotalBoxSize; ++i)
         {
-          aSize += theBorderMols[r][i].size();
+          aSize += theBorderMols[aBoxID][r][i].size();
         }
       return aSize;
     }
-  unsigned getBorderTarsSize(unsigned r)
+  unsigned getBorderTarsSize(unsigned r, unsigned aBoxID)
     {
       unsigned aSize(0);
-      for(unsigned i(0); i != theBoxSize; ++i)
+      for(unsigned i(0); i != theTotalBoxSize; ++i)
         {
-          aSize += theBorderTars[r][i].size();
+          aSize += theBorderTars[aBoxID][r][i].size();
         }
       return aSize;
     }
-  unsigned getAdjMolsSize(unsigned aBox, unsigned r)
+  unsigned getAdjMolsSize(unsigned aBox, unsigned r, unsigned aBoxID)
     {
-      return theAdjMols[r][aBox].size();
+      return theAdjMols[aBoxID][r][aBox].size();
     }
-  unsigned getAdjMolsSize(unsigned r)
+  unsigned getAdjMolsSize(unsigned r, unsigned aBoxID)
     {
       unsigned aSize(0);
-      for(unsigned i(0); i != theBoxSize; ++i)
+      for(unsigned i(0); i != theTotalBoxSize; ++i)
         {
-          aSize += theAdjMols[r][i].size();
+          aSize += theAdjMols[aBoxID][r][i].size();
         }
       return aSize;
     }
-  unsigned getAdjTarsSize(unsigned r)
+  unsigned getAdjTarsSize(unsigned r, unsigned aBoxID)
     {
       unsigned aSize(0);
-      for(unsigned i(0); i != theBoxSize; ++i)
+      for(unsigned i(0); i != theTotalBoxSize; ++i)
         {
-          aSize += theAdjTars[r][i].size();
+          aSize += theAdjTars[aBoxID][r][i].size();
         }
       return aSize;
     }
-  unsigned getAdjAdjMolsSize(unsigned r)
+  unsigned getAdjAdjMolsSize(unsigned r, unsigned aBoxID)
     {
       unsigned aSize(0);
-      for(unsigned i(0); i != theBoxSize; ++i)
+      for(unsigned i(0); i != theTotalBoxSize; ++i)
         {
-          aSize += theAdjAdjMols[r][i].size();
+          aSize += theAdjAdjMols[aBoxID][r][i].size();
         }
       return aSize;
     }
-  unsigned getAdjAdjTarsSize(unsigned r)
+  unsigned getAdjAdjTarsSize(unsigned r, unsigned aBoxID)
     {
       unsigned aSize(0);
-      for(unsigned i(0); i != theBoxSize; ++i)
+      for(unsigned i(0); i != theTotalBoxSize; ++i)
         {
-          aSize += theAdjAdjTars[r][i].size();
+          aSize += theAdjAdjTars[aBoxID][r][i].size();
         }
       return aSize;
     }
-  unsigned getRepeatAdjMolsSize()
+  unsigned getRepeatAdjMolsSize(unsigned aBoxID)
     {
       unsigned aSize(0);
-      for(unsigned i(0); i != theBoxSize; ++i)
+      for(unsigned i(0); i != theTotalBoxSize; ++i)
         {
-          aSize += theRepeatAdjMols[i].size();
+          aSize += theRepeatAdjMols[aBoxID][i].size();
         }
       return aSize;
     }
-  unsigned getRepeatAdjTarsSize()
+  unsigned getRepeatAdjTarsSize(unsigned aBoxID)
     {
       unsigned aSize(0);
-      for(unsigned i(0); i != theBoxSize; ++i)
+      for(unsigned i(0); i != theTotalBoxSize; ++i)
         {
-          aSize += theRepeatAdjTars[i].size();
+          aSize += theRepeatAdjTars[aBoxID][i].size();
         }
       return aSize;
     }
-  std::vector<unsigned>& getBorderMols(unsigned aBox, unsigned r)
+  std::vector<unsigned>& getBorderMols(unsigned aBox, unsigned r,
+                                       unsigned aBoxID)
     {
-      return theBorderMols[r][aBox];
+      return theBorderMols[aBoxID][r][aBox];
     }
-  std::vector<unsigned>& getBorderTars(unsigned aBox, unsigned r)
+  std::vector<unsigned>& getBorderTars(unsigned aBox, unsigned r,
+                                       unsigned aBoxID)
     {
-      return theBorderTars[r][aBox];
+      return theBorderTars[aBoxID][r][aBox];
     }
-  std::vector<unsigned>& getAdjMols(unsigned aBox, unsigned r)
+  std::vector<unsigned>& getAdjMols(unsigned aBox, unsigned r,
+                                    unsigned aBoxID)
     {
-      return theAdjMols[r][aBox];
+      return theAdjMols[aBoxID][r][aBox];
     }
-  std::vector<unsigned>& getAdjTars(unsigned aBox, unsigned r)
+  std::vector<unsigned>& getAdjTars(unsigned aBox, unsigned r,
+                                    unsigned aBoxID)
     {
-      return theAdjTars[r][aBox];
+      return theAdjTars[aBoxID][r][aBox];
     }
-  std::vector<unsigned>& getAdjAdjMols(unsigned aBox, unsigned r)
+  std::vector<unsigned>& getAdjAdjMols(unsigned aBox, unsigned r,
+                                       unsigned aBoxID)
     {
-      return theAdjAdjMols[r][aBox];
+      return theAdjAdjMols[aBoxID][r][aBox];
     }
-  std::vector<unsigned>& getAdjAdjTars(unsigned aBox, unsigned r)
+  std::vector<unsigned>& getAdjAdjTars(unsigned aBox, unsigned r,
+                                       unsigned aBoxID)
     {
-      return theAdjAdjTars[r][aBox];
+      return theAdjAdjTars[aBoxID][r][aBox];
     }
-  void pushAdj(unsigned aBox, unsigned rw, unsigned aMol, unsigned aTar)
+  void pushAdj(unsigned aBox, unsigned rw, unsigned aMol, unsigned aTar,
+               unsigned aBoxID)
     {
-      theAdjMols[rw][aBox].push_back(aMol);
-      theAdjTars[rw][aBox].push_back(aTar);
+      theAdjMols[aBoxID][rw][aBox].push_back(aMol);
+      theAdjTars[aBoxID][rw][aBox].push_back(aTar);
     }
-  void setMolID(unsigned aMol, unsigned short anID)
+  void setMolID(unsigned aMol, unsigned short anID, unsigned aBoxID)
     {
-      theIDs[aMol] = anID;
+      theIDs[aBoxID][aMol] = anID;
     }
-  void updateMols(std::vector<unsigned>& aMols);
+  void updateMols(std::vector<unsigned>& aMols, unsigned aBoxID);
   void runChildren();
   void waitChildren();
   void waitParent();
   void initialize();
   void initializeLists();
   void walk();
-  void walk(std::vector<std::vector<std::vector<unsigned> > >&, std::vector<std::vector<std::vector<unsigned> > >&);
   void doWork();
 protected:
   void work();
@@ -209,27 +215,26 @@ protected:
   char& flagB;
   std::ofstream out;
   std::vector<Species*>& theSpecies;
-  std::vector<unsigned> theTars;
-  std::vector<unsigned> theMols;
-  std::vector<unsigned> theAdjoins;
-  std::vector<unsigned short> theIDs;
-  std::vector<unsigned> theAdjBoxes;
-  std::vector<unsigned> theAdjAdjBoxes;
+  std::vector<std::vector<unsigned> > theTars;
+  std::vector<std::vector<unsigned> > theMols;
+  std::vector<std::vector<unsigned> > theAdjoins;
+  std::vector<std::vector<unsigned short> > theIDs;
+  std::vector<std::vector<unsigned> > theAdjBoxes;
+  std::vector<std::vector<unsigned> > theAdjAdjBoxes;
   RandomLib::Random theRng;
   unsigned theBoxSize;
-  std::vector<std::vector<std::vector<unsigned> > > theAdjMols;
-  std::vector<std::vector<std::vector<unsigned> > > theAdjTars;
-  std::vector<std::vector<std::vector<unsigned> > > theAdjAdjMols;
-  std::vector<std::vector<std::vector<unsigned> > > theAdjAdjTars;
-  std::vector<std::vector<std::vector<unsigned> > > theBorderMols;
-  std::vector<std::vector<std::vector<unsigned> > > theBorderTars;
-  std::vector<std::vector<unsigned> > theRepeatAdjMols;
-  std::vector<std::vector<unsigned> > theRepeatAdjTars;
+  unsigned theTotalBoxSize;
+  std::vector<std::vector<std::vector<std::vector<unsigned> > > > theAdjMols;
+  std::vector<std::vector<std::vector<std::vector<unsigned> > > > theAdjTars;
+  std::vector<std::vector<std::vector<std::vector<unsigned> > > > theAdjAdjMols;
+  std::vector<std::vector<std::vector<std::vector<unsigned> > > > theAdjAdjTars;
+  std::vector<std::vector<std::vector<std::vector<unsigned> > > > theBorderMols;
+  std::vector<std::vector<std::vector<std::vector<unsigned> > > > theBorderTars;
+  std::vector<std::vector<std::vector<unsigned> > > theRepeatAdjMols;
+  std::vector<std::vector<std::vector<unsigned> > > theRepeatAdjTars;
   bool isToggled;
-  unsigned startBox;
-  unsigned endBox;
   bool isRunA;
-  std::vector<unsigned> theRands;
+  std::vector<std::vector<unsigned> > theRands;
 };
 
 #endif /* __Thread_hpp */
