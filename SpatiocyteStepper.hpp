@@ -54,8 +54,8 @@ public:
     isPeriodicEdge(false),
     SearchVacant(false),
     LatticeType(HCP_LATTICE),
-    theBoxSize(8),
     theThreadSize(1),
+    theTotalBoxSize(8),
     VoxelRadius(10e-9),
     nVoxelRadius(0.5) {}
   virtual ~SpatiocyteStepper();
@@ -205,6 +205,7 @@ private:
   unsigned theBioSpeciesSize;
   unsigned theBoxSize;
   unsigned theThreadSize;
+  unsigned theTotalBoxSize;
   unsigned theCellShape;
   unsigned theTotalCols;
   unsigned theTotalLayers;

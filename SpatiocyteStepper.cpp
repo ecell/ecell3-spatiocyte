@@ -117,13 +117,12 @@ void SpatiocyteStepper::initialize()
 
 SpatiocyteStepper::~SpatiocyteStepper()
 {
-  /*
-  for(unsigned i(1); i != theThreads.size(); ++i)
+      std::cout << "destructing" << std::endl;
+  for(unsigned i(0); i != theThreads.size(); ++i)
     {
       std::cout << "destructing" << i << std::endl;
-      theThreads[i]->joinChildren();
+      //theThreads[i]->joinChildren();
     }
-    */
 }
 
 void SpatiocyteStepper::initializeThreads()
@@ -171,7 +170,7 @@ void SpatiocyteStepper::finalizeSpecies()
 
 unsigned SpatiocyteStepper::getBoxSize()
 {
-  return theBoxSize;
+  return theTotalBoxSize;
 }
 
 void SpatiocyteStepper::updateSpecies()
@@ -200,7 +199,7 @@ unsigned SpatiocyteStepper::getColSize()
 
 unsigned SpatiocyteStepper::getLatticeSize()
 {
-  return theIDs[0].size()*theBoxSize;
+  return theIDs[0].size()*theTotalBoxSize;
 }
 
 Point SpatiocyteStepper::getCenterPoint()
@@ -460,7 +459,7 @@ void SpatiocyteStepper::checkModel()
 void SpatiocyteStepper::checkLattice()
 {
   unsigned cnt(0);
-  for(unsigned i(0); i != theBoxSize; ++i)
+  for(unsigned i(0); i != theTotalBoxSize; ++i)
     {
       std::vector<unsigned>& anAdjoins(theAdjoins[i]);
       unsigned offset(i*theBoxMaxSize);
@@ -1036,10 +1035,11 @@ void SpatiocyteStepper::setLatticeProperties()
   theBoxRows = 6;
   theBoxCols = 1;
   theBoxLayers = 1;
-  theBoxSize = theBoxRows*theBoxCols*theBoxLayers;
-  theRows.resize(theBoxSize);
-  theCols.resize(theBoxSize);
-  theLayers.resize(theBoxSize);
+  theTotalBoxSize = theBoxRows*theBoxCols*theBoxLayers;
+  theBoxSize = theTotalBoxSize/theThreadSize;
+  theRows.resize(theTotalBoxSize);
+  theCols.resize(theTotalBoxSize);
+  theLayers.resize(theTotalBoxSize);
   theBoxMaxSize = 0;
   unsigned aBoxRowSize(theTotalRows/theBoxRows);
   unsigned aBoxColSize(theTotalCols/theBoxCols);
@@ -1128,7 +1128,7 @@ void SpatiocyteStepper::setLatticeProperties()
 
   /*
   unsigned totalVoxels(theTotalRows*theTotalCols*theTotalLayers);
-  unsigned boxVoxels(totalVoxels/theBoxSize);
+  unsigned boxVoxels(totalVoxels/theTotalBoxSize);
   unsigned idealSides(pow(boxVoxels, 1.0/3.0));
   theRows[i] = idealSides;
   theCols[i] = idealSides;
@@ -1147,17 +1147,17 @@ void SpatiocyteStepper::setLatticeProperties()
     }
     */
 
-  theIDs.resize(theBoxSize);
-  theAdjoins.resize(theBoxSize);
-  theInfo.resize(theBoxSize);
+  theIDs.resize(theTotalBoxSize);
+  theAdjoins.resize(theTotalBoxSize);
+  theInfo.resize(theTotalBoxSize);
   theNullMol = 0;
   //Initialize the null coord:
 }
 
 void SpatiocyteStepper::setAdjAdjBoxes()
 {
-  theAdjAdjBoxes.resize(theBoxSize);
-  for(unsigned i(0); i != theBoxSize; ++i)
+  theAdjAdjBoxes.resize(theTotalBoxSize);
+  for(unsigned i(0); i != theTotalBoxSize; ++i)
     {
       const unsigned boxA(i);
       const std::vector<unsigned> adjBoxesA(theAdjBoxes[boxA]);
@@ -1198,8 +1198,8 @@ void SpatiocyteStepper::setAdjAdjBoxes()
 void SpatiocyteStepper::setAdjBoxes()
 {
   Comp* aRootComp(theComps[0]);
-  theAdjBoxes.resize(theBoxSize);
-  for(unsigned i(0); i != theBoxSize; ++i)
+  theAdjBoxes.resize(theTotalBoxSize);
+  for(unsigned i(0); i != theTotalBoxSize; ++i)
     {
       const unsigned bc(i/(theBoxRows*theBoxLayers)); 
       const unsigned bl((i%(theBoxRows*theBoxLayers))/theBoxRows); 
@@ -1605,7 +1605,7 @@ void SpatiocyteStepper::constructLattice()
 { 
   Comp* aRootComp(theComps[0]);
   const unsigned short rootID(aRootComp->vacantSpecies->getID());
-  for(unsigned i(0); i != theBoxSize; ++i)
+  for(unsigned i(0); i != theTotalBoxSize; ++i)
     {
       const unsigned aSize(theRows[i]*theCols[i]*theLayers[i]);
       theIDs[i].resize(aSize);
@@ -1613,7 +1613,7 @@ void SpatiocyteStepper::constructLattice()
       theAdjoins[i].resize(aSize*theAdjoinSize);
       theIDs[i][theNullMol] = theNullID;
     }
-  for(unsigned i(0); i != theBoxSize; ++i)
+  for(unsigned i(0); i != theTotalBoxSize; ++i)
     {
       std::vector<unsigned short>& anIDs(theIDs[i]);
       std::vector<VoxelInfo>& anInfo(theInfo[i]);
@@ -1673,7 +1673,7 @@ void SpatiocyteStepper::constructLattice()
             }
         }
     }
-  for(unsigned i(0); i != theBoxSize; ++i)
+  for(unsigned i(0); i != theTotalBoxSize; ++i)
     {
       for(unsigned j(0); j != theIDs[i].size();  ++j)
         { 
@@ -1685,17 +1685,11 @@ void SpatiocyteStepper::constructLattice()
 void SpatiocyteStepper::constructLattice(unsigned anID)
 {
   theThreads[anID]->runChildren();
-  /*
-  if(anID)
-    {
-      return;
-    }
-    */
   Comp* aRootComp(theComps[0]);
   const unsigned short rootID(aRootComp->vacantSpecies->getID());
-  for(unsigned i(0); i != theBoxSize; ++i)
-  //for(unsigned i(anID); i != (anID)+1; ++i)
-  //for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+  const unsigned startID(anID*theBoxSize);
+  const unsigned endID(anID*theBoxSize+theBoxSize);
+  for(unsigned i(startID); i != endID; ++i)
     {
       const unsigned aSize(theRows[i]*theCols[i]*theLayers[i]);
       theIDs[i].resize(aSize);
@@ -1703,9 +1697,7 @@ void SpatiocyteStepper::constructLattice(unsigned anID)
       theAdjoins[i].resize(aSize*theAdjoinSize);
       theIDs[i][theNullMol] = theNullID;
     }
-  for(unsigned i(0); i != theBoxSize; ++i)
-  //for(unsigned i(anID); i != (anID)+1; ++i)
-  //for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+  for(unsigned i(startID); i != endID; ++i)
     {
       std::vector<unsigned short>& anIDs(theIDs[i]);
       std::vector<VoxelInfo>& anInfo(theInfo[i]);
@@ -1777,9 +1769,9 @@ void SpatiocyteStepper::concatenateLattice(unsigned anID)
       return;
     }
     */
-  for(unsigned i(0); i != theBoxSize; ++i)
-  //for(unsigned i(anID); i != (anID)+1; ++i)
-  //for(unsigned i(anID*2); i != (anID*2)+2; ++i)
+  const unsigned startID(anID*theBoxSize);
+  const unsigned endID(anID*theBoxSize+theBoxSize);
+  for(unsigned i(startID); i != endID; ++i)
     {
       for(unsigned j(0); j != theIDs[i].size();  ++j)
         {
@@ -3060,7 +3052,7 @@ void SpatiocyteStepper::setIntersectingParent()
 
 void SpatiocyteStepper::compartmentalizeLattice() 
 {
-  for(unsigned i(0); i != theBoxSize; ++i)
+  for(unsigned i(0); i != theTotalBoxSize; ++i)
     {
       std::vector<unsigned short>& anIDs(theIDs[i]);
       for(unsigned j(0); j != anIDs.size(); ++j)
