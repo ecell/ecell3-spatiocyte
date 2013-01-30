@@ -1804,6 +1804,12 @@ public:
               return false;
             }
         }
+      if(getVacantID() != aSpecies->getID() && 
+         aSpecies->getVacantID() != theID && 
+         getVacantID() != aSpecies->getVacantID())
+        {
+          return false;
+        }
       return true;
     }
 private:
