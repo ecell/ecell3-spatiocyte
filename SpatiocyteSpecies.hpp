@@ -606,6 +606,8 @@ public:
     }
   void walk()
     {
+      theMolecules.resize(theMoleculeSize);
+      std::random_shuffle(theMolecules.begin(), theMolecules.end());
       const unsigned beginMoleculeSize(theMoleculeSize);
       unsigned size(theAdjoiningCoordSize);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
@@ -684,6 +686,29 @@ public:
             }
         }
     }
+  void walkMultiscalePropensity()
+    {
+      unsigned beginMoleculeSize(theMoleculeSize);
+      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
+        {
+          Voxel* source(theMolecules[i]);
+          int size(source->diffuseSize);
+          Voxel* target(&theLattice[source->adjoiningCoords[
+                        gsl_rng_uniform_int(theRng, size)]]);
+          if(target->id == theVacantID)
+            {
+              if(!isIntersectMultiscale(source, target) &&
+                 isMultiscaleWalkPropensity(source, target))
+                {
+                  removeMultiscaleMolecule(source);
+                  addMultiscaleMolecule(target);
+                  target->id = theID;
+                  source->id = theVacantID;
+                  theMolecules[i] = target;
+                }
+            }
+        }
+    }
   void walkMultiscale()
     {
       unsigned beginMoleculeSize(theMoleculeSize);
@@ -695,17 +720,13 @@ public:
                         gsl_rng_uniform_int(theRng, size)]]);
           if(target->id == theVacantID)
             {
-              if(theWalkProbability == 1 ||
-                 gsl_rng_uniform(theRng) < theWalkProbability)
+              if(!isIntersectMultiscale(source, target))
                 {
-                  if(!isIntersectMultiscale(source, target))
-                    {
-                      removeMultiscaleMolecule(source);
-                      addMultiscaleMolecule(target);
-                      target->id = theID;
-                      source->id = theVacantID;
-                      theMolecules[i] = target;
-                    }
+                  removeMultiscaleMolecule(source);
+                  addMultiscaleMolecule(target);
+                  target->id = theID;
+                  source->id = theVacantID;
+                  theMolecules[i] = target;
                 }
             }
         }
@@ -1044,11 +1065,48 @@ public:
           unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
           unsigned anID(theLattice[coordB].id);
           if(anID == theID ||
-             std::find(theMultiscaleIDs.begin(), theMultiscaleIDs.end(),
-                       anID) != theMultiscaleIDs.end())
+             std::find(theMultiscaleBoundIDs.begin(), theMultiscaleBoundIDs.end(),
+                       anID) != theMultiscaleBoundIDs.end())
             {
               return true;
             }
+        }
+      return false;
+    }
+  bool isMultiscaleWalkPropensity(Voxel* source, Voxel* target)
+    {
+      unsigned coordA(source->coord-vacStartCoord);
+      unsigned srcCnt(0);
+      for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
+        {
+          unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
+          unsigned anID(theLattice[coordB].id);
+          if(std::find(theMultiscaleBoundIDs.begin(), 
+                       theMultiscaleBoundIDs.end(), anID) !=
+             theMultiscaleBoundIDs.end())
+            {
+              ++srcCnt;
+            }
+        }
+      unsigned coordC(target->coord-vacStartCoord);
+      unsigned tarCnt(0);
+      for(unsigned i(0); i != theIntersectLipids[coordC].size(); ++i)
+        {
+          unsigned coordD(theIntersectLipids[coordC][i]+lipStartCoord);
+          unsigned anID(theLattice[coordD].id);
+          if(std::find(theMultiscaleBoundIDs.begin(), 
+                       theMultiscaleBoundIDs.end(), anID) !=
+             theMultiscaleBoundIDs.end() ||
+             std::find(theMultiscaleBindableIDs.begin(), 
+                       theMultiscaleBindableIDs.end(), anID) !=
+             theMultiscaleBindableIDs.end())
+            {
+              ++tarCnt;
+            }
+        }
+      if(tarCnt > srcCnt)
+        {
+          return true;
         }
       return false;
     }
@@ -1095,6 +1153,21 @@ public:
       theCompVoxels->push_back(&theLattice[aCoord]);
       ++theMoleculeSize;
       theVariable->setValue(theMoleculeSize);
+    }
+  String getIDString(unsigned anID)
+    {
+      Species* aSpecies(theStepper->id2species(anID));
+      Variable* aVariable(aSpecies->getVariable());
+      if(aVariable)
+        {
+          return "["+aVariable->getSystemPath().asString()+":"+
+            aVariable->getID()+"]["+int2str(aSpecies->getID())+"]";
+        }
+      else if(aSpecies->getID() == theNullID)
+        {
+          return "[theNullID]["+int2str(aSpecies->getID())+"]";
+        }
+      return "[unknown]";
     }
   String getIDString(Species* aSpecies)
     {
@@ -1675,11 +1748,12 @@ public:
     }
   void setMultiscaleBindUnbindIDs(unsigned anID, unsigned aPairID)
     {
-      if(std::find(theMultiscaleIDs.begin(), theMultiscaleIDs.end(),
-                   anID) == theMultiscaleIDs.end())
+      if(std::find(theMultiscaleBoundIDs.begin(), theMultiscaleBoundIDs.end(),
+                   anID) == theMultiscaleBoundIDs.end())
         {
-          theMultiscaleIDs.push_back(anID);
+          theMultiscaleBoundIDs.push_back(anID);
         }
+      theMultiscaleBindableIDs.push_back(aPairID);
       theMultiscaleBindIDs[aPairID] = anID;
       theMultiscaleUnbindIDs[anID] = aPairID;
     }
@@ -1859,8 +1933,9 @@ private:
   std::vector<unsigned> collisionCnts;
   std::vector<unsigned> theCoords;
   std::vector<unsigned> theMultiscaleBindIDs;
-  std::vector<unsigned> theMultiscaleIDs;
+  std::vector<unsigned> theMultiscaleBoundIDs;
   std::vector<unsigned> theMultiscaleUnbindIDs;
+  std::vector<unsigned> theMultiscaleBindableIDs;
   std::vector<unsigned> thePopulatableCoords;
   std::vector<Tag> theTags;
   std::vector<double> theBendAngles;

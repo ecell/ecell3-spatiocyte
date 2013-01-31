@@ -46,11 +46,13 @@ public:
       INHERIT_PROPERTIES(Process);
       PROPERTYSLOT_SET_GET(Real, D);
       PROPERTYSLOT_SET_GET(Real, P);
+      PROPERTYSLOT_SET_GET(Real, Propensity);
       PROPERTYSLOT_SET_GET(Real, WalkProbability);
     }
   DiffusionProcess():
     D(0),
     P(1),
+    Propensity(0),
     WalkProbability(1),
     theDiffusionSpecies(NULL),
     theVacantSpecies(NULL),
@@ -58,6 +60,7 @@ public:
   virtual ~DiffusionProcess() {}
   SIMPLE_SET_GET_METHOD(Real, D);
   SIMPLE_SET_GET_METHOD(Real, P);
+  SIMPLE_SET_GET_METHOD(Real, Propensity);
   SIMPLE_SET_GET_METHOD(Real, WalkProbability);
   virtual void initialize()
     {
@@ -158,7 +161,14 @@ public:
         }
       else if(theDiffusionSpecies->getIsMultiscale())
         {
-          theWalkMethod = &DiffusionProcess::walkMultiscale;
+          if(Propensity)
+            {
+              theWalkMethod = &DiffusionProcess::walkMultiscalePropensity;
+            }
+          else
+            {
+              theWalkMethod = &DiffusionProcess::walkMultiscale;
+            }
         }
       else 
         {
@@ -202,6 +212,10 @@ public:
     {
       theDiffusionSpecies->walkMultiscale();
     }
+  void walkMultiscalePropensity() const
+    {
+      theDiffusionSpecies->walkMultiscalePropensity();
+    }
   virtual void initializeLastOnce()
     {
       //theDiffusionSpecies->addInterruptedProcess(this);
@@ -219,6 +233,7 @@ public:
 protected:
   double D;
   double P;
+  double Propensity;
   double WalkProbability;
   Species* theDiffusionSpecies;
   Species* theVacantSpecies;
