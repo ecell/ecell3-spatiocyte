@@ -29,29 +29,29 @@
 //
 
 
-#ifndef __MultiscaleProcess_hpp
-#define __MultiscaleProcess_hpp
+#ifndef __MultiscaleReactionProcess_hpp
+#define __MultiscaleReactionProcess_hpp
 
 #include <sstream>
 #include "SpatiocyteProcess.hpp"
 #include "SpatiocyteSpecies.hpp"
 
-LIBECS_DM_CLASS(MultiscaleProcess, SpatiocyteProcess)
+LIBECS_DM_CLASS(MultiscaleReactionProcess, ReactionProcess)
 { 
 public:
-  LIBECS_DM_OBJECT(MultiscaleProcess, Process)
+  LIBECS_DM_OBJECT(MultiscaleReactionProcess, Process)
     {
-      INHERIT_PROPERTIES(Process);
+      INHERIT_PROPERTIES(ReactionProcess);
     }
-  MultiscaleProcess() {}
-  virtual ~MultiscaleProcess() {}
+  MultiscaleReactionProcess() {}
+  virtual ~MultiscaleReactionProcess() {}
   virtual void initialize()
     {
       if(isInitialized)
         {
           return;
         }
-      SpatiocyteProcess::initialize();
+      ReactionProcess::initialize();
       for(VariableReferenceVector::iterator
           i(theVariableReferenceVector.begin());
           i != theVariableReferenceVector.end(); ++i)
@@ -98,11 +98,25 @@ public:
                                               theProduct->getID());
         }
     }
+  virtual void initializeFifth()
+    {
+      //theInterruptedProcess will be updated by theStepper in
+      //initPriorityQueue just after initializeFourth, so
+      //we use it here in initializeFifth:
+      for(std::vector<SpatiocyteProcess*>::const_iterator 
+          i(theInterruptedProcesses.begin());
+          i!=theInterruptedProcesses.end(); ++i)
+        {
+          SpatiocyteNextReactionProcess* aProcess(
+                            dynamic_cast<SpatiocyteNextReactionProcess*>(*i));
+          theMultiscale->addInterruptedProcess(aProcess);
+        }
+    }
 protected:
   Species* theSubstrate;
   Species* theProduct;
   Species* theMultiscale;
 };
 
-#endif /* __MultiscaleProcess_hpp */
+#endif /* __MultiscaleReactionProcess_hpp */
 

@@ -601,6 +601,8 @@ public:
         }
       for(unsigned i(0); i != theInterruptedProcesses.size(); ++i)
         {
+          //theInterruptedProcesses are the processes that will always be
+          //interrupted at the end of a walk:
           theInterruptedProcesses[i
             ]->substrateValueChanged(theStepper->getCurrentTime());
         }
