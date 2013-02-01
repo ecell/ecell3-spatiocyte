@@ -74,25 +74,6 @@ void CompartmentProcess::setVacantCompSpeciesProperties()
     }
 }
 
-void CompartmentProcess::setVacantCompMultiscaleProperties()
-{
-  for(unsigned i(0); i != theLipidCompSpecies.size(); ++i)
-    {
-      Species* aLipid(theLipidCompSpecies[i]);
-      for(unsigned j(0); j != theVacantCompSpecies.size(); ++j)
-        {
-          Species* aVacant(theVacantCompSpecies[j]);
-          if(aLipid->getVacantSpecies() == aVacant)
-            {
-              int aCoeff(getCoefficient(aLipid));
-              Species* aLipidPair(coefficient2species(sqrt(aCoeff*aCoeff)));
-              aVacant->setMultiscaleBindUnbindIDs(aLipid->getID(),
-                                                  aLipidPair->getID());
-            }
-        }
-    }
-}
-
 int CompartmentProcess::getCoefficient(Species* aSpecies)
 {
   for(VariableReferenceVector::iterator i(theVariableReferenceVector.begin());
@@ -186,11 +167,6 @@ void CompartmentProcess::initializeThird()
 {
   if(!isCompartmentalized)
     {
-      //setVacantCompMultiscaleProperties must be in 
-      //initializeThird since it requires vacant species properties
-      //set by DiffusionProcess in initializeSecond:
-      setVacantCompMultiscaleProperties();
-
       thePoints.resize(endCoord-subStartCoord);
       initializeVectors();
       initializeFilaments(subunitStart, Filaments, Subunits, nDiffuseRadius,

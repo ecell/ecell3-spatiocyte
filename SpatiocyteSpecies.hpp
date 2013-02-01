@@ -440,6 +440,19 @@ public:
                 }
             }
         }
+      if(isMultiscale)
+        {
+          std::cout << "Bound:" << std::endl;
+          for(unsigned i(0); i != theMultiscaleBoundIDs.size(); ++i)
+            {
+              std::cout << getIDString(theMultiscaleBoundIDs[i]) << std::endl;
+            }
+          std::cout << "Bindable:" << std::endl;
+          for(unsigned i(0); i != theMultiscaleBindableIDs.size(); ++i)
+            {
+              std::cout << getIDString(theMultiscaleBindableIDs[i]) << std::endl;
+            }
+        }
     }
   unsigned getCollisionCnt(unsigned anIndex)
     {
@@ -1065,7 +1078,8 @@ public:
           unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
           unsigned anID(theLattice[coordB].id);
           if(anID == theID ||
-             std::find(theMultiscaleBoundIDs.begin(), theMultiscaleBoundIDs.end(),
+             std::find(theMultiscaleBoundIDs.begin(), 
+                       theMultiscaleBoundIDs.end(),
                        anID) != theMultiscaleBoundIDs.end())
             {
               return true;
@@ -1746,16 +1760,29 @@ public:
             }
         }
     }
-  void setMultiscaleBindUnbindIDs(unsigned anID, unsigned aPairID)
+  void setMultiscaleBindIDs(unsigned subID, unsigned prodID)
     {
       if(std::find(theMultiscaleBoundIDs.begin(), theMultiscaleBoundIDs.end(),
-                   anID) == theMultiscaleBoundIDs.end())
+                   prodID) == theMultiscaleBoundIDs.end())
         {
-          theMultiscaleBoundIDs.push_back(anID);
+          theMultiscaleBoundIDs.push_back(prodID);
         }
-      theMultiscaleBindableIDs.push_back(aPairID);
-      theMultiscaleBindIDs[aPairID] = anID;
-      theMultiscaleUnbindIDs[anID] = aPairID;
+      if(std::find(theMultiscaleBindableIDs.begin(), 
+                   theMultiscaleBindableIDs.end(),
+                   subID) == theMultiscaleBindableIDs.end())
+        {
+          theMultiscaleBindableIDs.push_back(subID);
+        }
+      theMultiscaleBindIDs[subID] = prodID;
+    }
+  void setMultiscaleUnbindIDs(unsigned subID, unsigned prodID)
+    {
+      if(std::find(theMultiscaleBoundIDs.begin(), theMultiscaleBoundIDs.end(),
+                   subID) == theMultiscaleBoundIDs.end())
+        {
+          theMultiscaleBoundIDs.push_back(subID);
+        }
+      theMultiscaleUnbindIDs[subID] = prodID;
     }
   //Get the fraction of number of nanoscopic molecules (anID) within the
   //multiscale molecule (index):

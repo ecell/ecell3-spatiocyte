@@ -203,7 +203,6 @@ public:
   void addInterfaceVoxel(unsigned, unsigned);
   void setCompartmentDimension();
   void setVacantCompSpeciesProperties();
-  void setVacantCompMultiscaleProperties();
   void setLipidCompSpeciesProperties();
   void setDiffuseSize(unsigned, unsigned);
   void interfaceSubunits();
