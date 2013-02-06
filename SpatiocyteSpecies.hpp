@@ -1234,6 +1234,10 @@ public:
     }
   unsigned getIndex(Voxel* aVoxel)
     {
+      if(getIsCompVacant())
+        {
+          return theMoleculeSize;
+        }
       unsigned index(getIndexFast(aVoxel));
       if(index == theMoleculeSize)
         { 

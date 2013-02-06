@@ -400,6 +400,12 @@ void SpatiocyteNextReactionProcess::fire()
                       return;
                     }
                 }
+              //nonHD + nonHD -> nonHD
+              else
+                {
+                  std::cout << "here" << std::endl;
+                  reactABC();
+                }
             }
         }
     }
@@ -422,6 +428,26 @@ bool SpatiocyteNextReactionProcess::reactMultiABC()
   std::cout << "adding molecule" << std::endl;
   C->addMolecule(moleculeC);
   return true;
+}
+
+//nonHD.nonHD -> nonHD
+//Both A and B are immobile nonHD
+void SpatiocyteNextReactionProcess::reactABC()
+{
+  std::cout << "A size:" << moleculesA.size() << " time:" << theTime << std::endl;
+  unsigned rand(gsl_rng_uniform_int(getStepper()->getRng(),
+                                        moleculesA.size()));
+  moleculeA = moleculesA[rand];
+  moleculeB = A->getRandomAdjoiningVoxel(moleculeA, B, SearchVacant);
+  if(A != C)
+    {
+      unsigned indexA(A->getIndex(moleculeA));
+      Tag tagA(A->getTag(indexA));
+      A->removeMolecule(indexA);
+      C->addMolecule(moleculeA, tagA);
+    }
+  unsigned indexB(B->getIndex(moleculeB));
+  B->removeMolecule(indexB);
 }
 
 //nonHD.nonHD -> nonHD + nonHD
