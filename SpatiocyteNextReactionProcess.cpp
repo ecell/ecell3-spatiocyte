@@ -403,7 +403,6 @@ void SpatiocyteNextReactionProcess::fire()
               //nonHD + nonHD -> nonHD
               else
                 {
-                  std::cout << "here" << std::endl;
                   reactABC();
                 }
             }
@@ -416,7 +415,6 @@ void SpatiocyteNextReactionProcess::fire()
 //MultiA.B -> C
 bool SpatiocyteNextReactionProcess::reactMultiABC()
 {
-  std::cout << "react Multi ABC:" << nextIndexA << std::endl;
   moleculeA = A->getMolecule(nextIndexA);
   moleculeC = C->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
   if(moleculeC == NULL)
@@ -425,7 +423,6 @@ bool SpatiocyteNextReactionProcess::reactMultiABC()
       return false;
     }
   A->removeMolecule(nextIndexA);
-  std::cout << "adding molecule" << std::endl;
   C->addMolecule(moleculeC);
   return true;
 }
@@ -434,7 +431,6 @@ bool SpatiocyteNextReactionProcess::reactMultiABC()
 //Both A and B are immobile nonHD
 void SpatiocyteNextReactionProcess::reactABC()
 {
-  std::cout << "A size:" << moleculesA.size() << " time:" << theTime << std::endl;
   unsigned rand(gsl_rng_uniform_int(getStepper()->getRng(),
                                         moleculesA.size()));
   moleculeA = moleculesA[rand];
@@ -780,10 +776,10 @@ double SpatiocyteNextReactionProcess::getIntervalUnbindAB()
     {
       return getIntervalUnbindMultiAB();
     }
-  const double sizeB(updateSizesAB());
+  updateMoleculesA();
   const double sizeA(moleculesA.size());
   const double rand(gsl_rng_uniform_pos(getStepper()->getRng()));
-  const double denom((p*sizeA*sizeB)*(-log(rand)));
+  const double denom((p*sizeA)*(-log(rand)));
   if(denom)
     {
       return 1.0/denom;
@@ -791,21 +787,17 @@ double SpatiocyteNextReactionProcess::getIntervalUnbindAB()
   return libecs::INF;
 }
 
-unsigned SpatiocyteNextReactionProcess::updateSizesAB()
+void SpatiocyteNextReactionProcess::updateMoleculesA()
 {
-  unsigned sizeB(0);
   moleculesA.resize(0);
   for(unsigned i(0); i != A->size(); ++i)
     {
-      moleculeA = A->getMolecule(i);
-      unsigned cnt(A->getAdjoiningMoleculeCnt(moleculeA, B));
-      if(cnt)
+      moleculeA = A->getMolecule(i); 
+      if(A->isAdjoinedSpecies(moleculeA, B))
         {
           moleculesA.push_back(moleculeA);
-          sizeB += cnt;
         }
     }
-  return sizeB;
 }
 
 Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_OneSubstrate() 

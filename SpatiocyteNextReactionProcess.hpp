@@ -141,7 +141,7 @@ public:
   virtual void printParameters();
   virtual bool isInterrupted(ReactionProcess*);
 protected:
-  unsigned updateSizesAB();
+  void updateMoleculesA();
   double getIntervalUnbindAB();
   double getIntervalUnbindMultiAB();
   virtual void calculateOrder();

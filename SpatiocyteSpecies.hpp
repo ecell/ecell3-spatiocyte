@@ -1234,6 +1234,7 @@ public:
     }
   unsigned getIndex(Voxel* aVoxel)
     {
+      //This is required by SNRP reactABC with B a lipid or vacant molecule:
       if(getIsCompVacant())
         {
           return theMoleculeSize;
@@ -1602,6 +1603,18 @@ public:
             }
         }
       return getRandomVacantVoxel(compCoords);
+    }
+  bool isAdjoinedSpecies(Voxel* source, Species* aTargetSpecies)
+    {
+      for(unsigned i(0); i != source->adjoiningSize; ++i)
+        {
+          if(theLattice[source->adjoiningCoords[i]].id == 
+             aTargetSpecies->getID())
+            {
+              return true;
+            }
+        }
+      return false;
     }
   unsigned getAdjoiningMoleculeCnt(Voxel* source, Species* aTargetSpecies)
     {
