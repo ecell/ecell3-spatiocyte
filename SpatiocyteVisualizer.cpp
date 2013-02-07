@@ -343,6 +343,12 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
               &theSpeciesColor[i].b); 
       theSpeciesVisibility[i] = false;
     }
+  for(unsigned int i(0); i!=theTotalSpeciesSize; ++i)
+    {
+      theSpeciesColor[i].r = 0;
+      theSpeciesColor[i].g = 0;
+      theSpeciesColor[i].b = 0;
+    }
   std::cout << "row:" << theRowSize << " col:" << theColSize  <<
     " layer:" << theLayerSize << " marker:" <<
     theLogMarker << std::endl << std::flush;
@@ -574,8 +580,8 @@ void GLScene::on_realize()
       return;
     }
   //background color3D:
-  glClearColor (0, 0, 0, 0);
-  //glClearColor (1, 1, 1, 0);
+  //glClearColor (0, 0, 0, 0);
+  glClearColor (1, 1, 1, 0);
   glClearDepth (1);
   if(!theMeanCount)
     {

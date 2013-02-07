@@ -49,6 +49,7 @@ public:
       PROPERTYSLOT_SET_GET(Real, SpaceB);
       PROPERTYSLOT_SET_GET(Real, SpaceC);
       PROPERTYSLOT_SET_GET(Integer, BindingSite);
+      PROPERTYSLOT_SET_GET(Integer, ImplicitUnbind);
       PROPERTYSLOT_GET_NO_LOAD_SAVE(Real, Propensity);
     }
   SpatiocyteNextReactionProcess():
@@ -60,6 +61,7 @@ public:
     SpaceB(0),
     SpaceC(0),
     BindingSite(-1),
+    ImplicitUnbind(0),
     theGetPropensityMethodPtr(RealMethodProxy::create<
             &SpatiocyteNextReactionProcess::getPropensity_ZerothOrder>()) {}
   virtual ~SpatiocyteNextReactionProcess() {}
@@ -67,6 +69,7 @@ public:
   SIMPLE_SET_GET_METHOD(Real, SpaceB);
   SIMPLE_SET_GET_METHOD(Real, SpaceC);
   SIMPLE_SET_GET_METHOD(Integer, BindingSite);
+  SIMPLE_SET_GET_METHOD(Integer, ImplicitUnbind);
   virtual void initialize()
     {
       if(isInitialized)
@@ -169,6 +172,7 @@ protected:
   double SpaceB;
   double SpaceC;
   int BindingSite;
+  int ImplicitUnbind;
   unsigned nextIndexA;
   std::stringstream pFormula;
   RealMethodProxy theGetPropensityMethodPtr;  

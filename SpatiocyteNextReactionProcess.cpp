@@ -530,6 +530,12 @@ bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
 {
   unsigned indexA(a->getRandomIndex());
   moleculeA = a->getMolecule(indexA);
+  if(ImplicitUnbind && 
+     E->getRandomAdjoiningVoxel(moleculeA, E, SearchVacant) == NULL)
+    {
+      requeue();
+      return false;
+    }
   moleculeC = NULL;
   if(a->getVacantID() == c->getVacantID() || a->getID() == c->getVacantID())
     {
@@ -555,11 +561,11 @@ bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
 
 //zero-coefficient E
 //we remove a molecule E at random location in the compartment to allow
-//rebinding effect of the dissociated nonHD molecule while maintain the 
-//concentration of a substrate species even after the reaction:
+//rebinding effect of the dissociated nonHD molecule while maintaining (fixing)
+//the concentration of a substrate species even after the reaction:
 void SpatiocyteNextReactionProcess::removeMoleculeE()
 {
-  if(!E)
+  if(!E || ImplicitUnbind)
     {
       return;
     }
@@ -1112,7 +1118,7 @@ void SpatiocyteNextReactionProcess::printParameters()
 {
   String aProcess(String(getPropertyInterface().getClassName()) + 
                                       "[" + getFullID().asString() + "]");
-  std::cout << aProcess << std::endl;
+  std::cout << aProcess << " SearchVacant:" << SearchVacant << std::endl;
   if(A)
     {
       std::cout << "  " << getIDString(A);
