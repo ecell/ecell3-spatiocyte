@@ -148,7 +148,7 @@ public:
       theNullID = aNullID;
       theThread = aThread;
     }
-  Time getTime() const
+  double getTime() const
     {
       return theTime;
     }
@@ -156,7 +156,7 @@ public:
     {
       return thePriority;
     }
-  virtual void setTime(Time aTime)
+  virtual void setTime(double aTime)
     {
       theTime = aTime;
     }
@@ -172,12 +172,16 @@ public:
     {
       return 0;
     }
-  virtual void addSubstrateInterrupt(Species* aSpecies, unsigned short aMolecule) {}
-  virtual void removeSubstrateInterrupt(Species* aSpecies, unsigned short aMolecule) {}
-  virtual void substrateValueChanged(Time aCurrentTime)
+  virtual void addSubstrateInterrupt(Species* aSpecies, 
+                                     unsigned short aMolecule) {}
+  virtual void removeSubstrateInterrupt(Species* aSpecies, 
+                                        unsigned short aMolecule) {}
+  virtual void substrateValueChanged(double aCurrentTime)
     {
-      const Time anOldTime(theTime);
-      theTime = aCurrentTime + getInterval();
+      const double anOldTime(theTime);
+      double anInterval(std::max(getStepInterval(),
+                                 getStepper()->getMinStepInterval()));
+      theTime = aCurrentTime + anInterval;
       if(theTime >= anOldTime)
         {
           thePriorityQueue->moveDown(theQueueID);
@@ -185,7 +189,7 @@ public:
       else if(theTime < anOldTime)
         {
           thePriorityQueue->moveUp(theQueueID);
-        }          
+        }       
     }
   virtual bool getIsExternInterrupted()
     {
@@ -222,7 +226,7 @@ protected:
   unsigned theNullMol;
   unsigned theNullID;
   double theInterval;
-  Time theTime;
+  double theTime;
   ProcessID theQueueID;
   ProcessPriorityQueue* thePriorityQueue; 
   SpatiocyteStepper* theSpatiocyteStepper;

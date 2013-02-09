@@ -143,7 +143,7 @@ void SpatiocyteStepper::initializeThreads()
     }
 }
 
-void SpatiocyteStepper::interrupt(Time aTime)
+void SpatiocyteStepper::interrupt(double aTime)
 {
   setCurrentTime(aTime); 
   for(std::vector<Process*>::const_iterator 
