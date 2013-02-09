@@ -131,10 +131,10 @@ void SpatiocyteStepper::initializeThreads()
   flagA = FLAG_STOP;
   flagB = FLAG_STOP;
   __sync_synchronize();
-  theThreads.resize(theThreadSize);
-  for(unsigned i(0); i != theThreadSize; ++i)
+  theThreads.resize(ThreadSize);
+  for(unsigned i(0); i != ThreadSize; ++i)
     {
-      theThreads[i] = new Thread(i, theThreadSize, nThreadsRunning, flagA,
+      theThreads[i] = new Thread(i, ThreadSize, nThreadsRunning, flagA,
                                  flagB, theSpecies, *this);
       if(i)
         {
@@ -1036,7 +1036,7 @@ void SpatiocyteStepper::setLatticeProperties()
   theBoxCols = 1;
   theBoxLayers = 1;
   theTotalBoxSize = theBoxRows*theBoxCols*theBoxLayers;
-  theBoxSize = theTotalBoxSize/theThreadSize;
+  theBoxSize = theTotalBoxSize/ThreadSize;
   theRows.resize(theTotalBoxSize);
   theCols.resize(theTotalBoxSize);
   theLayers.resize(theTotalBoxSize);

@@ -45,17 +45,19 @@ public:
       PROPERTYSLOT_SET_GET(Real, VoxelRadius);
       PROPERTYSLOT_SET_GET(Integer, LatticeType);
       PROPERTYSLOT_SET_GET(Integer, SearchVacant);
+      PROPERTYSLOT_SET_GET(Integer, ThreadSize);
     }
   SIMPLE_SET_GET_METHOD(Real, VoxelRadius); 
   SIMPLE_SET_GET_METHOD(Integer, LatticeType); 
   SIMPLE_SET_GET_METHOD(Integer, SearchVacant); 
+  SIMPLE_SET_GET_METHOD(Integer, ThreadSize); 
   SpatiocyteStepper():
     isInitialized(false),
     isPeriodicEdge(false),
     SearchVacant(false),
     LatticeType(HCP_LATTICE),
-    theThreadSize(1),
     theTotalBoxSize(8),
+    ThreadSize(6),
     VoxelRadius(10e-9),
     nVoxelRadius(0.5) {}
   virtual ~SpatiocyteStepper();
@@ -204,12 +206,12 @@ private:
   unsigned theAdjoinSize;
   unsigned theBioSpeciesSize;
   unsigned theBoxSize;
-  unsigned theThreadSize;
-  unsigned theTotalBoxSize;
   unsigned theCellShape;
+  unsigned theTotalBoxSize;
   unsigned theTotalCols;
   unsigned theTotalLayers;
   unsigned theTotalRows;
+  unsigned ThreadSize;
   unsigned theBoxMaxSize;
   unsigned theBoxCols;
   unsigned theBoxRows;
