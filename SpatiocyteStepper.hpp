@@ -59,7 +59,7 @@ public:
   virtual void initialize();
   // need to check interrupt when we suddenly stop the simulation, do we
   // need to update the priority queue?
-  virtual void interrupt(Time);
+  virtual void interrupt(double);
   virtual void step();
   void createSpecies();
   Species* addSpecies(Variable*);

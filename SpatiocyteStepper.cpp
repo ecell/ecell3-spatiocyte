@@ -110,7 +110,7 @@ void SpatiocyteStepper::initialize()
   std::cout << "19. simulation is started..." << std::endl;
 }
 
-void SpatiocyteStepper::interrupt(Time aTime)
+void SpatiocyteStepper::interrupt(double aTime)
 {
   setCurrentTime(aTime); 
   for(std::vector<Process*>::const_iterator 

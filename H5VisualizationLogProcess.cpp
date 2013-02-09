@@ -401,7 +401,7 @@ void H5VisualizationLogProcess::logMolecules(H5::DataSpace const& space, H5::Dat
 
 void H5VisualizationLogProcess::logSpecies()
 {
-    const Time currentTime(theSpatiocyteStepper->getCurrentTime());
+    const double currentTime(theSpatiocyteStepper->getCurrentTime());
 
     H5::Group perTimeDataGroup(theDataGroup.createGroup(boost::lexical_cast<std::string>(currentTime).c_str()));
     setH5Attribute(perTimeDataGroup, "t", currentTime);

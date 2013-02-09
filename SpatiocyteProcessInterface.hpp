@@ -46,15 +46,15 @@ public:
   virtual void initializeLastOnce() = 0;
   virtual void printParameters() = 0;
   virtual void setPriorityQueue(ProcessPriorityQueue*) = 0;
-  virtual void setTime(Time) = 0;
-  virtual Time getTime() const = 0;
+  virtual void setTime(double) = 0;
+  virtual double getTime() const = 0;
   virtual int getQueuePriority() const = 0;
   virtual void setQueueID(ProcessID) = 0;
   virtual void addSubstrateInterrupt(Species*, Voxel*) = 0;
   virtual void removeSubstrateInterrupt(Species*, Voxel*) = 0;
   virtual void setLatticeProperties(std::vector<Voxel>*, unsigned,
                                     unsigned, unsigned) = 0;
-  virtual void substrateValueChanged(Time) = 0;
+  virtual void substrateValueChanged(double) = 0;
   virtual void fire() = 0;
   virtual unsigned getLatticeResizeCoord(unsigned) = 0;
   virtual void updateResizedLattice() = 0;

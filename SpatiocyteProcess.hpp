@@ -139,7 +139,7 @@ public:
       theNullCoord = aNullCoord;
       theNullID = aNullID;
     }
-  Time getTime() const
+  double getTime() const
     {
       return theTime;
     }
@@ -147,7 +147,7 @@ public:
     {
       return thePriority;
     }
-  virtual void setTime(Time aTime)
+  virtual void setTime(double aTime)
     {
       theTime = aTime;
     }
@@ -165,9 +165,9 @@ public:
     }
   virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
   virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
-  virtual void substrateValueChanged(Time aCurrentTime)
+  virtual void substrateValueChanged(double aCurrentTime)
     {
-      const Time anOldTime(theTime);
+      const double anOldTime(theTime);
       theTime = aCurrentTime + getInterval();
       if(theTime >= anOldTime)
         {
@@ -212,7 +212,7 @@ protected:
   unsigned theNullCoord;
   unsigned theNullID;
   double theInterval;
-  Time theTime;
+  double theTime;
   ProcessID theQueueID;
   ProcessPriorityQueue* thePriorityQueue; 
   SpatiocyteStepper* theSpatiocyteStepper;

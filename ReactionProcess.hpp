@@ -87,7 +87,7 @@ public:
     }
   virtual void fire()
     {
-      const Time aCurrentTime(theTime); // do this only for the Processes in Q
+      const double aCurrentTime(theTime); // do this only for the Processes in Q
       requeue(); //theTop in thePriorityQueue is still this process since
       //we have not interrupted other processes to update their queue. 
       //So it is valid to call requeue, which only requeues theTop process, 
