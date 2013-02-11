@@ -8,13 +8,13 @@ MassActionProcess\
 ReactionProcess\
 VisualizationLogProcess\
 CompartmentProcess\
-MultiscaleReactionProcess\
 ErythrocyteProcess\
+SpatiocyteNextReactionProcess\
 H5VisualizationLogProcess\
 IteratingLogProcess\
 DiffusionInfluencedReactionProcess\
 OscillationAnalysisProcess\
-SpatiocyteNextReactionProcess\
+MultiscaleReactionProcess\
 MicroscopyTrackingProcess\
 CoordinateLogProcess\
 HistogramLogProcess\
@@ -89,7 +89,7 @@ DiffusionProcess.so: 	DiffusionProcess.cpp
 	$(ECELL3_DMC) -o DiffusionProcess.so --ldflags="SpatiocyteProcess.so DiffusionInfluencedReactionProcess.so" DiffusionProcess.cpp
 
 MultiscaleReactionProcess.so: 	MultiscaleReactionProcess.cpp
-	$(ECELL3_DMC) -o MultiscaleReactionProcess.so --ldflags="SpatiocyteProcess.so" MultiscaleReactionProcess.cpp
+	$(ECELL3_DMC) -o MultiscaleReactionProcess.so --ldflags="SpatiocyteNextReactionProcess.so" MultiscaleReactionProcess.cpp
 
 CompartmentGrowthProcess.so: 	CompartmentGrowthProcess.cpp
 	$(ECELL3_DMC) -o CompartmentGrowthProcess.so --ldflags="SpatiocyteProcess.so" CompartmentGrowthProcess.cpp

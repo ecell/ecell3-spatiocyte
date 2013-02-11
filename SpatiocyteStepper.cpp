@@ -2955,15 +2955,16 @@ bool SpatiocyteStepper::isInsideCoord(unsigned aCoord,
 
 void SpatiocyteStepper::populateComp(Comp* aComp)
 {
-  std::vector<unsigned> populationSize;
+  //number of molecules that needs to be populated on a vacant species:
+  std::vector<unsigned> vacantPopulations;
   std::vector<Species*> prioritySpecies;
   std::vector<Species*> multiscaleSpecies;
   std::vector<Species*> diffusiveSpecies;
   std::vector<Species*> normalSpecies;
-  populationSize.resize(theSpecies.size());
+  vacantPopulations.resize(theSpecies.size());
   for(unsigned i(0); i != theSpecies.size(); ++i)
     {
-      populationSize[i] = 0;
+      vacantPopulations[i] = 0;
     }
   for(std::vector<Species*>::const_iterator i(aComp->species.begin());
       i != aComp->species.end(); ++i)
@@ -2978,7 +2979,7 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
         }
       else if((*i)->getIsPopulateSpecies())
         {
-          populationSize[(*i)->getVacantSpecies()->getID()] += 
+          vacantPopulations[(*i)->getVacantSpecies()->getID()] += 
             (*i)->getPopulateCoordSize();
           bool isPushed(false);
           std::vector<Species*> temp;
@@ -3013,30 +3014,30 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
           prioritySpecies = temp;
         }
     }
-  for(unsigned i(0); i != populationSize.size(); ++i)
+  for(unsigned i(0); i != vacantPopulations.size(); ++i)
     {
-      if(populationSize[i])
+      if(vacantPopulations[i])
         {
           unsigned available(theSpecies[i]->getPopulatableSize());
-          if(populationSize[i] > available)
+          if(vacantPopulations[i] > available)
             {
               THROW_EXCEPTION(ValueError, String(
                           getPropertyInterface().getClassName()) +
-                          "There are " + int2str(populationSize[i]) + 
+                          "There are " + int2str(vacantPopulations[i]) + 
                           " total molecules that must be uniformly " +
                           "populated,\nbut there are only "
                           + int2str(available) + " vacant voxels of [" + 
-                          theSpecies[i]->getVariable()->getFullID().asString() +
+                          theSpecies[i]->getIDString() +
                           "] that can be populated on.");
             } 
-          if(double(populationSize[i])/available > 0.2)
+          if(double(vacantPopulations[i])/available > 0.2)
             { 
-              populateSpeciesDense(prioritySpecies, populationSize[i],
-                                   available);
+              populateSpeciesDense(prioritySpecies, theSpecies[i],
+                                   vacantPopulations[i], available);
             }
           else
             {
-              populateSpeciesSparse(prioritySpecies);
+              populateSpeciesSparse(prioritySpecies, theSpecies[i], available);
             }
         }
     }
@@ -3053,15 +3054,33 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
 }
 
 void SpatiocyteStepper::populateSpeciesDense(std::vector<Species*>&
-                                             aSpeciesList, unsigned aSize,
+                                             aSpeciesList,
+                                             Species* aVacantSpecies,
+                                             unsigned aSize,
                                              unsigned availableVoxelSize)
 {
+  std::cout << "    Populating densely on " << aVacantSpecies->getIDString() <<
+    ", available size:" << availableVoxelSize << std::endl;
   unsigned count(0);
   unsigned* populateVoxels(new unsigned[aSize]);
   unsigned* availableVoxels(new unsigned [availableVoxelSize]); 
-  for(unsigned i(0); i != availableVoxelSize; ++i)
+  unsigned k(0);
+  for(unsigned i(0); i != aVacantSpecies->size(); ++i)
     {
-      availableVoxels[i] = i;
+      if(aVacantSpecies->getIsCompVacant())
+        {
+          //Some of the voxels of the comp vacant species could have been
+          //occupied by interface species, so we need to only include indices
+          //that are still vacant:
+          if(aVacantSpecies->getMolecule(i)->id == aVacantSpecies->getID())
+            {
+              availableVoxels[k++] = i;
+            }
+        }
+      else
+        {
+          availableVoxels[i] = i;
+        }
     }
   gsl_ran_choose(getRng(), populateVoxels, aSize, availableVoxels,
                  availableVoxelSize, sizeof(unsigned));
@@ -3071,19 +3090,29 @@ void SpatiocyteStepper::populateSpeciesDense(std::vector<Species*>&
   for(std::vector<Species*>::const_iterator i(aSpeciesList.begin());
       i != aSpeciesList.end(); ++i)
     {
-      (*i)->populateCompUniform(populateVoxels, &count);
+      if((*i)->getVacantSpecies()->getID() == aVacantSpecies->getID())
+        {
+          (*i)->populateCompUniformDense(populateVoxels, &count);
+        }
     }
   delete[] populateVoxels;
   delete[] availableVoxels;
 }
 
 void SpatiocyteStepper::populateSpeciesSparse(std::vector<Species*>&
-                                              aSpeciesList)
+                                              aSpeciesList,
+                                              Species* aVacantSpecies,
+                                              unsigned availableVoxelSize)
 {
+  std::cout << "    Populating sparsely on " << aVacantSpecies->getIDString() <<
+    ", available size:" << availableVoxelSize << std::endl;
   for(std::vector<Species*>::const_iterator i(aSpeciesList.begin());
       i != aSpeciesList.end(); ++i)
     {
-      (*i)->populateCompUniformSparse();
+      if((*i)->getVacantSpecies()->getID() == aVacantSpecies->getID())
+        {
+          (*i)->populateCompUniformSparse();
+        }
     }
 }
 

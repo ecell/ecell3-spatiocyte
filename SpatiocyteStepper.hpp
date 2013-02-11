@@ -145,8 +145,9 @@ private:
   void clearComps();
   void clearComp(Comp*);
   void populateComp(Comp*);
-  void populateSpeciesDense(std::vector<Species*>&, unsigned, unsigned);
-  void populateSpeciesSparse(std::vector<Species*>&);
+  void populateSpeciesDense(std::vector<Species*>&, Species*, unsigned,
+                            unsigned);
+  void populateSpeciesSparse(std::vector<Species*>&, Species*, unsigned);
   void registerCompSpecies(Comp*);
   void setCompProperties(Comp*);
   void setDiffusiveComp(Comp*);

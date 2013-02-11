@@ -33,7 +33,7 @@
 #define __MultiscaleReactionProcess_hpp
 
 #include <sstream>
-#include "SpatiocyteProcess.hpp"
+#include "ReactionProcess.hpp"
 #include "SpatiocyteSpecies.hpp"
 
 LIBECS_DM_CLASS(MultiscaleReactionProcess, ReactionProcess)

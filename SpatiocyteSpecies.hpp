@@ -216,7 +216,7 @@ public:
     {
       return (thePopulateProcess != NULL);
     }
-  void populateCompUniform(unsigned* voxelIDs, unsigned* aCount)
+  void populateCompUniformDense(unsigned* voxelIDs, unsigned* aCount)
     {
       if(thePopulateProcess)
         {
@@ -1847,6 +1847,20 @@ public:
                 }
             }
           return thePopulatableCoords.size();
+        }
+      //Required by populate dense because some comp vacant voxels have become
+      //interface species voxels and no longer populatable:
+      else if(isCompVacant)
+        {
+          unsigned aSize(0);
+          for(unsigned i(0); i != theMoleculeSize; ++i)
+            {
+              if(theMolecules[i]->id == theID)
+                {
+                  ++aSize;
+                }
+            }
+          return aSize;
         }
       return theMoleculeSize;
     }

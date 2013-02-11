@@ -224,7 +224,7 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
                                               unsigned int* aList, 
                                               unsigned int* aCount)
 {
-  std::cout << "    Populating densely:" <<
+  std::cout << "      Populating densely:" <<
     getIDString(aSpecies) << " current size:" << aSpecies->size() <<
     ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
   Species* aVacantSpecies(aSpecies->getVacantSpecies());
@@ -255,7 +255,7 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
 
 void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
 {
-  std::cout << "    Populating sparsely:" <<
+  std::cout << "      Populating sparsely:" <<
     getIDString(aSpecies) << " current size:" << aSpecies->size() <<
     ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
   Species* aVacantSpecies(aSpecies->getVacantSpecies());
