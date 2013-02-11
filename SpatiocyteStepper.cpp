@@ -3014,30 +3014,38 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
           prioritySpecies = temp;
         }
     }
-  for(unsigned i(0); i != vacantPopulations.size(); ++i)
+  for(unsigned i(0); i != prioritySpecies.size(); ++i)
     {
-      if(vacantPopulations[i])
+      //First get the highest priority species and get its vacant species.
+      //Then populate all the species that are supposed to be populated on
+      //the vacant species according to priority:
+      if(!prioritySpecies[i]->getIsPopulated())
         {
-          unsigned available(theSpecies[i]->getPopulatableSize());
-          if(vacantPopulations[i] > available)
+          unsigned aVacantID(prioritySpecies[i]->getVacantSpecies()->getID());
+          if(vacantPopulations[aVacantID])
             {
-              THROW_EXCEPTION(ValueError, String(
+              unsigned available(theSpecies[aVacantID]->getPopulatableSize());
+              if(vacantPopulations[aVacantID] > available)
+                {
+                  THROW_EXCEPTION(ValueError, String(
                           getPropertyInterface().getClassName()) +
-                          "There are " + int2str(vacantPopulations[i]) + 
+                          "There are " + int2str(vacantPopulations[aVacantID]) +
                           " total molecules that must be uniformly " +
                           "populated,\nbut there are only "
                           + int2str(available) + " vacant voxels of [" + 
-                          theSpecies[i]->getIDString() +
+                          theSpecies[aVacantID]->getIDString() +
                           "] that can be populated on.");
-            } 
-          if(double(vacantPopulations[i])/available > 0.2)
-            { 
-              populateSpeciesDense(prioritySpecies, theSpecies[i],
-                                   vacantPopulations[i], available);
-            }
-          else
-            {
-              populateSpeciesSparse(prioritySpecies, theSpecies[i], available);
+                } 
+              if(double(vacantPopulations[aVacantID])/available > 0.2)
+                { 
+                  populateSpeciesDense(prioritySpecies, theSpecies[aVacantID],
+                                       vacantPopulations[aVacantID], available);
+                }
+              else
+                {
+                  populateSpeciesSparse(prioritySpecies, theSpecies[aVacantID],
+                                        available);
+                }
             }
         }
     }

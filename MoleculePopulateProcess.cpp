@@ -289,7 +289,7 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
 
 void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
 {
-  std::cout << "    Populating uniformly ranged:" <<
+  std::cout << "        Populating uniformly ranged:" <<
     getIDString(aSpecies) << " current size:" << aSpecies->size() <<
     ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
   Comp* aComp(aSpecies->getComp());

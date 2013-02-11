@@ -1846,8 +1846,8 @@ public:
             }
           return thePopulatableCoords.size();
         }
-      //Required by populate dense because some comp vacant voxels have become
-      //interface species voxels and no longer populatable:
+      //Required by populate dense because some comp vacant voxels would
+      //have become interface species voxels and no longer populatable:
       else if(isCompVacant)
         {
           unsigned aSize(0);
