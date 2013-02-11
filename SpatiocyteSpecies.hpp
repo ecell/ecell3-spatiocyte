@@ -442,12 +442,10 @@ public:
         }
       if(isMultiscale)
         {
-          std::cout << "Bound:" << std::endl;
           for(unsigned i(0); i != theMultiscaleBoundIDs.size(); ++i)
             {
               std::cout << getIDString(theMultiscaleBoundIDs[i]) << std::endl;
             }
-          std::cout << "Bindable:" << std::endl;
           for(unsigned i(0); i != theMultiscaleBindableIDs.size(); ++i)
             {
               std::cout << getIDString(theMultiscaleBindableIDs[i]) << std::endl;
