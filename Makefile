@@ -5,10 +5,10 @@ DMS=\
 SpatiocyteStepper\
 SpatiocyteProcess\
 MassActionProcess\
-ReactionProcess\
 VisualizationLogProcess\
-CompartmentProcess\
 ErythrocyteProcess\
+ReactionProcess\
+CompartmentProcess\
 SpatiocyteNextReactionProcess\
 H5VisualizationLogProcess\
 IteratingLogProcess\

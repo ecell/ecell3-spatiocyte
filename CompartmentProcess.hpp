@@ -43,6 +43,7 @@ public:
   LIBECS_DM_OBJECT(CompartmentProcess, Process)
     {
       INHERIT_PROPERTIES(Process);
+      PROPERTYSLOT_SET_GET(Integer, Autofit);
       PROPERTYSLOT_SET_GET(Integer, Filaments);
       PROPERTYSLOT_SET_GET(Integer, Periodic);
       PROPERTYSLOT_SET_GET(Integer, Subunits);
@@ -60,6 +61,7 @@ public:
     }
   CompartmentProcess():
     isCompartmentalized(false),
+    Autofit(1),
     dimension(1),
     Filaments(1),
     Periodic(0),
@@ -79,6 +81,7 @@ public:
     theLipidSpecies(NULL),
     theVacantSpecies(NULL) {}
   virtual ~CompartmentProcess() {}
+  SIMPLE_SET_GET_METHOD(Integer, Autofit);
   SIMPLE_SET_GET_METHOD(Integer, Filaments);
   SIMPLE_SET_GET_METHOD(Integer, Periodic);
   SIMPLE_SET_GET_METHOD(Integer, Subunits);
@@ -214,11 +217,12 @@ public:
   void addAdjoin(Voxel&, unsigned);
   bool isInside(Point&);
   void setSpeciesIntersectLipids();
-  Point getStartVoxelPoint();
+  void getStartVoxelPoint(Point&, Point&, Point&);
   int getCoefficient(Species*);
   Species* coefficient2species(int);
 protected:
   bool isCompartmentalized;
+  unsigned Autofit;
   unsigned dimension;
   unsigned endCoord;
   unsigned Filaments;

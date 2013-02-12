@@ -122,13 +122,30 @@ void CompartmentProcess::updateResizedLattice()
 
 void CompartmentProcess::setCompartmentDimension()
 {
+  Point nearest;
+  Point farthest;
+  getStartVoxelPoint(subunitStart, nearest, farthest);
+  double dist(subunitStart.z-nearest.z+nVoxelRadius-nDiffuseRadius);
+  subunitStart.z -= int(dist/(nDiffuseRadius*2))*2*nDiffuseRadius;
+  dist = subunitStart.y-nearest.y+nVoxelRadius-nDiffuseRadius;
+  unsigned cnt(int(dist/(nDiffuseRadius*sqrt(3))));
+  subunitStart.y -= cnt*nDiffuseRadius*sqrt(3);
+  if(cnt%2 == 1)
+    {
+      subunitStart.z += nDiffuseRadius;
+    }
+  if(Autofit)
+    {
+      Width = (farthest.y-subunitStart.y+nVoxelRadius)*VoxelRadius*2;
+      Length = (farthest.z-subunitStart.z+nVoxelRadius)*VoxelRadius*2;
+    }
   if(Length)
     {
-      Subunits = (unsigned)rint(Length/(DiffuseRadius*2));
+      Subunits = (unsigned)(Length/(DiffuseRadius*2));
     }
   if(Width)
     {
-      Filaments = (unsigned)rint((Width-2*DiffuseRadius)/
+      Filaments = (unsigned)((Width-2*DiffuseRadius)/
                                  (DiffuseRadius*sqrt(3)))+1;
     }
   if(Periodic && Filaments%2 != 0)
@@ -153,12 +170,12 @@ void CompartmentProcess::setCompartmentDimension()
   nWidth = Width/(VoxelRadius*2);
   nHeight = Height/(VoxelRadius*2);
   theComp->lengthX = nHeight;
-  theComp->lengthY = nLength;
-  theComp->lengthZ = nWidth;
+  theComp->lengthY = nWidth;
+  theComp->lengthZ = nLength;
   if(theLipidSpecies)
     {
-      LipidCols = (unsigned)rint(Length/(LipidRadius*2));
-      LipidRows = (unsigned)rint((Width-2*LipidRadius)/(LipidRadius*sqrt(3)))+1;
+      LipidCols = (unsigned)(Length/(LipidRadius*2));
+      LipidRows = (unsigned)((Width-2*LipidRadius)/(LipidRadius*sqrt(3)))+1;
     }
   //Actual surface area = Width*Length
 }
@@ -196,39 +213,72 @@ void CompartmentProcess::setSpeciesIntersectLipids()
     }
 }
 
-Point CompartmentProcess::getStartVoxelPoint()
+void CompartmentProcess::getStartVoxelPoint(Point& start, Point& nearest,
+                                            Point& farthest)
 {
   Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
   Species* surface(aComp->surfaceSub->vacantSpecies);
-  Point nearest;
+  double dist(0);
   Point origin;
   origin.x = 0;
   origin.y = 0;
   origin.z = 0;
-  double dist;
   if(surface->size())
     {
       nearest = theSpatiocyteStepper->coord2point(surface->getCoord(0));
+      farthest = nearest; 
+      origin.x = nearest.x;
       dist = getDistance(&nearest, &origin);
+      start = nearest;
     }
   for(unsigned i(1); i < surface->size(); ++i)
     {
       Point aPoint(theSpatiocyteStepper->coord2point(surface->getCoord(i)));
-      double aDist(getDistance(&aPoint, &origin));
-      if(aDist < dist)
+      if(aPoint.x < nearest.x)
         {
-          dist = aDist;
-          nearest = aPoint;
+          nearest.x = aPoint.x;
+          origin.x = aPoint.x;
+          dist = getDistance(&aPoint, &origin);
+          start = nearest;
+        }
+      else if(aPoint.x == nearest.x)
+        {
+          origin.x = aPoint.x;
+          double aDist(getDistance(&aPoint, &origin));
+          if(aDist < dist)
+            {
+              dist = aDist;
+              start = aPoint;
+            }
+        }
+      if(aPoint.y < nearest.y)
+        {
+          nearest.y = aPoint.y;
+        }
+      if(aPoint.z < nearest.z)
+        {
+          nearest.z = aPoint.z;
+        }
+      if(aPoint.x > farthest.x)
+        {
+          farthest.x = aPoint.x;
+        }
+      if(aPoint.y > farthest.y)
+        {
+          farthest.y = aPoint.y;
+        }
+      if(aPoint.z > farthest.z)
+        {
+          farthest.z = aPoint.z;
         }
     }
-  return nearest;
 }
 
 void CompartmentProcess::initializeVectors()
 {
-  subunitStart = getStartVoxelPoint();
   lengthStart = subunitStart;
-  lengthStart.z -= 2*nDiffuseRadius;
+  //For Lipid start:
+  lengthStart.z -= nDiffuseRadius;
   lengthStart.y -= nDiffuseRadius;
 
   lengthVector.x = 0;
