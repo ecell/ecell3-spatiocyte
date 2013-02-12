@@ -152,6 +152,11 @@ void CompartmentProcess::setCompartmentDimension()
     {
       ++Filaments;
     }
+  if(theLipidSpecies)
+    {
+      LipidCols = (unsigned)(Length/(LipidRadius*2));
+      LipidRows = (unsigned)((Width-2*LipidRadius)/(LipidRadius*sqrt(3)))+1;
+    }
   Width = 2*DiffuseRadius+(Filaments-1)*DiffuseRadius*sqrt(3); 
   Height = 2*DiffuseRadius;
   if(Filaments == 1)
@@ -172,11 +177,6 @@ void CompartmentProcess::setCompartmentDimension()
   theComp->lengthX = nHeight;
   theComp->lengthY = nWidth;
   theComp->lengthZ = nLength;
-  if(theLipidSpecies)
-    {
-      LipidCols = (unsigned)(Length/(LipidRadius*2));
-      LipidRows = (unsigned)((Width-2*LipidRadius)/(LipidRadius*sqrt(3)))+1;
-    }
   //Actual surface area = Width*Length
 }
 
