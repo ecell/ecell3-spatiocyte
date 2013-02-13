@@ -120,6 +120,8 @@ void CompartmentProcess::updateResizedLattice()
     }
 }
 
+// y:width:rows
+// z:length:cols
 void CompartmentProcess::setCompartmentDimension()
 {
   Point nearest;
@@ -152,12 +154,14 @@ void CompartmentProcess::setCompartmentDimension()
     {
       ++Filaments;
     }
+  //Need to use 2.5 here to avoid rounding off error when calculating
+  //LipidRows below:
+  Width = 2.5*DiffuseRadius+(Filaments-1)*DiffuseRadius*sqrt(3); 
   if(theLipidSpecies)
     {
       LipidCols = (unsigned)(Length/(LipidRadius*2));
       LipidRows = (unsigned)((Width-2*LipidRadius)/(LipidRadius*sqrt(3)))+1;
     }
-  Width = 2*DiffuseRadius+(Filaments-1)*DiffuseRadius*sqrt(3); 
   Height = 2*DiffuseRadius;
   if(Filaments == 1)
     {
@@ -177,6 +181,9 @@ void CompartmentProcess::setCompartmentDimension()
   theComp->lengthX = nHeight;
   theComp->lengthY = nWidth;
   theComp->lengthZ = nLength;
+  gridCols = (unsigned)rint(nLength/nGridSize);
+  gridRows = (unsigned)rint(nWidth/nGridSize);
+  theGrid.resize(gridCols*gridRows);
   //Actual surface area = Width*Length
 }
 
@@ -205,11 +212,22 @@ void CompartmentProcess::initializeThird()
   theLipidSpecies->setIsPopulated();
 }
 
+// y:width:rows
+// z:length:cols
 void CompartmentProcess::setSpeciesIntersectLipids()
 {
+  for(unsigned i(0); i != theLipidSpecies->size(); ++i)
+    {
+      Point& aPoint(*(*theLattice)[lipStartCoord+i].point);
+      unsigned row((unsigned)((aPoint.y-lipidStart.y)/nGridSize));
+      unsigned col((unsigned)((aPoint.z-lipidStart.z)/nGridSize));
+      theGrid[col+gridCols*row].push_back(lipStartCoord+i);
+    }
   for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
     {
-      theVacantCompSpecies[i]->setIntersectLipids(theLipidSpecies);
+      theVacantCompSpecies[i]->setIntersectLipids(theLipidSpecies, lipidStart,
+                                                  nGridSize, gridCols, gridRows,
+                                                  theGrid);
     }
 }
 

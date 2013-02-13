@@ -1752,27 +1752,42 @@ public:
     {
       lipStartCoord = aCoord;
     }
-  void setIntersectLipids(Species* aLipid)
+  void setIntersectLipids(Species* aLipid, Point& aLipidStart, double aGridSize,
+                          unsigned aGridCols, unsigned aGridRows, 
+                          std::vector<std::vector<unsigned> >& aGrid)
     {
       //Traverse through the entire compartment voxels:
       unsigned endA(vacStartCoord+theVacantSpecies->size());
-      unsigned endB(lipStartCoord+aLipid->size());
-      double dist((aLipid->getMoleculeRadius()+theMoleculeRadius)/
+      double nDist((aLipid->getMoleculeRadius()+theMoleculeRadius)/
                   (2*theVoxelRadius));
       theIntersectLipids.resize(theVacantSpecies->size());
       for(unsigned i(vacStartCoord); i != endA; ++i)
         {
           Point& pointA(*theLattice[i].point);
-          for(unsigned j(lipStartCoord); j != endB; ++j)
+          unsigned row((unsigned)((pointA.y-aLipidStart.y)/aGridSize));
+          unsigned col((unsigned)((pointA.z-aLipidStart.z)/aGridSize));
+          unsigned rowStart(std::max(unsigned(1), row)-1);
+          unsigned rowEnd(std::min(unsigned(aGridRows), row+2));
+          for(unsigned j(rowStart); j != rowEnd; ++j)
             {
-              Point& pointB(*theLattice[j].point);
-              if(getDistance(&pointA, &pointB) < dist)
+              unsigned colStart(std::max(unsigned(1), col)-1);
+              unsigned colEnd(std::min(unsigned(aGridCols), col+2));
+              for(unsigned k(colStart); k != colEnd; ++k)
                 {
-                  //We save j-lipStartCoord and not the absolute coord
-                  //since the absolute coord may change after resize 
-                  //of lattice:
-                  theIntersectLipids[i-vacStartCoord
-                    ].push_back(j-lipStartCoord);
+                  std::vector<unsigned>& coords(aGrid[k+aGridCols*j]);
+                  for(unsigned l(0); l != coords.size(); ++l)
+                    {
+                      unsigned m(coords[l]);
+                      Point& pointB(*theLattice[m].point);
+                      if(getDistance(&pointA, &pointB) < nDist)
+                        {
+                          //We save j-lipStartCoord and not the absolute coord
+                          //since the absolute coord may change after resize 
+                          //of lattice:
+                          theIntersectLipids[i-vacStartCoord
+                            ].push_back(m-lipStartCoord);
+                        }
+                    }
                 }
             }
         }

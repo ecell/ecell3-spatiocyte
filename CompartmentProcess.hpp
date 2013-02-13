@@ -155,6 +155,7 @@ public:
       VoxelRadius = theSpatiocyteStepper->getVoxelRadius();
       //Normalized off-lattice voxel radius:
       nSubunitRadius = SubunitRadius/(VoxelRadius*2);
+      nGridSize = 1.5*nSubunitRadius;
       nDiffuseRadius = DiffuseRadius/(VoxelRadius*2);
       //Normalized lipid voxel radius:
       nLipidRadius = LipidRadius/(VoxelRadius*2);
@@ -226,6 +227,8 @@ protected:
   unsigned dimension;
   unsigned endCoord;
   unsigned Filaments;
+  unsigned gridCols;
+  unsigned gridRows;
   unsigned Periodic;
   unsigned LipidRows;
   unsigned LipidCols;
@@ -233,6 +236,7 @@ protected:
   unsigned subStartCoord;
   unsigned Subunits;
   double DiffuseRadius;
+  double nGridSize;
   double Height;
   double nHeight;
   double Length;
@@ -275,6 +279,7 @@ protected:
   Variable* theInterfaceVariable;
   Variable* theLipidVariable;
   Variable* theVacantVariable;
+  std::vector<std::vector<unsigned> > theGrid;
   std::vector<Point> thePoints;
   std::vector<Species*> theLipidCompSpecies;
   std::vector<Species*> theVacantCompSpecies;
