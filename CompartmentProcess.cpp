@@ -212,8 +212,8 @@ void CompartmentProcess::initializeThird()
   theLipidSpecies->setIsPopulated();
 }
 
-// y:width:rows
-// z:length:cols
+// y:width:rows:filaments
+// z:length:cols:subunits
 void CompartmentProcess::setSpeciesIntersectLipids()
 {
   for(unsigned i(0); i != theLipidSpecies->size(); ++i)
@@ -373,7 +373,20 @@ void CompartmentProcess::addCompVoxel(unsigned rowIndex,
   Voxel& aVoxel((*theLattice)[aCoord]);
   aVoxel.point = &thePoints[aStartCoord-subStartCoord+rowIndex*aCols+colIndex];
   *aVoxel.point = aPoint;
-  aVoxel.adjoiningSize = 0;
+  if(RegularLattice)
+    {
+      aVoxel.adjoiningSize = theDiffuseSize;
+      aVoxel.diffuseSize = theDiffuseSize;
+      aVoxel.adjoiningCoords = new unsigned int[theDiffuseSize];
+      for(unsigned i(0); i != theDiffuseSize; ++i)
+        {
+          aVoxel.adjoiningCoords[i] = theNullCoord;
+        }
+    }
+  else
+    {
+      aVoxel.adjoiningSize = 0;
+    }
   aVacant->addCompVoxel(aCoord);
 }
 
@@ -395,92 +408,114 @@ void CompartmentProcess::elongateFilaments(Species* aVacant,
     }
 }
 
+
+void CompartmentProcess::connectSubunit(unsigned a, unsigned b, 
+                                        unsigned adjoinA, unsigned adjoinB)
+{
+  Voxel& voxelA((*theLattice)[a]);
+  Voxel& voxelB((*theLattice)[b]);
+  if(RegularLattice)
+    {
+      voxelA.adjoiningCoords[adjoinA] = b;
+      voxelB.adjoiningCoords[adjoinB] = a;
+    }
+  else
+    {
+      addAdjoin(voxelA, b);
+      addAdjoin(voxelB, a);
+    }
+}
+
 /*
- [NW] [  N  ] [NE]
-     [subunit] 
- [SW] [  S  ] [SE]
+ row0   row1    row2
+ fil0   fil1    fil2
+ [NW] [ NORTH ] [NE] sub0, col0
+      [subunit]      sub1, col1
+ [SW] [ SOUTH ] [SE] sub2, col2
  */
 
+// y:width:rows:filaments
+// z:length:cols:subunits
 void CompartmentProcess::connectFilaments(unsigned aStartCoord,
                                           unsigned aRows, unsigned aCols)
 {
   for(unsigned i(0); i != aCols; ++i)
     {
       for(unsigned j(0); j != aRows; ++j)
-        { 
+        {
           if(i > 0)
             { 
-              //N-S
-              unsigned a(aStartCoord+j*aCols+(i-1));
-              unsigned b(aStartCoord+j*aCols+i);
-              connectSubunit(a, b);
+              //NORTH-SOUTH
+              unsigned a(aStartCoord+j*aCols+i);
+              unsigned b(aStartCoord+j*aCols+(i-1));
+              connectSubunit(a, b, NORTH, SOUTH);
             }
           else if(Periodic)
             {
-              //periodic N-S
+              //periodic NORTH-SOUTH
               unsigned a(aStartCoord+j*aCols); 
               unsigned b(aStartCoord+j*aCols+aCols-1);
-              connectSubunit(a, b);
+              connectSubunit(a, b, NORTH, SOUTH);
               if(j%2 == 1)
                 {
                   if(j+1 < aRows)
                     {
-                      //periodic NE_SW 
+                      //periodic NE-SW 
                       b = aStartCoord+(j+1)*aCols+aCols-1; 
-                      connectSubunit(a, b);
+                      connectSubunit(a, b, NE, SW);
                     }
                   else if(j == aRows-1)
                     {
-                      //periodic NE_SW 
+                      //periodic NE-SW 
                       b = aStartCoord+aCols-1; 
-                      connectSubunit(a, b);
+                      connectSubunit(a, b, NE, SW);
                     }
-                  //periodic SE_NW 
+                  //periodic NW-SE
                   b = aStartCoord+(j-1)*aCols+aCols-1; 
-                  connectSubunit(a, b);
+                  connectSubunit(a, b, NW, SE);
                 }
             }
           if(j > 0)
             {
               if(j%2 == 1)
                 {
-                  //NE_SW
+                  //SW-NE
                   unsigned a(aStartCoord+j*aCols+i);
                   unsigned b(aStartCoord+(j-1)*aCols+i); 
-                  connectSubunit(a, b);
+                  connectSubunit(a, b, SW, NE);
                   if(i > 0)
                     {
-                      //SE_NW
+                      //NW-SE
                       b = aStartCoord+(j-1)*aCols+(i-1); 
-                      connectSubunit(a, b);
+                      connectSubunit(a, b, NW, SE);
                     }
                 }
               else
                 {
-                  //SE_NW
+                  //NW-SE
                   unsigned a(aStartCoord+j*aCols+i);
                   unsigned b(aStartCoord+(j-1)*aCols+i); 
-                  connectSubunit(a, b);
+                  connectSubunit(a, b, NW, SE);
                   if(i+1 < aCols)
                     {
-                      //NE_SW
+                      //SW-NE
                       b = aStartCoord+(j-1)*aCols+(i+1); 
-                      connectSubunit(a, b);
+                      connectSubunit(a, b, SW, NE);
                     }
                 }
             }
         }
       if(Periodic && aRows > 1)
         { 
-          //periodic SE_NW
+          //periodic NW-SE
           unsigned a(aStartCoord+i); //row 0
           unsigned b(aStartCoord+(aRows-1)*aCols+i); 
-          connectSubunit(a, b);
+          connectSubunit(a, b, NW, SE);
           if(i+1 < aCols)
             {
-              //periodic NE_SW
+              //periodic SW-NE
               b = aStartCoord+(aRows-1)*aCols+(i+1); 
-              connectSubunit(a, b);
+              connectSubunit(a, b, SW, NE);
             }
         }
     }
@@ -493,14 +528,6 @@ void CompartmentProcess::setDiffuseSize(unsigned start, unsigned end)
       Voxel& subunit((*theLattice)[i]);
       subunit.diffuseSize = subunit.adjoiningSize;
     }
-}
-
-void CompartmentProcess::connectSubunit(unsigned a, unsigned b)
-{
-  Voxel& aVoxel((*theLattice)[a]);
-  Voxel& adjoin((*theLattice)[b]);
-  addAdjoin(aVoxel, b);
-  addAdjoin(adjoin, a);
 }
 
 void CompartmentProcess::addAdjoin(Voxel& aVoxel, unsigned coord)

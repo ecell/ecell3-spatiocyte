@@ -73,12 +73,12 @@ typedef ProcessPriorityQueue::ID ProcessID;
 //The 12 adjoining voxels of a voxel in the HCP lattice:
 #define NORTH    0 
 #define SOUTH    1
-#define EAST     2 
-#define WEST     3 
-#define NW       4 
-#define SW       5
-#define NE       6
-#define SE       7
+#define NW       2 
+#define SW       3
+#define NE       4
+#define SE       5
+#define EAST     6 
+#define WEST     7 
 #define DORSALN  8
 #define DORSALS  9
 #define VENTRALN 10 

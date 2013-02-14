@@ -46,6 +46,7 @@ public:
       PROPERTYSLOT_SET_GET(Integer, Autofit);
       PROPERTYSLOT_SET_GET(Integer, Filaments);
       PROPERTYSLOT_SET_GET(Integer, Periodic);
+      PROPERTYSLOT_SET_GET(Integer, RegularLattice);
       PROPERTYSLOT_SET_GET(Integer, Subunits);
       PROPERTYSLOT_SET_GET(Real, DiffuseRadius);
       PROPERTYSLOT_SET_GET(Real, Length);
@@ -65,7 +66,9 @@ public:
     dimension(1),
     Filaments(1),
     Periodic(0),
+    RegularLattice(1),
     Subunits(1),
+    theDiffuseSize(6),
     DiffuseRadius(0),
     Length(0),
     LipidRadius(0),
@@ -84,6 +87,7 @@ public:
   SIMPLE_SET_GET_METHOD(Integer, Autofit);
   SIMPLE_SET_GET_METHOD(Integer, Filaments);
   SIMPLE_SET_GET_METHOD(Integer, Periodic);
+  SIMPLE_SET_GET_METHOD(Integer, RegularLattice);
   SIMPLE_SET_GET_METHOD(Integer, Subunits);
   SIMPLE_SET_GET_METHOD(Real, DiffuseRadius);
   SIMPLE_SET_GET_METHOD(Real, Length);
@@ -202,7 +206,7 @@ public:
   void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
                            unsigned);
   void elongateFilaments(Species*, unsigned, unsigned, unsigned, double);
-  void connectSubunit(unsigned, unsigned);
+  void connectSubunit(unsigned, unsigned, unsigned, unsigned);
   void connectFilaments(unsigned, unsigned, unsigned);
   void addInterfaceVoxel(unsigned, unsigned);
   void setCompartmentDimension();
@@ -234,7 +238,9 @@ protected:
   unsigned LipidCols;
   unsigned lipStartCoord;
   unsigned subStartCoord;
+  unsigned RegularLattice;
   unsigned Subunits;
+  unsigned theDiffuseSize;
   double DiffuseRadius;
   double nGridSize;
   double Height;
