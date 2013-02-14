@@ -227,7 +227,7 @@ void CompartmentProcess::setSpeciesIntersectLipids()
     {
       theVacantCompSpecies[i]->setIntersectLipids(theLipidSpecies, lipidStart,
                                                   nGridSize, gridCols, gridRows,
-                                                  theGrid);
+                                                  theGrid, Filaments, Subunits);
     }
 }
 

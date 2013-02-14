@@ -183,6 +183,10 @@ public:
           //to be overwritten by DiffusionProcess in initializeSecond:
           theLipidCompSpecies[i]->setVacantSpecies(theLipidSpecies);
           theLipidCompSpecies[i]->setComp(theComp);
+          if(RegularLattice)
+            {
+              theLipidCompSpecies[i]->setIsRegularLattice(theDiffuseSize);
+            }
         }
       for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
         {
@@ -194,6 +198,10 @@ public:
           if(theLipidSpecies)
             {
               theVacantCompSpecies[i]->setIsMultiscale();
+            }
+          if(RegularLattice)
+            {
+              theVacantCompSpecies[i]->setIsRegularLattice(theDiffuseSize);
             }
         }
     }

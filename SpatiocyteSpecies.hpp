@@ -99,6 +99,7 @@ public:
     isOffLattice(false),
     isPolymer(false),
     isReactiveVacant(false),
+    isRegularLattice(false),
     isSubunitInitialized(false),
     isTag(false),
     isTagged(false),
@@ -203,6 +204,11 @@ public:
       isTagged = true;
       theTagSpeciesList.push_back(aSpecies);
       aSpecies->addTaggedSpecies(this);
+    }
+  void setIsRegularLattice(unsigned aDiffuseSize)
+    {
+      isRegularLattice = true;
+      theDiffuseSize = aDiffuseSize;
     }
   bool getIsTagged()
     {
@@ -1754,39 +1760,84 @@ public:
     }
   void setIntersectLipids(Species* aLipid, Point& aLipidStart, double aGridSize,
                           unsigned aGridCols, unsigned aGridRows, 
-                          std::vector<std::vector<unsigned> >& aGrid)
+                          std::vector<std::vector<unsigned> >& aGrid,
+                          unsigned aVacantRows, unsigned aVacantCols)
     {
-      //Traverse through the entire compartment voxels:
-      unsigned endA(vacStartCoord+theVacantSpecies->size());
       double nDist((aLipid->getMoleculeRadius()+theMoleculeRadius)/
-                  (2*theVoxelRadius));
-      theIntersectLipids.resize(theVacantSpecies->size());
-      for(unsigned i(vacStartCoord); i != endA; ++i)
+                   (2*theVoxelRadius));
+      if(isRegularLattice)
         {
-          Point& pointA(*theLattice[i].point);
-          unsigned row((unsigned)((pointA.y-aLipidStart.y)/aGridSize));
-          unsigned col((unsigned)((pointA.z-aLipidStart.z)/aGridSize));
-          unsigned rowStart(std::max(unsigned(1), row)-1);
-          unsigned rowEnd(std::min(unsigned(aGridRows), row+2));
-          for(unsigned j(rowStart); j != rowEnd; ++j)
+          theIntersectOffsets.resize(2);
+          unsigned rowA(aVacantRows/2);
+          unsigned rowB(rowA+1);
+          if(rowB >= aVacantRows && rowA > 0)
             {
-              unsigned colStart(std::max(unsigned(1), col)-1);
-              unsigned colEnd(std::min(unsigned(aGridCols), col+2));
-              for(unsigned k(colStart); k != colEnd; ++k)
+              rowB = rowA-1;
+            }
+          else
+            {
+              rowB = rowA;
+            }
+          unsigned aCol(aVacantCols/2);
+          unsigned coordA(rowA*aVacantCols+aCol);
+          unsigned coordB(rowB*aVacantCols+aCol);
+          setIntersectOffsets(rowA, coordA, nDist, aLipidStart, aGridSize,
+                              aGridCols, aGridRows, aGrid);
+          setIntersectOffsets(rowB, coordB, nDist, aLipidStart, aGridSize,
+                              aGridCols, aGridRows, aGrid);
+        }
+      else
+        {
+          //Traverse through the entire compartment voxels:
+          unsigned endA(vacStartCoord+theVacantSpecies->size());
+          theIntersectLipids.resize(theVacantSpecies->size());
+          for(unsigned i(vacStartCoord); i != endA; ++i)
+            { 
+              getIntersectLipids(i, nDist, aLipidStart, aGridSize,
+                                 aGridCols, aGridRows, aGrid,
+                                 theIntersectLipids[i-vacStartCoord]);
+            }
+        }
+    }
+  void setIntersectOffsets(unsigned row, unsigned coord, double nDist,
+                           Point& aLipidStart, double aGridSize,
+                           unsigned aGridCols, unsigned aGridRows, 
+                           std::vector<std::vector<unsigned> >& aGrid)
+    { 
+      std::vector<unsigned> anIntersectLipids;
+      getIntersectLipids(coord+vacStartCoord, nDist, aLipidStart, aGridSize,
+                         aGridCols, aGridRows, aGrid, anIntersectLipids);
+      theIntersectOffsets[row%2].resize(0);
+      for(unsigned i(0); i != anIntersectLipids.size(); ++i)
+        {
+          theIntersectOffsets[row%2].push_back(anIntersectLipids[i]-coord);
+        }
+    }
+  void getIntersectLipids(unsigned coordA, double nDist, Point& aLipidStart,
+                          double aGridSize, unsigned aGridCols, 
+                          unsigned aGridRows, 
+                          std::vector<std::vector<unsigned> >& aGrid,
+                          std::vector<unsigned>& anIntersectLipids)
+    {
+      Point& pointA(*theLattice[coordA].point);
+      unsigned row((unsigned)((pointA.y-aLipidStart.y)/aGridSize));
+      unsigned col((unsigned)((pointA.z-aLipidStart.z)/aGridSize));
+      unsigned rowStart(std::max(unsigned(1), row)-1);
+      unsigned rowEnd(std::min(unsigned(aGridRows), row+2));
+      for(unsigned j(rowStart); j != rowEnd; ++j)
+        {
+          unsigned colStart(std::max(unsigned(1), col)-1);
+          unsigned colEnd(std::min(unsigned(aGridCols), col+2));
+          for(unsigned k(colStart); k != colEnd; ++k)
+            {
+              std::vector<unsigned>& coords(aGrid[k+aGridCols*j]);
+              for(unsigned l(0); l != coords.size(); ++l)
                 {
-                  std::vector<unsigned>& coords(aGrid[k+aGridCols*j]);
-                  for(unsigned l(0); l != coords.size(); ++l)
+                  unsigned m(coords[l]);
+                  Point& pointB(*theLattice[m].point);
+                  if(getDistance(&pointA, &pointB) < nDist)
                     {
-                      unsigned m(coords[l]);
-                      Point& pointB(*theLattice[m].point);
-                      if(getDistance(&pointA, &pointB) < nDist)
-                        {
-                          //We save j-lipStartCoord and not the absolute coord
-                          //since the absolute coord may change after resize 
-                          //of lattice:
-                          theIntersectLipids[i-vacStartCoord
-                            ].push_back(m-lipStartCoord);
-                        }
+                      anIntersectLipids.push_back(m-lipStartCoord);
                     }
                 }
             }
@@ -1971,6 +2022,7 @@ private:
   bool isOffLattice;
   bool isPolymer;
   bool isReactiveVacant;
+  bool isRegularLattice;
   bool isSubunitInitialized;
   bool isTag;
   bool isTagged;
@@ -1979,6 +2031,7 @@ private:
   unsigned lipStartCoord;
   unsigned theAdjoiningCoordSize;
   unsigned theCollision;
+  unsigned theDiffuseSize;
   unsigned theDimension;
   unsigned theInitCoordSize;
   unsigned theMoleculeSize;
@@ -2002,6 +2055,7 @@ private:
   SpatiocyteStepper* theStepper;
   Variable* theVariable;
   Tag theNullTag;
+  std::vector<std::vector<int> > theIntersectOffsets;
   std::vector<bool> theFinalizeReactions;
   std::vector<unsigned> collisionCnts;
   std::vector<unsigned> theCoords;
