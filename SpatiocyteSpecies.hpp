@@ -1046,52 +1046,95 @@ public:
     }
   void addMultiscaleMolecule(Voxel* aVoxel)
     {
-      unsigned coordA(aVoxel->coord-vacStartCoord);
-      for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
+      if(isRegularLattice)
         {
-          unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
-          if(theLattice[coordB].id == theMultiscaleVacantSpecies->getID())
+          unsigned coordA(aVoxel->coord-vacStartCoord);
+          unsigned lipSize(lipRows*lipCols);
+          int rowA(coordA/lipCols);
+          std::vector<int>& anOffsets(theIntersectOffsets[rowA%2]);
+          for(unsigned i(0); i != anOffsets.size(); ++i)
             {
-              theLattice[coordB].id = theID;
+              const int offsetRow((anOffsets[i]+lipRows/2*lipCols+lipCols/2)/
+                              lipCols-(lipRows/2*lipCols+lipCols/2)/lipCols);
+              int coordB(coordA+anOffsets[i]);
+              if(coordB/lipCols == offsetRow+rowA && coordB >= 0 &&
+                 unsigned(coordB) < lipSize)
+                {
+                  unsigned coord(coordB+lipStartCoord);
+                  if(theLattice[coord].id == 
+                     theMultiscaleVacantSpecies->getID())
+                    {
+                      theLattice[coord].id = theID;
+                    }
+                  else
+                    {
+                      multiscaleBind(&theLattice[coord]);
+                    }
+                }
             }
-          else
+        }
+      else
+        {
+          unsigned coordA(aVoxel->coord-vacStartCoord);
+          for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
             {
-              multiscaleBind(&theLattice[coordB]);
+              unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
+              if(theLattice[coordB].id == theMultiscaleVacantSpecies->getID())
+                {
+                  theLattice[coordB].id = theID;
+                }
+              else
+                {
+                  multiscaleBind(&theLattice[coordB]);
+                }
             }
         }
     }
   void removeMultiscaleMolecule(Voxel* aVoxel)
     {
-      unsigned coordA(aVoxel->coord-vacStartCoord);
-      for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
+      if(isRegularLattice)
         {
-          unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
-          if(theLattice[coordB].id == theID)
+          unsigned coordA(aVoxel->coord-vacStartCoord);
+          unsigned lipSize(lipRows*lipCols);
+          int rowA(coordA/lipCols);
+          std::vector<int>& anOffsets(theIntersectOffsets[rowA%2]);
+          for(unsigned i(0); i != anOffsets.size(); ++i)
             {
-              theLattice[coordB].id = theMultiscaleVacantSpecies->getID();
-            }
-          else
-            {
-              multiscaleUnbind(&theLattice[coordB]);
+              const int offsetRow((anOffsets[i]+lipRows/2*lipCols+lipCols/2)/
+                              lipCols-(lipRows/2*lipCols+lipCols/2)/lipCols);
+              int coordB(coordA+anOffsets[i]);
+              if(coordB/lipCols == offsetRow+rowA && coordB >= 0 &&
+                 unsigned(coordB) < lipSize)
+                {
+                  unsigned coord(coordB+lipStartCoord);
+                  if(theLattice[coord].id == theID)
+                    {
+                      theLattice[coord].id = 
+                        theMultiscaleVacantSpecies->getID();
+                    }
+                  else
+                    {
+                      multiscaleUnbind(&theLattice[coord]);
+                    }
+                }
             }
         }
-    }
-  bool isIntersectMultiscale(Voxel* source)
-    {
-      unsigned coordA(source->coord-vacStartCoord);
-      for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
+      else
         {
-          unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
-          unsigned anID(theLattice[coordB].id);
-          if(anID == theID ||
-             std::find(theMultiscaleBoundIDs.begin(), 
-                       theMultiscaleBoundIDs.end(),
-                       anID) != theMultiscaleBoundIDs.end())
+          unsigned coordA(aVoxel->coord-vacStartCoord);
+          for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
             {
-              return true;
+              unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
+              if(theLattice[coordB].id == theID)
+                {
+                  theLattice[coordB].id = theMultiscaleVacantSpecies->getID();
+                }
+              else
+                {
+                  multiscaleUnbind(&theLattice[coordB]);
+                }
             }
         }
-      return false;
     }
   bool isMultiscaleWalkPropensity(Voxel* source, Voxel* target)
     {
@@ -1130,24 +1173,109 @@ public:
         }
       return false;
     }
+  bool isIntersectMultiscale(Voxel* source)
+    {
+      if(isRegularLattice)
+        {
+          //should change this to lipStartCoord:
+          //unsigned coordA(theLipCoords[source->coord-vacStartCoord]-
+          //lipStartCoord);
+          unsigned coordA(source->coord-vacStartCoord);
+          unsigned lipSize(lipRows*lipCols);
+          int rowA(coordA/lipCols);
+          std::vector<int>& anOffsets(theIntersectOffsets[rowA%2]);
+          for(unsigned i(0); i != anOffsets.size(); ++i)
+            {
+              const int offsetRow((anOffsets[i]+lipRows/2*lipCols+lipCols/2)/
+                              lipCols-(lipRows/2*lipCols+lipCols/2)/lipCols);
+              int coordB(coordA+anOffsets[i]);
+              if(coordB/lipCols == offsetRow+rowA && coordB >= 0 &&
+                 unsigned(coordB) < lipSize)
+                {
+                  unsigned anID(theLattice[coordB+lipStartCoord].id);
+                  if(anID == theID ||
+                     std::find(theMultiscaleBoundIDs.begin(), 
+                               theMultiscaleBoundIDs.end(),
+                               anID) != theMultiscaleBoundIDs.end())
+                    {
+                      return true;
+                    }
+                }
+            }
+        }
+      else
+        {
+          unsigned coordA(source->coord-vacStartCoord);
+          for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
+            {
+              unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
+              unsigned anID(theLattice[coordB].id);
+              if(anID == theID ||
+                 std::find(theMultiscaleBoundIDs.begin(), 
+                           theMultiscaleBoundIDs.end(),
+                           anID) != theMultiscaleBoundIDs.end())
+                {
+                  return true;
+                }
+            }
+        }
+      return false;
+    }
   bool isIntersectMultiscale(Voxel* source, Voxel* target)
     {
       bool isIntersect(false);
-      unsigned coordA(source->coord-vacStartCoord);
-      std::vector<unsigned> temp;
-      temp.resize(theIntersectLipids[coordA].size());
-      for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
+      if(isRegularLattice)
         {
-          unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
-          temp[i] = theLattice[coordB].id;
-          theLattice[coordB].id = theSpeciesSize;
+          unsigned coordA(source->coord-vacStartCoord);
+          unsigned lipSize(lipRows*lipCols);
+          int rowA(coordA/lipCols);
+          std::vector<int>& anOffsets(theIntersectOffsets[rowA%2]);
+          std::vector<unsigned> temp;
+          for(unsigned i(0); i != anOffsets.size(); ++i)
+            {
+              const int offsetRow((anOffsets[i]+lipRows/2*lipCols+lipCols/2)/
+                              lipCols-(lipRows/2*lipCols+lipCols/2)/lipCols);
+              int coordB(coordA+anOffsets[i]);
+              if(coordB/lipCols == offsetRow+rowA && coordB >= 0 &&
+                 unsigned(coordB) < lipSize)
+                {
+                  unsigned coord(coordB+lipStartCoord);
+                  temp.push_back(theLattice[coord].id);
+                  theLattice[coord].id = theSpeciesSize;
+                }
+            }
+          isIntersect = isIntersectMultiscale(target);
+          unsigned k(0);
+          for(unsigned i(0); i != anOffsets.size(); ++i)
+            {
+              const int offsetRow((anOffsets[i]+lipRows/2*lipCols+lipCols/2)/
+                              lipCols-(lipRows/2*lipCols+lipCols/2)/lipCols);
+              int coordB(coordA+anOffsets[i]);
+              if(coordB/lipCols == offsetRow+rowA && coordB >= 0 &&
+                 unsigned(coordB) < lipSize)
+                {
+                  theLattice[coordB+lipStartCoord].id = temp[k++];
+                }
+            }
         }
-      isIntersect = isIntersectMultiscale(target);
-      coordA = source->coord-vacStartCoord;
-      for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
+      else
         {
-          unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
-          theLattice[coordB].id = temp[i];
+          unsigned coordA(source->coord-vacStartCoord);
+          std::vector<unsigned> temp;
+          temp.resize(theIntersectLipids[coordA].size());
+          for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
+            {
+              unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
+              temp[i] = theLattice[coordB].id;
+              theLattice[coordB].id = theSpeciesSize;
+            }
+          isIntersect = isIntersectMultiscale(target);
+          coordA = source->coord-vacStartCoord;
+          for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
+            {
+              unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
+              theLattice[coordB].id = temp[i];
+            }
         }
       return isIntersect;
     }
@@ -1750,13 +1878,19 @@ public:
           theCoords[i] = getCoord(i);
         }
     }
-  void setVacStartCoord(unsigned aCoord)
+  void setVacStartCoord(unsigned aCoord, unsigned aVacantRows,
+                        unsigned aVacantCols)
     {
       vacStartCoord = aCoord;
+      vacRows = aVacantRows;
+      vacCols = aVacantCols;
     }
-  void setLipStartCoord(unsigned aCoord)
+  void setLipStartCoord(unsigned aCoord, unsigned aLipidRows,
+                        unsigned aLipidCols)
     {
       lipStartCoord = aCoord;
+      lipRows = aLipidRows;
+      lipCols = aLipidCols;
     }
   void setIntersectLipids(Species* aLipid, Point& aLipidStart, double aGridSize,
                           unsigned aGridCols, unsigned aGridRows, 
@@ -1774,30 +1908,42 @@ public:
             {
               rowB = rowA-1;
             }
-          else
+          else if(!rowA)
             {
-              rowB = rowA;
+              rowB = 0;
             }
           unsigned aCol(aVacantCols/2);
           unsigned coordA(rowA*aVacantCols+aCol);
           unsigned coordB(rowB*aVacantCols+aCol);
           setIntersectOffsets(rowA, coordA, nDist, aLipidStart, aGridSize,
                               aGridCols, aGridRows, aGrid);
+          std::cout << "the size:" << theIntersectOffsets[rowA%2].size() << " rowA:" << rowA << " i:" << rowA%2 << std::endl;
+          for(unsigned i(0); i != theIntersectOffsets[rowA%2].size(); ++i)
+            {
+              std::cout << theIntersectOffsets[rowA%2][i] << std::endl;
+            }
           setIntersectOffsets(rowB, coordB, nDist, aLipidStart, aGridSize,
                               aGridCols, aGridRows, aGrid);
+          std::cout << "the size:" << theIntersectOffsets[rowB%2].size() << " rowB:" << rowB << " i:" << rowB%2 << std::endl;
+          for(unsigned i(0); i != theIntersectOffsets[rowB%2].size(); ++i)
+            {
+              std::cout << theIntersectOffsets[rowB%2][i] << std::endl;
+            }
         }
+      /*
       else
         {
+        */
           //Traverse through the entire compartment voxels:
           unsigned endA(vacStartCoord+theVacantSpecies->size());
           theIntersectLipids.resize(theVacantSpecies->size());
           for(unsigned i(vacStartCoord); i != endA; ++i)
-            { 
+            {
               getIntersectLipids(i, nDist, aLipidStart, aGridSize,
                                  aGridCols, aGridRows, aGrid,
                                  theIntersectLipids[i-vacStartCoord]);
             }
-        }
+       // }
     }
   void setIntersectOffsets(unsigned row, unsigned coord, double nDist,
                            Point& aLipidStart, double aGridSize,
@@ -1810,7 +1956,8 @@ public:
       theIntersectOffsets[row%2].resize(0);
       for(unsigned i(0); i != anIntersectLipids.size(); ++i)
         {
-          theIntersectOffsets[row%2].push_back(anIntersectLipids[i]-coord);
+          theIntersectOffsets[row%2].push_back(long(anIntersectLipids[i])-
+                                               long(coord));
         }
     }
   void getIntersectLipids(unsigned coordA, double nDist, Point& aLipidStart,
@@ -2028,6 +2175,8 @@ private:
   bool isTagged;
   bool isVacant;
   const unsigned short theID;
+  int lipCols;
+  int lipRows;
   unsigned lipStartCoord;
   unsigned theAdjoiningCoordSize;
   unsigned theCollision;
@@ -2038,6 +2187,8 @@ private:
   unsigned theNullCoord;
   unsigned theNullID;
   unsigned theSpeciesSize;
+  unsigned vacCols;
+  unsigned vacRows;
   unsigned vacStartCoord;
   int thePolymerDirectionality;
   int theVacantID;

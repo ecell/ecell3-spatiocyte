@@ -241,7 +241,7 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
                 {
                   aCoord = aVacantSpecies->getCoord(aList[(*aCount)++]); 
                 }
-              while((*theLattice)[aCoord].id != aVacantSpecies->getID());
+              while(!aSpecies->isPopulatable(&(*theLattice)[aCoord]));
               aSpecies->addMolecule(&(*theLattice)[aCoord]);
             }
         }
@@ -274,7 +274,7 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
                   aCoord = aVacantSpecies->getCoord(gsl_rng_uniform_int(
                                 getStepper()->getRng(), availableVoxelSize));
                 }
-              while((*theLattice)[aCoord].id != aVacantSpecies->getID());
+              while(!aSpecies->isPopulatable(&(*theLattice)[aCoord]));
               aSpecies->addMolecule(&(*theLattice)[aCoord]);
             }
         }

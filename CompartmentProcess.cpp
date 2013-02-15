@@ -115,8 +115,10 @@ void CompartmentProcess::updateResizedLattice()
     {
       //TODO: replace subStartCoord with theVacantSpecies->getCoord(0) 
       //TODO: replace lipStartCoord with theLipidSpecies->getCoord(0) 
-      theVacantCompSpecies[i]->setVacStartCoord(subStartCoord);
-      theVacantCompSpecies[i]->setLipStartCoord(lipStartCoord);
+      theVacantCompSpecies[i]->setVacStartCoord(subStartCoord, Filaments,
+                                                Subunits);
+      theVacantCompSpecies[i]->setLipStartCoord(lipStartCoord, LipidRows,
+                                                LipidCols);
     }
 }
 
