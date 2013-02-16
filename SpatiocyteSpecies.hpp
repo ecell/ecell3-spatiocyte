@@ -1930,60 +1930,85 @@ public:
       lipRows = aLipidRows;
       lipCols = aLipidCols;
     }
-  void setIntersectLipids(Species* aLipid, const Point& aLipidStart, 
-                          const unsigned aVacantRows,
-                          const unsigned aVacantCols, const double nLipidRadius)
+  void setIntersectLipids(Species* aLipid, Point& aLipidStart, double aGridSize,
+                          unsigned aGridCols, unsigned aGridRows, 
+                          std::vector<std::vector<unsigned> >& aGrid,
+                          unsigned aVacantRows, unsigned aVacantCols)
     {
       double nDist((aLipid->getMoleculeRadius()+theMoleculeRadius)/
                    (2*theVoxelRadius));
-      if(isRegularLattice)
+      //Traverse through the entire compartment voxels:
+      unsigned endA(vacStartCoord+theVacantSpecies->size());
+      theIntersectLipids.resize(theVacantSpecies->size());
+      for(unsigned i(vacStartCoord); i != endA; ++i)
         {
-          theRegLatticeCoord = lipRows/2*lipCols+lipCols/2;
-          theIntersectOffsets.resize(2);
-          unsigned rowA(aVacantRows/2);
-          unsigned rowB(rowA+1);
-          if(rowB >= aVacantRows && rowA > 0)
+          getIntersectLipids(i, nDist, aLipidStart, aGridSize,
+                             aGridCols, aGridRows, aGrid,
+                             theIntersectLipids[i-vacStartCoord]);
+        }
+    }
+  void getIntersectLipids(unsigned coordA, double nDist, Point& aLipidStart,
+                          double aGridSize, unsigned aGridCols, 
+                          unsigned aGridRows, 
+                          std::vector<std::vector<unsigned> >& aGrid,
+                          std::vector<unsigned>& anIntersectLipids)
+    {
+      Point& pointA(*theLattice[coordA].point);
+      unsigned row((unsigned)((pointA.y-aLipidStart.y)/aGridSize));
+      unsigned col((unsigned)((pointA.z-aLipidStart.z)/aGridSize));
+      unsigned rowStart(std::max(unsigned(1), row)-1);
+      unsigned rowEnd(std::min(unsigned(aGridRows), row+2));
+      for(unsigned j(rowStart); j != rowEnd; ++j)
+        {
+          unsigned colStart(std::max(unsigned(1), col)-1);
+          unsigned colEnd(std::min(unsigned(aGridCols), col+2));
+          for(unsigned k(colStart); k != colEnd; ++k)
             {
-              rowB = rowA-1;
-            }
-          else if(!rowA)
-            {
-              rowB = 0;
-            }
-          unsigned aCol(aVacantCols/2);
-          unsigned coordA(rowA*aVacantCols+aCol);
-          unsigned coordB(rowB*aVacantCols+aCol);
-          setIntersectOffsets(rowA, coordA, nDist, aLipidStart, nLipidRadius);
-          for(unsigned i(0); i != theIntersectOffsets[rowA%2].size(); ++i)
-            {
-              std::cout << theIntersectOffsets[rowA%2][i] << std::endl;
-            }
-          std::cout << "B:" << std::endl;
-          setIntersectOffsets(rowB, coordB, nDist, aLipidStart, nLipidRadius);
-          for(unsigned i(0); i != theIntersectOffsets[rowB%2].size(); ++i)
-            {
-              std::cout << theIntersectOffsets[rowB%2][i] << std::endl;
+              std::vector<unsigned>& coords(aGrid[k+aGridCols*j]);
+              for(unsigned l(0); l != coords.size(); ++l)
+                {
+                  unsigned m(coords[l]);
+                  Point& pointB(*theLattice[m].point);
+                  if(getDistance(&pointA, &pointB) < nDist)
+                    {
+                      anIntersectLipids.push_back(m-lipStartCoord);
+                    }
+                }
             }
         }
-      else
+    }
+  void setIntersectLipidsRegular(Species* aLipid, const Point& aLipidStart, 
+                                 const unsigned aVacantRows,
+                                 const unsigned aVacantCols,
+                                 const double nLipidRadius)
+    {
+      double nDist((aLipid->getMoleculeRadius()+theMoleculeRadius)/
+                   (2*theVoxelRadius));
+      theRegLatticeCoord = lipRows/2*lipCols+lipCols/2;
+      theIntersectOffsets.resize(2);
+      unsigned rowA(aVacantRows/2);
+      unsigned rowB(rowA+1);
+      if(rowB >= aVacantRows && rowA > 0)
         {
-          //Traverse through the entire compartment voxels:
-          unsigned endA(vacStartCoord+theVacantSpecies->size());
-          theIntersectLipids.resize(theVacantSpecies->size());
-          for(unsigned i(vacStartCoord); i != endA; ++i)
-            {
-              getIntersectLipids(i, nDist, aLipidStart, nLipidRadius, 
-                                 theIntersectLipids[i-vacStartCoord]);
-            }
+          rowB = rowA-1;
         }
+      else if(!rowA)
+        {
+          rowB = 0;
+        }
+      unsigned aCol(aVacantCols/2);
+      unsigned coordA(rowA*aVacantCols+aCol);
+      unsigned coordB(rowB*aVacantCols+aCol);
+      setIntersectOffsets(rowA, coordA, nDist, aLipidStart, nLipidRadius);
+      setIntersectOffsets(rowB, coordB, nDist, aLipidStart, nLipidRadius);
     }
   void setIntersectOffsets(const unsigned row, const unsigned coord,
                            const double nDist, const Point& aLipidStart,
                            const double nLipidRadius)
     { 
       std::vector<unsigned> anIntersectLipids;
-      getIntersectLipids(coord+vacStartCoord, nDist, aLipidStart, nLipidRadius,
-                         anIntersectLipids);
+      getIntersectLipidsRegular(coord+vacStartCoord, nDist, aLipidStart,
+                                nLipidRadius, anIntersectLipids);
       theIntersectOffsets[row%2].resize(0);
       for(unsigned i(0); i != anIntersectLipids.size(); ++i)
         {
@@ -1991,9 +2016,10 @@ public:
                                                long(coord));
         }
     }
-  void getIntersectLipids(const unsigned coordA, const double nDist,
-                          const Point& aLipidStart, const double nLipidRadius,
-                          std::vector<unsigned>& anIntersectLipids)
+  void getIntersectLipidsRegular(const unsigned coordA, const double nDist,
+                                 const Point& aLipidStart,
+                                 const double nLipidRadius,
+                                 std::vector<unsigned>& anIntersectLipids)
     {
       Point& pointA(*theLattice[coordA].point);
       double minY(pointA.y-aLipidStart.y-nDist*2);

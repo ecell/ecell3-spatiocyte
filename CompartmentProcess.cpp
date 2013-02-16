@@ -218,20 +218,31 @@ void CompartmentProcess::initializeThird()
 // z:length:cols:subunits
 void CompartmentProcess::setSpeciesIntersectLipids()
 {
-  /*
-  for(unsigned i(0); i != theLipidSpecies->size(); ++i)
+  if(RegularLattice)
     {
-      Point& aPoint(*(*theLattice)[lipStartCoord+i].point);
-      unsigned row((unsigned)((aPoint.y-lipidStart.y)/nGridSize));
-      unsigned col((unsigned)((aPoint.z-lipidStart.z)/nGridSize));
-      theGrid[col+gridCols*row].push_back(lipStartCoord+i);
+      for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
+        {
+          theVacantCompSpecies[i]->setIntersectLipidsRegular(theLipidSpecies,
+                                                      lipidStart, Filaments,
+                                                      Subunits, nLipidRadius);
+        }
     }
-    */
-  for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
+  else
     {
-      theVacantCompSpecies[i]->setIntersectLipids(theLipidSpecies, lipidStart,
-                                                  Filaments, Subunits,
-                                                  nLipidRadius);
+      for(unsigned i(0); i != theLipidSpecies->size(); ++i)
+        {
+          Point& aPoint(*(*theLattice)[lipStartCoord+i].point);
+          unsigned row((unsigned)((aPoint.y-lipidStart.y)/nGridSize));
+          unsigned col((unsigned)((aPoint.z-lipidStart.z)/nGridSize));
+          theGrid[col+gridCols*row].push_back(lipStartCoord+i);
+        }
+      for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
+        {
+          theVacantCompSpecies[i]->setIntersectLipids(theLipidSpecies,
+                                                lipidStart, nGridSize, gridCols,
+                                                gridRows, theGrid, Filaments,
+                                                Subunits);
+        }
     }
 }
 
