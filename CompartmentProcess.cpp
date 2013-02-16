@@ -722,7 +722,9 @@ void CompartmentProcess::printParameters()
   std::cout << getPropertyInterface().getClassName() << "[" <<
     getFullID().asString() << "]" << std::endl;
   std::cout << "  width:" << Width << " length:" << Length <<
-    " area:" << Width*Length << std::endl;
+    " area:" << Width*Length << " LipidRows:" << LipidRows << " LipidCols:" <<
+    LipidCols << " Filaments:" << Filaments << " Subunits:" << Subunits <<
+    std::endl;
   if(theLipidSpecies)
     {
       std::cout << "  " << getIDString(theLipidSpecies) << 
