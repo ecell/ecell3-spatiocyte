@@ -1930,10 +1930,9 @@ public:
       lipRows = aLipidRows;
       lipCols = aLipidCols;
     }
-  void setIntersectLipids(Species* aLipid, Point& aLipidStart, double aGridSize,
-                          unsigned aGridCols, unsigned aGridRows, 
-                          std::vector<std::vector<unsigned> >& aGrid,
-                          unsigned aVacantRows, unsigned aVacantCols)
+  void setIntersectLipids(Species* aLipid, const Point& aLipidStart, 
+                          const unsigned aVacantRows,
+                          const unsigned aVacantCols, const double nLipidRadius)
     {
       double nDist((aLipid->getMoleculeRadius()+theMoleculeRadius)/
                    (2*theVoxelRadius));
@@ -1954,10 +1953,17 @@ public:
           unsigned aCol(aVacantCols/2);
           unsigned coordA(rowA*aVacantCols+aCol);
           unsigned coordB(rowB*aVacantCols+aCol);
-          setIntersectOffsets(rowA, coordA, nDist, aLipidStart, aGridSize,
-                              aGridCols, aGridRows, aGrid);
-          setIntersectOffsets(rowB, coordB, nDist, aLipidStart, aGridSize,
-                              aGridCols, aGridRows, aGrid);
+          setIntersectOffsets(rowA, coordA, nDist, aLipidStart, nLipidRadius);
+          for(unsigned i(0); i != theIntersectOffsets[rowA%2].size(); ++i)
+            {
+              std::cout << theIntersectOffsets[rowA%2][i] << std::endl;
+            }
+          std::cout << "B:" << std::endl;
+          setIntersectOffsets(rowB, coordB, nDist, aLipidStart, nLipidRadius);
+          for(unsigned i(0); i != theIntersectOffsets[rowB%2].size(); ++i)
+            {
+              std::cout << theIntersectOffsets[rowB%2][i] << std::endl;
+            }
         }
       else
         {
@@ -1966,20 +1972,18 @@ public:
           theIntersectLipids.resize(theVacantSpecies->size());
           for(unsigned i(vacStartCoord); i != endA; ++i)
             {
-              getIntersectLipids(i, nDist, aLipidStart, aGridSize,
-                                 aGridCols, aGridRows, aGrid,
+              getIntersectLipids(i, nDist, aLipidStart, nLipidRadius, 
                                  theIntersectLipids[i-vacStartCoord]);
             }
         }
     }
-  void setIntersectOffsets(unsigned row, unsigned coord, double nDist,
-                           Point& aLipidStart, double aGridSize,
-                           unsigned aGridCols, unsigned aGridRows, 
-                           std::vector<std::vector<unsigned> >& aGrid)
+  void setIntersectOffsets(const unsigned row, const unsigned coord,
+                           const double nDist, const Point& aLipidStart,
+                           const double nLipidRadius)
     { 
       std::vector<unsigned> anIntersectLipids;
-      getIntersectLipids(coord+vacStartCoord, nDist, aLipidStart, aGridSize,
-                         aGridCols, aGridRows, aGrid, anIntersectLipids);
+      getIntersectLipids(coord+vacStartCoord, nDist, aLipidStart, nLipidRadius,
+                         anIntersectLipids);
       theIntersectOffsets[row%2].resize(0);
       for(unsigned i(0); i != anIntersectLipids.size(); ++i)
         {
@@ -1987,32 +1991,30 @@ public:
                                                long(coord));
         }
     }
-  void getIntersectLipids(unsigned coordA, double nDist, Point& aLipidStart,
-                          double aGridSize, unsigned aGridCols, 
-                          unsigned aGridRows, 
-                          std::vector<std::vector<unsigned> >& aGrid,
+  void getIntersectLipids(const unsigned coordA, const double nDist,
+                          const Point& aLipidStart, const double nLipidRadius,
                           std::vector<unsigned>& anIntersectLipids)
     {
       Point& pointA(*theLattice[coordA].point);
-      unsigned row((unsigned)((pointA.y-aLipidStart.y)/aGridSize));
-      unsigned col((unsigned)((pointA.z-aLipidStart.z)/aGridSize));
-      unsigned rowStart(std::max(unsigned(1), row)-1);
-      unsigned rowEnd(std::min(unsigned(aGridRows), row+2));
-      for(unsigned j(rowStart); j != rowEnd; ++j)
+      double minY(pointA.y-aLipidStart.y-nDist*2);
+      double minZ(pointA.z-aLipidStart.z-nDist*2);
+      double maxY(pointA.y-aLipidStart.y+nDist*2);
+      double maxZ(pointA.z-aLipidStart.z+nDist*2);
+      unsigned rowStart((unsigned)std::max(minY/(nLipidRadius*sqrt(3)), 0.0));
+      unsigned colStart((unsigned)std::max(minZ/(nLipidRadius*2), 0.0));
+      unsigned rowEnd((unsigned)std::min(maxY/(nLipidRadius*sqrt(3)), 
+                                         double(lipRows)));
+      unsigned colEnd((unsigned)std::min(maxZ/(nLipidRadius*2),
+                                         double(lipCols)));
+      for(unsigned i(rowStart); i != rowEnd; ++i)
         {
-          unsigned colStart(std::max(unsigned(1), col)-1);
-          unsigned colEnd(std::min(unsigned(aGridCols), col+2));
-          for(unsigned k(colStart); k != colEnd; ++k)
+          for(unsigned j(colStart); j != colEnd; ++j)
             {
-              std::vector<unsigned>& coords(aGrid[k+aGridCols*j]);
-              for(unsigned l(0); l != coords.size(); ++l)
+              unsigned coord(i*lipCols+j);
+              Point& pointB(*theLattice[coord+lipStartCoord].point);
+              if(getDistance(&pointA, &pointB) < nDist)
                 {
-                  unsigned m(coords[l]);
-                  Point& pointB(*theLattice[m].point);
-                  if(getDistance(&pointA, &pointB) < nDist)
-                    {
-                      anIntersectLipids.push_back(m-lipStartCoord);
-                    }
+                  anIntersectLipids.push_back(coord);
                 }
             }
         }

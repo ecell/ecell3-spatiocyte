@@ -218,6 +218,7 @@ void CompartmentProcess::initializeThird()
 // z:length:cols:subunits
 void CompartmentProcess::setSpeciesIntersectLipids()
 {
+  /*
   for(unsigned i(0); i != theLipidSpecies->size(); ++i)
     {
       Point& aPoint(*(*theLattice)[lipStartCoord+i].point);
@@ -225,11 +226,12 @@ void CompartmentProcess::setSpeciesIntersectLipids()
       unsigned col((unsigned)((aPoint.z-lipidStart.z)/nGridSize));
       theGrid[col+gridCols*row].push_back(lipStartCoord+i);
     }
+    */
   for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
     {
       theVacantCompSpecies[i]->setIntersectLipids(theLipidSpecies, lipidStart,
-                                                  nGridSize, gridCols, gridRows,
-                                                  theGrid, Filaments, Subunits);
+                                                  Filaments, Subunits,
+                                                  nLipidRadius);
     }
 }
 
