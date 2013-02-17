@@ -163,11 +163,26 @@ public:
         {
           if(Propensity)
             {
-              theWalkMethod = &DiffusionProcess::walkMultiscalePropensity;
+              if(theDiffusionSpecies->getIsRegularLattice())
+                {
+                  theWalkMethod = 
+                    &DiffusionProcess::walkMultiscalePropensityRegular;
+                }
+              else
+                {
+                  theWalkMethod = &DiffusionProcess::walkMultiscalePropensity;
+                }
             }
           else
             {
-              theWalkMethod = &DiffusionProcess::walkMultiscale;
+              if(theDiffusionSpecies->getIsRegularLattice())
+                {
+                  theWalkMethod = &DiffusionProcess::walkMultiscaleRegular;
+                }
+              else
+                {
+                  theWalkMethod = &DiffusionProcess::walkMultiscale;
+                }
             }
         }
       else 
@@ -215,6 +230,14 @@ public:
   void walkMultiscalePropensity() const
     {
       theDiffusionSpecies->walkMultiscalePropensity();
+    }
+  void walkMultiscaleRegular() const
+    {
+      theDiffusionSpecies->walkMultiscaleRegular();
+    }
+  void walkMultiscalePropensityRegular() const
+    {
+      theDiffusionSpecies->walkMultiscalePropensityRegular();
     }
   virtual void initializeLastOnce()
     {

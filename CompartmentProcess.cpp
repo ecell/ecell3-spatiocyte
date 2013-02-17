@@ -222,9 +222,9 @@ void CompartmentProcess::setSpeciesIntersectLipids()
     {
       for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
         {
-          theVacantCompSpecies[i]->setIntersectLipidsRegular(theLipidSpecies,
-                                                      lipidStart, Filaments,
-                                                      Subunits, nLipidRadius);
+          theVacantCompSpecies[i]->setIntersectOffsets(theLipidSpecies,
+                                                       lipidStart, Filaments,
+                                                       Subunits, nLipidRadius);
         }
     }
   else
