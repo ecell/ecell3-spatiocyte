@@ -159,11 +159,6 @@ void CompartmentProcess::setCompartmentDimension()
   //Need to use 2.5 here to avoid rounding off error when calculating
   //LipidRows below:
   Width = 2.5*DiffuseRadius+(Filaments-1)*DiffuseRadius*sqrt(3); 
-  if(theLipidSpecies)
-    {
-      LipidCols = (unsigned)(Length/(LipidRadius*2));
-      LipidRows = (unsigned)((Width-2*LipidRadius)/(LipidRadius*sqrt(3)))+1;
-    }
   Height = 2*DiffuseRadius;
   if(Filaments == 1)
     {
@@ -176,6 +171,11 @@ void CompartmentProcess::setCompartmentDimension()
       //Add DiffuseRadius for the protrusion from hexagonal arrangement:
       Length = Subunits*DiffuseRadius*2+DiffuseRadius;
     }
+  if(theLipidSpecies)
+    {
+      LipidCols = (unsigned)(Length/(LipidRadius*2));
+      LipidRows = (unsigned)((Width-2*LipidRadius)/(LipidRadius*sqrt(3)))+1;
+    }
   //Normalized compartment lengths in terms of lattice voxel radius:
   nLength = Length/(VoxelRadius*2);
   nWidth = Width/(VoxelRadius*2);
@@ -183,9 +183,14 @@ void CompartmentProcess::setCompartmentDimension()
   theComp->lengthX = nHeight;
   theComp->lengthY = nWidth;
   theComp->lengthZ = nLength;
-  gridCols = (unsigned)rint(nLength/nGridSize);
-  gridRows = (unsigned)rint(nWidth/nGridSize);
-  theGrid.resize(gridCols*gridRows);
+  if(!RegularLattice)
+    {
+      gridCols = (unsigned)rint(nLength/nGridSize);
+      gridRows = (unsigned)rint(nWidth/nGridSize);
+      theGrid.resize(gridCols*gridRows);
+    }
+  std::cout << "length:" << Length << " lipidCols:" << LipidCols << " LipidRows:" << LipidRows << std::endl;
+  std::cout << "filaments:" << Filaments << " Subunits:" << Subunits << std::endl;
   //Actual surface area = Width*Length
 }
 

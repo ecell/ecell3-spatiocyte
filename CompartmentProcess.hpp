@@ -187,6 +187,10 @@ public:
             {
               theLipidCompSpecies[i]->setIsRegularLattice(theDiffuseSize);
             }
+          if(Periodic)
+            {
+              theLipidCompSpecies[i]->setIsPeriodic();
+            }
         }
       for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
         {
@@ -202,6 +206,10 @@ public:
           if(RegularLattice)
             {
               theVacantCompSpecies[i]->setIsRegularLattice(theDiffuseSize);
+            }
+          if(Periodic)
+            {
+              theVacantCompSpecies[i]->setIsPeriodic();
             }
         }
     }

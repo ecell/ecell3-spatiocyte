@@ -97,6 +97,7 @@ public:
     isInContact(false),
     isMultiscale(false),
     isOffLattice(false),
+    isPeriodic(false),
     isPolymer(false),
     isReactiveVacant(false),
     isRegularLattice(false),
@@ -204,6 +205,10 @@ public:
       isTagged = true;
       theTagSpeciesList.push_back(aSpecies);
       aSpecies->addTaggedSpecies(this);
+    }
+  void setIsPeriodic()
+    {
+      isPeriodic = true;
     }
   void setIsRegularLattice(unsigned aDiffuseSize)
     {
@@ -1184,20 +1189,47 @@ public:
             {
               const int offsetRow((anOffsets[i]+theRegLatticeCoord)/lipCols-
                                   theRegLatticeCoord/lipCols);
-              const int coordB(coordA+anOffsets[i]);
-              if(coordB/lipCols == offsetRow+rowA && coordB >= 0 &&
-                 coordB < lipRows*lipCols)
+              int coordB(coordA+anOffsets[i]);
+              if(isPeriodic)
                 {
-                  const unsigned coord(coordB+lipStartCoord);
-                  if(theLattice[coord].id == 
-                     theMultiscaleVacantSpecies->getID())
+                  if(coordB < 0)
                     {
-                      theLattice[coord].id = theID;
+                      coordB += lipRows*lipCols;
+                      if(coordB/lipCols-lipRows < offsetRow+rowA)
+                        {
+                          coordB -= (lipRows-1)*lipCols;
+                        }
                     }
-                  else
+                  else if(coordB >= lipRows*lipCols)
                     {
-                      multiscaleBind(&theLattice[coord]);
+                      coordB -= lipRows*lipCols;
+                      if(coordB/lipCols+lipRows > offsetRow+rowA)
+                        {
+                          coordB += (lipRows-1)*lipCols;
+                        }
                     }
+                  else if(coordB/lipCols < offsetRow+rowA)
+                    {
+                      coordB += lipCols;
+                    }
+                  else if(coordB/lipCols > offsetRow+rowA)
+                    {
+                      coordB -= lipCols;
+                    }
+                }
+              else if(coordB/lipCols != offsetRow+rowA || coordB < 0 ||
+                      coordB >= lipRows*lipCols)
+                {
+                  continue;
+                }
+              const unsigned coord(coordB+lipStartCoord);
+              if(theLattice[coord].id == theMultiscaleVacantSpecies->getID())
+                {
+                  theLattice[coord].id = theID;
+                }
+              else
+                {
+                  multiscaleBind(&theLattice[coord]);
                 }
             }
         }
@@ -1228,20 +1260,48 @@ public:
             {
               const int offsetRow((anOffsets[i]+theRegLatticeCoord)/lipCols-
                                   theRegLatticeCoord/lipCols);
-              const int coordB(coordA+anOffsets[i]);
-              if(coordB/lipCols == offsetRow+rowA && coordB >= 0 &&
-                 coordB < lipRows*lipCols)
+              int coordB(coordA+anOffsets[i]);
+              if(isPeriodic)
                 {
-                  const unsigned coord(coordB+lipStartCoord);
-                  if(theLattice[coord].id == theID)
+                  if(coordB < 0)
                     {
-                      theLattice[coord].id = 
-                        theMultiscaleVacantSpecies->getID();
+                      coordB += lipRows*lipCols;
+                      if(coordB/lipCols-lipRows < offsetRow+rowA)
+                        {
+                          coordB -= (lipRows-1)*lipCols;
+                        }
                     }
-                  else
+                  else if(coordB >= lipRows*lipCols)
                     {
-                      multiscaleUnbind(&theLattice[coord]);
+                      coordB -= lipRows*lipCols;
+                      if(coordB/lipCols+lipRows > offsetRow+rowA)
+                        {
+                          coordB += (lipRows-1)*lipCols;
+                        }
                     }
+                  else if(coordB/lipCols < offsetRow+rowA)
+                    {
+                      coordB += lipCols;
+                    }
+                  else if(coordB/lipCols > offsetRow+rowA)
+                    {
+                      coordB -= lipCols;
+                    }
+                }
+              else if(coordB/lipCols != offsetRow+rowA || coordB < 0 ||
+                      coordB >= lipRows*lipCols)
+                {
+                  continue;
+                }
+              const unsigned coord(coordB+lipStartCoord);
+              if(theLattice[coord].id == theID)
+                {
+                  theLattice[coord].id = 
+                    theMultiscaleVacantSpecies->getID();
+                }
+              else
+                {
+                  multiscaleUnbind(&theLattice[coord]);
                 }
             }
         }
@@ -1272,18 +1332,46 @@ public:
             {
               const int offsetRow((anOffsets[i]+theRegLatticeCoord)/lipCols-
                                   theRegLatticeCoord/lipCols);
-              const int coordB(coordA+anOffsets[i]);
-              if(coordB/lipCols == offsetRow+rowA && coordB >= 0 &&
-                 coordB < lipRows*lipCols)
+              int coordB(coordA+anOffsets[i]);
+              if(isPeriodic)
                 {
-                  const unsigned anID(theLattice[coordB+lipStartCoord].id);
-                  if(anID == theID ||
-                     std::find(theMultiscaleBoundIDs.begin(), 
-                               theMultiscaleBoundIDs.end(),
-                               anID) != theMultiscaleBoundIDs.end())
+                  if(coordB < 0)
                     {
-                      return true;
+                      coordB += lipRows*lipCols;
+                      if(coordB/lipCols-lipRows < offsetRow+rowA)
+                        {
+                          coordB -= (lipRows-1)*lipCols;
+                        }
                     }
+                  else if(coordB >= lipRows*lipCols)
+                    {
+                      coordB -= lipRows*lipCols;
+                      if(coordB/lipCols+lipRows > offsetRow+rowA)
+                        {
+                          coordB += (lipRows-1)*lipCols;
+                        }
+                    }
+                  else if(coordB/lipCols < offsetRow+rowA)
+                    {
+                      coordB += lipCols;
+                    }
+                  else if(coordB/lipCols > offsetRow+rowA)
+                    {
+                      coordB -= lipCols;
+                    }
+                }
+              else if(coordB/lipCols != offsetRow+rowA || coordB < 0 ||
+                      coordB >= lipRows*lipCols)
+                {
+                  continue;
+                }
+              const unsigned anID(theLattice[coordB+lipStartCoord].id);
+              if(anID == theID ||
+                 std::find(theMultiscaleBoundIDs.begin(), 
+                           theMultiscaleBoundIDs.end(),
+                           anID) != theMultiscaleBoundIDs.end())
+                {
+                  return true;
                 }
             }
         }
@@ -1310,46 +1398,105 @@ public:
       const unsigned coordA(srcCoord-vacStartCoord);
       const int rowA(coordA/lipCols);
       const std::vector<int>& anOffsetsA(theTarOffsets[rowA%2][tarIndex]);
+      std::cout << std::endl << "in coordA:" << coordA << " rowA:" << rowA << std::endl;
+      std::cout << "add------------------------:" << theStepper->getCurrentTime() << std::endl;
       //Add tar
       for(unsigned i(0); i != anOffsetsA.size(); ++i)
         {
           const int offsetRow((anOffsetsA[i]+theRegLatticeCoord)/lipCols-
                               theRegLatticeCoord/lipCols);
-          const int coordB(coordA+anOffsetsA[i]);
-          if(coordB/lipCols == offsetRow+rowA && coordB >= 0 &&
-             coordB < lipRows*lipCols)
+          int coordB(coordA+anOffsetsA[i]);
+          std::cout << "add coordB:" << coordB << " rowB:" << coordB/lipCols << " offsetRow:" << offsetRow <<  std::endl;
+          if(isPeriodic)
             {
-              const unsigned coord(coordB+lipStartCoord);
-              if(theLattice[coord].id == 
-                 theMultiscaleVacantSpecies->getID())
+              if(coordB < 0)
                 {
-                  theLattice[coord].id = theID;
+                  coordB += lipCols*(offsetRow+rowA-(coordB+1)/lipCols+1);
+                  std::cout << "a1:" << coordB << std::endl;
                 }
               else
                 {
-                  multiscaleBind(&theLattice[coord]);
+                  coordB += lipCols*(offsetRow+rowA-(coordB/lipCols));
+                  std::cout << "a2:" << coordB << std::endl;
                 }
+              if(coordB < 0)
+                {
+                  coordB += lipRows*lipCols;
+                  std::cout << "a3:" << coordB << std::endl;
+                }
+              else if(coordB >= lipRows*lipCols)
+                {
+                  coordB -= lipRows*lipCols;
+                  std::cout << "a4:" << coordB << std::endl;
+                }
+            }
+          else if(coordB/lipCols != offsetRow+rowA || coordB < 0 ||
+                  coordB >= lipRows*lipCols)
+            {
+              continue;
+            }
+          const unsigned coord(coordB+lipStartCoord);
+          if(theLattice[coord].id == 
+             theMultiscaleVacantSpecies->getID())
+            {
+              std::cout << "adding my coord:" << coord-lipStartCoord << std::endl;
+              theLattice[coord].id = theID;
+            }
+          else
+            {
+              std::cout << "adding coord:" << coord-lipStartCoord << " id before:" << theLattice[coord].id << " a1:" << getIDString(theLattice[coord].id) << " number:" << theStepper->id2species(theLattice[coord].id)->size() << std::endl;
+              multiscaleBind(&theLattice[coord]);
+              std::cout << "id after:" << theLattice[coord].id << " a2:" << getIDString(theLattice[coord].id) << " number:" << theStepper->id2species(theLattice[coord].id)->size() << std::endl;
             }
         }
       //Remove src
+      std::cout << "rem------------------------" << std::endl;
       const std::vector<int>& anOffsetsB(theSrcOffsets[rowA%2][tarIndex]);
       for(unsigned i(0); i != anOffsetsB.size(); ++i)
         {
           const int offsetRow((anOffsetsB[i]+theRegLatticeCoord)/lipCols-
                               theRegLatticeCoord/lipCols);
-          const int coordB(coordA+anOffsetsB[i]);
-          if(coordB/lipCols == offsetRow+rowA && coordB >= 0 &&
-             coordB < lipRows*lipCols)
+          int coordB(coordA+anOffsetsB[i]);
+          std::cout << "rem coordB:" << coordB << " rowB:" << coordB/lipCols << " offsetRow:" << offsetRow << std::endl;
+          if(isPeriodic)
             {
-              const unsigned coord(coordB+lipStartCoord);
-              if(theLattice[coord].id == theID)
+              if(coordB < 0)
                 {
-                  theLattice[coord].id = theMultiscaleVacantSpecies->getID();
+                  coordB += lipCols*(offsetRow+rowA-(coordB+1)/lipCols+1);
+                  std::cout << "r1:" << coordB << std::endl;
                 }
               else
                 {
-                  multiscaleUnbind(&theLattice[coord]);
+                  coordB += lipCols*(offsetRow+rowA-(coordB/lipCols));
+                  std::cout << "r2:" << coordB << std::endl;
                 }
+              if(coordB < 0)
+                {
+                  coordB += lipRows*lipCols;
+                  std::cout << "r3:" << coordB << std::endl;
+                }
+              else if(coordB >= lipRows*lipCols)
+                {
+                  coordB -= lipRows*lipCols;
+                  std::cout << "r4:" << coordB << std::endl;
+                }
+            }
+          else if(coordB/lipCols != offsetRow+rowA || coordB < 0 ||
+                  coordB >= lipRows*lipCols)
+            {
+              continue;
+            }
+          const unsigned coord(coordB+lipStartCoord);
+          if(theLattice[coord].id == theID)
+            {
+              std::cout << "removing my coord:" << coord-lipStartCoord << std::endl;
+              theLattice[coord].id = theMultiscaleVacantSpecies->getID();
+            }
+          else
+            {
+              std::cout << "removing coord:" << coord-lipStartCoord << " id before:" << theLattice[coord].id << " r1:" << getIDString(theLattice[coord].id) << " number:" << theStepper->id2species(theLattice[coord].id)->size() << std::endl;
+              multiscaleUnbind(&theLattice[coord]);
+              std::cout << "id after:" << theLattice[coord].id << " r2:" << getIDString(theLattice[coord].id) << " number:" << theStepper->id2species(theLattice[coord].id)->size() << std::endl;
             }
         }
     }
@@ -1363,18 +1510,46 @@ public:
         {
           const int offsetRow((anOffsets[i]+theRegLatticeCoord)/lipCols-
                               theRegLatticeCoord/lipCols);
-          const int coordB(coordA+anOffsets[i]);
-          if(coordB/lipCols == offsetRow+rowA && coordB >= 0 &&
-             coordB < lipRows*lipCols)
+          int coordB(coordA+anOffsets[i]);
+          if(isPeriodic)
             {
-              const unsigned anID(theLattice[coordB+lipStartCoord].id);
-              if(anID == theID ||
-                 std::find(theMultiscaleBoundIDs.begin(), 
-                           theMultiscaleBoundIDs.end(),
-                           anID) != theMultiscaleBoundIDs.end())
+              if(coordB < 0)
                 {
-                  return true;
+                  coordB += lipRows*lipCols;
+                  if(coordB/lipCols-lipRows < offsetRow+rowA)
+                    {
+                      coordB -= (lipRows-1)*lipCols;
+                    }
                 }
+              else if(coordB >= lipRows*lipCols)
+                {
+                  coordB -= lipRows*lipCols;
+                  if(coordB/lipCols+lipRows > offsetRow+rowA)
+                    {
+                      coordB += (lipRows-1)*lipCols;
+                    }
+                }
+              else if(coordB/lipCols < offsetRow+rowA)
+                {
+                  coordB += lipCols;
+                }
+              else if(coordB/lipCols > offsetRow+rowA)
+                {
+                  coordB -= lipCols;
+                }
+            }
+          if(coordB/lipCols != offsetRow+rowA || coordB < 0 ||
+                  coordB >= lipRows*lipCols)
+            {
+              continue;
+            }
+          const unsigned anID(theLattice[coordB+lipStartCoord].id);
+          if(anID == theID ||
+             std::find(theMultiscaleBoundIDs.begin(), 
+                       theMultiscaleBoundIDs.end(),
+                       anID) != theMultiscaleBoundIDs.end())
+            {
+              return true;
             }
         }
       return false;
@@ -2237,15 +2412,28 @@ public:
                 {
                   const int offsetRow((anOffsetsA[i]+theRegLatticeCoord)/
                                       lipCols-theRegLatticeCoord/lipCols);
-                  const int coord(coordA+anOffsetsA[i]);
-                  if(coord/lipCols == offsetRow+rowA && coord >= 0 &&
-                     coord < lipRows*lipCols)
+                  int coord(coordA+anOffsetsA[i]);
+                  if(isPeriodic)
                     {
-                      ++size;
-                      if(theLattice[coord+lipStartCoord].id == anID)
+                      coord += lipCols*(offsetRow+rowA-coord/lipCols);
+                      if(coord < 0)
                         {
-                          fraction += 1;
+                          coord += lipRows*lipCols;
                         }
+                      else if(coord > lipRows*lipCols)
+                        {
+                          coord -= lipRows*lipCols;
+                        }
+                    }
+                  else if(coord/lipCols != offsetRow+rowA || coord < 0 ||
+                          coord >= lipRows*lipCols)
+                    {
+                      continue;
+                    }
+                  ++size;
+                  if(theLattice[coord+lipStartCoord].id == anID)
+                    {
+                      fraction += 1;
                     }
                 }
               fraction /= size;
@@ -2289,14 +2477,42 @@ public:
                       const int offsetRow((anOffsetsA[j]+theRegLatticeCoord)/
                                           lipCols-theRegLatticeCoord/lipCols);
                       int coord(coordA+anOffsetsA[j]);
-                      if(coord/lipCols == offsetRow+rowA && coord >= 0 &&
-                         coord < lipRows*lipCols)
+                      if(isPeriodic)
                         {
-                          coord += lipStartCoord;
-                          if(theLattice[coord].id == theID)
+                          if(coord < 0)
                             {
-                              thePopulatableCoords.push_back(coord);
+                              coord += lipRows*lipCols;
+                              if(coord/lipCols-lipRows < offsetRow+rowA)
+                                {
+                                  coord -= (lipRows-1)*lipCols;
+                                }
                             }
+                          else if(coord >= lipRows*lipCols)
+                            {
+                              coord -= lipRows*lipCols;
+                              if(coord/lipCols+lipRows > offsetRow+rowA)
+                                {
+                                  coord += (lipRows-1)*lipCols;
+                                }
+                            }
+                          else if(coord/lipCols < offsetRow+rowA)
+                            {
+                              coord += lipCols;
+                            }
+                          else if(coord/lipCols > offsetRow+rowA)
+                            {
+                              coord -= lipCols;
+                            }
+                        }
+                      else if(coord/lipCols != offsetRow+rowA || coord < 0 ||
+                              coord >= lipRows*lipCols)
+                        {
+                          continue;
+                        }
+                      coord += lipStartCoord;
+                      if(theLattice[coord].id == theID)
+                        {
+                          thePopulatableCoords.push_back(coord);
                         }
                     }
                 }
@@ -2424,6 +2640,7 @@ private:
   bool isInContact;
   bool isMultiscale;
   bool isOffLattice;
+  bool isPeriodic;
   bool isPolymer;
   bool isReactiveVacant;
   bool isRegularLattice;
