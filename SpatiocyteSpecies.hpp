@@ -2091,7 +2091,8 @@ public:
   void setIntersectOffsets(Species* aLipid, const Point& aLipidStart, 
                                  const unsigned aVacantRows,
                                  const unsigned aVacantCols,
-                                 const double nLipidRadius)
+                                 const double nLipidRadius,
+                                 const double aSubunitAngle)
     {
       double nDist((aLipid->getMoleculeRadius()+theMoleculeRadius)/
                    (2*theVoxelRadius));
@@ -2111,49 +2112,19 @@ public:
       unsigned coordA(rowA*aVacantCols+aCol);
       unsigned coordB(rowB*aVacantCols+aCol);
       setCoordOffsets(coordA, coordA, nDist, aLipidStart, nLipidRadius,
-                      theOffsets[rowA%2]);
+                      aSubunitAngle, theOffsets[rowA%2]);
       setCoordOffsets(coordB, coordB, nDist, aLipidStart, nLipidRadius,
-                      theOffsets[rowB%2]);
+                      aSubunitAngle, theOffsets[rowB%2]);
       theTarOffsets.resize(2);
       theSrcOffsets.resize(2);
       setWalkOffsets(rowA, coordA, nDist, aLipidStart, nLipidRadius,
-                     theOffsets[rowA%2]);
+                     aSubunitAngle, theOffsets[rowA%2]);
       setWalkOffsets(rowB, coordB, nDist, aLipidStart, nLipidRadius,
-                     theOffsets[rowB%2]);
-      /*
-      std::cout << "row0:" << theDiffuseSize << std::endl;
-      for(unsigned i(0); i != theDiffuseSize; ++i)
-        {
-          std::cout << "tar:" << i << std::endl; 
-          for(unsigned j(0); j != theTarOffsets[0][i].size(); ++j)
-            {
-              std::cout << theTarOffsets[0][i][j] << std::endl;
-            }
-          std::cout << "src:" << i << std::endl; 
-          for(unsigned j(0); j != theSrcOffsets[0][i].size(); ++j)
-            {
-              std::cout << theSrcOffsets[0][i][j] << std::endl;
-            }
-        }
-      std::cout << "row1" << std::endl;
-      for(unsigned i(0); i != theDiffuseSize; ++i)
-        {
-          std::cout << "tar:" << std::endl; 
-          for(unsigned j(0); j != theTarOffsets[1][i].size(); ++j)
-            {
-              std::cout << theTarOffsets[1][i][j] << std::endl;
-            }
-          std::cout << "src:" << std::endl; 
-          for(unsigned j(0); j != theSrcOffsets[1][i].size(); ++j)
-            {
-              std::cout << theSrcOffsets[1][i][j] << std::endl;
-            }
-        }
-        */
+                     aSubunitAngle, theOffsets[rowB%2]);
     }
   void setWalkOffsets(const unsigned row, const unsigned coordA,
                       const double nDist, const Point& aLipidStart,
-                      const double nLipidRadius,
+                      const double nLipidRadius, const double aSubunitAngle,
                       std::vector<int>& srcOffsets)
     {
       theTarOffsets[row%2].resize(theDiffuseSize);
@@ -2164,7 +2135,7 @@ public:
                                ].adjoiningCoords[i]-lipStartCoord);
           std::vector<int> tarOffsets;
           setCoordOffsets(coordB, coordA, nDist, aLipidStart, nLipidRadius,
-                          tarOffsets);
+                          aSubunitAngle, tarOffsets);
           setDiffOffsets(srcOffsets, tarOffsets, theTarOffsets[row%2][i]);
           setDiffOffsets(tarOffsets, srcOffsets, theSrcOffsets[row%2][i]);
         }
@@ -2184,12 +2155,12 @@ public:
     }
   void setCoordOffsets(const unsigned coordA, const unsigned coordB,
                        const double nDist, const Point& aLipidStart,
-                       const double nLipidRadius,
+                       const double nLipidRadius, const double aSubunitAngle,
                        std::vector<int>& anIntersectOffsets)
     {
       std::vector<unsigned> anIntersectLipids;
       getIntersectLipidsRegular(coordA+vacStartCoord, nDist, aLipidStart,
-                                nLipidRadius, anIntersectLipids);
+                                nLipidRadius, aSubunitAngle, anIntersectLipids);
       anIntersectOffsets.resize(0);
       for(unsigned i(0); i != anIntersectLipids.size(); ++i)
         {
@@ -2199,9 +2170,14 @@ public:
   void getIntersectLipidsRegular(const unsigned coordA, const double nDist,
                                  const Point& aLipidStart,
                                  const double nLipidRadius,
+                                 const double aSubunitAngle,
                                  std::vector<unsigned>& anIntersectLipids)
     {
       Point& pointA(*theLattice[coordA].point);
+      double maxRectY(pointA.y+nDist*sin(aSubunitAngle));
+      double minRectY(pointA.y-nDist*sin(aSubunitAngle));
+      double maxRectZ(pointA.z+nDist*cos(aSubunitAngle));
+      double minRectZ(pointA.z-nDist*cos(aSubunitAngle));
       double minY(pointA.y-aLipidStart.y-nDist*2);
       double minZ(pointA.z-aLipidStart.z-nDist*2);
       double maxY(pointA.y-aLipidStart.y+nDist*2);
@@ -2218,7 +2194,15 @@ public:
             {
               unsigned coord(i*lipCols+j);
               Point& pointB(*theLattice[coord+lipStartCoord].point);
-              if(getDistance(&pointA, &pointB) < nDist)
+              if(aSubunitAngle)
+                {
+                  if(pointB.y > minRectY && pointB.y < maxRectY &&
+                     pointB.z > minRectZ && pointB.z < maxRectZ)
+                    {
+                      anIntersectLipids.push_back(coord);
+                    }
+                }
+              else if(getDistance(&pointA, &pointB) < nDist)
                 {
                   anIntersectLipids.push_back(coord);
                 }

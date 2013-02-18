@@ -189,8 +189,6 @@ void CompartmentProcess::setCompartmentDimension()
       gridRows = (unsigned)rint(nWidth/nGridSize);
       theGrid.resize(gridCols*gridRows);
     }
-  std::cout << "length:" << Length << " lipidCols:" << LipidCols << " LipidRows:" << LipidRows << std::endl;
-  std::cout << "filaments:" << Filaments << " Subunits:" << Subunits << std::endl;
   //Actual surface area = Width*Length
 }
 
@@ -229,7 +227,8 @@ void CompartmentProcess::setSpeciesIntersectLipids()
         {
           theVacantCompSpecies[i]->setIntersectOffsets(theLipidSpecies,
                                                        lipidStart, Filaments,
-                                                       Subunits, nLipidRadius);
+                                                       Subunits, nLipidRadius,
+                                                       SubunitAngle);
         }
     }
   else

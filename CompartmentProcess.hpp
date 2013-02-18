@@ -57,6 +57,7 @@ public:
       PROPERTYSLOT_SET_GET(Real, RotateX);
       PROPERTYSLOT_SET_GET(Real, RotateY);
       PROPERTYSLOT_SET_GET(Real, RotateZ);
+      PROPERTYSLOT_SET_GET(Real, SubunitAngle);
       PROPERTYSLOT_SET_GET(Real, SubunitRadius);
       PROPERTYSLOT_SET_GET(Real, Width);
     }
@@ -79,6 +80,7 @@ public:
     RotateX(0),
     RotateY(0),
     RotateZ(0),
+    SubunitAngle(0),
     SubunitRadius(0),
     Width(0),
     theLipidSpecies(NULL),
@@ -98,6 +100,7 @@ public:
   SIMPLE_SET_GET_METHOD(Real, RotateX);
   SIMPLE_SET_GET_METHOD(Real, RotateY);
   SIMPLE_SET_GET_METHOD(Real, RotateZ);
+  SIMPLE_SET_GET_METHOD(Real, SubunitAngle);
   SIMPLE_SET_GET_METHOD(Real, SubunitRadius);
   SIMPLE_SET_GET_METHOD(Real, Width);
   virtual void prepreinitialize()
@@ -277,6 +280,7 @@ protected:
   double RotateX;
   double RotateY;
   double RotateZ;
+  double SubunitAngle;
   double SubunitRadius;
   double surfaceDisplace;
   double VoxelRadius;
