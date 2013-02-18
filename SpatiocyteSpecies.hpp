@@ -716,11 +716,11 @@ public:
     }
   void walkMultiscalePropensity()
     {
-      unsigned beginMoleculeSize(theMoleculeSize);
+      const unsigned beginMoleculeSize(theMoleculeSize);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
-          int size(source->diffuseSize);
+          const int size(source->diffuseSize);
           Voxel* target(&theLattice[source->adjoiningCoords[
                         gsl_rng_uniform_int(theRng, size)]]);
           if(target->id == theVacantID)
@@ -739,11 +739,11 @@ public:
     }
   void walkMultiscalePropensityRegular()
     {
-      unsigned beginMoleculeSize(theMoleculeSize);
+      const unsigned beginMoleculeSize(theMoleculeSize);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
-          unsigned tarIndex(gsl_rng_uniform_int(theRng, theDiffuseSize));
+          const unsigned tarIndex(gsl_rng_uniform_int(theRng, theDiffuseSize));
           Voxel* target(&theLattice[source->adjoiningCoords[tarIndex]]);
           if(target->id == theVacantID)
             {
@@ -760,11 +760,11 @@ public:
     }
   void walkMultiscale()
     {
-      unsigned beginMoleculeSize(theMoleculeSize);
+      const unsigned beginMoleculeSize(theMoleculeSize);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
-          int size(source->diffuseSize);
+          const int size(source->diffuseSize);
           Voxel* target(&theLattice[source->adjoiningCoords[
                         gsl_rng_uniform_int(theRng, size)]]);
           if(target->id == theVacantID)
@@ -782,11 +782,11 @@ public:
     }
   void walkMultiscaleRegular()
     {
-      unsigned beginMoleculeSize(theMoleculeSize);
+      const unsigned beginMoleculeSize(theMoleculeSize);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
-          unsigned tarIndex(gsl_rng_uniform_int(theRng, theDiffuseSize));
+          const unsigned tarIndex(gsl_rng_uniform_int(theRng, theDiffuseSize));
           Voxel* target(&theLattice[source->adjoiningCoords[tarIndex]]);
           if(target->id == theVacantID)
             {
@@ -2257,6 +2257,7 @@ public:
       if(isMultiscale)
         {
           const unsigned coordA(getCoord(index)-vacStartCoord);
+          //Need to optimize this, which is a big bottleneck:
           if(isRegularLattice)
             {
               const int rowA(coordA/lipCols);

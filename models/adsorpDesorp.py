@@ -211,7 +211,16 @@ fil.Width = 1e-7
 fil.SubunitRadius = 1.74e-9
 fil.DiffuseRadius = 0.436e-9
 fil.LipidRadius = 0.436e-9
-fil.Periodic = 0
+fil.RegularLattice = 1
+fil.Periodic = 1
 
-run(0.1)
+import time
+run(1e-6)
+print "Done stirring. Now running..."
+start = time.time()
+run(0.0001)
+end = time.time()
+duration = end-start
+print duration
+
 
