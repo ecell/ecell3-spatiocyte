@@ -726,7 +726,7 @@ public:
           if(target->id == theVacantID)
             {
               if(!isIntersectMultiscale(source->coord, target->coord) &&
-                 isMultiscaleWalkPropensity(source, target))
+                 isMultiscaleWalkPropensity(source->coord, target->coord))
                 {
                   removeMultiscaleMolecule(source);
                   addMultiscaleMolecule(target);
@@ -748,7 +748,7 @@ public:
           if(target->id == theVacantID)
             {
               if(!isIntersectMultiscaleRegular(source->coord, tarIndex) &&
-                 isMultiscaleWalkPropensity(source, target))
+                 isMultiscaleWalkPropensityRegular(source->coord, tarIndex))
                 {
                   moveMultiscaleMoleculeRegular(source->coord, tarIndex);
                   target->id = theID;
@@ -1094,62 +1094,41 @@ public:
         }
       theVariable->setValue(theMoleculeSize);
     }
-  bool isMultiscaleWalkPropensity(Voxel* source, Voxel* target)
+  bool isMultiscaleWalkPropensityRegular(const unsigned srcCoord,
+                                         const unsigned tarIndex)
     {
-      unsigned srcCnt(0);
       unsigned tarCnt(0);
-      const unsigned coordA(source->coord-vacStartCoord);
-      const unsigned coordB(target->coord-vacStartCoord);
-      if(isRegularLattice)
+      unsigned srcCnt(0);
+      const unsigned coordA(srcCoord-vacStartCoord);
+      const int rowA(coordA/lipCols);
+      const std::vector<int>& anOffsetsA(theTarOffsets[rowA%2][tarIndex]);
+      //count tar
+      for(unsigned i(0); i != anOffsetsA.size(); ++i)
         {
-          const int rowA(coordA/lipCols);
-          const std::vector<int>& anOffsetsA(theOffsets[rowA%2]);
-          for(unsigned i(0); i != anOffsetsA.size(); ++i)
+          const int offsetRow((anOffsetsA[i]+theRegLatticeCoord)/lipCols-
+                              theRegLatticeCoord/lipCols);
+          int coordB(coordA+anOffsetsA[i]);
+          if(isInLattice(coordB, offsetRow+rowA))
             {
-              const int offsetRow((anOffsetsA[i]+theRegLatticeCoord)/lipCols-
-                                  theRegLatticeCoord/lipCols);
-              const int coord(coordA+anOffsetsA[i]);
-              if(coord/lipCols == offsetRow+rowA && coord >= 0 &&
-                 coord < lipRows*lipCols)
+              const unsigned anID(theLattice[coordB+lipStartCoord].id);
+              if(std::find(theMultiscaleBindableIDs.begin(), 
+                           theMultiscaleBindableIDs.end(), anID) !=
+                 theMultiscaleBindableIDs.end())
                 {
-                  const unsigned anID(theLattice[coord+lipStartCoord].id);
-                  if(std::find(theMultiscaleBoundIDs.begin(), 
-                               theMultiscaleBoundIDs.end(), anID) !=
-                     theMultiscaleBoundIDs.end())
-                    {
-                      ++srcCnt;
-                    }
-                }
-            }
-          const int rowB(coordB/lipCols);
-          const std::vector<int>& anOffsetsB(theOffsets[rowB%2]);
-          for(unsigned i(0); i != anOffsetsB.size(); ++i)
-            {
-              const int offsetRow((anOffsetsB[i]+theRegLatticeCoord)/lipCols-
-                                  theRegLatticeCoord/lipCols);
-              const int coord(coordB+anOffsetsB[i]);
-              if(coord/lipCols == offsetRow+rowB && coord >= 0 &&
-                 coord < lipRows*lipCols)
-                {
-                  const unsigned anID(theLattice[coord+lipStartCoord].id);
-                  if(std::find(theMultiscaleBoundIDs.begin(), 
-                               theMultiscaleBoundIDs.end(), anID) !=
-                     theMultiscaleBoundIDs.end() ||
-                     std::find(theMultiscaleBindableIDs.begin(), 
-                               theMultiscaleBindableIDs.end(), anID) !=
-                     theMultiscaleBindableIDs.end())
-                    {
-                      ++tarCnt;
-                    }
+                  ++tarCnt;
                 }
             }
         }
-      else
+      //count src
+      const std::vector<int>& anOffsetsB(theSrcOffsets[rowA%2][tarIndex]);
+      for(unsigned i(0); i != anOffsetsB.size(); ++i)
         {
-          for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
+          const int offsetRow((anOffsetsB[i]+theRegLatticeCoord)/lipCols-
+                              theRegLatticeCoord/lipCols);
+          int coordB(coordA+anOffsetsB[i]);
+          if(isInLattice(coordB, offsetRow+rowA))
             {
-              unsigned coord(theIntersectLipids[coordA][i]+lipStartCoord);
-              unsigned anID(theLattice[coord].id);
+              const unsigned anID(theLattice[coordB+lipStartCoord].id);
               if(std::find(theMultiscaleBoundIDs.begin(), 
                            theMultiscaleBoundIDs.end(), anID) !=
                  theMultiscaleBoundIDs.end())
@@ -1157,19 +1136,43 @@ public:
                   ++srcCnt;
                 }
             }
-          for(unsigned i(0); i != theIntersectLipids[coordB].size(); ++i)
+        }
+      if(tarCnt > srcCnt)
+        {
+          return true;
+        }
+      return false;
+    }
+  bool isMultiscaleWalkPropensity(const unsigned srcCoord,
+                                  const unsigned tarCoord)
+    {
+      unsigned srcCnt(0);
+      unsigned tarCnt(0);
+      const unsigned coordA(srcCoord-vacStartCoord);
+      const unsigned coordB(tarCoord-vacStartCoord);
+      for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
+        {
+          unsigned coord(theIntersectLipids[coordA][i]+lipStartCoord);
+          unsigned anID(theLattice[coord].id);
+          if(std::find(theMultiscaleBoundIDs.begin(), 
+                       theMultiscaleBoundIDs.end(), anID) !=
+             theMultiscaleBoundIDs.end())
             {
-              unsigned coord(theIntersectLipids[coordB][i]+lipStartCoord);
-              unsigned anID(theLattice[coord].id);
-              if(std::find(theMultiscaleBoundIDs.begin(), 
-                           theMultiscaleBoundIDs.end(), anID) !=
-                 theMultiscaleBoundIDs.end() ||
-                 std::find(theMultiscaleBindableIDs.begin(), 
-                           theMultiscaleBindableIDs.end(), anID) !=
-                 theMultiscaleBindableIDs.end())
-                {
-                  ++tarCnt;
-                }
+              ++srcCnt;
+            }
+        }
+      for(unsigned i(0); i != theIntersectLipids[coordB].size(); ++i)
+        {
+          unsigned coord(theIntersectLipids[coordB][i]+lipStartCoord);
+          unsigned anID(theLattice[coord].id);
+          if(std::find(theMultiscaleBoundIDs.begin(), 
+                       theMultiscaleBoundIDs.end(), anID) !=
+             theMultiscaleBoundIDs.end() ||
+             std::find(theMultiscaleBindableIDs.begin(), 
+                       theMultiscaleBindableIDs.end(), anID) !=
+             theMultiscaleBindableIDs.end())
+            {
+              ++tarCnt;
             }
         }
       if(tarCnt > srcCnt)
