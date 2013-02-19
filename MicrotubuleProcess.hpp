@@ -219,7 +219,6 @@ public:
   bool initAdjoins(Voxel&);
   void updateAdjoinSize(Voxel&);
   bool inMTCylinder(Point&);
-  void rotatePointAlongVector(Point&, double);
   void connectProtofilaments();
 protected:
   bool isCompartmentalized;

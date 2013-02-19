@@ -179,7 +179,7 @@ void MicrotubuleProcess::initializeProtofilaments()
   for(int i(1); i != Protofilaments; ++i)
     {
       double angle(2*M_PI/Protofilaments);
-      rotatePointAlongVector(S, angle);
+      rotatePointAlongVector(S, M, T, angle);
       S.x += MonomerPitch/(Protofilaments-1)*T.x;
       S.y += MonomerPitch/(Protofilaments-1)*T.y;
       S.z += MonomerPitch/(Protofilaments-1)*T.z;
@@ -491,37 +491,6 @@ bool MicrotubuleProcess::inMTCylinder(Point& N)
   return false;
 }
 
-
-/*
- * The function returns the result when the point (x,y,z) is rotated about the line through (a,b,c) with unit direction vector ⟨u,v,w⟩ by the angle θ.
- * */
-void MicrotubuleProcess::rotatePointAlongVector(Point& S, double angle)
-{
-  double x(S.x);
-  double y(S.y);
-  double z(S.z);
-  double a(M.x);
-  double b(M.y);
-  double c(M.z);
-  double u(T.x);
-  double v(T.y);
-  double w(T.z);
-  double u2(u*u);
-  double v2(v*v);
-  double w2(w*w);
-  double cosT(cos(angle));
-  double oneMinusCosT(1-cosT);
-  double sinT(sin(angle));
-  double xx((a*(v2 + w2) - u*(b*v + c*w - u*x - v*y - w*z)) * oneMinusCosT
-                + x*cosT + (-c*v + b*w - w*y + v*z)*sinT);
-  double yy((b*(u2 + w2) - v*(a*u + c*w - u*x - v*y - w*z)) * oneMinusCosT
-                + y*cosT + (c*u - a*w + w*x - u*z)*sinT);
-  double zz((c*(u2 + v2) - w*(a*u + b*v - u*x - v*y - w*z)) * oneMinusCosT
-                + z*cosT + (-b*u + a*v - v*x + u*y)*sinT);
-  S.x = xx;
-  S.y = yy;
-  S.z = zz;
-}
 
 
 

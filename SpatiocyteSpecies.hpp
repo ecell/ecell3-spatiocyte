@@ -33,6 +33,7 @@
 #include "SpatiocyteNextReactionProcess.hpp"
 #include "DiffusionInfluencedReactionProcess.hpp"
 #include "MoleculePopulateProcessInterface.hpp"
+#include "Vector.hpp"
 
 // The size of Coord must be 128 bytes to avoid cacheline splits
 // The Core 2 has 64-byte cacheline
@@ -2092,7 +2093,8 @@ public:
                                  const unsigned aVacantRows,
                                  const unsigned aVacantCols,
                                  const double nLipidRadius,
-                                 const double aSubunitAngle)
+                                 const double aSubunitAngle,
+                                 Point& aSurfaceNormal)
     {
       double nDist((aLipid->getMoleculeRadius()+theMoleculeRadius)/
                    (2*theVoxelRadius));
@@ -2112,20 +2114,47 @@ public:
       unsigned coordA(rowA*aVacantCols+aCol);
       unsigned coordB(rowB*aVacantCols+aCol);
       setCoordOffsets(coordA, coordA, nDist, aLipidStart, nLipidRadius,
-                      aSubunitAngle, theOffsets[rowA%2]);
+                      aSubunitAngle, aSurfaceNormal, theOffsets[rowA%2]);
       setCoordOffsets(coordB, coordB, nDist, aLipidStart, nLipidRadius,
-                      aSubunitAngle, theOffsets[rowB%2]);
+                      aSubunitAngle, aSurfaceNormal, theOffsets[rowB%2]);
       theTarOffsets.resize(2);
       theSrcOffsets.resize(2);
       setWalkOffsets(rowA, coordA, nDist, aLipidStart, nLipidRadius,
-                     aSubunitAngle, theOffsets[rowA%2]);
+                     aSubunitAngle, aSurfaceNormal, theOffsets[rowA%2]);
       setWalkOffsets(rowB, coordB, nDist, aLipidStart, nLipidRadius,
-                     aSubunitAngle, theOffsets[rowB%2]);
+                     aSubunitAngle, aSurfaceNormal, theOffsets[rowB%2]);
+      setRotateOffsets(rowA, coordA, nDist, aLipidStart, nLipidRadius,
+                       aSubunitAngle, aSurfaceNormal, theOffsets[rowA%2]);
+      setRotateOffsets(rowB, coordB, nDist, aLipidStart, nLipidRadius,
+                       aSubunitAngle, aSurfaceNormal, theOffsets[rowB%2]);
+    }
+  void setRotateOfsets(const unsigned row, const unsigned coordA,
+                       const double nDist, const Point& aLipidStart,
+                       const double nLipidRadius, const double aSubunitAngle,
+                       Point& aSurfaceNormal, std::vector<int>& startOffsets)
+    {
+      theRotateSize = 8;
+      theRotOffsets[row%2].resize(theRotateSize);
+      double angle(0);
+      double incAngle(M_PI*2/theRotateSize);
+      std::vector<int> srcOffsets(startOffsets);
+      for(unsigned i(1); i != theRotateSize; ++i)
+        {
+          theRotOffsets[row%s][i].resize(2);
+          angle += incAngle;
+          std::vector<int> tarOffsets;
+          setCoordOffsets(coordA, coordA, nDist, aLipidStart, nLipidRadius,
+                          aSubunitAngle, aSurfaceNormal, angle, tarOffsets);
+          unsigned prev(std::max(
+          setDiffOffsets(srcOffsets, tarOffsets, theRotOffsets[row%2][i][1]);
+          setDiffOffsets(tarOffsets, srcOffsets, theRotOffsets[row%2][i][0]);
+          srcOffsets = tarOffsets;
+        }
     }
   void setWalkOffsets(const unsigned row, const unsigned coordA,
                       const double nDist, const Point& aLipidStart,
                       const double nLipidRadius, const double aSubunitAngle,
-                      std::vector<int>& srcOffsets)
+                      Point& aSurfaceNormal, std::vector<int>& srcOffsets)
     {
       theTarOffsets[row%2].resize(theDiffuseSize);
       theSrcOffsets[row%2].resize(theDiffuseSize);
@@ -2135,7 +2164,7 @@ public:
                                ].adjoiningCoords[i]-lipStartCoord);
           std::vector<int> tarOffsets;
           setCoordOffsets(coordB, coordA, nDist, aLipidStart, nLipidRadius,
-                          aSubunitAngle, tarOffsets);
+                          aSubunitAngle, aSurfaceNormal, 0, tarOffsets);
           setDiffOffsets(srcOffsets, tarOffsets, theTarOffsets[row%2][i]);
           setDiffOffsets(tarOffsets, srcOffsets, theSrcOffsets[row%2][i]);
         }
@@ -2156,11 +2185,13 @@ public:
   void setCoordOffsets(const unsigned coordA, const unsigned coordB,
                        const double nDist, const Point& aLipidStart,
                        const double nLipidRadius, const double aSubunitAngle,
+                       Point& aSurfaceNormal, const double aRotateAngle,
                        std::vector<int>& anIntersectOffsets)
     {
       std::vector<unsigned> anIntersectLipids;
       getIntersectLipidsRegular(coordA+vacStartCoord, nDist, aLipidStart,
-                                nLipidRadius, aSubunitAngle, anIntersectLipids);
+                                nLipidRadius, aSubunitAngle, aSurfaceNormal,
+                                aRotateAngle, anIntersectLipids);
       anIntersectOffsets.resize(0);
       for(unsigned i(0); i != anIntersectLipids.size(); ++i)
         {
@@ -2171,6 +2202,8 @@ public:
                                  const Point& aLipidStart,
                                  const double nLipidRadius,
                                  const double aSubunitAngle,
+                                 Point& aSurfaceNormal,
+                                 const double aRotateAngle,
                                  std::vector<unsigned>& anIntersectLipids)
     {
       Point& pointA(*theLattice[coordA].point);
@@ -2193,7 +2226,9 @@ public:
           for(unsigned j(colStart); j != colEnd; ++j)
             {
               unsigned coord(i*lipCols+j);
-              Point& pointB(*theLattice[coord+lipStartCoord].point);
+              Point pointB(*theLattice[coord+lipStartCoord].point);
+              rotatePointAlongVector(pointB, pointA, aSurfaceNormal,
+                                     aRotateAngle);
               if(aSubunitAngle)
                 {
                   if(pointB.y > minRectY && pointB.y < maxRectY &&
@@ -2458,6 +2493,7 @@ private:
   unsigned theNullID;
   unsigned theRegLatticeCoord;
   unsigned theSpeciesSize;
+  unsigned theRotateSize;
   unsigned vacCols;
   unsigned vacRows;
   unsigned vacStartCoord;

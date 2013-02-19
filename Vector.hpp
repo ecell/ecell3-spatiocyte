@@ -121,13 +121,34 @@ double abs(double a)
   return sqrt(a*a);
 }
 
-/*
-//Get the intersection point for the line connecting A to B with a plane having
-//the normal N and the distance from origin m:
-Point intersectLinePlane(Point& A, Point& B, Point& N, double m)
+//Return the result when the point P(x,y,z) is rotated about the line through
+//C(a,b,c) with unit direction vector N⟨u,v,w⟩ by the angle θ.
+void rotatePointAlongVector(Point& P, Point& C, Point& N, double angle)
 {
-  Point V;
-*/
-
+  double x(P.x);
+  double y(P.y);
+  double z(P.z);
+  double a(C.x);
+  double b(C.y);
+  double c(C.z);
+  double u(N.x);
+  double v(N.y);
+  double w(N.z);
+  double u2(u*u);
+  double v2(v*v);
+  double w2(w*w);
+  double cosT(cos(angle));
+  double oneMinusCosT(1-cosT);
+  double sinT(sin(angle));
+  double xx((a*(v2 + w2) - u*(b*v + c*w - u*x - v*y - w*z)) * oneMinusCosT
+                + x*cosT + (-c*v + b*w - w*y + v*z)*sinT);
+  double yy((b*(u2 + w2) - v*(a*u + c*w - u*x - v*y - w*z)) * oneMinusCosT
+                + y*cosT + (c*u - a*w + w*x - u*z)*sinT);
+  double zz((c*(u2 + v2) - w*(a*u + b*v - u*x - v*y - w*z)) * oneMinusCosT
+                + z*cosT + (-b*u + a*v - v*x + u*y)*sinT);
+  P.x = xx;
+  P.y = yy;
+  P.z = zz;
+}
 
 #endif /* __Vector_hpp */

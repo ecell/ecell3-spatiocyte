@@ -228,7 +228,8 @@ void CompartmentProcess::setSpeciesIntersectLipids()
           theVacantCompSpecies[i]->setIntersectOffsets(theLipidSpecies,
                                                        lipidStart, Filaments,
                                                        Subunits, nLipidRadius,
-                                                       SubunitAngle);
+                                                       SubunitAngle,
+                                                       surfaceNormal);
         }
     }
   else
