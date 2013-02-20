@@ -180,6 +180,7 @@ struct Tag
 {
   unsigned origin;
   unsigned id;
+  unsigned rotIndex; //rotation index
 };
 
 struct Origin
