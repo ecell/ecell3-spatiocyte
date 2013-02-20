@@ -110,6 +110,7 @@ public:
     theCollision(0),
     theInitCoordSize(anInitCoordSize),
     theMoleculeSize(0),
+    theRotateSize(1),
     D(0),
     theDiffuseRadius(voxelRadius),
     theDiffusionInterval(libecs::INF),
@@ -729,7 +730,7 @@ public:
               if(!isIntersectMultiscale(source->coord, target->coord) &&
                  isMultiscaleWalkPropensity(source->coord, target->coord))
                 {
-                  removeMultiscaleMolecule(source);
+                  removeMultiscaleMolecule(source, theTags[i].rotIndex);
                   addMultiscaleMolecule(target);
                   target->id = theID;
                   source->id = theVacantID;
@@ -737,29 +738,6 @@ public:
                 }
             }
         }
-    }
-  void walkMultiscalePropensityRegular()
-    {
-      /*
-      const unsigned beginMoleculeSize(theMoleculeSize);
-      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
-        {
-          Voxel* source(theMolecules[i]);
-          const unsigned tarIndex(gsl_rng_uniform_int(theRng, theDiffuseSize));
-          Voxel* target(&theLattice[source->adjoiningCoords[tarIndex]]);
-          if(target->id == theVacantID)
-            {
-              if(!isIntersectMultiscaleRegular(source->coord, tarIndex) &&
-                 isMultiscaleWalkPropensityRegular(source->coord, tarIndex))
-                {
-                  moveMultiscaleMoleculeRegular(source->coord, tarIndex);
-                  target->id = theID;
-                  source->id = theVacantID;
-                  theMolecules[i] = target;
-                }
-            }
-        }
-        */
     }
   void walkMultiscale()
     {
@@ -774,7 +752,7 @@ public:
             {
               if(!isIntersectMultiscale(source->coord, target->coord))
                 {
-                  removeMultiscaleMolecule(source);
+                  removeMultiscaleMolecule(source, theTags[i].rotIndex);
                   addMultiscaleMolecule(target);
                   target->id = theID;
                   source->id = theVacantID;
@@ -783,7 +761,7 @@ public:
             }
         }
     }
-  void walkMultiscaleRegular()
+  void rotateMultiscaleRegular()
     {
       const unsigned beginMoleculeSize(theMoleculeSize);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
@@ -827,7 +805,34 @@ public:
             }
         }
     }
-  /*
+  void walkMultiscalePropensityRegular()
+    {
+      const unsigned beginMoleculeSize(theMoleculeSize);
+      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
+        {
+          Voxel* source(theMolecules[i]);
+          const unsigned tarIndex(gsl_rng_uniform_int(theRng, theDiffuseSize));
+          Voxel* target(&theLattice[source->adjoiningCoords[tarIndex]]);
+          if(target->id == theVacantID)
+            {
+              const unsigned coordA(source->coord-vacStartCoord);
+              const int rowA(coordA/lipCols);
+              if(!isIntersectMultiscaleRegular(coordA, rowA,
+                       theTarOffsets[rowA%2][theTags[i].rotIndex][tarIndex]) &&
+                 isMultiscaleWalkPropensityRegular(coordA, rowA,
+                     theTarOffsets[rowA%2][theTags[i].rotIndex][tarIndex],
+                     theSrcOffsets[rowA%2][theTags[i].rotIndex][tarIndex]))
+                {
+                  moveMultiscaleMoleculeRegular(coordA, rowA, 
+                     theTarOffsets[rowA%2][theTags[i].rotIndex][tarIndex],
+                     theSrcOffsets[rowA%2][theTags[i].rotIndex][tarIndex]);
+                  target->id = theID;
+                  source->id = theVacantID;
+                  theMolecules[i] = target;
+                }
+            }
+        }
+    }
   void walkMultiscaleRegular()
     {
       const unsigned beginMoleculeSize(theMoleculeSize);
@@ -838,9 +843,14 @@ public:
           Voxel* target(&theLattice[source->adjoiningCoords[tarIndex]]);
           if(target->id == theVacantID)
             {
-              if(!isIntersectMultiscaleRegular(source->coord, tarIndex))
+              const unsigned coordA(source->coord-vacStartCoord);
+              const int rowA(coordA/lipCols);
+              if(!isIntersectMultiscaleRegular(coordA, rowA,
+                       theTarOffsets[rowA%2][theTags[i].rotIndex][tarIndex]))
                 {
-                  moveMultiscaleMoleculeRegular(source->coord, tarIndex);
+                  moveMultiscaleMoleculeRegular(coordA, rowA, 
+                     theTarOffsets[rowA%2][theTags[i].rotIndex][tarIndex],
+                     theSrcOffsets[rowA%2][theTags[i].rotIndex][tarIndex]);
                   target->id = theID;
                   source->id = theVacantID;
                   theMolecules[i] = target;
@@ -848,7 +858,6 @@ public:
             }
         }
     }
-    */
   void walkVacant()
     {
       updateVacantMolecules();
@@ -1143,21 +1152,20 @@ public:
         }
       theVariable->setValue(theMoleculeSize);
     }
-  bool isMultiscaleWalkPropensityRegular(const unsigned srcCoord,
-                                         const unsigned tarIndex)
+  bool isMultiscaleWalkPropensityRegular(const unsigned coordA, 
+                                         const unsigned rowA,
+                                         const std::vector<int>& tarOffsets,
+                                         const std::vector<int>& srcOffsets)
     {
       unsigned tarCnt(0);
       unsigned srcCnt(0);
-      const unsigned coordA(srcCoord-vacStartCoord);
-      const int rowA(coordA/lipCols);
-      const std::vector<int>& anOffsetsA(theTarOffsets[rowA%2][tarIndex]);
       //count tar
-      for(unsigned i(0); i != anOffsetsA.size(); ++i)
+      for(unsigned i(0); i != tarOffsets.size(); ++i)
         {
-          const int offsetRow((anOffsetsA[i]+theRegLatticeCoord)/lipCols-
-                              theRegLatticeCoord/lipCols);
-          int coordB(coordA+anOffsetsA[i]);
-          if(isInLattice(coordB, offsetRow+rowA))
+          const int offsetRow((tarOffsets[i]+theRegLatticeCoord)/lipCols-
+                              theRegLatticeCoord/lipCols+rowA);
+          int coordB(coordA+tarOffsets[i]);
+          if(isInLattice(coordB, offsetRow))
             {
               const unsigned anID(theLattice[coordB+lipStartCoord].id);
               if(std::find(theMultiscaleBindableIDs.begin(), 
@@ -1168,14 +1176,13 @@ public:
                 }
             }
         }
-      //count src
-      const std::vector<int>& anOffsetsB(theSrcOffsets[rowA%2][tarIndex]);
-      for(unsigned i(0); i != anOffsetsB.size(); ++i)
+      //Remove src
+      for(unsigned i(0); i != srcOffsets.size(); ++i)
         {
-          const int offsetRow((anOffsetsB[i]+theRegLatticeCoord)/lipCols-
-                              theRegLatticeCoord/lipCols);
-          int coordB(coordA+anOffsetsB[i]);
-          if(isInLattice(coordB, offsetRow+rowA))
+          const int offsetRow((srcOffsets[i]+theRegLatticeCoord)/lipCols-
+                              theRegLatticeCoord/lipCols+rowA);
+          int coordB(coordA+srcOffsets[i]);
+          if(isInLattice(coordB, offsetRow))
             {
               const unsigned anID(theLattice[coordB+lipStartCoord].id);
               if(std::find(theMultiscaleBoundIDs.begin(), 
@@ -1236,7 +1243,7 @@ public:
       if(isRegularLattice)
         {
           const int rowA(coordA/lipCols);
-          const std::vector<int>& anOffsets(theOffsets[rowA%2]);
+          const std::vector<int>& anOffsets(theOffsets[rowA%2][0]);
           for(unsigned i(0); i != anOffsets.size(); ++i)
             {
               const int offsetRow((anOffsets[i]+theRegLatticeCoord)/lipCols-
@@ -1273,13 +1280,13 @@ public:
             }
         }
     }
-  void removeMultiscaleMolecule(Voxel* aVoxel)
+  void removeMultiscaleMolecule(Voxel* aVoxel, const unsigned rotIndex)
     {
       const unsigned coordA(aVoxel->coord-vacStartCoord);
       if(isRegularLattice)
         {
           const int rowA(coordA/lipCols);
-          const std::vector<int>& anOffsets(theOffsets[rowA%2]);
+          const std::vector<int>& anOffsets(theOffsets[rowA%2][rotIndex]);
           for(unsigned i(0); i != anOffsets.size(); ++i)
             {
               const int offsetRow((anOffsets[i]+theRegLatticeCoord)/lipCols-
@@ -1322,7 +1329,7 @@ public:
       if(isRegularLattice)
         {
           const int rowA(coordA/lipCols);
-          const std::vector<int>& anOffsets(theOffsets[rowA%2]);
+          const std::vector<int>& anOffsets(theOffsets[rowA%2][0]);
           for(unsigned i(0); i != anOffsets.size(); ++i)
             {
               const int offsetRow((anOffsets[i]+theRegLatticeCoord)/lipCols-
@@ -1625,7 +1632,8 @@ public:
     {
       if(isMultiscale)
         {
-          removeMultiscaleMolecule(theMolecules[anIndex]);
+          removeMultiscaleMolecule(theMolecules[anIndex],
+                                   theTags[anIndex].rotIndex);
         }
       if(!isVacant)
         {
@@ -2157,69 +2165,66 @@ public:
       unsigned aCol(aVacantCols/2);
       unsigned coordA(rowA*aVacantCols+aCol);
       unsigned coordB(rowB*aVacantCols+aCol);
-      setCoordOffsets(coordA, coordA, nDist, aLipidStart, nLipidRadius,
-                      aSubunitAngle, aSurfaceNormal, 0, theOffsets[rowA%2]);
-      setCoordOffsets(coordB, coordB, nDist, aLipidStart, nLipidRadius,
-                      aSubunitAngle, aSurfaceNormal, 0, theOffsets[rowB%2]);
       theTarOffsets.resize(2);
       theSrcOffsets.resize(2);
-      setWalkOffsets(rowA, coordA, nDist, aLipidStart, nLipidRadius,
-                     aSubunitAngle, aSurfaceNormal, theOffsets[rowA%2]);
-      setWalkOffsets(rowB, coordB, nDist, aLipidStart, nLipidRadius,
-                     aSubunitAngle, aSurfaceNormal, theOffsets[rowB%2]);
       theRotOffsets.resize(2);
-      setRotateOffsets(rowA, coordA, nDist, aLipidStart, nLipidRadius,
-                       aSubunitAngle, aSurfaceNormal, theOffsets[rowA%2]);
-      setRotateOffsets(rowB, coordB, nDist, aLipidStart, nLipidRadius,
-                       aSubunitAngle, aSurfaceNormal, theOffsets[rowB%2]);
+      setOffsets(rowA, coordA, nDist, aLipidStart, nLipidRadius, aSubunitAngle,
+                 aSurfaceNormal, theOffsets[rowA%2]);
+      setOffsets(rowB, coordB, nDist, aLipidStart, nLipidRadius, aSubunitAngle,
+                 aSurfaceNormal, theOffsets[rowB%2]);
     }
-  void setRotateOffsets(const unsigned row, const unsigned coordA,
-                        const double nDist, const Point& aLipidStart,
-                        const double nLipidRadius, const double aSubunitAngle,
-                        Point& aSurfaceNormal, std::vector<int>& startOffsets)
+  void setOffsets(const unsigned row, const unsigned coordA, const double nDist,
+                  const Point& aLipidStart, const double nLipidRadius,
+                  const double aSubunitAngle, Point& aSurfaceNormal, 
+                  std::vector<std::vector<int> >& refOffsets)
     {
       theRotateSize = 8;
+      refOffsets.resize(theRotateSize);
+      theTarOffsets[row%2].resize(theRotateSize);
+      theSrcOffsets[row%2].resize(theRotateSize);
       theRotOffsets[row%2].resize(theRotateSize);
       double angle(0);
       double incAngle(M_PI*2/theRotateSize);
-      std::vector<int> srcOffsets(startOffsets);
-      theRotOffsets[row%2][0].resize(2);
       for(unsigned i(0); i != theRotateSize; ++i)
         {
-          angle += incAngle;
-          std::vector<int> tarOffsets;
           setCoordOffsets(coordA, coordA, nDist, aLipidStart, nLipidRadius,
-                          aSubunitAngle, aSurfaceNormal, angle, tarOffsets);
-          unsigned j(i+1);
-          if(j != theRotateSize)
-            {
-              theRotOffsets[row%2][j].resize(2);
+                          aSubunitAngle, aSurfaceNormal, angle, refOffsets[i]);
+          setWalkOffsets(row, coordA, nDist, aLipidStart, nLipidRadius,
+                         aSubunitAngle, aSurfaceNormal, refOffsets[i],
+                         theTarOffsets[row%2][i], theSrcOffsets[row%2][i]);
+          theRotOffsets[row%2][i].resize(2);
+          if(i)
+            { 
+              setDiffOffsets(refOffsets[i-1], refOffsets[i],
+                             theRotOffsets[row%2][i-1][1]);
+              setDiffOffsets(refOffsets[i], refOffsets[i-1],
+                             theRotOffsets[row%2][i][0]);
             }
-          else
-            {
-              j = 0;
-            }
-          setDiffOffsets(srcOffsets, tarOffsets, theRotOffsets[row%2][i][1]);
-          setDiffOffsets(tarOffsets, srcOffsets, theRotOffsets[row%2][j][0]);
-          srcOffsets = tarOffsets;
+          angle += incAngle;
         }
+      setDiffOffsets(refOffsets[theRotateSize-1], refOffsets[0],
+                     theRotOffsets[row%2][theRotateSize-1][1]);
+      setDiffOffsets(refOffsets[0], refOffsets[theRotateSize-1],
+                     theRotOffsets[row%2][0][0]);
     }
   void setWalkOffsets(const unsigned row, const unsigned coordA,
                       const double nDist, const Point& aLipidStart,
                       const double nLipidRadius, const double aSubunitAngle,
-                      Point& aSurfaceNormal, std::vector<int>& srcOffsets)
+                      Point& aSurfaceNormal, std::vector<int>& prevOffsets,
+                      std::vector<std::vector<int> >& aTarOffsets,
+                      std::vector<std::vector<int> >& aSrcOffsets)
     {
-      theTarOffsets[row%2].resize(theDiffuseSize);
-      theSrcOffsets[row%2].resize(theDiffuseSize);
+      aTarOffsets.resize(theDiffuseSize);
+      aSrcOffsets.resize(theDiffuseSize);
       for(unsigned i(0); i != theDiffuseSize; ++i)
         {
           const unsigned coordB(theLattice[coordA+lipStartCoord
                                ].adjoiningCoords[i]-lipStartCoord);
-          std::vector<int> tarOffsets;
+          std::vector<int> nextOffsets;
           setCoordOffsets(coordB, coordA, nDist, aLipidStart, nLipidRadius,
-                          aSubunitAngle, aSurfaceNormal, 0, tarOffsets);
-          setDiffOffsets(srcOffsets, tarOffsets, theTarOffsets[row%2][i]);
-          setDiffOffsets(tarOffsets, srcOffsets, theSrcOffsets[row%2][i]);
+                          aSubunitAngle, aSurfaceNormal, 0, nextOffsets);
+          setDiffOffsets(prevOffsets, nextOffsets, aTarOffsets[i]);
+          setDiffOffsets(nextOffsets, prevOffsets, aSrcOffsets[i]);
         }
     }
   void setDiffOffsets(std::vector<int>& srcOffsets,
@@ -2333,7 +2338,8 @@ public:
           if(isRegularLattice)
             {
               const int rowA(coordA/lipCols);
-              const std::vector<int>& anOffsetsA(theOffsets[rowA%2]);
+              const std::vector<int>& anOffsetsA(theOffsets[rowA%2][
+                                                 theTags[index].rotIndex]);
               unsigned size(0);
               for(unsigned i(0); i != anOffsetsA.size(); ++i)
                 {
@@ -2384,7 +2390,7 @@ public:
                 {
                   const int rowA(coordA/lipCols);
                   const std::vector<int>& anOffsetsA(theOffsets[
-                                                     rowA%2]);
+                                               rowA%2][theTags[i].rotIndex]);
                   for(unsigned j(0); j != anOffsetsA.size(); ++j)
                     {
                       const int offsetRow((anOffsetsA[j]+theRegLatticeCoord)/
@@ -2566,9 +2572,9 @@ private:
   SpatiocyteStepper* theStepper;
   Variable* theVariable;
   Tag theNullTag;
-  std::vector<std::vector<int> > theOffsets;
-  std::vector<std::vector<std::vector<int> > > theTarOffsets;
-  std::vector<std::vector<std::vector<int> > > theSrcOffsets;
+  std::vector<std::vector<std::vector<int> > > theOffsets;
+  std::vector<std::vector<std::vector<std::vector<int> > > > theTarOffsets;
+  std::vector<std::vector<std::vector<std::vector<int> > > > theSrcOffsets;
   std::vector<std::vector<std::vector<std::vector<int> > > > theRotOffsets;
   std::vector<bool> theFinalizeReactions;
   std::vector<unsigned> collisionCnts;

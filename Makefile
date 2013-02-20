@@ -20,7 +20,8 @@ DiffusionProcess\
 CoordinateLogProcess\
 HistogramLogProcess\
 MoleculePopulateProcess\
-PeriodicBoundaryDiffusionProcess
+PeriodicBoundaryDiffusionProcess\
+RotationProcess
 #OscillationAnalysisProcess\
 #PolymerFragmentationProcess\
 MicrotubuleProcess\
@@ -87,6 +88,9 @@ MoleculePopulateProcess.so: 	MoleculePopulateProcess.cpp
 
 DiffusionProcess.so: 	DiffusionProcess.cpp
 	$(ECELL3_DMC) -o DiffusionProcess.so --ldflags="SpatiocyteProcess.so DiffusionInfluencedReactionProcess.so" DiffusionProcess.cpp
+
+RotationProcess.so: 	RotationProcess.cpp
+	$(ECELL3_DMC) -o RotationProcess.so --ldflags="DiffusionProcess.so" RotationProcess.cpp
 
 MultiscaleReactionProcess.so: 	MultiscaleReactionProcess.cpp
 	$(ECELL3_DMC) -o MultiscaleReactionProcess.so --ldflags="SpatiocyteNextReactionProcess.so" MultiscaleReactionProcess.cpp
