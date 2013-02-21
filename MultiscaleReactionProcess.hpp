@@ -33,46 +33,61 @@
 #define __MultiscaleReactionProcess_hpp
 
 #include <sstream>
-#include "ReactionProcess.hpp"
+#include "DiffusionInfluencedReactionProcess.hpp"
 #include "SpatiocyteSpecies.hpp"
 
-LIBECS_DM_CLASS(MultiscaleReactionProcess, ReactionProcess)
+LIBECS_DM_CLASS(MultiscaleReactionProcess, DiffusionInfluencedReactionProcess)
 { 
 public:
   LIBECS_DM_OBJECT(MultiscaleReactionProcess, Process)
     {
-      INHERIT_PROPERTIES(ReactionProcess);
+      INHERIT_PROPERTIES(DiffusionInfluencedReactionProcess);
     }
   MultiscaleReactionProcess() {}
   virtual ~MultiscaleReactionProcess() {}
-  virtual void initialize()
+  virtual void initializeSecond()
     {
-      if(isInitialized)
+      //This must be in initializeSecond since we need to know
+      //if a species is multiscale, which is only set by the
+      //CompartmentProcess in initializeFirst:
+      if(A->getIsMultiscale())
         {
-          return;
+          theMultiscale = A;
+          theSubstrate = B;
         }
-      ReactionProcess::initialize();
-      for(VariableReferenceVector::iterator
-          i(theVariableReferenceVector.begin());
-          i != theVariableReferenceVector.end(); ++i)
+      else if(B->getIsMultiscale())
         {
-          Species* aSpecies(theSpatiocyteStepper->variable2species(
-                                   (*i).getVariable())); 
-          if((*i).getCoefficient())
-            {
-              if((*i).getCoefficient() < 0)
-                {
-                  theSubstrate = aSpecies;
-                }
-              else
-                {
-                  theProduct = aSpecies;
-                }
-            }
-          else
-            {
-              theMultiscale = aSpecies;
-            }
+          theMultiscale = B;
+          theSubstrate = A;
+        }
+      else
+        {
+          THROW_EXCEPTION(ValueError, String(
+             getPropertyInterface().getClassName()) + " [" + 
+              getFullID().asString() + "]: This process must have at least " +
+             "one multiscale substrate species.");
+        }
+      if(!D)
+        {
+          THROW_EXCEPTION(ValueError, String(
+             getPropertyInterface().getClassName()) + " [" + 
+              getFullID().asString() + "]: This process must have two " +
+              "products.");
+        }
+      if(C->getIsMultiscale() && !D->getIsMultiscale())
+        {
+          theProduct = D;
+        }
+      else if(!C->getIsMultiscale() && D->getIsMultiscale())
+        {
+          theProduct = C;
+        }
+      else
+        {
+          THROW_EXCEPTION(ValueError, String(
+             getPropertyInterface().getClassName()) + " [" + 
+              getFullID().asString() + "]: This process must have at least " +
+             "one multiscale product species.");
         }
     }
   virtual void initializeThird()
@@ -97,20 +112,18 @@ public:
           theMultiscale->setMultiscaleBindIDs(theSubstrate->getID(),
                                               theProduct->getID());
         }
+      theMultiscale->setDiffusionInfluencedReaction(
+            dynamic_cast<DiffusionInfluencedReactionProcess*>(this),
+            B->getID(), 1); 
     }
-  virtual void initializeFifth()
+  virtual void react(Voxel* aVoxel)
     {
-      //theInterruptedProcess will be updated by theStepper in
-      //initPriorityQueue just after initializeFourth, so
-      //we use it here in initializeFifth:
-      for(std::vector<SpatiocyteProcess*>::const_iterator 
-          i(theInterruptedProcesses.begin());
-          i!=theInterruptedProcesses.end(); ++i)
-        {
-          SpatiocyteNextReactionProcess* aProcess(
-                            dynamic_cast<SpatiocyteNextReactionProcess*>(*i));
-          theMultiscale->addInterruptedProcess(aProcess);
-        }
+      theProduct->addMolecule(aVoxel);
+    }
+  virtual void finalizeReaction()
+    {
+      DiffusionInfluencedReactionProcess::finalizeReaction();
+      theSubstrate->updateMoleculeList();
     }
 protected:
   Species* theSubstrate;

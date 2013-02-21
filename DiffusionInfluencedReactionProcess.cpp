@@ -40,15 +40,15 @@ void DiffusionInfluencedReactionProcess::checkSubstrates()
     {
       THROW_EXCEPTION(ValueError, String(
         getPropertyInterface().getClassName()) + " [" + getFullID().asString() +
-		    "]: A DiffusionInfluencedReactionProcess cannot have a HD " +
-        "substrate species: " + getIDString(variableA));
+		    "]: This process cannot have a HD substrate species: " + 
+        getIDString(variableA));
     }
   if(variableB)
     {
       THROW_EXCEPTION(ValueError, String(
         getPropertyInterface().getClassName()) + " [" + getFullID().asString() +
-		    "]: A DiffusionInfluencedReactionProcess cannot have a HD " +
-        "substrate species: " + getIDString(variableB));
+		    "]: This process cannot have a HD substrate species: " + 
+        getIDString(variableB));
     }
 }
 

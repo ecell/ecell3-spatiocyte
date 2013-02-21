@@ -70,6 +70,7 @@ public:
   virtual void initializeSecond();
   virtual void initializeThird();
   virtual bool react(Voxel*, Voxel*, unsigned, unsigned);
+  virtual void react(Voxel*) {}
   virtual void printParameters();
   virtual void finalizeReaction();
 protected:

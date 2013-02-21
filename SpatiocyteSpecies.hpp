@@ -149,8 +149,7 @@ public:
       theNullTag.origin = theNullCoord;
       theNullTag.id = theNullID;
     }
-  void setDiffusionInfluencedReaction(
-                                    DiffusionInfluencedReactionProcess*
+  void setDiffusionInfluencedReaction(DiffusionInfluencedReactionProcess*
                                       aReaction, int anID, double aProbability)
     {
       theDiffusionInfluencedReactions[anID] = aReaction;
@@ -614,6 +613,7 @@ public:
               theDiffusionInfluencedReactions[i]->finalizeReaction();
             }
         }
+      /*
       for(unsigned i(0); i != theInterruptedProcesses.size(); ++i)
         {
           //theInterruptedProcesses are the processes that will always be
@@ -621,6 +621,7 @@ public:
           theInterruptedProcesses[i
             ]->substrateValueChanged(theStepper->getCurrentTime());
         }
+        */
     }
   void addCollision(Voxel* aVoxel)
     {
@@ -1081,6 +1082,19 @@ public:
             }
         }
     }
+  void updateMoleculeList()
+    {
+      for(unsigned i(0); i < theMoleculeSize; ++i)
+        { 
+          if(theMolecules[i]->id != theID)
+            {
+              while(theMolecules[--theMoleculeSize]->id != theID &&
+                    theMoleculeSize != i) {};
+              theMolecules[i] = theMolecules[theMoleculeSize];
+            }
+        }
+      theVariable->setValue(theMoleculeSize);
+    }
   //Even if it is a isCompVacant, this method will be called by
   //VisualizationLogProcess, or SNRP if it is Reactive, or DiffusionProcess
   //if it is Diffusive:
@@ -1296,7 +1310,7 @@ public:
                     }
                   else
                     {
-                      multiscaleBind(&theLattice[coord]);
+                      reactMultiscale(&theLattice[coord]);
                     }
                 }
             }
@@ -1312,7 +1326,7 @@ public:
                 }
               else
                 {
-                  multiscaleBind(&theLattice[coordB]);
+                  reactMultiscale(&theLattice[coordB]);
                 }
             }
         }
@@ -1339,7 +1353,7 @@ public:
                     }
                   else
                     {
-                      multiscaleUnbind(&theLattice[coord]);
+                      reactMultiscale(&theLattice[coord]);
                     }
                 }
             }
@@ -1355,7 +1369,7 @@ public:
                 }
               else
                 {
-                  multiscaleUnbind(&theLattice[coordB]);
+                  reactMultiscale(&theLattice[coordB]);
                 }
             }
         }
@@ -1443,14 +1457,13 @@ public:
           if(isInLattice(coordB, offsetRow))
             {
               const unsigned coord(coordB+lipStartCoord);
-              if(theLattice[coord].id == 
-                 theMultiscaleVacantSpecies->getID())
+              if(theLattice[coord].id == theMultiscaleVacantSpecies->getID())
                 {
                   theLattice[coord].id = theID;
                 }
               else
                 {
-                  multiscaleBind(&theLattice[coord]);
+                  reactMultiscale(&theLattice[coord]);
                 }
             }
         }
@@ -1469,7 +1482,7 @@ public:
                 }
               else
                 {
-                  multiscaleUnbind(&theLattice[coord]);
+                  reactMultiscale(&theLattice[coord]);
                 }
             }
         }
@@ -1486,10 +1499,9 @@ public:
           if(isInLattice(coordB, offsetRow))
             {
               const unsigned anID(theLattice[coordB+lipStartCoord].id);
-              if(anID == theID ||
-                 std::find(theMultiscaleBoundIDs.begin(), 
-                           theMultiscaleBoundIDs.end(),
-                           anID) != theMultiscaleBoundIDs.end())
+              if(anID == theID || std::find(theMultiscaleBoundIDs.begin(), 
+                                            theMultiscaleBoundIDs.end(),
+                                      anID) != theMultiscaleBoundIDs.end())
                 {
                   return true;
                 }
@@ -1517,21 +1529,11 @@ public:
         }
       return isIntersect;
     }
-  void multiscaleBind(Voxel* aVoxel)
-    {
+  void reactMultiscale(Voxel* aVoxel)
+    { 
       unsigned anID(aVoxel->id);
-      Species* source(theStepper->id2species(anID));
-      Species* target(theStepper->id2species(theMultiscaleBindIDs[anID]));
-      source->softRemoveMolecule(aVoxel);
-      target->addMolecule(aVoxel);
-    }
-  void multiscaleUnbind(Voxel* aVoxel)
-    {
-      unsigned anID(aVoxel->id);
-      Species* source(theStepper->id2species(anID));
-      Species* target(theStepper->id2species(theMultiscaleUnbindIDs[anID]));
-      source->softRemoveMolecule(aVoxel);
-      target->addMolecule(aVoxel);
+      theDiffusionInfluencedReactions[anID]->react(aVoxel);
+      theFinalizeReactions[anID] = true;
     }
   void addCompVoxel(unsigned aCoord)
     {

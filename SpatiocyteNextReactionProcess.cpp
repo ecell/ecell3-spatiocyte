@@ -1231,12 +1231,6 @@ bool SpatiocyteNextReactionProcess::isInterrupted(ReactionProcess*
     {
       if((*i).isAccessor())
         {
-          Species* aSpecies(theSpatiocyteStepper->variable2species(
-                                                 (*i).getVariable()));
-          if(aSpecies && aSpecies->getIsMultiscale())
-            {
-              aSpecies->addInterruptedProcess(this);
-            }
           for(std::vector<Variable*>::const_iterator j(aVariables.begin());
               j != aVariables.end(); ++j)
             {

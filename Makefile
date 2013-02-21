@@ -14,12 +14,12 @@ ReactionProcess\
 SpatiocyteNextReactionProcess\
 IteratingLogProcess\
 DiffusionInfluencedReactionProcess\
-MultiscaleReactionProcess\
 MicroscopyTrackingProcess\
 DiffusionProcess\
 CoordinateLogProcess\
 HistogramLogProcess\
 MoleculePopulateProcess\
+MultiscaleReactionProcess\
 PeriodicBoundaryDiffusionProcess\
 RotationProcess
 #OscillationAnalysisProcess\
@@ -93,7 +93,7 @@ RotationProcess.so: 	RotationProcess.cpp
 	$(ECELL3_DMC) -o RotationProcess.so --ldflags="DiffusionProcess.so" RotationProcess.cpp
 
 MultiscaleReactionProcess.so: 	MultiscaleReactionProcess.cpp
-	$(ECELL3_DMC) -o MultiscaleReactionProcess.so --ldflags="SpatiocyteNextReactionProcess.so" MultiscaleReactionProcess.cpp
+	$(ECELL3_DMC) -o MultiscaleReactionProcess.so --ldflags="DiffusionInfluencedReactionProcess.so" MultiscaleReactionProcess.cpp
 
 CompartmentGrowthProcess.so: 	CompartmentGrowthProcess.cpp
 	$(ECELL3_DMC) -o CompartmentGrowthProcess.so --ldflags="SpatiocyteProcess.so" CompartmentGrowthProcess.cpp
