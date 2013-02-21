@@ -130,7 +130,7 @@ public:
     }
   void rotateMultiscalePropensityRegular() const
     {
-      //theDiffusionSpecies->rotateMultiscalePropensityRegular();
+      theDiffusionSpecies->rotateMultiscalePropensityRegular();
     }
 private:
   RotateMethod theRotateMethod;

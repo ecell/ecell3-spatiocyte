@@ -33,7 +33,7 @@ logger.VariableReferenceList = [['_', 'Variable:/:MinD']]
 #logger.VariableReferenceList = [['_', 'Variable:/:Interface']]
 logger.VariableReferenceList = [['_', 'Variable:/Surface:PG']]
 logger.VariableReferenceList = [['_', 'Variable:/Surface:PGs']]
-logger.LogInterval = 1e-6
+logger.LogInterval = 1e-5
 
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop')
 populator.VariableReferenceList = [['_', 'Variable:/Surface:PG']]
@@ -156,6 +156,15 @@ react.k = 1.5e+6
 #diffuser.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
 #diffuser.D = 5e-12
 
+rotator = theSimulator.createEntity('DiffusionProcess', 'Process:/:rotateMinD')
+rotator.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
+rotator.D = 1e-12
+
+rotator = theSimulator.createEntity('DiffusionProcess', 'Process:/:rotatePropenMinD')
+rotator.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
+rotator.D = 1e-12
+rotator.Propensity = 1
+
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:propenMinD')
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
 diffuser.D = 10e-12
@@ -209,10 +218,19 @@ fil.Length = 1e-7
 fil.Width = 1e-7
 #fil.Filaments = 4
 fil.SubunitRadius = 1.74e-9
+fil.SubunitAngle = 0.7
 fil.DiffuseRadius = 0.436e-9
 fil.LipidRadius = 0.436e-9
 fil.Periodic = 1
 fil.RegularLattice = 1
 
-run(0.1)
+import time
+run(1e-6)
+print "Done stirring. Now running..."
+start = time.time()
+run(0.01)
+end = time.time()
+duration = end-start
+print duration
+
 

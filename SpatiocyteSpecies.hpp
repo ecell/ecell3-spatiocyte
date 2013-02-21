@@ -636,8 +636,10 @@ public:
     }
   void walk()
     {
+      /*
       theMolecules.resize(theMoleculeSize);
       std::random_shuffle(theMolecules.begin(), theMolecules.end());
+      */
       const unsigned beginMoleculeSize(theMoleculeSize);
       unsigned size(theAdjoiningCoordSize);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
@@ -773,39 +775,31 @@ public:
           if(!isIntersectMultiscaleRegular(coordA, rowA,
                        theRotOffsets[rowA%2][theTags[i].rotIndex][tarIndex]))
             { 
-              unsigned old(theTags[i].rotIndex);
-              if(tarIndex)
+              unsigned srcIndex(0);
+              unsigned srcRotIndex(theTags[i].rotIndex+1);
+              if(!tarIndex)
                 {
-                  if(theTags[i].rotIndex == theRotateSize-1)
+                  srcIndex = 1;
+                  if(!theTags[i].rotIndex)
                     {
-                      theTags[i].rotIndex = 0;
+                      srcRotIndex = theRotateSize-1;
                     }
                   else
                     {
-                      theTags[i].rotIndex++;
+                      srcRotIndex = theTags[i].rotIndex-1; 
                     }
-                  moveMultiscaleMoleculeRegular(coordA, rowA, 
-                        theRotOffsets[rowA%2][old][1],
-                        theRotOffsets[rowA%2][theTags[i].rotIndex][0]);
                 }
-              else
+              else if(srcRotIndex == theRotateSize)
                 {
-                  if(int(theTags[i].rotIndex-1) < 0)
-                    {
-                      theTags[i].rotIndex = theRotateSize-1;
-                    }
-                  else
-                    {
-                      theTags[i].rotIndex--;
-                    }
-                  moveMultiscaleMoleculeRegular(coordA, rowA, 
-                        theRotOffsets[rowA%2][old][0],
-                        theRotOffsets[rowA%2][theTags[i].rotIndex][1]);
+                  srcRotIndex = 0;
                 }
+              moveMultiscaleMoleculeRegular(coordA, rowA, 
+                    theRotOffsets[rowA%2][theTags[i].rotIndex][tarIndex],
+                    theRotOffsets[rowA%2][srcRotIndex][srcIndex]);
+              theTags[i].rotIndex = srcRotIndex;
             }
         }
     }
-  /*
   void rotateMultiscalePropensityRegular()
     {
       const unsigned beginMoleculeSize(theMoleculeSize);
@@ -814,43 +808,40 @@ public:
           Voxel* source(theMolecules[i]);
           const int tarIndex(gsl_rng_uniform_int(theRng, 2)); 
           const unsigned coordA(source->coord-vacStartCoord);
-          const int rowA(coordA/lipCols);
+          const int rowA(coordA/lipCols); 
           if(!isIntersectMultiscaleRegular(coordA, rowA,
-                       theRotOffsets[rowA%2][theTags[i].rotIndex][tarIndex]))
-            { 
-              unsigned old(theTags[i].rotIndex);
-              if(tarIndex)
+                 theRotOffsets[rowA%2][theTags[i].rotIndex][tarIndex]))
+            {
+              unsigned srcIndex(0);
+              unsigned srcRotIndex(theTags[i].rotIndex+1);
+              if(!tarIndex)
                 {
-                  if(theTags[i].rotIndex == theRotateSize-1)
+                  srcIndex = 1;
+                  if(!theTags[i].rotIndex)
                     {
-                      theTags[i].rotIndex = 0;
+                      srcRotIndex = theRotateSize-1;
                     }
                   else
                     {
-                      theTags[i].rotIndex++;
+                      srcRotIndex = theTags[i].rotIndex-1; 
                     }
-                  moveMultiscaleMoleculeRegular(coordA, rowA, 
-                        theRotOffsets[rowA%2][old][1],
-                        theRotOffsets[rowA%2][theTags[i].rotIndex][0]);
                 }
-              else
+              else if(srcRotIndex == theRotateSize)
                 {
-                  if(int(theTags[i].rotIndex-1) < 0)
-                    {
-                      theTags[i].rotIndex = theRotateSize-1;
-                    }
-                  else
-                    {
-                      theTags[i].rotIndex--;
-                    }
+                  srcRotIndex = 0;
+                }
+              if(isMultiscaleWalkPropensityRegular(coordA, rowA,
+                     theRotOffsets[rowA%2][theTags[i].rotIndex][tarIndex],
+                     theRotOffsets[rowA%2][srcRotIndex][srcIndex]))
+                {
                   moveMultiscaleMoleculeRegular(coordA, rowA, 
-                        theRotOffsets[rowA%2][old][0],
-                        theRotOffsets[rowA%2][theTags[i].rotIndex][1]);
+                        theRotOffsets[rowA%2][theTags[i].rotIndex][tarIndex],
+                        theRotOffsets[rowA%2][srcRotIndex][srcIndex]);
+                  theTags[i].rotIndex = srcRotIndex;
                 }
             }
         }
     }
-    */
   void walkMultiscalePropensityRegular()
     {
       const unsigned beginMoleculeSize(theMoleculeSize);
@@ -1239,7 +1230,7 @@ public:
                 }
             }
         }
-      if(tarCnt > srcCnt)
+      if(tarCnt >= srcCnt)
         {
           return true;
         }
@@ -1277,7 +1268,7 @@ public:
               ++tarCnt;
             }
         }
-      if(tarCnt > srcCnt)
+      if(tarCnt >= srcCnt)
         {
           return true;
         }
@@ -2224,7 +2215,7 @@ public:
                   const double aSubunitAngle, Point& aSurfaceNormal, 
                   std::vector<std::vector<int> >& refOffsets)
     {
-      theRotateSize = 8;
+      theRotateSize = 16;
       refOffsets.resize(theRotateSize);
       theTarOffsets[row%2].resize(theRotateSize);
       theSrcOffsets[row%2].resize(theRotateSize);
