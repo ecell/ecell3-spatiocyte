@@ -112,7 +112,10 @@ public:
           LogStart = LogInterval;
         }
       timePointCnt = 0;
-      thePriority = -10;
+      if(!getPriority())
+        {
+          setPriority(-10);
+        }
     }
   virtual void initializeFifth();
   virtual void initializeLastOnce();

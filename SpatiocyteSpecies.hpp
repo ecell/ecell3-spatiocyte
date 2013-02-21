@@ -805,6 +805,52 @@ public:
             }
         }
     }
+  /*
+  void rotateMultiscalePropensityRegular()
+    {
+      const unsigned beginMoleculeSize(theMoleculeSize);
+      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
+        {
+          Voxel* source(theMolecules[i]);
+          const int tarIndex(gsl_rng_uniform_int(theRng, 2)); 
+          const unsigned coordA(source->coord-vacStartCoord);
+          const int rowA(coordA/lipCols);
+          if(!isIntersectMultiscaleRegular(coordA, rowA,
+                       theRotOffsets[rowA%2][theTags[i].rotIndex][tarIndex]))
+            { 
+              unsigned old(theTags[i].rotIndex);
+              if(tarIndex)
+                {
+                  if(theTags[i].rotIndex == theRotateSize-1)
+                    {
+                      theTags[i].rotIndex = 0;
+                    }
+                  else
+                    {
+                      theTags[i].rotIndex++;
+                    }
+                  moveMultiscaleMoleculeRegular(coordA, rowA, 
+                        theRotOffsets[rowA%2][old][1],
+                        theRotOffsets[rowA%2][theTags[i].rotIndex][0]);
+                }
+              else
+                {
+                  if(int(theTags[i].rotIndex-1) < 0)
+                    {
+                      theTags[i].rotIndex = theRotateSize-1;
+                    }
+                  else
+                    {
+                      theTags[i].rotIndex--;
+                    }
+                  moveMultiscaleMoleculeRegular(coordA, rowA, 
+                        theRotOffsets[rowA%2][old][0],
+                        theRotOffsets[rowA%2][theTags[i].rotIndex][1]);
+                }
+            }
+        }
+    }
+    */
   void walkMultiscalePropensityRegular()
     {
       const unsigned beginMoleculeSize(theMoleculeSize);
@@ -2190,7 +2236,7 @@ public:
           setCoordOffsets(coordA, coordA, nDist, aLipidStart, nLipidRadius,
                           aSubunitAngle, aSurfaceNormal, angle, refOffsets[i]);
           setWalkOffsets(row, coordA, nDist, aLipidStart, nLipidRadius,
-                         aSubunitAngle, aSurfaceNormal, refOffsets[i],
+                         aSubunitAngle, aSurfaceNormal, angle, refOffsets[i],
                          theTarOffsets[row%2][i], theSrcOffsets[row%2][i]);
           theRotOffsets[row%2][i].resize(2);
           if(i)
@@ -2210,7 +2256,8 @@ public:
   void setWalkOffsets(const unsigned row, const unsigned coordA,
                       const double nDist, const Point& aLipidStart,
                       const double nLipidRadius, const double aSubunitAngle,
-                      Point& aSurfaceNormal, std::vector<int>& prevOffsets,
+                      Point& aSurfaceNormal, const double angle,
+                      std::vector<int>& prevOffsets,
                       std::vector<std::vector<int> >& aTarOffsets,
                       std::vector<std::vector<int> >& aSrcOffsets)
     {
@@ -2222,7 +2269,7 @@ public:
                                ].adjoiningCoords[i]-lipStartCoord);
           std::vector<int> nextOffsets;
           setCoordOffsets(coordB, coordA, nDist, aLipidStart, nLipidRadius,
-                          aSubunitAngle, aSurfaceNormal, 0, nextOffsets);
+                          aSubunitAngle, aSurfaceNormal, angle, nextOffsets);
           setDiffOffsets(prevOffsets, nextOffsets, aTarOffsets[i]);
           setDiffOffsets(nextOffsets, prevOffsets, aSrcOffsets[i]);
         }

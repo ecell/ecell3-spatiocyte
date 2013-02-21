@@ -51,7 +51,6 @@ public:
     isExternInterrupted(false),
     isInitialized(false),
     isPriorityQueued(false),
-    thePriority(0),
     theInterval(libecs::INF),
     theTime(libecs::INF) {}
   virtual ~SpatiocyteProcess() {}
@@ -143,9 +142,9 @@ public:
     {
       return theTime;
     }
-  virtual int getQueuePriority() const
+  virtual int getPriority() const
     {
-      return thePriority;
+      return Process::getPriority();
     }
   virtual void setTime(double aTime)
     {
@@ -207,7 +206,6 @@ protected:
   bool isExternInterrupted;
   bool isInitialized;
   bool isPriorityQueued;
-  int thePriority;
   unsigned theAdjoiningCoordSize;
   unsigned theNullCoord;
   unsigned theNullID;

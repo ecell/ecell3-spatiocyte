@@ -100,7 +100,10 @@ public:
             }
 
         }
-      thePriority = -1;
+      if(!getPriority())
+        {
+          setPriority(-1);
+        }
     }
   virtual void initializeFifth()
     {
@@ -144,10 +147,12 @@ public:
           double aTime(theTime);
           theTime = libecs::INF;
           thePriorityQueue->moveTop();
-          if(thePriorityQueue->getTop()->getTime() > aTime)
+          if(thePriorityQueue->getTop() != 
+             dynamic_cast<SpatiocyteProcessInterface*>(this))
             {
               theInterval = thePriorityQueue->getTop()->getTime() -
                 theSpatiocyteStepper->getCurrentTime();
+              setPriority(thePriorityQueue->getTop()->getPriority()-1);
             }
           theTime = aTime + theInterval;
           thePriorityQueue->move(theQueueID);

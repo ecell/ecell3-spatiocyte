@@ -71,7 +71,10 @@ public:
               theLatticeSpecies.push_back(aSpecies);
             }
         }
-      thePriority = -1;
+      if(!getPriority())
+        {
+          setPriority(-1);
+        }
     }
   virtual void initializeFifth()
     {

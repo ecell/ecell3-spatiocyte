@@ -48,7 +48,7 @@ public:
   virtual void setPriorityQueue(ProcessPriorityQueue*) = 0;
   virtual void setTime(double) = 0;
   virtual double getTime() const = 0;
-  virtual int getQueuePriority() const = 0;
+  virtual int getPriority() const = 0;
   virtual void setQueueID(ProcessID) = 0;
   virtual void addSubstrateInterrupt(Species*, Voxel*) = 0;
   virtual void removeSubstrateInterrupt(Species*, Voxel*) = 0;
