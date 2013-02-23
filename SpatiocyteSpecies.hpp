@@ -456,17 +456,6 @@ public:
                 }
             }
         }
-      if(isMultiscale)
-        {
-          for(unsigned i(0); i != theMultiscaleBoundIDs.size(); ++i)
-            {
-              std::cout << getIDString(theMultiscaleBoundIDs[i]) << std::endl;
-            }
-          for(unsigned i(0); i != theMultiscaleBindableIDs.size(); ++i)
-            {
-              std::cout << getIDString(theMultiscaleBindableIDs[i]) << std::endl;
-            }
-        }
     }
   unsigned getCollisionCnt(unsigned anIndex)
     {
@@ -604,55 +593,17 @@ public:
       for(unsigned i(0); i != theFinalizeReactions.size(); ++i)
         {
           theFinalizeReactions[i] = false;
-          if(theDiffusionInfluencedReactions[i])
-            {
-              theDiffusionInfluencedReactions[i]->initializeReaction();
-              theDiffusionInfluencedReactions[i]->checkSubstrate(1);
-            }
         }
     }
   void finalizeReactions()
     {
       for(unsigned i(0); i != theFinalizeReactions.size(); ++i)
         {
-          if(isMultiscale)
-            {
-              if(theDiffusionInfluencedReactions[i])
-                {
-                  if(theFinalizeReactions[i])
-                    {
-                      theDiffusionInfluencedReactions[i]->finalizeReaction();
-                    }
-                  if(theDiffusionInfluencedReactions[i]->checkSubstrate(2))
-                    {
-                      std::cout << "finalized:" << theFinalizeReactions[i] << std::endl;
-                      std::cout << "bind:" << std::endl;
-                      for(unsigned j(0); j != tmpBind.size(); ++j)
-                        {
-                          std::cout << "  " << getIDString(tmpBind[j]) << std::endl;
-                        }
-                      std::cout << "unbind:" << std::endl;
-                      for(unsigned j(0); j != tmpUnbind.size(); ++j)
-                        {
-                          std::cout << "  " << getIDString(tmpUnbind[j]) << std::endl;
-                        }
-                    }
-                }
-            }
-          else if(theFinalizeReactions[i])
+          if(theFinalizeReactions[i])
             {
               theDiffusionInfluencedReactions[i]->finalizeReaction();
             }
         }
-      /*
-      for(unsigned i(0); i != theInterruptedProcesses.size(); ++i)
-        {
-          //theInterruptedProcesses are the processes that will always be
-          //interrupted at the end of a walk:
-          theInterruptedProcesses[i
-            ]->substrateValueChanged(theStepper->getCurrentTime());
-        }
-        */
     }
   void addCollision(Voxel* aVoxel)
     {
@@ -668,24 +619,12 @@ public:
     }
   void walk()
     {
-      std::cout << "  walk() theVacantSpecies: " << theVacantSpecies->getIDString() << std::endl;
-      for(unsigned i(0); i != this->size(); ++i)
-        {
-          if(getMolecule(i)->id != getID()) 
-            {
-              std::cout << "  in:" << getIDString() << " curr:" << getIDString(getMolecule(i)->id) << std::endl;
-            }
-        }
-
       /*
       theMolecules.resize(theMoleculeSize);
       std::random_shuffle(theMolecules.begin(), theMolecules.end());
       */
       const unsigned beginMoleculeSize(theMoleculeSize);
       unsigned size(theAdjoiningCoordSize);
-      int isDiff(0);
-      unsigned tarCoord(0);
-      unsigned srcCoord(0);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
@@ -695,34 +634,20 @@ public:
             }
           Voxel* target(&theLattice[source->adjoiningCoords[
                         gsl_rng_uniform_int(theRng, size)]]);
-          for(unsigned j(0); j != this->size(); ++j)
-            {
-              if(getMolecule(j)->id != getID())
-                {
-                  std::cout << "1 before reactant:" << " i:" << i << " j:" << j << " begin:" << beginMoleculeSize << " end:" << theMoleculeSize <<  " curr:" << getIDString(getMolecule(j)->id) << std::endl;
-                }
-            }
-          unsigned tarID(target->id);
           if(target->id == theVacantID)
             {
-              isDiff = 1;
               if(theWalkProbability == 1 ||
                  gsl_rng_uniform(theRng) < theWalkProbability)
                 {
-                  isDiff = 2;
-                  tarCoord = target->coord;
-                  srcCoord = source->coord;
                   target->id = theID;
                   source->id = theVacantID;
                   theMolecules[i] = target;
                 }
             }
           else
-            { 
-              isDiff = 3;
+            {
               if(target->id == theComp->interfaceID)
                 {
-                  std::cout << "interfacing" << std::endl;
                   unsigned coord(gsl_rng_uniform_int(theRng, 
                                                      target->adjoiningSize-
                                                      target->diffuseSize));
@@ -731,17 +656,6 @@ public:
                 }
               if(theDiffusionInfluencedReactions[target->id])
                 {
-                  isDiff = 4;
-                  //if(theID == 1)
-                    {
-                      for(unsigned j(0); j != this->size(); ++j)
-                        {
-                          if(getMolecule(j)->id != getID())
-                            {
-                              std::cout << "before reactant:" << " i:" << i << " j:" << j << " begin:" << beginMoleculeSize << " end:" << theMoleculeSize <<  " curr:" << getIDString(getMolecule(j)->id) << " tar:" << getIDString(tarID) << std::endl;
-                            }
-                        }
-                    }
                   //If it meets the reaction probability:
                   if(theReactionProbabilities[target->id] == 1 ||
                      gsl_rng_uniform(theRng) < 
@@ -753,18 +667,12 @@ public:
                       if(targetSpecies->getIsMultiscale() && theVacantSpecies ==
                          targetSpecies->getMultiscaleVacantSpecies())
                         {
-                          /*
-                          theDiffusionInfluencedReactions[
-                            target->id]->react(source);
-                          theFinalizeReactions[target->id] = true;
-                          continue;
-                          */
                           //Set an invalid index if the target molecule is
                           //an implicitly represented multiscale molecule:
                           targetIndex = targetSpecies->size();
                         }
                       else
-                        { 
+                        {
                           targetIndex = targetSpecies->getIndex(target);
                         }
                       if(theCollision)
@@ -790,31 +698,7 @@ public:
                           --i;
                         }
                     }
-                  if(theID == 1)
-                    {
-                      for(unsigned j(0); j != this->size(); ++j)
-                        {
-                          if(getMolecule(j)->id != getID())
-                            {
-                              std::cout << "after  reactant:" << " i:" << i << " j:" << j << " begin:" << beginMoleculeSize << " end:" << theMoleculeSize << " curr:" << getIDString(getMolecule(j)->id) << " tar:" << getIDString(tarID) << std::endl;
-                            }
-                        }
-                    }
                 }
-            }
-          for(unsigned j(0); j != this->size(); ++j)
-            {
-              if(getMolecule(j)->id != getID())
-                {
-                  std::cout << "1 after  reactant:" << " i:" << i << " j:" << j << " begin:" << beginMoleculeSize << " end:" << theMoleculeSize <<  " curr:" << getIDString(getMolecule(j)->id) << " tar:" << getIDString(tarID) << " diff:" << isDiff << " currCoord:" << getMolecule(j)->coord << " tar:" << tarCoord << " src:" << srcCoord << " eq:" << (source == getMolecule(j)) << std::endl;
-                }
-            }
-        }
-      for(unsigned i(0); i != this->size(); ++i)
-        {
-          if(getMolecule(i)->id != getID()) 
-            {
-              std::cout << "  out:" << getIDString() << " curr:" << getIDString(getMolecule(i)->id) << std::endl;
             }
         }
     }
@@ -865,7 +749,6 @@ public:
     }
   void rotateMultiscaleRegular()
     {
-      std::cout << "  rotateMultiscaleReg()" << std::endl;
       const unsigned beginMoleculeSize(theMoleculeSize);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
@@ -903,7 +786,6 @@ public:
     }
   void rotateMultiscalePropensityRegular()
     {
-      std::cout << "  rotateMultiscalePropenReg()" << std::endl;
       const unsigned beginMoleculeSize(theMoleculeSize);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
@@ -946,7 +828,6 @@ public:
     }
   void walkMultiscalePropensityRegular()
     {
-      std::cout << "  walkMultiscalePropenReg()" << std::endl;
       const unsigned beginMoleculeSize(theMoleculeSize);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
@@ -975,7 +856,6 @@ public:
     }
   void walkMultiscaleRegular()
     {
-      std::cout << "  walkMultiscaleReg()" << std::endl;
       const unsigned beginMoleculeSize(theMoleculeSize);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
@@ -1001,7 +881,6 @@ public:
     }
   void walkVacant()
     {
-      std::cout << "  walkVacant()" << std::endl;
       updateVacantMolecules();
       for(unsigned i(0); i < theMoleculeSize; ++i)
         {

@@ -124,25 +124,10 @@ public:
             dynamic_cast<DiffusionInfluencedReactionProcess*>(this),
             theSubstrates[0]->getID(), 1); 
     }
-  virtual void initializeReaction()
-    {
-    }
   virtual void react(Voxel* aVoxel, const unsigned coord,
                      const unsigned dirA, const unsigned dirB)
     {
       /*
-      for(unsigned i(0); i != theProducts[k]->size(); ++i)
-        {
-          for(unsigned j(0); j != theProducts[k]->size(); ++j)
-            {
-              if(i != j && theProducts[k]->getMolecule(i) == 
-                 theProducts[k]->getMolecule(j))
-                {
-                  std::cout << " before add error in:" << getFullID().asString() << " sp:" << theProducts[k]->getIDString() << " time:" << getStepper()->getCurrentTime() << " i:" << i << " j:" << j << " size:" << theProducts[k]->size() << std::endl;
-                }
-            }
-        }
-        */
       removedMols[dirA].push_back(aVoxel->coord);
       aVoxel->id = theProducts[dirA]->getID();
       for(unsigned i(0); i != removedMols[dirB].size(); ++i)
@@ -153,24 +138,13 @@ public:
             }
         }
       addedMols[dirA].push_back(coord);
-      /*
-      //theSubstrate->softRemoveMolecule(aVoxel);
-      theProducts[k]->addMolecule(aVoxel);
-      for(unsigned i(0); i != theProducts[k]->size(); ++i)
-        {
-          for(unsigned j(0); j != theProducts[k]->size(); ++j)
-            {
-              if(i != j && theProducts[k]->getMolecule(i) == 
-                 theProducts[k]->getMolecule(j))
-                {
-                  std::cout << " after add error in:" << getFullID().asString() << " sp:" << theProducts[k]->getIDString() << " time:" << getStepper()->getCurrentTime() << " i:" << i << " j:" << j << " size:" << theProducts[k]->size() << std::endl;
-                }
-            }
-        }
-        */
+      */
+      theSubstrates[dirA]->softRemoveMolecule(aVoxel);
+      theProducts[dirA]->addMolecule(aVoxel);
     }
   virtual void finalizeReaction()
     {
+      /*
       theSubstrates[0]->updateMoleculeList(addedMols[1]);
       theSubstrates[1]->updateMoleculeList(addedMols[0]);
       addedMols[0].resize(0);
@@ -192,26 +166,8 @@ public:
                 }
             }
         }
+        */
       DiffusionInfluencedReactionProcess::finalizeReaction();
-    }
-  virtual unsigned checkSubstrate(unsigned ind)
-    {
-      for(unsigned k(0); k != 2; ++k)
-        {
-          for(unsigned i(0); i != theSubstrates[k]->size(); ++i)
-            {
-              for(unsigned j(0); j != theSubstrates[k]->size(); ++j)
-                {
-                  if(i != j && theSubstrates[k]->getMolecule(i) ==
-                     theSubstrates[k]->getMolecule(j))
-                    {
-                      std::cout << ind << " second error in:" << getFullID().asString() << " sp:" << theSubstrates[k]->getIDString() << " time:" << getStepper()->getCurrentTime() << std::endl;
-                      return 1;
-                    }
-                }
-            }
-        }
-      return 0;
     }
 protected:
   std::vector<Species*> theSubstrates;
