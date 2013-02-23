@@ -456,6 +456,17 @@ public:
                 }
             }
         }
+      if(isMultiscale)
+        {
+          for(unsigned i(0); i != theMultiscaleBoundIDs.size(); ++i)
+            {
+              std::cout << getIDString(theMultiscaleBoundIDs[i]) << std::endl;
+            }
+          for(unsigned i(0); i != theMultiscaleBindableIDs.size(); ++i)
+            {
+              std::cout << getIDString(theMultiscaleBindableIDs[i]) << std::endl;
+            }
+        }
     }
   unsigned getCollisionCnt(unsigned anIndex)
     {
@@ -588,8 +599,6 @@ public:
     }
   void resetFinalizeReactions()
     {
-      tmpBind.resize(0);
-      tmpUnbind.resize(0);
       for(unsigned i(0); i != theFinalizeReactions.size(); ++i)
         {
           theFinalizeReactions[i] = false;
@@ -604,6 +613,15 @@ public:
               theDiffusionInfluencedReactions[i]->finalizeReaction();
             }
         }
+      /*
+      for(unsigned i(0); i != theInterruptedProcesses.size(); ++i)
+        {
+          //theInterruptedProcesses are the processes that will always be
+          //interrupted at the end of a walk:
+          theInterruptedProcesses[i
+            ]->substrateValueChanged(theStepper->getCurrentTime());
+        }
+        */
     }
   void addCollision(Voxel* aVoxel)
     {
@@ -667,12 +685,18 @@ public:
                       if(targetSpecies->getIsMultiscale() && theVacantSpecies ==
                          targetSpecies->getMultiscaleVacantSpecies())
                         {
+                          /*
+                          theDiffusionInfluencedReactions[
+                            target->id]->react(source);
+                          theFinalizeReactions[target->id] = true;
+                          continue;
+                          */
                           //Set an invalid index if the target molecule is
                           //an implicitly represented multiscale molecule:
                           targetIndex = targetSpecies->size();
                         }
                       else
-                        {
+                        { 
                           targetIndex = targetSpecies->getIndex(target);
                         }
                       if(theCollision)
@@ -1065,7 +1089,6 @@ public:
             }
         }
     }
-  /*
   void updateMoleculeList()
     {
       unsigned aSize(0);
@@ -1079,7 +1102,6 @@ public:
       theMoleculeSize = aSize;
       theVariable->setValue(aSize);
     }
-    */
   void updateMoleculeList(const std::vector<unsigned>& addedMols)
     {
       for(unsigned i(0); i < theMoleculeSize; ++i)
@@ -1330,11 +1352,6 @@ public:
                       source->softRemoveMolecule(&theLattice[coordB]);
                       */
                       reactMultiscale(&theLattice[coord], coord, 0, 1);
-                      if(std::find(tmpBind.begin(), tmpBind.end(), 
-                                   theLattice[coord].id) == tmpBind.end())
-                        {
-                          tmpBind.push_back(theLattice[coord].id);
-                        }
                     }
                 }
             }
@@ -1382,11 +1399,6 @@ public:
               else
                 {
                   reactMultiscale(&theLattice[coord], coord, 0, 1);
-                  if(std::find(tmpBind.begin(), tmpBind.end(), 
-                               theLattice[coord].id) == tmpBind.end())
-                    {
-                      tmpBind.push_back(theLattice[coord].id);
-                    }
                 }
             }
         }
@@ -1406,11 +1418,6 @@ public:
               else
                 {
                   reactMultiscale(&theLattice[coord], coord, 1, 0);
-                  if(std::find(tmpUnbind.begin(), tmpUnbind.end(), 
-                               theLattice[coord].id) == tmpUnbind.end())
-                    {
-                      tmpUnbind.push_back(theLattice[coord].id);
-                    }
                 }
             }
         }
@@ -1438,11 +1445,6 @@ public:
                   else
                     {
                       reactMultiscale(&theLattice[coord], coord, 1, 0);
-                      if(std::find(tmpUnbind.begin(), tmpUnbind.end(), 
-                                   theLattice[coord].id) == tmpUnbind.end())
-                        {
-                          tmpUnbind.push_back(theLattice[coord].id);
-                        }
                     }
                 }
             }
@@ -1574,13 +1576,13 @@ public:
         }
       return isIntersect;
     }
-  void reactMultiscale(Voxel* aVoxel, unsigned coord, unsigned dirA,
-                       unsigned dirB)
+  void reactMultiscale(Voxel* aVoxel, const unsigned coord, const unsigned dirA,
+                       const unsigned dirB)
     { 
       unsigned anID(aVoxel->id);
       if(dirA)
         {
-          anID = theMultiscaleBindIDs[anID];
+          anID = theMultiscaleUnbindIDs[anID];
         }
       theDiffusionInfluencedReactions[anID]->react(aVoxel, coord, dirA, dirB);
       theFinalizeReactions[anID] = true;
@@ -2685,8 +2687,6 @@ private:
   std::vector<std::vector<std::vector<std::vector<int> > > > theRotOffsets;
   std::vector<bool> theFinalizeReactions;
   std::vector<unsigned> collisionCnts;
-  std::vector<unsigned> tmpUnbind;
-  std::vector<unsigned> tmpBind;
   std::vector<unsigned> theCoords;
   std::vector<unsigned> theMultiscaleBindIDs;
   std::vector<unsigned> theMultiscaleBoundIDs;

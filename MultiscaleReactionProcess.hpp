@@ -127,7 +127,6 @@ public:
   virtual void react(Voxel* aVoxel, const unsigned coord,
                      const unsigned dirA, const unsigned dirB)
     {
-      /*
       removedMols[dirA].push_back(aVoxel->coord);
       aVoxel->id = theProducts[dirA]->getID();
       for(unsigned i(0); i != removedMols[dirB].size(); ++i)
@@ -138,35 +137,23 @@ public:
             }
         }
       addedMols[dirA].push_back(coord);
-      */
+      /*
       theSubstrates[dirA]->softRemoveMolecule(aVoxel);
       theProducts[dirA]->addMolecule(aVoxel);
+      */
     }
   virtual void finalizeReaction()
     {
       /*
+      theSubstrates[0]->updateMoleculeList();
+      theSubstrates[1]->updateMoleculeList();
+      */
       theSubstrates[0]->updateMoleculeList(addedMols[1]);
       theSubstrates[1]->updateMoleculeList(addedMols[0]);
       addedMols[0].resize(0);
       addedMols[1].resize(0);
       removedMols[0].resize(0);
       removedMols[1].resize(0);
-      for(unsigned k(0); k != 2; ++k)
-        {
-          //theSubstrates[k]->updateMoleculeList();
-          for(unsigned i(0); i != theSubstrates[k]->size(); ++i)
-            {
-              for(unsigned j(0); j != theSubstrates[k]->size(); ++j)
-                {
-                  if(i != j && theSubstrates[k]->getMolecule(i) == 
-                     theSubstrates[k]->getMolecule(j))
-                    {
-                      std::cout << " after update error in:" << getFullID().asString() << " sp:" << theSubstrates[k]->getIDString() << " time:" << getStepper()->getCurrentTime() << " i:" << i << " j:" << j << " size:" << theSubstrates[k]->size() << std::endl;
-                    }
-                }
-            }
-        }
-        */
       DiffusionInfluencedReactionProcess::finalizeReaction();
     }
 protected:
@@ -180,4 +167,8 @@ protected:
 };
 
 #endif /* __MultiscaleReactionProcess_hpp */
+
+
+
+
 

@@ -34,6 +34,7 @@ logger.VariableReferenceList = [['_', 'Variable:/:MinD']]
 logger.VariableReferenceList = [['_', 'Variable:/Surface:PG']]
 logger.VariableReferenceList = [['_', 'Variable:/Surface:PGs']]
 logger.LogInterval = 1e-5
+logger.MultiscaleStructure = 1
 
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop')
 populator.VariableReferenceList = [['_', 'Variable:/Surface:PG']]
@@ -160,10 +161,10 @@ rotator = theSimulator.createEntity('DiffusionProcess', 'Process:/:rotateMinD')
 rotator.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
 rotator.D = 1e-12
 
-rotator = theSimulator.createEntity('DiffusionProcess', 'Process:/:rotatePropenMinD')
-rotator.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
-rotator.D = 1e-12
-rotator.Propensity = 1
+#rotator = theSimulator.createEntity('DiffusionProcess', 'Process:/:rotatePropenMinD')
+#rotator.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
+#rotator.D = 1e-12
+#rotator.Propensity = 1
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:propenMinD')
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
@@ -188,25 +189,17 @@ diffuser.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD']]
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:MinD', '-1']]
 diffuser.D = 0
 
-multi = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:multiA')
-multi.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
-multi.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '-1']]
-multi.VariableReferenceList = [['_', 'Variable:/Surface:PG', '1']]
-
-multi = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:multiB')
-multi.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
-multi.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '-1']]
-multi.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '1']]
-
 multi = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:multiC')
-multi.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
+multi.VariableReferenceList = [['_', 'Variable:/Surface:MinD', '-1']]
 multi.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '-1']]
 multi.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '1']]
+multi.VariableReferenceList = [['_', 'Variable:/Surface:MinD', '1']]
 
 multi = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:multiD')
-multi.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
+multi.VariableReferenceList = [['_', 'Variable:/Surface:MinD', '-1']]
 multi.VariableReferenceList = [['_', 'Variable:/Surface:PG', '-1']]
 multi.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '1']]
+multi.VariableReferenceList = [['_', 'Variable:/Surface:MinD', '1']]
 
 fil = theSimulator.createEntity('CompartmentProcess', 'Process:/:filam')
 fil.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]

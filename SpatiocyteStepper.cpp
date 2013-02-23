@@ -662,6 +662,28 @@ inline void SpatiocyteStepper::step()
 {
   do
     {
+      /*
+      for(unsigned i(0); i != theSpecies.size(); ++i)
+        {
+          if(!theSpecies[i]->getIsVacant())
+            {
+              for(unsigned j(0); j != theSpecies[i]->size(); ++j)
+                {
+                  for(unsigned k(0); k != theSpecies[i]->size(); ++k)
+                    {
+                      if((j != k && theSpecies[i]->getMolecule(j) == 
+                         theSpecies[i]->getMolecule(k)) || 
+                         theSpecies[i]->getMolecule(j)->id != 
+                         theSpecies[i]->getID()) 
+                        {
+                          std::cout << getCurrentTime() << ":" << theSpecies[i]->getIDString() << " curr:" << theSpecies[i]->getIDString(theSpecies[i]->getMolecule(j)->id) << " id:" << theSpecies[i]->getID() << " currID:" << theSpecies[i]->getMolecule(j)->id << std::endl;
+                        }
+                    }
+                }
+            }
+        }
+      std::cout << "executing " << thePriorityQueue.getTop()->getIDString() << " time:" << getCurrentTime() << std::endl;
+      */
       thePriorityQueue.getTop()->fire();
     }
   while(thePriorityQueue.getTop()->getTime() == getCurrentTime());
