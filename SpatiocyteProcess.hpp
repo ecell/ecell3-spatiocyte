@@ -196,6 +196,10 @@ public:
       aVariable->setValue(0);
       return aVariable;
     }
+  String getIDString()
+    {
+      return getFullID().asString();
+    }
 protected:
   String getIDString(Voxel*) const;
   String getIDString(Species*) const;

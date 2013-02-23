@@ -1534,7 +1534,10 @@ bool GLScene::on_timeout()
         {
           m_stepCnt = 0;
         }
-      theFile.seekg(theStreamPosList[m_stepCnt]);
+      if(theStreamPosList.size())
+        {
+          theFile.seekg(theStreamPosList[m_stepCnt]);
+        }
     }
   std::streampos aCurrStreamPos;
   if(!(this->*theLoadCoordsFunction)(aCurrStreamPos))

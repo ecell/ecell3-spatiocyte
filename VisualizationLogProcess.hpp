@@ -43,17 +43,20 @@ public:
   LIBECS_DM_OBJECT(VisualizationLogProcess, Process)
     {
       INHERIT_PROPERTIES(Process);
+      PROPERTYSLOT_SET_GET(Integer, MultiscaleStructure);
       PROPERTYSLOT_SET_GET(Integer, Polymer);
       PROPERTYSLOT_SET_GET(Real, LogInterval);
       PROPERTYSLOT_SET_GET(String, FileName);
     }
   VisualizationLogProcess():
+    MultiscaleStructure(0),
     Polymer(1),
     theLogMarker(UINT_MAX),
     theMeanCount(0),
     LogInterval(0),
     FileName("VisualLog.dat") {}
   virtual ~VisualizationLogProcess() {}
+  SIMPLE_SET_GET_METHOD(Integer, MultiscaleStructure);
   SIMPLE_SET_GET_METHOD(Integer, Polymer);
   SIMPLE_SET_GET_METHOD(Real, LogInterval);
   SIMPLE_SET_GET_METHOD(String, FileName); 
@@ -82,7 +85,7 @@ public:
     }	
   virtual void initializeFourth()
     {
-      for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
+      for(unsigned i(0); i != theProcessSpecies.size(); ++i)
         {
           Species* aSpecies(theProcessSpecies[i]);
           if(aSpecies->getIsOffLattice())
@@ -169,14 +172,15 @@ protected:
   void logPolymers(int);
   void logOffLattice(int);
 protected:
-  unsigned int Polymer;
-  unsigned int theLogMarker;
-  unsigned int theMeanCount;
+  unsigned MultiscaleStructure;
+  unsigned Polymer;
+  unsigned theLogMarker;
+  unsigned theMeanCount;
   double LogInterval;
   String FileName;
   std::ofstream theLogFile;
   std::streampos theStepStartPos;  
-  std::vector<unsigned int> thePolymerIndex;
+  std::vector<unsigned> thePolymerIndex;
   std::vector<Species*> thePolymerSpecies;
   std::vector<Species*> theLatticeSpecies;
   std::vector<Species*> theOffLatticeSpecies;

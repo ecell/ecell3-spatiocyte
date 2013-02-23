@@ -91,6 +91,10 @@ void VisualizationLogProcess::initializeLog()
        theOffLatticeSpecies[i]->getVariable()->getFullID().asString().c_str(),
        aStringSize);
       double aRadius(theOffLatticeSpecies[i]->getMoleculeRadius());
+      if(theOffLatticeSpecies[i]->getIsMultiscale() && MultiscaleStructure)
+        {
+          aRadius = theOffLatticeSpecies[i]->getDiffuseRadius();
+        }
       theLogFile.write((char*)(&aRadius), sizeof(aRadius));
     }
 }
@@ -131,10 +135,22 @@ void VisualizationLogProcess::logOffLattice(int anIndex)
   theLogFile.write((char*)(&anIndex), sizeof(anIndex));
   //The species molecule size:
   int aSize(aSpecies->size());
+  if(aSpecies->getIsMultiscale() && MultiscaleStructure)
+    {
+      aSize = aSpecies->getMultiscaleStructureSize();
+    }
   theLogFile.write((char*)(&aSize), sizeof(aSize)); 
   for(int i(0); i != aSize; ++i)
     {
-      Point aPoint(aSpecies->getPoint(i));
+      Point aPoint;
+      if(aSpecies->getIsMultiscale() && MultiscaleStructure)
+        {
+          aPoint = aSpecies->getMultiscaleStructurePoint(i);
+        }
+      else
+        {
+          aPoint = aSpecies->getPoint(i);
+        }
       theLogFile.write((char*)(&aPoint), sizeof(aPoint));
     }
 }  

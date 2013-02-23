@@ -43,22 +43,29 @@ public:
     {
       INHERIT_PROPERTIES(DiffusionInfluencedReactionProcess);
     }
-  MultiscaleReactionProcess() {}
+  MultiscaleReactionProcess():
+    isFinalized(true) {}
   virtual ~MultiscaleReactionProcess() {}
-  virtual void initializeSecond()
-    {
-      //This must be in initializeSecond since we need to know
+  virtual void initializeThird()
+    { 
+      theSubstrates.resize(2);
+      theProducts.resize(2);
+      addedMols.resize(2);
+      removedMols.resize(2);
+      //This must be in initializeSecond or later since we need to know
       //if a species is multiscale, which is only set by the
       //CompartmentProcess in initializeFirst:
       if(A->getIsMultiscale())
         {
           theMultiscale = A;
-          theSubstrate = B;
+          theSubstrates[0] = B;
+          theProducts[1] = B;
         }
       else if(B->getIsMultiscale())
         {
           theMultiscale = B;
-          theSubstrate = A;
+          theSubstrates[0] = A;
+          theProducts[1] = A;
         }
       else
         {
@@ -66,6 +73,17 @@ public:
              getPropertyInterface().getClassName()) + " [" + 
               getFullID().asString() + "]: This process must have at least " +
              "one multiscale substrate species.");
+        }
+      if(theSubstrates[0]->getVacantSpecies() == theMultiscale)
+        {
+          THROW_EXCEPTION(ValueError, String(
+             getPropertyInterface().getClassName()) + " [" + 
+              getFullID().asString() + "]: The substrate " + 
+              getIDString(theSubstrates[0]) + "'s vacant species is " +
+              getIDString(theMultiscale) + " which is a multiscale species. " +
+              "This reaction only expects the product's vacant species to be " +
+              "a multiscale species. You should probably invert the " +
+              "substrate with the product species to reverse the reaction.");
         }
       if(!D)
         {
@@ -76,11 +94,13 @@ public:
         }
       if(C->getIsMultiscale() && !D->getIsMultiscale())
         {
-          theProduct = D;
+          theProducts[0] = D;
+          theSubstrates[1] = D;
         }
       else if(!C->getIsMultiscale() && D->getIsMultiscale())
         {
-          theProduct = C;
+          theProducts[0] = C;
+          theSubstrates[1] = C;
         }
       else
         {
@@ -89,9 +109,6 @@ public:
               getFullID().asString() + "]: This process must have at least " +
              "one multiscale product species.");
         }
-    }
-  virtual void initializeThird()
-    {
       //This must be set in
       //initializeThird since it requires vacant species properties
       //set by DiffusionProcess in initializeSecond:
@@ -99,36 +116,111 @@ public:
       //If it is a dissociation reaction,
       //theSubstrate diffuses on theMultiscale,
       //theSubstrate unbinds from theMultiscale to become theProduct:
-      if(theSubstrate->getVacantSpecies() == theMultiscale)
-        {
-          theMultiscale->setMultiscaleUnbindIDs(theSubstrate->getID(),
-                                                theProduct->getID());
-        }
-      //If it is a association reaction,
-      //theProduct diffuses on theMultiscale,
-      //theSubstrate binds with theMultiscale to become theProduct:
-      else if(theProduct->getVacantSpecies() == theMultiscale)
-        {
-          theMultiscale->setMultiscaleBindIDs(theSubstrate->getID(),
-                                              theProduct->getID());
-        }
+      theMultiscale->setMultiscaleBindIDs(theSubstrates[0]->getID(),
+                                            theProducts[0]->getID());
+      theMultiscale->setMultiscaleUnbindIDs(theSubstrates[1]->getID(),
+                                            theProducts[1]->getID());
       theMultiscale->setDiffusionInfluencedReaction(
             dynamic_cast<DiffusionInfluencedReactionProcess*>(this),
-            B->getID(), 1); 
+            theSubstrates[0]->getID(), 1); 
     }
-  virtual void react(Voxel* aVoxel)
+  virtual void initializeReaction()
     {
-      theProduct->addMolecule(aVoxel);
+    }
+  virtual void react(Voxel* aVoxel, const unsigned coord,
+                     const unsigned dirA, const unsigned dirB)
+    {
+      /*
+      for(unsigned i(0); i != theProducts[k]->size(); ++i)
+        {
+          for(unsigned j(0); j != theProducts[k]->size(); ++j)
+            {
+              if(i != j && theProducts[k]->getMolecule(i) == 
+                 theProducts[k]->getMolecule(j))
+                {
+                  std::cout << " before add error in:" << getFullID().asString() << " sp:" << theProducts[k]->getIDString() << " time:" << getStepper()->getCurrentTime() << " i:" << i << " j:" << j << " size:" << theProducts[k]->size() << std::endl;
+                }
+            }
+        }
+        */
+      removedMols[dirA].push_back(aVoxel->coord);
+      aVoxel->id = theProducts[dirA]->getID();
+      for(unsigned i(0); i != removedMols[dirB].size(); ++i)
+        {
+          if(removedMols[dirB][i] == coord)
+            {
+              return;
+            }
+        }
+      addedMols[dirA].push_back(coord);
+      /*
+      //theSubstrate->softRemoveMolecule(aVoxel);
+      theProducts[k]->addMolecule(aVoxel);
+      for(unsigned i(0); i != theProducts[k]->size(); ++i)
+        {
+          for(unsigned j(0); j != theProducts[k]->size(); ++j)
+            {
+              if(i != j && theProducts[k]->getMolecule(i) == 
+                 theProducts[k]->getMolecule(j))
+                {
+                  std::cout << " after add error in:" << getFullID().asString() << " sp:" << theProducts[k]->getIDString() << " time:" << getStepper()->getCurrentTime() << " i:" << i << " j:" << j << " size:" << theProducts[k]->size() << std::endl;
+                }
+            }
+        }
+        */
     }
   virtual void finalizeReaction()
     {
+      theSubstrates[0]->updateMoleculeList(addedMols[1]);
+      theSubstrates[1]->updateMoleculeList(addedMols[0]);
+      addedMols[0].resize(0);
+      addedMols[1].resize(0);
+      removedMols[0].resize(0);
+      removedMols[1].resize(0);
+      for(unsigned k(0); k != 2; ++k)
+        {
+          //theSubstrates[k]->updateMoleculeList();
+          for(unsigned i(0); i != theSubstrates[k]->size(); ++i)
+            {
+              for(unsigned j(0); j != theSubstrates[k]->size(); ++j)
+                {
+                  if(i != j && theSubstrates[k]->getMolecule(i) == 
+                     theSubstrates[k]->getMolecule(j))
+                    {
+                      std::cout << " after update error in:" << getFullID().asString() << " sp:" << theSubstrates[k]->getIDString() << " time:" << getStepper()->getCurrentTime() << " i:" << i << " j:" << j << " size:" << theSubstrates[k]->size() << std::endl;
+                    }
+                }
+            }
+        }
       DiffusionInfluencedReactionProcess::finalizeReaction();
-      theSubstrate->updateMoleculeList();
+    }
+  virtual unsigned checkSubstrate(unsigned ind)
+    {
+      for(unsigned k(0); k != 2; ++k)
+        {
+          for(unsigned i(0); i != theSubstrates[k]->size(); ++i)
+            {
+              for(unsigned j(0); j != theSubstrates[k]->size(); ++j)
+                {
+                  if(i != j && theSubstrates[k]->getMolecule(i) ==
+                     theSubstrates[k]->getMolecule(j))
+                    {
+                      std::cout << ind << " second error in:" << getFullID().asString() << " sp:" << theSubstrates[k]->getIDString() << " time:" << getStepper()->getCurrentTime() << std::endl;
+                      return 1;
+                    }
+                }
+            }
+        }
+      return 0;
     }
 protected:
-  Species* theSubstrate;
-  Species* theProduct;
+  std::vector<Species*> theSubstrates;
+  std::vector<Species*> theProducts;
+  std::vector<std::vector<unsigned> > addedMols;
+  std::vector<std::vector<unsigned> > removedMols;
   Species* theMultiscale;
+  double time;
+  bool isFinalized;
 };
 
 #endif /* __MultiscaleReactionProcess_hpp */

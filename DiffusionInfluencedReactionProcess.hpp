@@ -70,9 +70,11 @@ public:
   virtual void initializeSecond();
   virtual void initializeThird();
   virtual bool react(Voxel*, Voxel*, unsigned, unsigned);
-  virtual void react(Voxel*) {}
+  virtual void react(Voxel*, unsigned, unsigned, unsigned) {}
   virtual void printParameters();
   virtual void finalizeReaction();
+  virtual void initializeReaction() {};
+  virtual unsigned checkSubstrate(unsigned) {return 0;}
 protected:
   void calculateReactionProbability();
   void addMoleculeE();

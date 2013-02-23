@@ -40,6 +40,8 @@ public:
   virtual ~DiffusionInfluencedReactionProcessInterface() {}
   virtual bool react(Voxel*, Voxel*, unsigned, unsigned) = 0;
   virtual void finalizeReaction() = 0;
+  virtual void initializeReaction() = 0;
+  virtual unsigned checkSubstrate(unsigned) = 0;
 };
 
 #endif /* __DIFFUSIONINFLUENCEDREACTIONPROCESSINTERFACE_HPP */
