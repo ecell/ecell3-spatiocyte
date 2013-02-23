@@ -137,23 +137,15 @@ public:
             }
         }
       addedMols[dirA].push_back(coord);
-      /*
-      theSubstrates[dirA]->softRemoveMolecule(aVoxel);
-      theProducts[dirA]->addMolecule(aVoxel);
-      */
     }
   virtual void finalizeReaction()
     {
-      /*
-      theSubstrates[0]->updateMoleculeList();
-      theSubstrates[1]->updateMoleculeList();
-      */
-      theSubstrates[0]->updateMoleculeList(addedMols[1]);
-      theSubstrates[1]->updateMoleculeList(addedMols[0]);
-      addedMols[0].resize(0);
-      addedMols[1].resize(0);
       removedMols[0].resize(0);
       removedMols[1].resize(0);
+      theSubstrates[0]->updateMoleculeList(addedMols[1]);
+      addedMols[1].resize(0);
+      theSubstrates[1]->updateMoleculeList(addedMols[0]);
+      addedMols[0].resize(0);
       DiffusionInfluencedReactionProcess::finalizeReaction();
     }
 protected:

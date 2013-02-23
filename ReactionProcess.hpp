@@ -201,18 +201,6 @@ public:
     }
   virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
   virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
-  virtual void finalizeReaction()
-    {
-      //The number of molecules may have changed for both reactant and product
-      //species. We need to update SpatiocyteNextReactionProcesses which are
-      //dependent on these species:
-      for(std::vector<SpatiocyteProcess*>::const_iterator 
-          i(theInterruptedProcesses.begin());
-          i!=theInterruptedProcesses.end(); ++i)
-        {
-          (*i)->substrateValueChanged(theSpatiocyteStepper->getCurrentTime());
-        }
-    }
 protected:
   virtual void calculateOrder();
 protected:
