@@ -1102,29 +1102,40 @@ public:
       theMoleculeSize = aSize;
       theVariable->setValue(aSize);
     }
-  void updateMoleculeList(const std::vector<unsigned>& addedMols)
+  void updateMoleculeList(const unsigned removedSize,
+                          const std::vector<unsigned>& addedMols)
     {
-      for(unsigned i(0); i < theMoleculeSize; ++i)
-        { 
+      unsigned r(0);
+      unsigned a(0);
+      for(unsigned i(0); i < theMoleculeSize && r != removedSize; ++i)
+        {
           if(theMolecules[i]->id != theID)
             {
-              while(--theMoleculeSize > i &&
-                    theMolecules[theMoleculeSize]->id != theID) {};
-              theMolecules[i] = theMolecules[theMoleculeSize];
+              if(a != addedMols.size() && theLattice[addedMols[a]].id == theID)
+                {
+                  theMolecules[i] = &theLattice[addedMols[a++]];
+                }
+              else
+                {
+                  while(--theMoleculeSize > i &&
+                        theMolecules[theMoleculeSize]->id != theID) {};
+                  theMolecules[i] = theMolecules[theMoleculeSize];
+                }
+              ++r;
             }
         }
-      for(unsigned i(0); i != addedMols.size(); ++i)
+      for(; a != addedMols.size(); ++a)
         {
-          if(theLattice[addedMols[i]].id == theID)
+          if(theLattice[addedMols[a]].id == theID)
             {
               ++theMoleculeSize;
               if(theMoleculeSize > theMolecules.size())
                 {
-                  theMolecules.push_back(&theLattice[addedMols[i]]);
+                  theMolecules.push_back(&theLattice[addedMols[a]]);
                 }
               else
                 {
-                  theMolecules[theMoleculeSize-1] = &theLattice[addedMols[i]];
+                  theMolecules[theMoleculeSize-1] = &theLattice[addedMols[a]];
                 }
             }
         }

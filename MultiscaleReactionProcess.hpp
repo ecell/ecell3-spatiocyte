@@ -133,6 +133,8 @@ public:
         {
           if(removedMols[dirB][i] == coord)
             {
+              removedMols[dirB][i] = removedMols[dirB].back();
+              removedMols[dirB].pop_back();
               return;
             }
         }
@@ -140,11 +142,11 @@ public:
     }
   virtual void finalizeReaction()
     {
+      theSubstrates[0]->updateMoleculeList(removedMols[0].size(), addedMols[1]);
       removedMols[0].resize(0);
-      removedMols[1].resize(0);
-      theSubstrates[0]->updateMoleculeList(addedMols[1]);
       addedMols[1].resize(0);
-      theSubstrates[1]->updateMoleculeList(addedMols[0]);
+      theSubstrates[1]->updateMoleculeList(removedMols[1].size(), addedMols[0]);
+      removedMols[1].resize(0);
       addedMols[0].resize(0);
       DiffusionInfluencedReactionProcess::finalizeReaction();
     }
