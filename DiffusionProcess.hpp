@@ -187,7 +187,14 @@ public:
         }
       else 
         {
-          theWalkMethod = &DiffusionProcess::walk;
+          if(theDiffusionSpecies->getIsRegularLattice())
+            {
+              theWalkMethod = &DiffusionProcess::walkRegular;
+            }
+          else
+            {
+              theWalkMethod = &DiffusionProcess::walk;
+            }
         }
       //After initializeFourth, this process will be enqueued in the priority
       //queue, so we must update the number of molecules of the diffusion 
@@ -218,6 +225,10 @@ public:
   void walk() const
     {
       theDiffusionSpecies->walk();
+    }
+  void walkRegular() const
+    {
+      theDiffusionSpecies->walkRegular();
     }
   void walkVacant() const
     {

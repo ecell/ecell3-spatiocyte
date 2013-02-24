@@ -120,6 +120,11 @@ void CompartmentProcess::updateResizedLattice()
       theVacantCompSpecies[i]->setLipStartCoord(lipStartCoord, LipidRows,
                                                 LipidCols);
     }
+  for(unsigned i(0); i != theLipidCompSpecies.size(); ++i)
+    {
+      theLipidCompSpecies[i]->setLipStartCoord(lipStartCoord, LipidRows,
+                                                LipidCols);
+    }
 }
 
 // y:width:rows
@@ -221,11 +226,19 @@ void CompartmentProcess::initializeThird()
 // z:length:cols:subunits
 void CompartmentProcess::setSpeciesIntersectLipids()
 {
+  setAdjoinOffsets();
   if(RegularLattice)
     {
+      for(unsigned i(0); i != theLipidCompSpecies.size(); ++i)
+        {
+          theLipidCompSpecies[i]->setAdjoinOffsets(theAdjoinOffsets,
+                                                   theRowOffsets);
+        }
       for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
         {
-          theVacantCompSpecies[i]->setIntersectOffsets(theLipidSpecies,
+          theVacantCompSpecies[i]->setIntersectOffsets(theAdjoinOffsets,
+                                                       theRowOffsets,
+                                                       theLipidSpecies,
                                                        lipidStart, Filaments,
                                                        Subunits, nLipidRadius,
                                                        SubunitAngle,
@@ -452,7 +465,35 @@ void CompartmentProcess::connectSubunit(unsigned a, unsigned b,
  [NW] [ NORTH ] [NE] sub0, col0
       [subunit]      sub1, col1
  [SW] [ SOUTH ] [SE] sub2, col2
- */
+*/
+
+void CompartmentProcess::setAdjoinOffsets()
+{
+  theAdjoinOffsets.resize(2);
+  theAdjoinOffsets[0].resize(theDiffuseSize);
+  theAdjoinOffsets[0][NORTH] = -1;
+  theAdjoinOffsets[0][SOUTH] = 1;
+  theAdjoinOffsets[0][NW] = -LipidCols;
+  theAdjoinOffsets[0][SW] = -LipidCols+1;
+  theAdjoinOffsets[0][NE] = LipidCols;
+  theAdjoinOffsets[0][SE] = LipidCols+1;
+
+  theAdjoinOffsets[1].resize(theDiffuseSize);
+  theAdjoinOffsets[1][NORTH] = -1;
+  theAdjoinOffsets[1][SOUTH] = 1;
+  theAdjoinOffsets[1][NW] = -LipidCols-1;
+  theAdjoinOffsets[1][SW] = -LipidCols;
+  theAdjoinOffsets[1][NE] = LipidCols-1;
+  theAdjoinOffsets[1][SE] = LipidCols;
+
+  theRowOffsets.resize(theDiffuseSize);
+  theRowOffsets[NORTH] = 0;
+  theRowOffsets[SOUTH] = 0;
+  theRowOffsets[NW] = -1;
+  theRowOffsets[SW] = -1;
+  theRowOffsets[NE] = 1;
+  theRowOffsets[SE] = 1;
+}
 
 // y:width:rows:filaments
 // z:length:cols:subunits

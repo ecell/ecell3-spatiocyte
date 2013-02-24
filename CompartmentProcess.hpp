@@ -242,6 +242,7 @@ public:
   bool isInside(Point&);
   void setSpeciesIntersectLipids();
   void getStartVoxelPoint(Point&, Point&, Point&);
+  void setAdjoinOffsets();
   int getCoefficient(Species*);
   Species* coefficient2species(int);
 protected:
@@ -310,6 +311,8 @@ protected:
   std::vector<Species*> theLipidCompSpecies;
   std::vector<Species*> theVacantCompSpecies;
   std::vector<std::vector<unsigned> > subunitInterfaces;
+  std::vector<std::vector<int> > theAdjoinOffsets;
+  std::vector<int> theRowOffsets;
 };
 
 #endif /* __CompartmentProcess_hpp */

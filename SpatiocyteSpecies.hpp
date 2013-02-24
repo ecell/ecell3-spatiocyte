@@ -637,10 +637,6 @@ public:
     }
   void walk()
     {
-      /*
-      theMolecules.resize(theMoleculeSize);
-      std::random_shuffle(theMolecules.begin(), theMolecules.end());
-      */
       const unsigned beginMoleculeSize(theMoleculeSize);
       unsigned size(theAdjoiningCoordSize);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
@@ -652,6 +648,95 @@ public:
             }
           Voxel* target(&theLattice[source->adjoiningCoords[
                         gsl_rng_uniform_int(theRng, size)]]);
+          if(target->id == theVacantID)
+            {
+              if(theWalkProbability == 1 ||
+                 gsl_rng_uniform(theRng) < theWalkProbability)
+                {
+                  target->id = theID;
+                  source->id = theVacantID;
+                  theMolecules[i] = target;
+                }
+            }
+          else
+            {
+              if(target->id == theComp->interfaceID)
+                {
+                  unsigned coord(gsl_rng_uniform_int(theRng, 
+                                                     target->adjoiningSize-
+                                                     target->diffuseSize));
+                  coord = target->adjoiningCoords[coord+target->diffuseSize];
+                  target = &theLattice[coord];
+                }
+              if(theDiffusionInfluencedReactions[target->id])
+                {
+                  //If it meets the reaction probability:
+                  if(theReactionProbabilities[target->id] == 1 ||
+                     gsl_rng_uniform(theRng) < 
+                     theReactionProbabilities[target->id])
+                    { 
+                      Species* targetSpecies(theStepper->id2species(
+                                                                  target->id));
+                      unsigned targetIndex(0);
+                      if(targetSpecies->getIsMultiscale() && theVacantSpecies ==
+                         targetSpecies->getMultiscaleVacantSpecies())
+                        {
+                          /*
+                          theDiffusionInfluencedReactions[
+                            target->id]->react(source);
+                          theFinalizeReactions[target->id] = true;
+                          continue;
+                          */
+                          //Set an invalid index if the target molecule is
+                          //an implicitly represented multiscale molecule:
+                          targetIndex = targetSpecies->size();
+                        }
+                      else
+                        { 
+                          targetIndex = targetSpecies->getIndex(target);
+                        }
+                      if(theCollision)
+                        { 
+                          ++collisionCnts[i];
+                          targetSpecies->addCollision(target);
+                          if(theCollision != 2)
+                            {
+                              return;
+                            }
+                        }
+                      unsigned aMoleculeSize(theMoleculeSize);
+                      react(source, target, i, targetIndex, targetSpecies);
+                      //If the reaction is successful, the last molecule of this
+                      //species will replace the pointer of i, so we need to 
+                      //decrement i to perform the diffusion on it. However, if
+                      //theMoleculeSize didn't decrease, that means the
+                      //currently walked molecule was a product of this
+                      //reaction and so we don't need to walk it again by
+                      //decrementing i.
+                      if(theMoleculeSize < aMoleculeSize)
+                        {
+                          --i;
+                        }
+                    }
+                }
+            }
+        }
+    }
+  void walkRegular()
+    {
+      const unsigned beginMoleculeSize(theMoleculeSize);
+      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
+        {
+          Voxel* source(theMolecules[i]);
+          const unsigned tarIndex(gsl_rng_uniform_int(theRng, theDiffuseSize)); 
+          const unsigned row((source->coord-lipStartCoord)/lipCols);
+          int coordA(source->coord-lipStartCoord+
+                     theAdjoinOffsets[row%2][tarIndex]);
+          if(!isInLattice(coordA, theRowOffsets[tarIndex]+row))
+            {
+              continue;
+            }
+          Voxel* target(&theLattice[coordA+lipStartCoord]);
           if(target->id == theVacantID)
             {
               if(theWalkProbability == 1 ||
@@ -2243,13 +2328,21 @@ public:
             }
         }
     }
-  void setIntersectOffsets(Species* aLipid, const Point& aLipidStart, 
-                                 const unsigned aVacantRows,
-                                 const unsigned aVacantCols,
-                                 const double nLipidRadius,
-                                 const double aSubunitAngle,
-                                 Point& aSurfaceNormal)
+  void setAdjoinOffsets(const std::vector<std::vector<int> > anAdjoinOffsets,
+                        const std::vector<int> aRowOffsets)
     {
+      theAdjoinOffsets = anAdjoinOffsets;
+      theRowOffsets = aRowOffsets;
+    }
+  void setIntersectOffsets(const std::vector<std::vector<int> > anAdjoinOffsets,
+                           const std::vector<int> aRowOffsets,
+                           Species* aLipid, const Point& aLipidStart, 
+                           const unsigned aVacantRows,
+                           const unsigned aVacantCols,
+                           const double nLipidRadius,
+                           const double aSubunitAngle, Point& aSurfaceNormal)
+    {
+      setAdjoinOffsets(anAdjoinOffsets, aRowOffsets);
       double nDist((aLipid->getMoleculeRadius()+theMoleculeRadius)/
                    (2*theVoxelRadius));
       theRegLatticeCoord = lipRows/2*lipCols+lipCols/2;
@@ -2321,8 +2414,7 @@ public:
       aSrcOffsets.resize(theDiffuseSize);
       for(unsigned i(0); i != theDiffuseSize; ++i)
         {
-          const unsigned coordB(theLattice[coordA+lipStartCoord
-                               ].adjoiningCoords[i]-lipStartCoord);
+          const unsigned coordB(theAdjoinOffsets[row%2][i]+coordA);
           std::vector<int> nextOffsets;
           setCoordOffsets(coordB, coordA, nDist, aLipidStart, nLipidRadius,
                           aSubunitAngle, aSurfaceNormal, angle, nextOffsets);
@@ -2692,6 +2784,8 @@ private:
   SpatiocyteStepper* theStepper;
   Variable* theVariable;
   Tag theNullTag;
+  std::vector<int> theRowOffsets;
+  std::vector<std::vector<int> > theAdjoinOffsets;
   std::vector<std::vector<std::vector<int> > > theOffsets;
   std::vector<std::vector<std::vector<std::vector<int> > > > theTarOffsets;
   std::vector<std::vector<std::vector<std::vector<int> > > > theSrcOffsets;
