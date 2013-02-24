@@ -35,6 +35,15 @@ Extensible Markup Language (XML) format. The simple.eml file can now be loaded
 from the File menu of the E-Cell Session Monitor or the File open button. Try
 running the simulation by clicking on the Start button.
 
+Installing RandomLib:
+$ tar xzvf RandomLib-1.6.tar.gz 
+$ cd RandomLib-1.6
+$ mkdir BUILD
+$ cd BUILD
+$ cmake -D CMAKE_INSTALL_PREFIX=$HOME/root ..
+$ make
+$ make install
+
 The steps to install E-Cell3-Spatiocyte are as follows:
 $ cd $HOME/wrk
 $ git clone git://github.com/ecell/ecell3-spatiocyte.git
