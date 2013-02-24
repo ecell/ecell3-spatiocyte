@@ -722,6 +722,51 @@ public:
             }
         }
     }
+  void walkMultiscalePropensity()
+    {
+      const unsigned beginMoleculeSize(theMoleculeSize);
+      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
+        {
+          Voxel* source(theMolecules[i]);
+          const int size(source->diffuseSize);
+          Voxel* target(&theLattice[source->adjoiningCoords[
+                        gsl_rng_uniform_int(theRng, size)]]);
+          if(target->id == theVacantID)
+            {
+              if(!isIntersectMultiscale(source->coord, target->coord) &&
+                 isMultiscaleWalkPropensity(source->coord, target->coord))
+                {
+                  removeMultiscaleMolecule(source, theTags[i].rotIndex);
+                  addMultiscaleMolecule(target);
+                  target->id = theID;
+                  source->id = theVacantID;
+                  theMolecules[i] = target;
+                }
+            }
+        }
+    }
+  void walkMultiscale()
+    {
+      const unsigned beginMoleculeSize(theMoleculeSize);
+      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
+        {
+          Voxel* source(theMolecules[i]);
+          const int size(source->diffuseSize);
+          Voxel* target(&theLattice[source->adjoiningCoords[
+                        gsl_rng_uniform_int(theRng, size)]]);
+          if(target->id == theVacantID)
+            {
+              if(!isIntersectMultiscale(source->coord, target->coord))
+                {
+                  removeMultiscaleMolecule(source, theTags[i].rotIndex);
+                  addMultiscaleMolecule(target);
+                  target->id = theID;
+                  source->id = theVacantID;
+                  theMolecules[i] = target;
+                }
+            }
+        }
+    }
   void walkRegular()
     {
       const unsigned beginMoleculeSize(theMoleculeSize);
@@ -811,51 +856,6 @@ public:
             }
         }
     }
-  void walkMultiscalePropensity()
-    {
-      const unsigned beginMoleculeSize(theMoleculeSize);
-      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
-        {
-          Voxel* source(theMolecules[i]);
-          const int size(source->diffuseSize);
-          Voxel* target(&theLattice[source->adjoiningCoords[
-                        gsl_rng_uniform_int(theRng, size)]]);
-          if(target->id == theVacantID)
-            {
-              if(!isIntersectMultiscale(source->coord, target->coord) &&
-                 isMultiscaleWalkPropensity(source->coord, target->coord))
-                {
-                  removeMultiscaleMolecule(source, theTags[i].rotIndex);
-                  addMultiscaleMolecule(target);
-                  target->id = theID;
-                  source->id = theVacantID;
-                  theMolecules[i] = target;
-                }
-            }
-        }
-    }
-  void walkMultiscale()
-    {
-      const unsigned beginMoleculeSize(theMoleculeSize);
-      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
-        {
-          Voxel* source(theMolecules[i]);
-          const int size(source->diffuseSize);
-          Voxel* target(&theLattice[source->adjoiningCoords[
-                        gsl_rng_uniform_int(theRng, size)]]);
-          if(target->id == theVacantID)
-            {
-              if(!isIntersectMultiscale(source->coord, target->coord))
-                {
-                  removeMultiscaleMolecule(source, theTags[i].rotIndex);
-                  addMultiscaleMolecule(target);
-                  target->id = theID;
-                  source->id = theVacantID;
-                  theMolecules[i] = target;
-                }
-            }
-        }
-    }
   void rotateMultiscaleRegular()
     {
       const unsigned beginMoleculeSize(theMoleculeSize);
@@ -941,21 +941,26 @@ public:
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
-          const unsigned tarIndex(gsl_rng_uniform_int(theRng, theDiffuseSize));
-          Voxel* target(&theLattice[source->adjoiningCoords[tarIndex]]);
+          const unsigned srcCoord(source->coord-vacStartCoord);
+          const unsigned tarIndex(gsl_rng_uniform_int(theRng, theDiffuseSize)); 
+          const unsigned row(srcCoord/lipCols);
+          int tarCoord(srcCoord+theAdjoinOffsets[row%2][tarIndex]);
+          if(!isInLattice(tarCoord, theRowOffsets[tarIndex]+row))
+            {
+              continue;
+            }
+          Voxel* target(&theLattice[tarCoord+vacStartCoord]);
           if(target->id == theVacantID)
             {
-              const unsigned coordA(source->coord-vacStartCoord);
-              const int rowA(coordA/lipCols);
-              if(!isIntersectMultiscaleRegular(coordA, rowA,
-                       theTarOffsets[rowA%2][theTags[i].rotIndex][tarIndex]) &&
-                 isMultiscaleWalkPropensityRegular(coordA, rowA,
-                     theTarOffsets[rowA%2][theTags[i].rotIndex][tarIndex],
-                     theSrcOffsets[rowA%2][theTags[i].rotIndex][tarIndex]))
+              if(!isIntersectMultiscaleRegular(srcCoord, row,
+                       theTarOffsets[row%2][theTags[i].rotIndex][tarIndex]) &&
+                 isMultiscaleWalkPropensityRegular(srcCoord, row,
+                     theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
+                     theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex]))
                 {
-                  moveMultiscaleMoleculeRegular(coordA, rowA, 
-                     theTarOffsets[rowA%2][theTags[i].rotIndex][tarIndex],
-                     theSrcOffsets[rowA%2][theTags[i].rotIndex][tarIndex]);
+                  moveMultiscaleMoleculeRegular(srcCoord, row, 
+                     theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
+                     theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex]);
                   target->id = theID;
                   source->id = theVacantID;
                   theMolecules[i] = target;
@@ -969,18 +974,23 @@ public:
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
-          const unsigned tarIndex(gsl_rng_uniform_int(theRng, theDiffuseSize));
-          Voxel* target(&theLattice[source->adjoiningCoords[tarIndex]]);
+          const unsigned srcCoord(source->coord-vacStartCoord);
+          const unsigned tarIndex(gsl_rng_uniform_int(theRng, theDiffuseSize)); 
+          const unsigned row(srcCoord/lipCols);
+          int tarCoord(srcCoord+theAdjoinOffsets[row%2][tarIndex]);
+          if(!isInLattice(tarCoord, theRowOffsets[tarIndex]+row))
+            {
+              continue;
+            }
+          Voxel* target(&theLattice[tarCoord+vacStartCoord]);
           if(target->id == theVacantID)
             {
-              const unsigned coordA(source->coord-vacStartCoord);
-              const int rowA(coordA/lipCols);
-              if(!isIntersectMultiscaleRegular(coordA, rowA,
-                       theTarOffsets[rowA%2][theTags[i].rotIndex][tarIndex]))
+              if(!isIntersectMultiscaleRegular(srcCoord, row,
+                       theTarOffsets[row%2][theTags[i].rotIndex][tarIndex]))
                 {
-                  moveMultiscaleMoleculeRegular(coordA, rowA, 
-                     theTarOffsets[rowA%2][theTags[i].rotIndex][tarIndex],
-                     theSrcOffsets[rowA%2][theTags[i].rotIndex][tarIndex]);
+                  moveMultiscaleMoleculeRegular(srcCoord, row, 
+                     theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
+                     theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex]);
                   target->id = theID;
                   source->id = theVacantID;
                   theMolecules[i] = target;
