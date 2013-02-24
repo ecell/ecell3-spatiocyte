@@ -649,7 +649,7 @@ public:
                         theRng.Integer(size)]]);
           if(target->id == theVacantID)
             {
-              if(theWalkProbability == 1 || theRng.Real() < theWalkProbability)
+              if(theWalkProbability == 1 || theRng.Fixed() < theWalkProbability)
                 {
                   target->id = theID;
                   source->id = theVacantID;
@@ -669,7 +669,7 @@ public:
                 {
                   //If it meets the reaction probability:
                   if(theReactionProbabilities[target->id] == 1 ||
-                     theRng.Real() < theReactionProbabilities[target->id])
+                     theRng.Fixed() < theReactionProbabilities[target->id])
                     { 
                       Species* targetSpecies(theStepper->id2species(
                                                                   target->id));
@@ -778,7 +778,7 @@ public:
           Voxel* target(&theLattice[coordA+lipStartCoord]);
           if(target->id == theVacantID)
             {
-              if(theWalkProbability == 1 || theRng.Real() < theWalkProbability)
+              if(theWalkProbability == 1 || theRng.Fixed() < theWalkProbability)
                 {
                   target->id = theID;
                   source->id = theVacantID;
@@ -798,7 +798,7 @@ public:
                 {
                   //If it meets the reaction probability:
                   if(theReactionProbabilities[target->id] == 1 ||
-                     theRng.Real() < theReactionProbabilities[target->id])
+                     theRng.Fixed() < theReactionProbabilities[target->id])
                     { 
                       Species* targetSpecies(theStepper->id2species(
                                                                   target->id));
@@ -1008,7 +1008,7 @@ public:
                         theRng.Integer(size)]]);
           if(target->id == theVacantID)
             {
-              if(theWalkProbability == 1 || theRng.Real() < theWalkProbability)
+              if(theWalkProbability == 1 || theRng.Fixed() < theWalkProbability)
                 {
                   target->id = theID;
                   source->id = theVacantID;

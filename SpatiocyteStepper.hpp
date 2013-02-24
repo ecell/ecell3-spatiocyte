@@ -33,9 +33,8 @@
 #define __SpatiocyteStepper_hpp
 
 #include <Stepper.hpp>
-#include "RandomLib/Random.hpp"
-#include "RandomLib/Random.cpp"
-#include "SpatiocyteCommon.hpp"
+#include <RandomLib/Random.hpp>
+#include <SpatiocyteCommon.hpp>
 
 LIBECS_DM_CLASS(SpatiocyteStepper, Stepper)
 { 
