@@ -131,8 +131,10 @@ public:
     }
   virtual void setLatticeProperties(std::vector<Voxel>* aLattice,
                                     unsigned anAdjoiningCoordSize,
-                                    unsigned aNullCoord, unsigned aNullID)
+                                    unsigned aNullCoord, unsigned aNullID,
+                                    RandomLib::Random* aRng)
     {
+      theRng = aRng;
       theLattice = aLattice;
       theAdjoiningCoordSize = anAdjoiningCoordSize;
       theNullCoord = aNullCoord;
@@ -225,6 +227,7 @@ protected:
   VariableReferenceVector theNegativeVariableReferences;
   VariableReferenceVector theZeroVariableReferences;
   VariableReferenceVector theSortedVariableReferences;
+  RandomLib::Random* theRng;
 };
 
 #endif /* __SpatiocyteProcess_hpp */

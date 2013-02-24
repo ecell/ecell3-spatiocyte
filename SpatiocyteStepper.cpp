@@ -475,7 +475,7 @@ void SpatiocyteStepper::broadcastLatticeProperties()
       SpatiocyteProcessInterface*
         aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
       aProcess->setLatticeProperties(&theLattice, theAdjoiningCoordSize,
-                                     theNullCoord, theNullID);
+                                     theNullCoord, theNullID, &theRan);
     }
 }
 

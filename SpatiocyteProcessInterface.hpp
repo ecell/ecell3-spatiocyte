@@ -53,7 +53,7 @@ public:
   virtual void addSubstrateInterrupt(Species*, Voxel*) = 0;
   virtual void removeSubstrateInterrupt(Species*, Voxel*) = 0;
   virtual void setLatticeProperties(std::vector<Voxel>*, unsigned,
-                                    unsigned, unsigned) = 0;
+                                    unsigned, unsigned, RandomLib::Random*) = 0;
   virtual void substrateValueChanged(double) = 0;
   virtual void fire() = 0;
   virtual unsigned getLatticeResizeCoord(unsigned) = 0;

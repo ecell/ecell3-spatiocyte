@@ -431,8 +431,7 @@ bool SpatiocyteNextReactionProcess::reactMultiABC()
 //Both A and B are immobile nonHD
 void SpatiocyteNextReactionProcess::reactABC()
 {
-  unsigned rand(gsl_rng_uniform_int(getStepper()->getRng(),
-                                        moleculesA.size()));
+  unsigned rand(theRng->Integer(moleculesA.size()));
   moleculeA = moleculesA[rand];
   moleculeB = A->getRandomAdjoiningVoxel(moleculeA, B, SearchVacant);
   if(A != C)
@@ -450,8 +449,7 @@ void SpatiocyteNextReactionProcess::reactABC()
 //Both A and B are immobile nonHD
 void SpatiocyteNextReactionProcess::reactABCD()
 {
-  unsigned rand(gsl_rng_uniform_int(getStepper()->getRng(),
-                                        moleculesA.size()));
+  unsigned rand(theRng->Integer(moleculesA.size()));
   moleculeA = moleculesA[rand];
   moleculeB = A->getRandomAdjoiningVoxel(moleculeA, B, SearchVacant);
   if(A != C)
@@ -747,7 +745,7 @@ double SpatiocyteNextReactionProcess::getIntervalUnbindMultiAB()
   nextIndexA = 0;
   double fraction(A->getMultiscaleBoundFraction(nextIndexA,
                                             B->getVacantSpecies()->getID())); 
-  double rand(gsl_rng_uniform_pos(getStepper()->getRng()));
+  double rand(theRng->FixedU());
   double denom((p*fraction)*(-log(rand)));
   double nextInterval(libecs::INF);
   if(denom)
@@ -758,7 +756,7 @@ double SpatiocyteNextReactionProcess::getIntervalUnbindMultiAB()
     {
       fraction = A->getMultiscaleBoundFraction(i,
                                                B->getVacantSpecies()->getID());
-      rand = gsl_rng_uniform_pos(getStepper()->getRng());
+      rand = theRng->FixedU();
       denom = (p*fraction)*(-log(rand));
       double interval(libecs::INF);
       if(denom)
@@ -784,7 +782,7 @@ double SpatiocyteNextReactionProcess::getIntervalUnbindAB()
     }
   updateMoleculesA();
   const double sizeA(moleculesA.size());
-  const double rand(gsl_rng_uniform_pos(getStepper()->getRng()));
+  const double rand(theRng->FixedU());
   const double denom((p*sizeA)*(-log(rand)));
   if(denom)
     {
@@ -1178,7 +1176,7 @@ double SpatiocyteNextReactionProcess::getInterval()
       //std::cout << "interval:" << interval << std::endl;
       return interval;
     }
-  double step(getPropensity_R()*(-log(gsl_rng_uniform_pos(getStepper()->getRng()))));
+  double step(getPropensity_R()*(-log(theRng->FixedU())));
   //std::cout << getFullID().asString() << " " << theTime <<  " next:" << theTime+step << " interval:" << step << std::endl; 
   return step;
 }
