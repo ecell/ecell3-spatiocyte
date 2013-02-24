@@ -28,9 +28,9 @@ MicrotubuleProcess\
 PolymerizationParameterProcess\
 PolymerizationProcess
 
-ECELL3_DMC = ecell3-dmc
-CXX = g++
 CXXFLAGS = -Wall -O3 -g
+ECELL3_DMC = ecell3-dmc --no-define-cxxflags="-lpthread -I."
+CXX = g++
 GUIFLAGS = $(CXXFLAGS) $(shell pkg-config --cflags gtkmm-2.4 gtkglextmm-x11-1.2)
 CPPFLAGS = -DG_DISABLE_DEPRECATED -DGDK_PIXBUF_DISABLE_DEPRECATED -DPNG_SKIP_SETJMP_CHECK # -DGDK_DISABLE_DEPRECATED 
 GUILIBS =

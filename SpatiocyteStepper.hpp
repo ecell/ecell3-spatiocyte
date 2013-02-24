@@ -33,6 +33,8 @@
 #define __SpatiocyteStepper_hpp
 
 #include <Stepper.hpp>
+#include "RandomLib/Random.hpp"
+#include "RandomLib/Random.cpp"
 #include "SpatiocyteCommon.hpp"
 
 LIBECS_DM_CLASS(SpatiocyteStepper, Stepper)
@@ -205,6 +207,7 @@ private:
   std::vector<Comp*> theComps;
   std::vector<Voxel> theLattice;
   std::vector<Process*> theExternInterruptedProcesses;
+  RandomLib::Random theRan;
 };
 
 #endif /* __SpatiocyteStepper_hpp */

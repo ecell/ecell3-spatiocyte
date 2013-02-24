@@ -26,7 +26,6 @@
 
 #include <sstream>
 #include <Variable.hpp>
-#include <gsl/gsl_randist.h>
 #include "SpatiocyteCommon.hpp"
 #include "SpatiocyteStepper.hpp"
 #include "SpatiocyteProcessInterface.hpp"
@@ -87,8 +86,8 @@ class Species
 {
 public:
   Species(SpatiocyteStepper* aStepper, Variable* aVariable, int anID, 
-          int anInitCoordSize, const gsl_rng* aRng, double voxelRadius,
-          std::vector<Voxel>& aLattice):
+          int anInitCoordSize, RandomLib::Random& aRng,
+          double voxelRadius, std::vector<Voxel>& aLattice):
     isCentered(false),
     isCompVacant(false),
     isDiffusing(false),
@@ -647,11 +646,10 @@ public:
               size = source->diffuseSize;
             }
           Voxel* target(&theLattice[source->adjoiningCoords[
-                        gsl_rng_uniform_int(theRng, size)]]);
+                        theRng.Integer(size)]]);
           if(target->id == theVacantID)
             {
-              if(theWalkProbability == 1 ||
-                 gsl_rng_uniform(theRng) < theWalkProbability)
+              if(theWalkProbability == 1 || theRng.Real() < theWalkProbability)
                 {
                   target->id = theID;
                   source->id = theVacantID;
@@ -662,9 +660,8 @@ public:
             {
               if(target->id == theComp->interfaceID)
                 {
-                  unsigned coord(gsl_rng_uniform_int(theRng, 
-                                                     target->adjoiningSize-
-                                                     target->diffuseSize));
+                  unsigned coord(theRng.Integer(target->adjoiningSize-
+                                                 target->diffuseSize));
                   coord = target->adjoiningCoords[coord+target->diffuseSize];
                   target = &theLattice[coord];
                 }
@@ -672,8 +669,7 @@ public:
                 {
                   //If it meets the reaction probability:
                   if(theReactionProbabilities[target->id] == 1 ||
-                     gsl_rng_uniform(theRng) < 
-                     theReactionProbabilities[target->id])
+                     theRng.Real() < theReactionProbabilities[target->id])
                     { 
                       Species* targetSpecies(theStepper->id2species(
                                                                   target->id));
@@ -728,9 +724,8 @@ public:
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
-          const int size(source->diffuseSize);
           Voxel* target(&theLattice[source->adjoiningCoords[
-                        gsl_rng_uniform_int(theRng, size)]]);
+                        theRng.Integer(source->diffuseSize)]]);
           if(target->id == theVacantID)
             {
               if(!isIntersectMultiscale(source->coord, target->coord) &&
@@ -751,9 +746,8 @@ public:
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
-          const int size(source->diffuseSize);
           Voxel* target(&theLattice[source->adjoiningCoords[
-                        gsl_rng_uniform_int(theRng, size)]]);
+                        theRng.Integer(source->diffuseSize)]]);
           if(target->id == theVacantID)
             {
               if(!isIntersectMultiscale(source->coord, target->coord))
@@ -773,7 +767,7 @@ public:
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
-          const unsigned tarIndex(gsl_rng_uniform_int(theRng, theDiffuseSize)); 
+          const unsigned tarIndex(theRng.Integer(theDiffuseSize)); 
           const unsigned row((source->coord-lipStartCoord)/lipCols);
           int coordA(source->coord-lipStartCoord+
                      theAdjoinOffsets[row%2][tarIndex]);
@@ -784,8 +778,7 @@ public:
           Voxel* target(&theLattice[coordA+lipStartCoord]);
           if(target->id == theVacantID)
             {
-              if(theWalkProbability == 1 ||
-                 gsl_rng_uniform(theRng) < theWalkProbability)
+              if(theWalkProbability == 1 || theRng.Real() < theWalkProbability)
                 {
                   target->id = theID;
                   source->id = theVacantID;
@@ -796,9 +789,8 @@ public:
             {
               if(target->id == theComp->interfaceID)
                 {
-                  unsigned coord(gsl_rng_uniform_int(theRng, 
-                                                     target->adjoiningSize-
-                                                     target->diffuseSize));
+                  unsigned coord(theRng.Integer(target->adjoiningSize-
+                                                 target->diffuseSize));
                   coord = target->adjoiningCoords[coord+target->diffuseSize];
                   target = &theLattice[coord];
                 }
@@ -806,8 +798,7 @@ public:
                 {
                   //If it meets the reaction probability:
                   if(theReactionProbabilities[target->id] == 1 ||
-                     gsl_rng_uniform(theRng) < 
-                     theReactionProbabilities[target->id])
+                     theRng.Real() < theReactionProbabilities[target->id])
                     { 
                       Species* targetSpecies(theStepper->id2species(
                                                                   target->id));
@@ -862,7 +853,7 @@ public:
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
-          const int tarIndex(gsl_rng_uniform_int(theRng, 2)); 
+          const int tarIndex(theRng.Integer(2)); 
           const unsigned coordA(source->coord-vacStartCoord);
           const int rowA(coordA/lipCols);
           if(!isIntersectMultiscaleRegular(coordA, rowA,
@@ -899,7 +890,7 @@ public:
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
-          const int tarIndex(gsl_rng_uniform_int(theRng, 2)); 
+          const int tarIndex(theRng.Integer(2)); 
           const unsigned coordA(source->coord-vacStartCoord);
           const int rowA(coordA/lipCols); 
           if(!isIntersectMultiscaleRegular(coordA, rowA,
@@ -942,7 +933,7 @@ public:
         {
           Voxel* source(theMolecules[i]);
           const unsigned srcCoord(source->coord-vacStartCoord);
-          const unsigned tarIndex(gsl_rng_uniform_int(theRng, theDiffuseSize)); 
+          const unsigned tarIndex(theRng.Integer(theDiffuseSize)); 
           const unsigned row(srcCoord/lipCols);
           int tarCoord(srcCoord+theAdjoinOffsets[row%2][tarIndex]);
           if(!isInLattice(tarCoord, theRowOffsets[tarIndex]+row))
@@ -975,7 +966,7 @@ public:
         {
           Voxel* source(theMolecules[i]);
           const unsigned srcCoord(source->coord-vacStartCoord);
-          const unsigned tarIndex(gsl_rng_uniform_int(theRng, theDiffuseSize)); 
+          const unsigned tarIndex(theRng.Integer(theDiffuseSize)); 
           const unsigned row(srcCoord/lipCols);
           int tarCoord(srcCoord+theAdjoinOffsets[row%2][tarIndex]);
           if(!isInLattice(tarCoord, theRowOffsets[tarIndex]+row))
@@ -1014,11 +1005,10 @@ public:
               size = source->diffuseSize;
             }
           Voxel* target(&theLattice[source->adjoiningCoords[
-                        gsl_rng_uniform_int(theRng, size)]]);
+                        theRng.Integer(size)]]);
           if(target->id == theVacantID)
             {
-              if(theWalkProbability == 1 ||
-                 gsl_rng_uniform(theRng) < theWalkProbability)
+              if(theWalkProbability == 1 || theRng.Real() < theWalkProbability)
                 {
                   target->id = theID;
                   source->id = theVacantID;
@@ -2011,7 +2001,7 @@ public:
     }
   unsigned getRandomIndex()
     {
-      return gsl_rng_uniform_int(theRng, theMoleculeSize);
+      return theRng.Integer(theMoleculeSize);
     }
   Voxel* getRandomMolecule()
     {
@@ -2194,8 +2184,8 @@ public:
     {
       if(aCoords.size())
         {
-          const int r(gsl_rng_uniform_int(theRng, aCoords.size())); 
-          unsigned aCoord(aCoords[r]);
+          const unsigned r(theRng.Integer(aCoords.size())); 
+          const unsigned aCoord(aCoords[r]);
           if(isPopulatable(&theLattice[aCoord]))
             {
               return &theLattice[aCoord];
@@ -2208,8 +2198,8 @@ public:
     {
       if(aCoords.size())
         {
-          const int r(gsl_rng_uniform_int(theRng, aCoords.size())); 
-          unsigned aCoord(aCoords[r]);
+          const unsigned r(theRng.Integer(aCoords.size())); 
+          const unsigned aCoord(aCoords[r]);
           if(theLattice[aCoord].id == aVacantSpecies->getID())
             {
               return &theLattice[aCoord];
@@ -2221,7 +2211,7 @@ public:
     {
       Species* aVacantSpecies(theComp->vacantSpecies);
       int aSize(aVacantSpecies->compVoxelSize());
-      int r(gsl_rng_uniform_int(theRng, aSize));
+      const int r(theRng.Integer(aSize)); 
       if(searchVacant)
         {
           for(int i(r); i != aSize; ++i)
@@ -2254,7 +2244,7 @@ public:
   Voxel* getRandomAdjoiningCompVoxel(Comp* aComp, int searchVacant)
     {
       int aSize(theVacantSpecies->size());
-      int r(gsl_rng_uniform_int(theRng, aSize)); 
+      const unsigned r(theRng.Integer(aSize)); 
       Voxel* aVoxel(theVacantSpecies->getMolecule(r));
       return getRandomAdjoiningVoxel(aVoxel, searchVacant);
     }
@@ -2651,7 +2641,7 @@ public:
           unsigned index(0);
           do
             {
-              index = gsl_rng_uniform_int(theRng, thePopulatableCoords.size());
+              index = theRng.Integer(thePopulatableCoords.size());
             }
           while(theLattice[thePopulatableCoords[index]].id != theID);
           aMolecule =  &theLattice[thePopulatableCoords[index]];
@@ -2786,7 +2776,7 @@ private:
   double theMoleculeRadius;
   double theVoxelRadius;
   double theWalkProbability;
-  const gsl_rng* theRng;
+  RandomLib::Random& theRng;
   Species* theVacantSpecies;
   Species* theMultiscaleVacantSpecies;
   Comp* theComp;
@@ -2827,4 +2817,5 @@ private:
 
 
 #endif /* __SpatiocyteSpecies_hpp */
+
 
