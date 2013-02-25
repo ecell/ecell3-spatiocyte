@@ -59,6 +59,7 @@ public:
   virtual void initializeSecond()
     {
       theSpecies = theSpatiocyteStepper->getSpecies();
+      theStride = UINT_MAX/theSpecies.size();
     }
   virtual void initializeThird() {}
   virtual void initializeFourth() {}
@@ -202,6 +203,14 @@ public:
     {
       return getFullID().asString();
     }
+  unsigned getID(const Voxel* aVoxel) const
+    {
+      return aVoxel->idx/theStride;
+    }
+  unsigned getID(const Voxel& aVoxel) const
+    {
+      return aVoxel.idx/theStride;
+    }
 protected:
   String getIDString(Voxel*) const;
   String getIDString(Species*) const;
@@ -215,6 +224,7 @@ protected:
   unsigned theAdjoiningCoordSize;
   unsigned theNullCoord;
   unsigned theNullID;
+  unsigned theStride;
   double theInterval;
   double theTime;
   ProcessID theQueueID;

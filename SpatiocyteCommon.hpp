@@ -109,7 +109,7 @@ struct Point
 
 struct Voxel
 {
-  unsigned short id;
+  unsigned idx;
   unsigned short diffuseSize;
   unsigned short adjoiningSize;
   //We use short here to maintain the size of Voxel as 128 bytes which helps

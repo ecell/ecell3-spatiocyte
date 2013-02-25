@@ -426,7 +426,7 @@ void SpatiocyteStepper::checkLattice()
     }
   for(unsigned i(0); i!=theLattice.size(); ++i)
     {
-      ++list[theLattice[i].id];
+      ++list[getID(theLattice[i])];
     }
   int volumeCnt(0);
   int surfaceCnt(0);
@@ -912,6 +912,7 @@ void SpatiocyteStepper::registerCompSpecies(Comp* aComp)
 
 void SpatiocyteStepper::setLatticeProperties()
 {
+  theStride = UINT_MAX/theSpecies.size();
   Comp* aRootComp(theComps[0]);
   switch(LatticeType)
     {
@@ -991,7 +992,7 @@ void SpatiocyteStepper::setLatticeProperties()
   theLattice.resize(theRowSize*theLayerSize*theColSize+1);
   //Initialize the null coord:
   theNullCoord = theRowSize*theLayerSize*theColSize;
-  theLattice[theNullCoord].id = theNullID;
+  theLattice[theNullCoord].idx = theNullID*theStride;
 }
 
 void SpatiocyteStepper::storeSimulationParameters()
@@ -1253,7 +1254,7 @@ void SpatiocyteStepper::constructLattice()
       if(aRootComp->geometry == CUBOID || isInsideCoord(a, aRootComp, 0))
         {
           //By default, the voxel is vacant and we set it to the root id:
-          (*i).id = rootID;
+          (*i).idx = rootID*theStride;
           for(unsigned j(0); j != theAdjoiningCoordSize; ++j)
             { 
               // By default let the adjoining voxel pointer point to the 
@@ -1266,7 +1267,7 @@ void SpatiocyteStepper::constructLattice()
         {
           //We set id = theNullID if it is an invalid voxel, i.e., no molecules
           //will occupy it:
-          (*i).id = theNullID;
+          (*i).idx = theNullID*theStride;
           //Concatenate some of the null voxels close to the surface:
           if(isInsideCoord(a, aRootComp, 4))
             {
@@ -1988,8 +1989,8 @@ void SpatiocyteStepper::concatenatePeriodicSurfaces()
           //We cannot have valid voxels pointing to itself it it is not periodic
           //to avoid incorrect homodimerization reaction. So we set such
           //molecules to null ID.
-          theLattice[srcCoord].id = theNullID;
-          theLattice[destCoord].id = theNullID;
+          theLattice[srcCoord].idx = theNullID*theStride;
+          theLattice[destCoord].idx = theNullID*theStride;
         }
     }
   for(unsigned i(0); i<=theRowSize*theLayerSize*(theColSize-1)+theRowSize;)
@@ -2011,8 +2012,8 @@ void SpatiocyteStepper::concatenatePeriodicSurfaces()
         }
       else if(!isPeriodicEdge)
         {
-          theLattice[srcCoord].id = theNullID;
-          theLattice[destCoord].id = theNullID;
+          theLattice[srcCoord].idx = theNullID*theStride;
+          theLattice[destCoord].idx = theNullID*theStride;
         }
       ++i;
       if(coord2layer(i) != 0)
@@ -2038,8 +2039,8 @@ void SpatiocyteStepper::concatenatePeriodicSurfaces()
         }
       else if(!isPeriodicEdge)
         {
-          theLattice[srcCoord].id = theNullID;
-          theLattice[destCoord].id = theNullID;
+          theLattice[srcCoord].idx = theNullID*theStride;
+          theLattice[destCoord].idx = theNullID*theStride;
         }
     }
 }
@@ -2063,7 +2064,8 @@ void SpatiocyteStepper::replaceVoxel(unsigned src, unsigned dest)
 {
   Voxel& aSrcVoxel(theLattice[src]);
   Voxel& aDestVoxel(theLattice[dest]);
-  if(aSrcVoxel.id != theNullID && aDestVoxel.id != theNullID)
+  if(aSrcVoxel.idx != theNullID*theStride && 
+     aDestVoxel.idx != theNullID*theStride)
     {
       for(unsigned j(0); j!=theAdjoiningCoordSize; ++j)
         {
@@ -2081,7 +2083,7 @@ void SpatiocyteStepper::replaceVoxel(unsigned src, unsigned dest)
                 }
             }
         }
-      aDestVoxel.id = theNullID;
+      aDestVoxel.idx = theNullID*theStride;
     }
 }
 
@@ -2089,7 +2091,8 @@ void SpatiocyteStepper::replaceUniVoxel(unsigned src, unsigned dest)
 {
   Voxel& aSrcVoxel(theLattice[src]);
   Voxel& aDestVoxel(theLattice[dest]);
-  if(aSrcVoxel.id != theNullID && aDestVoxel.id != theNullID)
+  if(aSrcVoxel.idx*theStride != theNullID &&
+     aDestVoxel.idx != theNullID*theStride)
     {
       for(unsigned j(0); j!=theAdjoiningCoordSize; ++j)
         {
@@ -2105,7 +2108,7 @@ void SpatiocyteStepper::replaceUniVoxel(unsigned src, unsigned dest)
                 }
             }
         }
-      aDestVoxel.id = theNullID;
+      aDestVoxel.idx = theNullID*theStride;
     }
 }
 
@@ -2114,7 +2117,7 @@ void SpatiocyteStepper::shuffleAdjoiningCoords()
   for(std::vector<Voxel>::iterator i(theLattice.begin());
       i != theLattice.end(); ++i)
     {
-      if((*i).id != theNullID)
+      if((*i).idx != theNullID*theStride)
         { 
           gsl_ran_shuffle(getRng(), (*i).adjoiningCoords, theAdjoiningCoordSize,
                           sizeof(unsigned));
@@ -2233,8 +2236,8 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(unsigned aCoord, Comp* aComp)
   for(std::vector<unsigned>::iterator l(adjoiningCopy.begin());
       l != adjoiningCopy.end(); ++l)
     {
-      if((*l) != aCoord && theLattice[*l].id != theNullID 
-         && id2Comp(theLattice[*l].id)->dimension <= aComp->dimension)
+      if((*l) != aCoord && theLattice[*l].idx != theNullID*theStride 
+         && id2Comp(getID(theLattice[*l]))->dimension <= aComp->dimension)
         {
           ++aComp->adjoinCount[l-adjoiningCopy.begin()];
           (*forward) = (*l);
@@ -2461,7 +2464,7 @@ void SpatiocyteStepper::compartmentalizeLattice()
 {
   for(unsigned i(0); i != theLattice.size(); ++i)
     {
-      if(theLattice[i].id != theNullID)
+      if(theLattice[i].idx != theNullID*theStride)
         { 
           compartmentalizeVoxel(i, theComps[0]);
         }
@@ -2565,7 +2568,7 @@ bool SpatiocyteStepper::isRootSurfaceVoxel(Voxel& aVoxel, unsigned aCoord,
 {
   for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
     {
-      if(theLattice[aVoxel.adjoiningCoords[i]].id == theNullID ||
+      if(theLattice[aVoxel.adjoiningCoords[i]].idx == theNullID*theStride ||
          aVoxel.adjoiningCoords[i] == aCoord)
         {
           return true;
@@ -3063,6 +3066,16 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
     }
 }
 
+unsigned SpatiocyteStepper::getID(const Voxel* aVoxel) const
+{
+  return aVoxel->idx/theStride;
+}
+
+unsigned SpatiocyteStepper::getID(const Voxel& aVoxel) const
+{
+  return aVoxel.idx/theStride;
+}
+
 void SpatiocyteStepper::populateSpeciesDense(std::vector<Species*>&
                                              aSpeciesList,
                                              Species* aVacantSpecies,
@@ -3082,7 +3095,7 @@ void SpatiocyteStepper::populateSpeciesDense(std::vector<Species*>&
           //Some of the voxels of the comp vacant species could have been
           //occupied by interface species, so we need to only include indices
           //that are still vacant:
-          if(aVacantSpecies->getMolecule(i)->id == aVacantSpecies->getID())
+          if(getID(aVacantSpecies->getMolecule(i)) == aVacantSpecies->getID())
             {
               availableVoxels[k++] = i;
             }

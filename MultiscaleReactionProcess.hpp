@@ -128,7 +128,7 @@ public:
                      const unsigned dirA, const unsigned dirB)
     {
       removedMols[dirA].push_back(aVoxel->coord);
-      aVoxel->id = theProducts[dirA]->getID();
+      aVoxel->idx = theProducts[dirA]->getID()*theStride;
       for(unsigned i(0); i != removedMols[dirB].size(); ++i)
         {
           if(removedMols[dirB][i] == coord)

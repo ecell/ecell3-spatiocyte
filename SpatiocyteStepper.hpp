@@ -105,12 +105,9 @@ public:
   void updateSpecies();
   void finalizeSpecies();
   unsigned getStartCoord();
-
-  virtual GET_METHOD(Real, TimeScale)
-  {
-      return 0.0;
-  }
-
+  unsigned getID(const Voxel&) const;
+  unsigned getID(const Voxel*) const;
+  virtual GET_METHOD(Real, TimeScale) { return 0; }
 private:
   void setCompsCenterPoint();
   void setIntersectingCompartmentList();
@@ -193,6 +190,7 @@ private:
   unsigned theColSize;
   unsigned theLayerSize;
   unsigned theBioSpeciesSize;
+  unsigned theStride;
   double VoxelRadius; //r_v
   double theNormalizedVoxelRadius;
   double theHCPl;

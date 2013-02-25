@@ -35,9 +35,9 @@ LIBECS_DM_INIT(SpatiocyteProcess, Process);
 
 String SpatiocyteProcess::getIDString(Voxel* aVoxel) const
 {
-  Variable* aVariable(theSpecies[aVoxel->id]->getVariable());
+  Variable* aVariable(theSpecies[getID(aVoxel)]->getVariable());
   return "["+aVariable->getSystemPath().asString()+":"+
-    aVariable->getID()+"]["+int2str(aVoxel->id)+"]";
+    aVariable->getID()+"]["+int2str(getID(aVoxel))+"]";
 }
 
 String SpatiocyteProcess::getIDString(Species* aSpecies) const

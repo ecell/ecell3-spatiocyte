@@ -1163,9 +1163,55 @@ void SpatiocyteNextReactionProcess::printParameters()
     {
       std::cout << " + " << getIDString(variableD);
     }
+  double interval(getInterval());
+  double propensity(getPropensity_R());
+  if(interval == libecs::INF)
+    {
+      bool a(false);
+      bool b(false);
+      bool vA(false);
+      bool vB(false);
+      if(A && !A->getVariable()->getValue())
+        {
+          A->getVariable()->addValue(1);
+          a = true;
+        }
+      if(B && !B->getVariable()->getValue())
+        {
+          B->getVariable()->addValue(1);
+          b = true;
+        }
+      if(variableA && !variableA->getValue())
+        {
+          variableA->addValue(1);
+          vA = true;
+        }
+      if(variableB && !variableB->getValue())
+        {
+          variableB->addValue(1);
+          vB = true;
+        }
+      interval = getInterval();
+      propensity = getPropensity_R(); 
+      if(a)
+        {
+          A->getVariable()->addValue(-1);
+        }
+      if(b)
+        {
+          B->getVariable()->addValue(-1);
+        }
+      if(vA)
+        {
+          variableA->addValue(-1);
+        }
+      if(vB)
+        {
+          variableB->addValue(-1);
+        }
+    }
   std::cout << " k:" << k << " p = " << pFormula.str() << " = " << p
-    << " nextTime:" << getInterval() << " propensity:" << getPropensity_R()
-    << std::endl;
+    << " nextTime:" << interval << " propensity:" << propensity << std::endl;
 }
 
 double SpatiocyteNextReactionProcess::getInterval()

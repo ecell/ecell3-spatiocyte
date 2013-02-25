@@ -106,13 +106,13 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* molA, Voxel* molB,
         {
           moleculeP = moleculeA;
           //Hard remove the B molecule, since nonHD_p is in a different Comp:
-          moleculeB->id = B->getVacantID();
+          moleculeB->idx = B->getVacantID()*theStride;
         }
       else if(B->isReplaceable(moleculeB, nonHD_p))
         {
           moleculeP = moleculeB;
           //Hard remove the A molecule, since nonHD_p is in a different Comp:
-          moleculeA->id = A->getVacantID();
+          moleculeA->idx = A->getVacantID()*theStride;
         }
       else
         { 
@@ -129,9 +129,9 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* molA, Voxel* molB,
                 }
             }
           //Hard remove the A molecule, since nonHD_p is in a different Comp:
-          moleculeA->id = A->getVacantID();
+          moleculeA->idx = A->getVacantID()*theStride;
           //Hard remove the B molecule, since nonHD_p is in a different Comp:
-          moleculeB->id = B->getVacantID();
+          moleculeB->idx = B->getVacantID()*theStride;
         }
       HD_p->addValue(1);
       nonHD_p->addMolecule(moleculeP, A->getTag(indexA));
@@ -142,9 +142,9 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* molA, Voxel* molB,
     {
 
       //Hard remove the A molecule, since nonHD_p is in a different Comp:
-      moleculeA->id = A->getVacantID();
+      moleculeA->idx = A->getVacantID()*theStride;
       //Hard remove the B molecule, since nonHD_p is in a different Comp:
-      moleculeB->id = B->getVacantID();
+      moleculeB->idx = B->getVacantID()*theStride;
       variableC->addValue(1);
       return true;
     }
@@ -166,14 +166,14 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* molA, Voxel* molB,
                 {
                   return false;
                 }
-              moleculeB->id = B->getVacantID();
+              moleculeB->idx = B->getVacantID()*theStride;
             }
           D->addMolecule(moleculeD, B->getTag(indexB));
         }
       else
         {
           //Hard remove the B molecule since it is not used:
-          moleculeB->id = B->getVacantID();
+          moleculeB->idx = B->getVacantID()*theStride;
         }
     }
   else if(B->isReplaceable(moleculeB, C))
@@ -193,14 +193,14 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* molA, Voxel* molB,
                 {
                   return false;
                 }
-              moleculeA->id = A->getVacantID();
+              moleculeA->idx = A->getVacantID()*theStride;
             }
           D->addMolecule(moleculeD, B->getTag(indexB));
         }
       else
         {
           //Hard remove the A molecule since it is not used:
-          moleculeA->id = A->getVacantID();
+          moleculeA->idx = A->getVacantID()*theStride;
         }
     }
   else
@@ -227,9 +227,9 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* molA, Voxel* molB,
           D->addMolecule(moleculeD, B->getTag(indexB));
         }
       //Hard remove the A molecule since it is not used:
-      moleculeA->id = A->getVacantID();
+      moleculeA->idx = A->getVacantID()*theStride;
       //Hard remove the B molecule since it is not used:
-      moleculeB->id = B->getVacantID();
+      moleculeB->idx = B->getVacantID()*theStride;
     }
   C->addMolecule(moleculeC, A->getTag(indexA));
   addMoleculeE();
