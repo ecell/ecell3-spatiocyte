@@ -119,6 +119,7 @@ void TagProcess::initialize()
 
 void TagProcess::initializeSecond()
 {
+  SpatiocyteProcess::initializeSecond();
   //We can only do this is initializeSecond because off lattice species
   //are only defined in initializeFirst by other processes:
   for(unsigned i(0); i != theTaggedSpeciesList.size(); ++i)

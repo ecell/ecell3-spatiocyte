@@ -124,9 +124,23 @@ public:
             dynamic_cast<DiffusionInfluencedReactionProcess*>(this),
             theSubstrates[0]->getID(), 1); 
     }
-  virtual void react(Voxel* aVoxel, const unsigned coord,
-                     const unsigned dirA, const unsigned dirB)
+  virtual void bind(Voxel* aVoxel, const unsigned vacantIdx)
     {
+      std::cout << "in bind sub:" << theSubstrates[0]->getIDString() << 
+        " prod:" << theProducts[0]->getIDString() << " vacidx:" << vacantIdx
+        << std::endl;
+      theSubstrates[0]->softRemoveMolecule(aVoxel);
+      theProducts[0]->addMolecule(aVoxel, vacantIdx);
+      std::cout << "out bind" << std::endl;
+    }
+  virtual void unbind(Voxel* aVoxel)
+    {
+      std::cout << "in unbind sub:" << theSubstrates[1]->getIDString() << 
+        " prod:" << theProducts[1]->getIDString() << std::endl;
+      theSubstrates[1]->softRemoveMolecule(aVoxel);
+      theProducts[1]->addMolecule(aVoxel);
+      std::cout << "out unbind" << std::endl;
+      /*
       removedMols[dirA].push_back(aVoxel->coord);
       aVoxel->idx = theProducts[dirA]->getID()*theStride;
       for(unsigned i(0); i != removedMols[dirB].size(); ++i)
@@ -139,15 +153,18 @@ public:
             }
         }
       addedMols[dirA].push_back(coord);
+      */
     }
   virtual void finalizeReaction()
     {
+      /*
       theSubstrates[0]->updateMoleculeList(removedMols[0].size(), addedMols[1]);
       removedMols[0].resize(0);
       addedMols[1].resize(0);
       theSubstrates[1]->updateMoleculeList(removedMols[1].size(), addedMols[0]);
       removedMols[1].resize(0);
       addedMols[0].resize(0);
+      */
       DiffusionInfluencedReactionProcess::finalizeReaction();
     }
 protected:

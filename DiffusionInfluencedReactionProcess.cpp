@@ -76,6 +76,165 @@ void DiffusionInfluencedReactionProcess::initializeThird()
     {
       B->setDiffusionInfluencedReaction(this, A->getID(), p); 
     }
+  if(A->getIsMultiscaleComp() && !B->getIsMultiscaleComp())
+    {
+      M = A;
+      N = B;
+      isReactWithMultiscaleComp = true;
+    }
+  else if(!A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
+    {
+      N = A;
+      M = B;
+      isReactWithMultiscaleComp = true;
+    }
+  else if(A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
+    {
+      isReactInMultiscaleComp = true;
+    }
+  if(isReactWithMultiscaleComp)
+    {
+      if(C->getIsMultiscaleComp())
+        {
+          M_p = C;
+          if(D)
+            {
+              N_p = D;
+            }
+        }
+      else
+        {
+          N_p = C;
+          if(D)
+            {
+              M_p = D;
+            }
+        }
+    }
+}
+
+
+//M -> isMultiscaleComp (isMultiscale or isOnMultiscale)
+//N -> normal species (not isMultiscaleComp)
+void DiffusionInfluencedReactionProcess::reactWithMultiscaleComp(
+                                       Voxel* moleculeN, Voxel* moleculeM,
+                                       const unsigned indexN,
+                                       const unsigned indexM)
+{
+  std::cout << "checking before" << std::endl;
+  theSpatiocyteStepper->checkSpecies();
+  unsigned vacantIdx(moleculeM->idx);
+  std::cout << "vacIdx:" << vacantIdx << std::endl;
+  if(M->getIsOnMultiscale())
+    {
+      vacantIdx = M->getTag(indexM).vacantIdx; 
+      std::cout << "b vacIdx:" << vacantIdx << " sp:" << M->getIDString(vacantIdx/theStride) << std::endl;
+    }
+  if(M_p)
+    {
+      std::cout << "1 M:" << M->getIDString() << " N:" << N->getIDString() << 
+        " M_p:" << M_p->getIDString() << " vacIdx:" << vacantIdx << " sp:" << M->getIDString(vacantIdx/theStride) << std::endl;
+      M_p->addMolecule(moleculeM, vacantIdx);
+      for(unsigned i(0); i != M_p->size(); ++i)
+        {
+          if(!M_p->getTag(i).vacantIdx)
+            {
+              std::cout << "error in vacantIdx:" << i << std::endl;
+            }
+        }
+      std::cout << "1 M added sp:" << M_p->getIDString(moleculeM->idx/theStride) << std::endl;
+    }
+  else
+    {
+      std::cout << "2 M:" << M->getIDString() << " N:" << N->getIDString() << std::endl;
+      moleculeM->idx = vacantIdx;
+    }
+  if(N_p)
+    {
+      std::cout << "3 M:" << M->getIDString() << " N:" << N->getIDString() <<
+        " N_p:" <<  N_p->getIDString() << std::endl;
+      N_p->addMolecule(moleculeN);
+    }
+  else
+    {
+      std::cout << "4 M:" << M->getIDString() << " N:" << N->getIDString() << " vacIdx:" << vacantIdx << " vac:" << N->getIDString(N->getVacantIdx()/theStride) << std::endl;
+      moleculeN->idx = N->getVacantIdx();
+    }
+}
+
+void DiffusionInfluencedReactionProcess::reactInMultiscaleComp(
+                                       Voxel* molA, Voxel* molB,
+                                       const unsigned indexA,
+                                       const unsigned indexB)
+{
+  std::cout << "in multi checking before" << std::endl;
+  theSpatiocyteStepper->checkSpecies();
+  unsigned vacantIdxA(molA->idx);
+  if(A->getIsOnMultiscale())
+    {
+      vacantIdxA = A->getTag(indexA).vacantIdx; 
+    }
+  unsigned vacantIdxB(molB->idx);
+  if(B->getIsOnMultiscale())
+    {
+      vacantIdxB = B->getTag(indexB).vacantIdx; 
+    }
+  if(A->isReplaceable(molA, C))
+    {
+      std::cout << "1 A:" << A->getIDString() << " B:" << B->getIDString() << " vacIdxA:" << vacantIdxA << " vacB:" << vacantIdxB << " C:" << C->getIDString() << std::endl;
+      if(C->getIsOnMultiscale())
+        {
+          std::cout << "a" << std::endl;
+          C->addMolecule(molA, vacantIdxA);
+        }
+      else
+        {
+          std::cout << "b" << std::endl;
+          molA->idx = vacantIdxA;
+        }
+      if(D)
+        {
+          if(B->isReplaceable(molB, D))
+            {
+              if(D->getIsOnMultiscale())
+                {
+          std::cout << "c" << std::endl;
+                  D->addMolecule(molB, vacantIdxB);
+                }
+              else
+                {
+          std::cout << "d" << std::endl;
+                  molB->idx = vacantIdxB;
+                }
+            }
+        }
+    }
+  else if(B->isReplaceable(molB, C))
+    {
+      std::cout << "2 A:" << A->getIDString() << " B:" << B->getIDString() << " vacIdxA:" << vacantIdxA << " vacB:" << vacantIdxB << " C:" << C->getIDString() << std::endl;
+      if(C->getIsOnMultiscale())
+        {
+          C->addMolecule(molB, vacantIdxB);
+        }
+      else
+        {
+          molB->idx = vacantIdxB;
+        }
+      if(D)
+        {
+          if(A->isReplaceable(molA, D))
+            {
+              if(D->getIsOnMultiscale())
+                {
+                  D->addMolecule(molA, vacantIdxA);
+                }
+              else
+                {
+                  molA->idx = vacantIdxA;
+                }
+            }
+        }
+    }
 }
 
 //Do the reaction A + B -> C + D. So that A <- C and B <- D.
@@ -87,7 +246,8 @@ void DiffusionInfluencedReactionProcess::initializeThird()
 //Otherwise, find a vacant adjoining voxel of C, Y which is the same Comp
 //as D and Y <- D.
 bool DiffusionInfluencedReactionProcess::react(Voxel* molA, Voxel* molB,
-                                               unsigned indexA, unsigned indexB)
+                                               const unsigned indexA,
+                                               const unsigned indexB)
 {
   moleculeA = molA;
   moleculeB = molB;
@@ -106,13 +266,13 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* molA, Voxel* molB,
         {
           moleculeP = moleculeA;
           //Hard remove the B molecule, since nonHD_p is in a different Comp:
-          moleculeB->idx = B->getVacantID()*theStride;
+          moleculeB->idx = B->getVacantIdx();
         }
       else if(B->isReplaceable(moleculeB, nonHD_p))
         {
           moleculeP = moleculeB;
           //Hard remove the A molecule, since nonHD_p is in a different Comp:
-          moleculeA->idx = A->getVacantID()*theStride;
+          moleculeA->idx = A->getVacantIdx();
         }
       else
         { 
@@ -129,9 +289,9 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* molA, Voxel* molB,
                 }
             }
           //Hard remove the A molecule, since nonHD_p is in a different Comp:
-          moleculeA->idx = A->getVacantID()*theStride;
+          moleculeA->idx = A->getVacantIdx();
           //Hard remove the B molecule, since nonHD_p is in a different Comp:
-          moleculeB->idx = B->getVacantID()*theStride;
+          moleculeB->idx = B->getVacantIdx();
         }
       HD_p->addValue(1);
       nonHD_p->addMolecule(moleculeP, A->getTag(indexA));
@@ -142,9 +302,9 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* molA, Voxel* molB,
     {
 
       //Hard remove the A molecule, since nonHD_p is in a different Comp:
-      moleculeA->idx = A->getVacantID()*theStride;
+      moleculeA->idx = A->getVacantIdx();
       //Hard remove the B molecule, since nonHD_p is in a different Comp:
-      moleculeB->idx = B->getVacantID()*theStride;
+      moleculeB->idx = B->getVacantIdx();
       variableC->addValue(1);
       return true;
     }
@@ -166,14 +326,14 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* molA, Voxel* molB,
                 {
                   return false;
                 }
-              moleculeB->idx = B->getVacantID()*theStride;
+              moleculeB->idx = B->getVacantIdx();
             }
           D->addMolecule(moleculeD, B->getTag(indexB));
         }
       else
         {
           //Hard remove the B molecule since it is not used:
-          moleculeB->idx = B->getVacantID()*theStride;
+          moleculeB->idx = B->getVacantIdx();
         }
     }
   else if(B->isReplaceable(moleculeB, C))
@@ -193,14 +353,14 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* molA, Voxel* molB,
                 {
                   return false;
                 }
-              moleculeA->idx = A->getVacantID()*theStride;
+              moleculeA->idx = A->getVacantIdx();
             }
           D->addMolecule(moleculeD, B->getTag(indexB));
         }
       else
         {
           //Hard remove the A molecule since it is not used:
-          moleculeA->idx = A->getVacantID()*theStride;
+          moleculeA->idx = A->getVacantIdx();
         }
     }
   else
@@ -227,9 +387,9 @@ bool DiffusionInfluencedReactionProcess::react(Voxel* molA, Voxel* molB,
           D->addMolecule(moleculeD, B->getTag(indexB));
         }
       //Hard remove the A molecule since it is not used:
-      moleculeA->idx = A->getVacantID()*theStride;
+      moleculeA->idx = A->getVacantIdx();
       //Hard remove the B molecule since it is not used:
-      moleculeB->idx = B->getVacantID()*theStride;
+      moleculeB->idx = B->getVacantIdx();
     }
   C->addMolecule(moleculeC, A->getTag(indexA));
   addMoleculeE();

@@ -81,6 +81,7 @@ public:
   unsigned global2coord(unsigned, unsigned, unsigned);
   Point getPeriodicPoint(unsigned, unsigned, Origin*);
   void checkLattice();
+  void checkSpecies();
   void setPeriodicEdge();
   void reset(int);
   unsigned getRowSize();

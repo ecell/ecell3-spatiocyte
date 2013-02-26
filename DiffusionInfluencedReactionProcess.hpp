@@ -45,7 +45,13 @@ public:
     }
   SIMPLE_SET_GET_METHOD(Integer, Collision);
   DiffusionInfluencedReactionProcess():
-   Collision(0) {}
+    isReactInMultiscaleComp(false),
+    isReactWithMultiscaleComp(false),
+    Collision(0),
+    M(NULL),
+    N(NULL),
+    M_p(NULL),
+    N_p(NULL) {}
   virtual ~DiffusionInfluencedReactionProcess() {}
   virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
   virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
@@ -69,20 +75,39 @@ public:
   virtual void checkSubstrates();
   virtual void initializeSecond();
   virtual void initializeThird();
-  virtual bool react(Voxel*, Voxel*, unsigned, unsigned);
-  virtual void react(Voxel*, unsigned, unsigned, unsigned) {}
+  virtual bool react(Voxel*, Voxel*, const unsigned, const unsigned);
+  virtual void reactInMultiscaleComp(Voxel*, Voxel*, const unsigned,
+                                     const unsigned);
+  virtual void reactWithMultiscaleComp(Voxel*, Voxel*, const unsigned,
+                                       const unsigned);
+  virtual void bind(Voxel*, const unsigned) {}
+  virtual void unbind(Voxel*) {}
   virtual void printParameters();
   virtual void finalizeReaction();
+  virtual bool getIsReactWithMultiscaleComp()
+    {
+      return isReactWithMultiscaleComp;
+    }
+  virtual bool getIsReactInMultiscaleComp()
+    {
+      return isReactInMultiscaleComp;
+    }
 protected:
   void calculateReactionProbability();
   void addMoleculeE();
   void addMoleculeF();
 protected:
+  bool isReactInMultiscaleComp;
+  bool isReactWithMultiscaleComp;
   unsigned int Collision;
   double D_A;
   double D_B;
   double r_v;
   double V;
+  Species* M;
+  Species* N;
+  Species* M_p;
+  Species* N_p;
 };
 
 #endif /* __DiffusionInfluencedReactionProcess_hpp */

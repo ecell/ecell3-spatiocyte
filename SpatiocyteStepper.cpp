@@ -663,13 +663,79 @@ inline void SpatiocyteStepper::step()
 {
   do
     {
+      std::cout << "before:" << std::endl;
+      checkSpecies();
+      std::cout << getCurrentTime() << " firing:" << thePriorityQueue.getTop()->getIDString() << std::endl;
       thePriorityQueue.getTop()->fire();
+      std::cout << "after:" << std::endl;
+      checkSpecies();
     }
   while(thePriorityQueue.getTop()->getTime() == getCurrentTime());
   setNextTime(thePriorityQueue.getTop()->getTime());
   //checkLattice();
 } 
 
+
+void SpatiocyteStepper::checkSpecies()
+{
+  for(unsigned i(0); i != theSpecies.size(); ++i)
+    {
+      Species* aSpecies(theSpecies[i]);
+      if(!aSpecies->getIsCompVacant())
+        {
+          for(unsigned j(0); j != aSpecies->size(); ++j)
+            {
+              Voxel* aVoxel(aSpecies->getMolecule(j));
+              if(aVoxel->idx/theStride != aSpecies->getID())
+                {
+                  std::cout << aSpecies->getIDString() << " size:" << 
+                    aSpecies->size() << std::endl;
+                  std::cout << "wrong id, mine:" << aSpecies->getID() <<
+                    " but in the list (idx/stride):" << 
+                    aSpecies->getIDString(aVoxel->idx/theStride) << " idx:" <<
+                    aVoxel->idx  << " stride:" << theStride << std::endl;
+                }
+              if(aVoxel->idx-aSpecies->getID()*theStride != j)
+                {
+                  std::cout << aSpecies->getIDString() << " size:" << 
+                    aSpecies->size() << std::endl;
+                  std::cout << "wrong index, mine:" << j <<
+                    " but in the list (idx-id*stride):" << aVoxel->idx-
+                    aSpecies->getID()*theStride << " idx:" << aVoxel->idx
+                    << " stride:" << theStride << std::endl;
+                }
+              if(aSpecies->getIsOnMultiscale())
+                {
+                  if(!aSpecies->getTag(j).vacantIdx)
+                    {
+                      std::cout << aSpecies->getIDString() << " size:" << 
+                        aSpecies->size() << " vacidx wrong:" << j << std::endl;
+                    }
+                }
+            }
+        }
+      else
+        {
+          for(unsigned j(0); j != aSpecies->size(); ++j)
+            {
+              Voxel* aVoxel(aSpecies->getMolecule(j));
+              unsigned anID(aVoxel->idx/theStride);
+              if(anID != aSpecies->getID() && 
+                 !theSpecies[anID]->getIsMultiscale())
+                {
+                  unsigned anIndex(aVoxel->idx%theStride);
+                  if(theSpecies[anID]->getMolecule(anIndex) != aVoxel)
+                    {
+                      std::cout << "error in index j:" << j << " " <<
+                        theSpecies[anID]->getIDString() << " size:"
+                        << theSpecies[anID]->size() << " index:" << anIndex
+                        << " idx:" << aVoxel->idx << std::endl;
+                    }
+                }
+            }
+        }
+    }
+}
 
 void SpatiocyteStepper::registerComps()
 {

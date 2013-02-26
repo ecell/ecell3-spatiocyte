@@ -97,7 +97,9 @@ public:
     isGaussianPopulation(false),
     isInContact(false),
     isMultiscale(false),
+    isMultiscaleComp(false),
     isOffLattice(false),
+    isOnMultiscale(false),
     isPeriodic(false),
     isPolymer(false),
     isReactiveVacant(false),
@@ -147,6 +149,7 @@ public:
         {
           setVacantSpecies(theComp->vacantSpecies);
         }
+      theVacantIdx = theStride*theVacantID;
       theNullTag.origin = theNullCoord;
       theNullTag.id = theNullID;
     }
@@ -168,6 +171,10 @@ public:
           isGaussianPopulation = true;
         }
       thePopulateProcess = aProcess;
+    }
+  bool getIsOnMultiscale()
+    {
+      return isOnMultiscale;
     }
   bool getIsGaussianPopulation()
     {
@@ -407,10 +414,15 @@ public:
   void setIsMultiscale()
     {
       isMultiscale = true;
+      isMultiscaleComp = true;
     }
   bool getIsMultiscale()
     {
       return isMultiscale;
+    }
+  bool getIsMultiscaleComp()
+    {
+      return isMultiscaleComp;
     }
   void setIsCompVacant()
     {
@@ -460,17 +472,6 @@ public:
                 {
                   theTags[i].origin = getCoord(i);
                 }
-            }
-        }
-      if(isMultiscale)
-        {
-          for(unsigned i(0); i != theMultiscaleBoundIDs.size(); ++i)
-            {
-              std::cout << getIDString(theMultiscaleBoundIDs[i]) << std::endl;
-            }
-          for(unsigned i(0); i != theMultiscaleBindableIDs.size(); ++i)
-            {
-              std::cout << getIDString(theMultiscaleBindableIDs[i]) << std::endl;
             }
         }
     }
@@ -687,22 +688,10 @@ public:
                   if(theReactionProbabilities[tarID] == 1 ||
                      theRng.Fixed() < theReactionProbabilities[tarID])
                     { 
-                      Species* targetSpecies(theStepper->id2species(tarID));
-                      unsigned targetIndex(0);
-                      if(targetSpecies->getIsMultiscale() && theVacantSpecies ==
-                         targetSpecies->getMultiscaleVacantSpecies())
-                        {
-                          //Set an invalid index if the target molecule is
-                          //an implicitly represented multiscale molecule:
-                          targetIndex = targetSpecies->size();
-                        }
-                      else
-                        { 
-                          targetIndex = targetSpecies->getIndex(target);
-                        }
                       if(theCollision)
                         { 
                           ++collisionCnts[i];
+                          Species* targetSpecies(theStepper->id2species(tarID));
                           targetSpecies->addCollision(target);
                           if(theCollision != 2)
                             {
@@ -710,7 +699,7 @@ public:
                             }
                         }
                       unsigned aMoleculeSize(theMoleculeSize);
-                      react(source, target, i, targetIndex, targetSpecies);
+                      react(source, target, i);
                       //If the reaction is successful, the last molecule of this
                       //species will replace the pointer of i, so we need to 
                       //decrement i to perform the diffusion on it. However, if
@@ -741,7 +730,7 @@ public:
                  isMultiscaleWalkPropensity(source->coord, target->coord))
                 {
                   removeMultiscaleMolecule(source, theTags[i].rotIndex);
-                  addMultiscaleMolecule(target);
+                  addMultiscaleMolecule(target, i);
                   source->idx = target->idx;
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
@@ -762,7 +751,7 @@ public:
               if(!isIntersectMultiscale(source->coord, target->coord))
                 {
                   removeMultiscaleMolecule(source, theTags[i].rotIndex);
-                  addMultiscaleMolecule(target);
+                  addMultiscaleMolecule(target, i);
                   source->idx = target->idx;
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
@@ -810,22 +799,10 @@ public:
                   if(theReactionProbabilities[tarID] == 1 ||
                      theRng.Fixed() < theReactionProbabilities[tarID])
                     { 
-                      Species* targetSpecies(theStepper->id2species(tarID));
-                      unsigned targetIndex(0);
-                      if(targetSpecies->getIsMultiscale() && theVacantSpecies ==
-                         targetSpecies->getMultiscaleVacantSpecies())
-                        {
-                          //Set an invalid index if the target molecule is
-                          //an implicitly represented multiscale molecule:
-                          targetIndex = targetSpecies->size();
-                        }
-                      else
-                        { 
-                          targetIndex = targetSpecies->getIndex(target);
-                        }
                       if(theCollision)
                         { 
                           ++collisionCnts[i];
+                          Species* targetSpecies(theStepper->id2species(tarID));
                           targetSpecies->addCollision(target);
                           if(theCollision != 2)
                             {
@@ -833,7 +810,62 @@ public:
                             }
                         }
                       unsigned aMoleculeSize(theMoleculeSize);
-                      react(source, target, i, targetIndex, targetSpecies);
+                      react(source, target, i);
+                      //If the reaction is successful, the last molecule of this
+                      //species will replace the pointer of i, so we need to 
+                      //decrement i to perform the diffusion on it. However, if
+                      //theMoleculeSize didn't decrease, that means the
+                      //currently walked molecule was a product of this
+                      //reaction and so we don't need to walk it again by
+                      //decrementing i.
+                      if(theMoleculeSize < aMoleculeSize)
+                        {
+                          --i;
+                        }
+                    }
+                }
+            }
+        }
+    }
+  void walkOnMultiscaleRegular()
+    {
+      const unsigned beginMoleculeSize(theMoleculeSize);
+      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
+        {
+          Voxel* source(theMolecules[i]);
+          const unsigned tarIndex(theRng.Integer(theDiffuseSize)); 
+          const unsigned row((source->coord-lipStartCoord)/lipCols);
+          int coordA(source->coord-lipStartCoord+
+                     theAdjoinOffsets[row%2][tarIndex]);
+          if(!isInLattice(coordA, theRowOffsets[tarIndex]+row))
+            {
+              continue;
+            }
+          Voxel* target(&theLattice[coordA+lipStartCoord]);
+          if(getID(target) == theVacantID)
+            {
+              if(theWalkProbability == 1 || theRng.Fixed() < theWalkProbability)
+                {
+                  source->idx = theTags[i].vacantIdx;
+                  if(theTags[i].vacantIdx != target->idx)
+                    {
+                      theTags[i].vacantIdx = target->idx;
+                    }
+                  target->idx = i+theStride*theID;
+                  theMolecules[i] = target;
+                }
+            }
+          else
+            {
+              const unsigned tarID(getID(target));
+              if(theDiffusionInfluencedReactions[tarID])
+                {
+                  //If it meets the reaction probability:
+                  if(theReactionProbabilities[tarID] == 1 ||
+                     theRng.Fixed() < theReactionProbabilities[tarID])
+                    {
+                      unsigned aMoleculeSize(theMoleculeSize);
+                      react(source, target, i);
                       //If the reaction is successful, the last molecule of this
                       //species will replace the pointer of i, so we need to 
                       //decrement i to perform the diffusion on it. However, if
@@ -882,7 +914,7 @@ public:
                 }
               moveMultiscaleMoleculeRegular(coordA, rowA, 
                     theRotOffsets[rowA%2][theTags[i].rotIndex][tarIndex],
-                    theRotOffsets[rowA%2][srcRotIndex][srcIndex]);
+                    theRotOffsets[rowA%2][srcRotIndex][srcIndex], i);
               theTags[i].rotIndex = srcRotIndex;
             }
         }
@@ -923,7 +955,7 @@ public:
                 {
                   moveMultiscaleMoleculeRegular(coordA, rowA, 
                         theRotOffsets[rowA%2][theTags[i].rotIndex][tarIndex],
-                        theRotOffsets[rowA%2][srcRotIndex][srcIndex]);
+                        theRotOffsets[rowA%2][srcRotIndex][srcIndex], i);
                   theTags[i].rotIndex = srcRotIndex;
                 }
             }
@@ -954,7 +986,7 @@ public:
                 {
                   moveMultiscaleMoleculeRegular(srcCoord, row, 
                      theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
-                     theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex]);
+                     theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex], i);
                   source->idx = target->idx;
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
@@ -984,7 +1016,7 @@ public:
                 {
                   moveMultiscaleMoleculeRegular(srcCoord, row, 
                      theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
-                     theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex]);
+                     theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex], i);
                   source->idx = target->idx;
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
@@ -1020,45 +1052,89 @@ public:
             }
         }
     }
-  void react(Voxel* source, Voxel* target, unsigned sourceIndex,
-             unsigned targetIndex, Species* targetSpecies)
+  void react(Voxel* src, Voxel* tar, unsigned srcIndex)
     {
+      const unsigned tarID(tar->idx/theStride);
+      const unsigned tarIndex(tar->idx%theStride);
       DiffusionInfluencedReactionProcess* aReaction(
-               theDiffusionInfluencedReactions[targetSpecies->getID()]);
-      Voxel* moleculeA(source);
-      Voxel* moleculeB(target);
-      unsigned indexA(sourceIndex);
-      unsigned indexB(targetIndex);
-      if(aReaction->getA() != this)
+                      theDiffusionInfluencedReactions[tarID]);
+      Species* tarSpecies(theStepper->id2species(tarID));
+      if(aReaction->getIsReactWithMultiscaleComp())
         {
-          indexA = targetIndex; 
-          indexB = sourceIndex;
-          moleculeA = target;
-          moleculeB = source;
+          if(tarSpecies->getIsMultiscaleComp())
+            {
+          std::cout << "react1" << std::endl;
+              aReaction->reactWithMultiscaleComp(src, tar, srcIndex, tarIndex);
+            }
+          else
+            {
+          std::cout << "react2" << std::endl;
+              aReaction->reactWithMultiscaleComp(tar, src, tarIndex, srcIndex);
+            }
+          softRemoveMolecule(srcIndex);
+          if(!tarSpecies->getIsMultiscale())
+            {
+              tarSpecies->softRemoveMolecule(tarIndex);
+            }
         }
-      if(aReaction->react(moleculeA, moleculeB, indexA, indexB))
+      else if(aReaction->getIsReactInMultiscaleComp())
         {
+          if(aReaction->getA() == this)
+            { 
+          std::cout << "react3" << std::endl;
+              aReaction->reactInMultiscaleComp(src, tar, srcIndex, tarIndex);
+            }
+          else
+            {
+          std::cout << "react4" << std::endl;
+              aReaction->reactInMultiscaleComp(tar, src, tarIndex, srcIndex);
+            }
+          softRemoveMolecule(srcIndex);
+          if(!tarSpecies->getIsMultiscale())
+            {
+              tarSpecies->softRemoveMolecule(tarIndex);
+            }
+        }
+      else
+        {
+          if(aReaction->getA() == this)
+            { 
+          std::cout << "react5" << std::endl;
+              if(!aReaction->react(src, tar, srcIndex, tarIndex))
+                {
+          std::cout << "react5 fail" << std::endl;
+                  return;
+                }
+            }
+          else
+            {
+          std::cout << "react6" << std::endl;
+              if(!aReaction->react(tar, src, tarIndex, srcIndex))
+                {
+          std::cout << "react6 fail" << std::endl;
+                  return;
+                }
+            }
           //Soft remove the source molecule, i.e., keep the id:
-          softRemoveMolecule(sourceIndex);
+          softRemoveMolecule(srcIndex);
           //Soft remove the target molecule:
           //Make sure the targetIndex is valid:
           //Target and Source are same species:
           //For some reason if I use theMolecules[sourceIndex] instead
           //of getMolecule(sourceIndex) the walk method becomes
           //much slower when it is only diffusing without reacting:
-          if(targetSpecies == this && getMolecule(sourceIndex) == target)
+          if(tarSpecies == this && getMolecule(srcIndex) == tar)
             {
-              softRemoveMolecule(sourceIndex);
+              softRemoveMolecule(srcIndex);
             }
-          //If the targetSpecies is a multiscale species with implicit
-          //molecule, theTargetIndex is equal to the target molecule size,
-          //so we use this info to avoid removing the implicit target molecule:
-          else if(targetIndex != targetSpecies->size())
+          else
             {
-              targetSpecies->softRemoveMolecule(targetIndex);
+              tarSpecies->softRemoveMolecule(tarIndex);
             }
-          theFinalizeReactions[targetSpecies->getID()] = true;
         }
+      theFinalizeReactions[tarID] = true;
+      std::cout << "check final after:" << std::endl;
+      theStepper->checkSpecies();
     }
   void setComp(Comp* aComp)
     {
@@ -1283,7 +1359,7 @@ public:
     }
   Tag& getTag(unsigned anIndex)
     {
-      if(isTagged && anIndex != theMoleculeSize)
+      if(isOnMultiscale || (isTagged && anIndex != theMoleculeSize))
         {
           return theTags[anIndex];
         }
@@ -1297,6 +1373,12 @@ public:
     {
       return theMultiscaleVacantSpecies;
     }
+  //This should only be called by isOnMultiscale and not by isMultiscale:
+  void addMolecule(Voxel* aVoxel, const unsigned vacantIdx)
+    {
+      doAddMolecule(aVoxel, theNullTag);
+      theTags[theMoleculeSize-1].vacantIdx = vacantIdx;
+    }
   void addMolecule(Voxel* aVoxel, Tag& aTag)
     {
       if(!isVacant)
@@ -1307,8 +1389,8 @@ public:
               Species* aSpecies(theStepper->id2species(getID(aVoxel)));
               if(aSpecies->getVacantSpecies() != theMultiscaleVacantSpecies)
                 {
+                  addMultiscaleMolecule(aVoxel, theMoleculeSize);
                   doAddMolecule(aVoxel, aTag);
-                  addMultiscaleMolecule(aVoxel);
                 }
             }
           else
@@ -1323,7 +1405,7 @@ public:
     }
   void doAddMolecule(Voxel* aVoxel, Tag& aTag)
     {
-      aVoxel->idx = theStride*theID+theMoleculeSize;
+      aVoxel->idx = theMoleculeSize+theStride*theID;
       ++theMoleculeSize; 
       if(theMoleculeSize > theMolecules.size())
         {
@@ -1436,9 +1518,10 @@ public:
         }
       return false;
     }
-  void addMultiscaleMolecule(Voxel* aVoxel)
+  void addMultiscaleMolecule(Voxel* aVoxel, const unsigned index)
     {
       const unsigned coordA(aVoxel->coord-vacStartCoord);
+      const unsigned idx(index+theID*theStride);
       if(isRegularLattice)
         {
           const int rowA(coordA/lipCols);
@@ -1454,17 +1537,11 @@ public:
                   if(getID(theLattice[coord]) == 
                      theMultiscaleVacantSpecies->getID())
                     {
-                      theLattice[coord].idx = theID*theStride;
+                      theLattice[coord].idx = idx;
                     }
                   else
                     {
-                      /*
-                      unsigned anID();
-                      Species* source(theStepper->id2species(theLattice[
-                                                             coordB].id));
-                      source->softRemoveMolecule(&theLattice[coordB]);
-                      */
-                      reactMultiscale(&theLattice[coord], coord, 0, 1);
+                      bindMultiscale(&theLattice[coord], idx);
                     }
                 }
             }
@@ -1477,17 +1554,11 @@ public:
               if(getID(theLattice[coordB]) ==
                  theMultiscaleVacantSpecies->getID())
                 {
-                  theLattice[coordB].idx = theID*theStride;
+                  theLattice[coordB].idx = idx;
                 }
               else
                 { 
-                  /*
-                  unsigned anID();
-                  Species* source(theStepper->id2species(theLattice[
-                                                         coordB].id));
-                  source->softRemoveMolecule(&theLattice[coordB]);
-                  */
-                  reactMultiscale(&theLattice[coordB], coordB, 0, 1);
+                  bindMultiscale(&theLattice[coordB], idx);
                 }
             }
         }
@@ -1495,8 +1566,10 @@ public:
   void moveMultiscaleMoleculeRegular(const unsigned coordA, 
                                      const unsigned rowA,
                                      const std::vector<int>& tarOffsets,
-                                     const std::vector<int>& srcOffsets)
+                                     const std::vector<int>& srcOffsets,
+                                     const unsigned index)
     {
+      const unsigned idx(index+theID*theStride);
       //Add tar
       for(unsigned i(0); i != tarOffsets.size(); ++i)
         {
@@ -1509,11 +1582,11 @@ public:
               if(getID(theLattice[coord]) ==
                  theMultiscaleVacantSpecies->getID())
                 {
-                  theLattice[coord].idx = theID*theStride;
+                  theLattice[coord].idx = idx;
                 }
               else
                 {
-                  reactMultiscale(&theLattice[coord], coord, 0, 1);
+                  bindMultiscale(&theLattice[coord], idx);
                 }
             }
         }
@@ -1533,7 +1606,7 @@ public:
                 }
               else
                 {
-                  reactMultiscale(&theLattice[coord], coord, 1, 0);
+                  unbindMultiscale(&theLattice[coord]);
                 }
             }
         }
@@ -1560,7 +1633,7 @@ public:
                     }
                   else
                     {
-                      reactMultiscale(&theLattice[coord], coord, 1, 0);
+                      unbindMultiscale(&theLattice[coord]);
                     }
                 }
             }
@@ -1577,7 +1650,7 @@ public:
                 }
               else
                 {
-                  reactMultiscale(&theLattice[coordB], coordB, 1, 0);
+                  unbindMultiscale(&theLattice[coordB]);
                 }
             }
         }
@@ -1695,15 +1768,16 @@ public:
         */
       return isIntersect;
     }
-  void reactMultiscale(Voxel* aVoxel, const unsigned coord, const unsigned dirA,
-                       const unsigned dirB)
+  void bindMultiscale(Voxel* aVoxel, const unsigned vacantIdx)
     { 
       unsigned anID(getID(aVoxel));
-      if(dirA)
-        {
-          anID = theMultiscaleUnbindIDs[anID];
-        }
-      theDiffusionInfluencedReactions[anID]->react(aVoxel, coord, dirA, dirB);
+      theDiffusionInfluencedReactions[anID]->bind(aVoxel, vacantIdx);
+      theFinalizeReactions[anID] = true;
+    }
+  void unbindMultiscale(Voxel* aVoxel)
+    {
+      unsigned anID(theMultiscaleUnbindIDs[getID(aVoxel)]);
+      theDiffusionInfluencedReactions[anID]->unbind(aVoxel);
       theFinalizeReactions[anID] = true;
     }
   void addCompVoxel(unsigned aCoord)
@@ -1764,17 +1838,6 @@ public:
     {
       return (*theCompVoxels)[index];
     }
-  unsigned getIndexFast(Voxel* aVoxel)
-    {
-      for(unsigned i(0); i < theMoleculeSize; ++i)
-        {
-          if(theMolecules[i] == aVoxel)
-            {
-              return i;
-            }
-        }
-      return theMoleculeSize;
-    }
   unsigned getIndex(Voxel* aVoxel)
     {
       //This is required by SNRP reactABC with B a lipid or vacant molecule:
@@ -1782,20 +1845,14 @@ public:
         {
           return theMoleculeSize;
         }
-      unsigned index(getIndexFast(aVoxel));
-      if(index == theMoleculeSize)
+      unsigned index(aVoxel->idx-theStride*theID);
+      if(index >= theMoleculeSize)
         { 
-          if(isDiffusiveVacant || isReactiveVacant)
-            {
-              updateVacantMolecules();
-            }
-          index = getIndexFast(aVoxel);
-          if(index == theMoleculeSize)
-            { 
-              std::cout << "error in getting the index:" << getIDString() <<
-               " size:" << theMoleculeSize << std::endl;
-              return 0;
-            }
+          std::cout << getIDString() << ":error in getting the index" << 
+            " size:" << theMoleculeSize << " idx:" << aVoxel->idx <<
+            " requested species:" << getIDString(aVoxel->idx/theStride) <<
+            " requested index(idx-stride*id):" << index << std::endl;
+          return 0;
         }
       return index;
     }
@@ -1848,9 +1905,11 @@ public:
         }
       if(!isVacant)
         {
-          theMolecules[anIndex] = theMolecules[--theMoleculeSize];
-          if(isTagged)
+          --theMoleculeSize;
+          if(theMoleculeSize != anIndex)
             {
+              theMolecules[anIndex] = theMolecules[theMoleculeSize];
+              theMolecules[anIndex]->idx = anIndex+theStride*theID;
               theTags[anIndex] = theTags[theMoleculeSize];
             }
           theVariable->setValue(theMoleculeSize);
@@ -1926,7 +1985,7 @@ public:
             }
         }
     }
-  int getVacantID() const
+  unsigned getVacantID() const
     {
       return theVacantID;
     }
@@ -1934,10 +1993,17 @@ public:
     {
       return theVacantSpecies;
     }
+  //Called by initializeFirst of CompartmentProcess:
   void setVacantSpecies(Species* aVacantSpecies)
     {
       theVacantSpecies = aVacantSpecies;
       theVacantID = aVacantSpecies->getID();
+      theVacantIdx = theStride*theVacantID;
+      if(aVacantSpecies->getIsMultiscale())
+        {
+          isOnMultiscale = true;
+          isMultiscaleComp = true;
+        }
     }
    const std::vector<double>& getBendAngles() const
     {
@@ -2700,6 +2766,10 @@ public:
     {
       theMultiscaleVacantSpecies = aSpecies;
     }
+  const unsigned getVacantIdx()
+    {
+      return theVacantIdx;
+    }
   //Can aVoxel be populated by this species:
   bool isPopulatable(Voxel* aVoxel)
     {
@@ -2742,6 +2812,8 @@ public:
   unsigned getMultiscaleStructureSize()
     {
       theMultiscaleStructureCoords.resize(0);
+      //TODO: should be able to optimize this if you don't
+      //want to use this for bug checking:
       for(unsigned i(0); i != theMultiscaleVacantSpecies->size(); ++i)
         {
           unsigned coord(theMultiscaleVacantSpecies->getCoord(i));
@@ -2766,7 +2838,9 @@ private:
   bool isGaussianPopulation;
   bool isInContact;
   bool isMultiscale;
+  bool isMultiscaleComp;
   bool isOffLattice;
+  bool isOnMultiscale;
   bool isPeriodic;
   bool isPolymer;
   bool isReactiveVacant;
@@ -2791,6 +2865,7 @@ private:
   unsigned theSpeciesSize;
   unsigned theStride;
   unsigned theRotateSize;
+  unsigned theVacantIdx;
   unsigned vacCols;
   unsigned vacRows;
   unsigned vacStartCoord;

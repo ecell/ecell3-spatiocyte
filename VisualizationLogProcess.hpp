@@ -121,6 +121,7 @@ public:
           theTime = libecs::INF;
           thePriorityQueue->move(theQueueID);
           theInterval = thePriorityQueue->getTop()->getTime();
+          std::cout << "theINt:" << theInterval << std::endl;
         }
       theTime = theInterval;
       thePriorityQueue->move(theQueueID);

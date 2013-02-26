@@ -122,6 +122,7 @@ public:
     }
   virtual void initializeSecond()
     {
+      SpatiocyteProcess::initializeSecond();
       if(theVacantSpecies)
         {
           if(!theVacantSpecies->getIsMultiscale())
@@ -189,7 +190,14 @@ public:
         {
           if(theDiffusionSpecies->getIsRegularLattice())
             {
-              theWalkMethod = &DiffusionProcess::walkRegular;
+              if(theDiffusionSpecies->getIsOnMultiscale())
+                {
+                  theWalkMethod = &DiffusionProcess::walkOnMultiscaleRegular;
+                }
+              else
+                {
+                  theWalkMethod = &DiffusionProcess::walkRegular;
+                }
             }
           else
             {
@@ -229,6 +237,10 @@ public:
   void walkRegular() const
     {
       theDiffusionSpecies->walkRegular();
+    }
+   void walkOnMultiscaleRegular() const
+    {
+      theDiffusionSpecies->walkOnMultiscaleRegular();
     }
   void walkVacant() const
     {

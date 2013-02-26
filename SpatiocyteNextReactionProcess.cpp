@@ -550,9 +550,20 @@ bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
           return false;
         }
     }
-  Tag tagA(a->getTag(indexA));
-  a->removeMolecule(indexA);
-  c->addMolecule(moleculeC, tagA);
+  if(a->getIsOnMultiscale() && c->getIsOnMultiscale())
+    {
+      unsigned vacantIdx(a->getTag(indexA).vacantIdx);
+      std::cout << "vidx:" << vacantIdx << std::endl;
+      c->addMolecule(moleculeC, vacantIdx);
+      a->softRemoveMolecule(indexA);
+      std::cout << "2vidx:" << c->getTag(c->size()-1).vacantIdx << std::endl;
+    }
+  else
+    {
+      Tag tagA(a->getTag(indexA));
+      a->removeMolecule(indexA);
+      c->addMolecule(moleculeC, tagA);
+    }
   removeMoleculeE();
   return true;
 }
