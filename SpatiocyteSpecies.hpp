@@ -1063,12 +1063,10 @@ public:
         {
           if(tarSpecies->getIsMultiscaleComp())
             {
-          std::cout << "react1" << std::endl;
               aReaction->reactWithMultiscaleComp(src, tar, srcIndex, tarIndex);
             }
           else
             {
-          std::cout << "react2" << std::endl;
               aReaction->reactWithMultiscaleComp(tar, src, tarIndex, srcIndex);
             }
           softRemoveMolecule(srcIndex);
@@ -1081,60 +1079,61 @@ public:
         {
           if(aReaction->getA() == this)
             { 
-          std::cout << "react3" << std::endl;
               aReaction->reactInMultiscaleComp(src, tar, srcIndex, tarIndex);
             }
           else
             {
-          std::cout << "react4" << std::endl;
               aReaction->reactInMultiscaleComp(tar, src, tarIndex, srcIndex);
             }
-          softRemoveMolecule(srcIndex);
-          if(!tarSpecies->getIsMultiscale())
+          if(tarSpecies == this && theMoleculeSize-1 == tarIndex)
             {
-              tarSpecies->softRemoveMolecule(tarIndex);
+              --theMoleculeSize;
+              softRemoveMolecule(srcIndex);
+            }
+          else
+            {
+              softRemoveMolecule(srcIndex);
+              if(!tarSpecies->getIsMultiscale())
+                {
+                  tarSpecies->softRemoveMolecule(tarIndex);
+                }
             }
         }
       else
         {
           if(aReaction->getA() == this)
             { 
-          std::cout << "react5" << std::endl;
               if(!aReaction->react(src, tar, srcIndex, tarIndex))
                 {
-          std::cout << "react5 fail" << std::endl;
                   return;
                 }
             }
           else
             {
-          std::cout << "react6" << std::endl;
               if(!aReaction->react(tar, src, tarIndex, srcIndex))
                 {
-          std::cout << "react6 fail" << std::endl;
                   return;
                 }
             }
           //Soft remove the source molecule, i.e., keep the id:
-          softRemoveMolecule(srcIndex);
           //Soft remove the target molecule:
           //Make sure the targetIndex is valid:
           //Target and Source are same species:
           //For some reason if I use theMolecules[sourceIndex] instead
           //of getMolecule(sourceIndex) the walk method becomes
           //much slower when it is only diffusing without reacting:
-          if(tarSpecies == this && getMolecule(srcIndex) == tar)
+          if(tarSpecies == this && theMoleculeSize-1 == tarIndex)
             {
+              --theMoleculeSize;
               softRemoveMolecule(srcIndex);
             }
           else
             {
+              softRemoveMolecule(srcIndex);
               tarSpecies->softRemoveMolecule(tarIndex);
             }
         }
       theFinalizeReactions[tarID] = true;
-      std::cout << "check final after:" << std::endl;
-      theStepper->checkSpecies();
     }
   void setComp(Comp* aComp)
     {
@@ -1906,7 +1905,7 @@ public:
       if(!isVacant)
         {
           --theMoleculeSize;
-          if(theMoleculeSize != anIndex)
+          if(theMoleculeSize > anIndex)
             {
               theMolecules[anIndex] = theMolecules[theMoleculeSize];
               theMolecules[anIndex]->idx = anIndex+theStride*theID;

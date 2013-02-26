@@ -126,20 +126,13 @@ public:
     }
   virtual void bind(Voxel* aVoxel, const unsigned vacantIdx)
     {
-      std::cout << "in bind sub:" << theSubstrates[0]->getIDString() << 
-        " prod:" << theProducts[0]->getIDString() << " vacidx:" << vacantIdx
-        << std::endl;
       theSubstrates[0]->softRemoveMolecule(aVoxel);
       theProducts[0]->addMolecule(aVoxel, vacantIdx);
-      std::cout << "out bind" << std::endl;
     }
   virtual void unbind(Voxel* aVoxel)
     {
-      std::cout << "in unbind sub:" << theSubstrates[1]->getIDString() << 
-        " prod:" << theProducts[1]->getIDString() << std::endl;
       theSubstrates[1]->softRemoveMolecule(aVoxel);
       theProducts[1]->addMolecule(aVoxel);
-      std::cout << "out unbind" << std::endl;
       /*
       removedMols[dirA].push_back(aVoxel->coord);
       aVoxel->idx = theProducts[dirA]->getID()*theStride;

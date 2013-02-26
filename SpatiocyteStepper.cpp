@@ -663,16 +663,10 @@ inline void SpatiocyteStepper::step()
 {
   do
     {
-      std::cout << "before:" << std::endl;
-      checkSpecies();
-      std::cout << getCurrentTime() << " firing:" << thePriorityQueue.getTop()->getIDString() << std::endl;
       thePriorityQueue.getTop()->fire();
-      std::cout << "after:" << std::endl;
-      checkSpecies();
     }
   while(thePriorityQueue.getTop()->getTime() == getCurrentTime());
   setNextTime(thePriorityQueue.getTop()->getTime());
-  //checkLattice();
 } 
 
 

@@ -553,10 +553,8 @@ bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
   if(a->getIsOnMultiscale() && c->getIsOnMultiscale())
     {
       unsigned vacantIdx(a->getTag(indexA).vacantIdx);
-      std::cout << "vidx:" << vacantIdx << std::endl;
       c->addMolecule(moleculeC, vacantIdx);
       a->softRemoveMolecule(indexA);
-      std::cout << "2vidx:" << c->getTag(c->size()-1).vacantIdx << std::endl;
     }
   else
     {
