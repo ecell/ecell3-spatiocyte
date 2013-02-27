@@ -1265,6 +1265,107 @@ public:
       theMoleculeSize = aSize;
       theVariable->setValue(aSize);
     }
+  void updateMoleculeList(const std::vector<unsigned>& removedMols,
+                          const std::vector<Voxel*>& addedVoxels,
+                          const std::vector<unsigned>& addedIdx)
+    {
+      unsigned j(0);
+      const unsigned size(theMoleculeSize);
+      for(unsigned i(0); i != removedMols.size(); ++i)
+        {
+          const unsigned index(removedMols[i]);
+          if(theMolecules[index]->idx != index+theID*theStride)
+            {
+              while(j != addedVoxels.size() &&
+                    addedVoxels[j]->idx != j+size+theID*theStride)
+                {
+                  ++j;
+                }
+              if(j < addedVoxels.size())
+                {
+                  theMolecules[index] = addedVoxels[j];
+                  theMolecules[index]->idx = index+theID*theStride;
+                  theTags[index].vacantIdx = addedIdx[j];
+                }
+              else
+                {
+                  while(theMoleculeSize > 0 &&
+                        theMolecules[theMoleculeSize-1]->idx != 
+                        theMoleculeSize-1+theID*theStride)
+                    {
+                      --theMoleculeSize;
+                    }
+                  if(index < theMoleculeSize)
+                    {
+                      theMolecules[index] = theMolecules[--theMoleculeSize];
+                      theMolecules[index]->idx = index+theID*theStride;
+                      theTags[index] = theTags[theMoleculeSize];
+                    }
+                }
+            }
+        }
+      ++j;
+      if(j < addedVoxels.size())
+         {
+           for(; j != addedVoxels.size(); ++j)
+             {
+               if(addedVoxels[j]->idx == j+size+theID*theStride)
+                 {
+                   addMolecule(addedVoxels[j], addedIdx[j]);
+                 }
+             }
+         }
+      theVariable->setValue(theMoleculeSize);
+    }
+  void updateMoleculeList(const std::vector<unsigned>& removedMols,
+                          const std::vector<Voxel*>& addedVoxels)
+    {
+      unsigned j(0);
+      const unsigned size(theMoleculeSize);
+      for(unsigned i(0); i != removedMols.size(); ++i)
+        {
+          const unsigned index(removedMols[i]);
+          if(theMolecules[index]->idx != index+theID*theStride)
+            {
+              while(j != addedVoxels.size() &&
+                    addedVoxels[j]->idx != j+size+theID*theStride)
+                {
+                  ++j;
+                }
+              if(j < addedVoxels.size())
+                {
+                  theMolecules[index] = addedVoxels[j];
+                  theMolecules[index]->idx = index+theID*theStride;
+                }
+              else
+                {
+                  while(theMoleculeSize > 0 &&
+                        theMolecules[theMoleculeSize-1]->idx != 
+                        theMoleculeSize-1+theID*theStride)
+                    {
+                      --theMoleculeSize;
+                    }
+                  if(index < theMoleculeSize)
+                    {
+                      theMolecules[index] = theMolecules[--theMoleculeSize];
+                      theMolecules[index]->idx = index+theID*theStride;
+                    }
+                }
+            }
+        }
+      ++j;
+      if(j < addedVoxels.size())
+         {
+           for(; j != addedVoxels.size(); ++j)
+             {
+               if(addedVoxels[j]->idx == j+size+theID*theStride)
+                 {
+                   doAddMolecule(addedVoxels[j], theNullTag);
+                 }
+             }
+         }
+      theVariable->setValue(theMoleculeSize);
+    }
   void updateMoleculeList(const unsigned removedSize,
                           const std::vector<unsigned>& addedMols)
     {

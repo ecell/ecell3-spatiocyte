@@ -34,7 +34,7 @@ logger.VariableReferenceList = [['_', 'Variable:/:MinD']]
 logger.VariableReferenceList = [['_', 'Variable:/Surface:PG']]
 logger.VariableReferenceList = [['_', 'Variable:/Surface:PGs']]
 logger.LogInterval = 1e-5
-logger.MultiscaleStructure = 1
+logger.MultiscaleStructure = 0
 
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop')
 populator.VariableReferenceList = [['_', 'Variable:/Surface:PG']]
