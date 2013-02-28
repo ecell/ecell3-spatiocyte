@@ -137,10 +137,13 @@ public:
       theReactionProbabilities.resize(speciesSize);
       theDiffusionInfluencedReactions.resize(speciesSize);
       theFinalizeReactions.resize(speciesSize);
-      theMultiscaleBindIDs.resize(speciesSize);
       theMultiscaleUnbindIDs.resize(speciesSize);
+      isMultiscaleBinderID.resize(speciesSize);
+      isMultiscaleBoundID.resize(speciesSize);
       for(int i(0); i != speciesSize; ++i)
         {
+          isMultiscaleBinderID[i] = false;
+          isMultiscaleBoundID[i] = false;
           theDiffusionInfluencedReactions[i] = NULL;
           theReactionProbabilities[i] = 0;
           theFinalizeReactions[i] = false;
@@ -1548,16 +1551,13 @@ public:
           int coordB(coordA+tarOffsets[i]);
           if(isInLattice(coordB, offsetRow))
             {
-              const unsigned anID(getID(theLattice[coordB+lipStartCoord]));
-              if(std::find(theMultiscaleBindableIDs.begin(), 
-                           theMultiscaleBindableIDs.end(), anID) !=
-                 theMultiscaleBindableIDs.end())
+              if(isMultiscaleBinderID[getID(theLattice[coordB+lipStartCoord])])
                 {
                   ++tarCnt;
                 }
             }
         }
-      //Remove src
+      //count src
       for(unsigned i(0); i != srcOffsets.size(); ++i)
         {
           const int offsetRow((srcOffsets[i]+theRegLatticeCoord)/lipCols-
@@ -1565,10 +1565,7 @@ public:
           int coordB(coordA+srcOffsets[i]);
           if(isInLattice(coordB, offsetRow))
             {
-              const unsigned anID(getID(theLattice[coordB+lipStartCoord]));
-              if(std::find(theMultiscaleBoundIDs.begin(), 
-                           theMultiscaleBoundIDs.end(), anID) !=
-                 theMultiscaleBoundIDs.end())
+              if(isMultiscaleBoundID[getID(theLattice[coordB+lipStartCoord])])
                 {
                   ++srcCnt;
                 }
@@ -1590,10 +1587,7 @@ public:
       for(unsigned i(0); i != theIntersectLipids[coordA].size(); ++i)
         {
           unsigned coord(theIntersectLipids[coordA][i]+lipStartCoord);
-          unsigned anID(getID(theLattice[coord]));
-          if(std::find(theMultiscaleBoundIDs.begin(), 
-                       theMultiscaleBoundIDs.end(), anID) !=
-             theMultiscaleBoundIDs.end())
+          if(isMultiscaleBoundID[getID(theLattice[coord])])
             {
               ++srcCnt;
             }
@@ -1601,13 +1595,7 @@ public:
       for(unsigned i(0); i != theIntersectLipids[coordB].size(); ++i)
         {
           unsigned coord(theIntersectLipids[coordB][i]+lipStartCoord);
-          unsigned anID(getID(theLattice[coord]));
-          if(std::find(theMultiscaleBoundIDs.begin(), 
-                       theMultiscaleBoundIDs.end(), anID) !=
-             theMultiscaleBoundIDs.end() ||
-             std::find(theMultiscaleBindableIDs.begin(), 
-                       theMultiscaleBindableIDs.end(), anID) !=
-             theMultiscaleBindableIDs.end())
+          if(isMultiscaleBinderID[getID(theLattice[coord])])
             {
               ++tarCnt;
             }
@@ -1770,10 +1758,7 @@ public:
               if(isInLattice(coordB, offsetRow+rowA))
                 {
                   const unsigned anID(getID(theLattice[coordB+lipStartCoord]));
-                  if(anID == theID ||
-                     std::find(theMultiscaleBoundIDs.begin(), 
-                               theMultiscaleBoundIDs.end(),
-                               anID) != theMultiscaleBoundIDs.end())
+                  if(anID == theID || isMultiscaleBoundID[anID])
                     {
                       return true;
                     }
@@ -1786,10 +1771,7 @@ public:
             {
               unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
               unsigned anID(getID(theLattice[coordB]));
-              if(anID == theID ||
-                 std::find(theMultiscaleBoundIDs.begin(), 
-                           theMultiscaleBoundIDs.end(),
-                           anID) != theMultiscaleBoundIDs.end())
+              if(anID == theID || isMultiscaleBoundID[anID])
                 {
                   return true;
                 }
@@ -1836,9 +1818,7 @@ public:
           if(isInLattice(coordB, offsetRow))
             {
               const unsigned anID(getID(theLattice[coordB+lipStartCoord]));
-              if(anID == theID || std::find(theMultiscaleBoundIDs.begin(), 
-                                            theMultiscaleBoundIDs.end(),
-                                      anID) != theMultiscaleBoundIDs.end())
+              if(anID == theID || isMultiscaleBoundID[anID])
                 {
                   return true;
                 }
@@ -2689,26 +2669,12 @@ public:
     }
   void setMultiscaleBindIDs(unsigned subID, unsigned prodID)
     {
-      if(std::find(theMultiscaleBoundIDs.begin(), theMultiscaleBoundIDs.end(),
-                   prodID) == theMultiscaleBoundIDs.end())
-        {
-          theMultiscaleBoundIDs.push_back(prodID);
-        }
-      if(std::find(theMultiscaleBindableIDs.begin(), 
-                   theMultiscaleBindableIDs.end(),
-                   subID) == theMultiscaleBindableIDs.end())
-        {
-          theMultiscaleBindableIDs.push_back(subID);
-        }
-      theMultiscaleBindIDs[subID] = prodID;
+      isMultiscaleBoundID[prodID] = true;
+      isMultiscaleBinderID[subID] = true;
     }
   void setMultiscaleUnbindIDs(unsigned subID, unsigned prodID)
     {
-      if(std::find(theMultiscaleBoundIDs.begin(), theMultiscaleBoundIDs.end(),
-                   subID) == theMultiscaleBoundIDs.end())
-        {
-          theMultiscaleBoundIDs.push_back(subID);
-        }
+      isMultiscaleBoundID[subID] = true;
       theMultiscaleUnbindIDs[subID] = prodID;
     }
   //Get the fraction of number of nanoscopic molecules (anID) within the
@@ -2992,12 +2958,11 @@ private:
   std::vector<std::vector<std::vector<std::vector<int> > > > theSrcOffsets;
   std::vector<std::vector<std::vector<std::vector<int> > > > theRotOffsets;
   std::vector<bool> theFinalizeReactions;
+  std::vector<bool> isMultiscaleBinderID;
+  std::vector<bool> isMultiscaleBoundID;
   std::vector<unsigned> collisionCnts;
   std::vector<unsigned> theCoords;
-  std::vector<unsigned> theMultiscaleBindIDs;
-  std::vector<unsigned> theMultiscaleBoundIDs;
   std::vector<unsigned> theMultiscaleUnbindIDs;
-  std::vector<unsigned> theMultiscaleBindableIDs;
   std::vector<unsigned> thePopulatableCoords;
   std::vector<unsigned> theMultiscaleStructureCoords;
   std::vector<Tag> theTags;

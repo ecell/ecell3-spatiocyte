@@ -50,8 +50,6 @@ public:
     { 
       theSubstrates.resize(2);
       theProducts.resize(2);
-      addedVoxels.resize(2);
-      removedMols.resize(2);
       //This must be in initializeSecond or later since we need to know
       //if a species is multiscale, which is only set by the
       //CompartmentProcess in initializeFirst:
@@ -126,55 +124,21 @@ public:
     }
   virtual void bind(Voxel* aVoxel, const unsigned vacantIdx)
     {
-      /*
-      const unsigned index(aVoxel->idx%theStride);
-      if(index < theSubstrates[0]->size())
-        {
-          removedMols[0].push_back(index);
-        }
-      aVoxel->idx = addedVoxels[0].size()+theProducts[0]->size()+
-        theProducts[0]->getID()*theStride;
-      addedVoxels[0].push_back(aVoxel);
-      addedIdx.push_back(vacantIdx);
-      */
       theSubstrates[0]->softRemoveMolecule(aVoxel);
       theProducts[0]->addMolecule(aVoxel, vacantIdx);
     }
   virtual void unbind(Voxel* aVoxel)
     {
-      /*
-      const unsigned index(aVoxel->idx%theStride);
-      if(index < theSubstrates[1]->size())
-        {
-          removedMols[1].push_back(index);
-        }
-      aVoxel->idx = addedVoxels[1].size()+theProducts[1]->size()+
-        theProducts[1]->getID()*theStride;
-      addedVoxels[1].push_back(aVoxel);
-      */
       theSubstrates[1]->softRemoveMolecule(aVoxel);
       theProducts[1]->addMolecule(aVoxel);
     }
   virtual void finalizeReaction()
     {
-      /*
-      theSubstrates[0]->updateMoleculeList(removedMols[0], addedVoxels[1]);
-      removedMols[0].resize(0);
-      addedVoxels[1].resize(0);
-      theSubstrates[1]->updateMoleculeList(removedMols[1], addedVoxels[0],
-                                           addedIdx);
-      removedMols[1].resize(0);
-      addedVoxels[0].resize(0);
-      addedIdx.resize(0);
-      */
       DiffusionInfluencedReactionProcess::finalizeReaction();
     }
 protected:
   std::vector<Species*> theSubstrates;
   std::vector<Species*> theProducts;
-  std::vector<std::vector<Voxel*> > addedVoxels;
-  std::vector<std::vector<unsigned> > removedMols;
-  std::vector<unsigned> addedIdx;
   Species* theMultiscale;
   double time;
   bool isFinalized;
