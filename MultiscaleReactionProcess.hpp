@@ -43,27 +43,27 @@ public:
     {
       INHERIT_PROPERTIES(DiffusionInfluencedReactionProcess);
     }
-  MultiscaleReactionProcess():
-    isFinalized(true) {}
+  MultiscaleReactionProcess() {}
   virtual ~MultiscaleReactionProcess() {}
   virtual void initializeThird()
     { 
-      theSubstrates.resize(2);
-      theProducts.resize(2);
+      //Set up the following:
+      //theMultiscale = isMultiscale species 
+      //M = a species on multiscale (isOnMultiscale)
+      //N = a normal species that can bind with theMultiscaleSpecies to become
+      //    M
       //This must be in initializeSecond or later since we need to know
       //if a species is multiscale, which is only set by the
       //CompartmentProcess in initializeFirst:
       if(A->getIsMultiscale())
         {
           theMultiscale = A;
-          theSubstrates[0] = B;
-          theProducts[1] = B;
+          N = B;
         }
       else if(B->getIsMultiscale())
         {
           theMultiscale = B;
-          theSubstrates[0] = A;
-          theProducts[1] = A;
+          N = A;
         }
       else
         {
@@ -72,12 +72,12 @@ public:
               getFullID().asString() + "]: This process must have at least " +
              "one multiscale substrate species.");
         }
-      if(theSubstrates[0]->getVacantSpecies() == theMultiscale)
+      if(N->getVacantSpecies() == theMultiscale)
         {
           THROW_EXCEPTION(ValueError, String(
              getPropertyInterface().getClassName()) + " [" + 
               getFullID().asString() + "]: The substrate " + 
-              getIDString(theSubstrates[0]) + "'s vacant species is " +
+              getIDString(N) + "'s vacant species is " +
               getIDString(theMultiscale) + " which is a multiscale species. " +
               "This reaction only expects the product's vacant species to be " +
               "a multiscale species. You should probably invert the " +
@@ -90,58 +90,50 @@ public:
               getFullID().asString() + "]: This process must have two " +
               "products.");
         }
-      if(C->getIsMultiscale() && !D->getIsMultiscale())
+      if(C->getIsMultiscale() && D->getIsOnMultiscale())
         {
-          theProducts[0] = D;
-          theSubstrates[1] = D;
+          M = D;
         }
-      else if(!C->getIsMultiscale() && D->getIsMultiscale())
+      else if(C->getIsOnMultiscale() && D->getIsMultiscale())
         {
-          theProducts[0] = C;
-          theSubstrates[1] = C;
+          M = C;
         }
       else
         {
           THROW_EXCEPTION(ValueError, String(
              getPropertyInterface().getClassName()) + " [" + 
               getFullID().asString() + "]: This process must have at least " +
-             "one multiscale product species.");
+             "one product species on multiscale.");
         }
       //This must be set in
       //initializeThird since it requires vacant species properties
       //set by DiffusionProcess in initializeSecond:
 
       //If it is a dissociation reaction,
-      //theSubstrate diffuses on theMultiscale,
-      //theSubstrate unbinds from theMultiscale to become theProduct:
-      theMultiscale->setMultiscaleBindIDs(theSubstrates[0]->getID(),
-                                            theProducts[0]->getID());
-      theMultiscale->setMultiscaleUnbindIDs(theSubstrates[1]->getID(),
-                                            theProducts[1]->getID());
+      //M diffuses on theMultiscale,
+      //M unbinds from theMultiscale to become N:
+      theMultiscale->setMultiscaleBindIDs(N->getID(), M->getID());
+      theMultiscale->setMultiscaleUnbindIDs(M->getID(), N->getID());
       theMultiscale->setDiffusionInfluencedReaction(
             dynamic_cast<DiffusionInfluencedReactionProcess*>(this),
-            theSubstrates[0]->getID(), 1); 
+            N->getID(), 1); 
     }
   virtual void bind(Voxel* aVoxel, const unsigned vacantIdx)
     {
-      theSubstrates[0]->softRemoveMolecule(aVoxel);
-      theProducts[0]->addMolecule(aVoxel, vacantIdx);
+      N->softRemoveMolecule(aVoxel);
+      M->addMolecule(aVoxel, vacantIdx);
     }
   virtual void unbind(Voxel* aVoxel)
     {
-      theSubstrates[1]->softRemoveMolecule(aVoxel);
-      theProducts[1]->addMolecule(aVoxel);
+      M->softRemoveMolecule(aVoxel);
+      N->addMolecule(aVoxel);
     }
   virtual void finalizeReaction()
     {
       DiffusionInfluencedReactionProcess::finalizeReaction();
     }
 protected:
-  std::vector<Species*> theSubstrates;
-  std::vector<Species*> theProducts;
   Species* theMultiscale;
-  double time;
-  bool isFinalized;
 };
 
 #endif /* __MultiscaleReactionProcess_hpp */

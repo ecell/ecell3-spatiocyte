@@ -2139,7 +2139,8 @@ public:
   double getMaxReactionProbability()
     {
       double maxProbability(0);
-      for(std::vector<double>::const_iterator i(theReactionProbabilities.begin()); 
+      for(std::vector<double>::const_iterator
+          i(theReactionProbabilities.begin()); 
           i != theReactionProbabilities.end(); ++i)
         {
           if(maxProbability < *i)
