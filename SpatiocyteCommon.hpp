@@ -182,6 +182,7 @@ struct Tag
   unsigned id;
   unsigned rotIndex; //rotation index
   unsigned vacantIdx;
+  unsigned boundCnt;
 };
 
 struct Origin

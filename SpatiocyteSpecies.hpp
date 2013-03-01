@@ -1310,147 +1310,6 @@ public:
       theMoleculeSize = aSize;
       theVariable->setValue(aSize);
     }
-  void updateMoleculeList(const std::vector<unsigned>& removedMols,
-                          const std::vector<Voxel*>& addedVoxels,
-                          const std::vector<unsigned>& addedIdx)
-    {
-      unsigned j(0);
-      const unsigned size(theMoleculeSize);
-      for(unsigned i(0); i != removedMols.size(); ++i)
-        {
-          const unsigned index(removedMols[i]);
-          if(theMolecules[index]->idx != index+theID*theStride)
-            {
-              while(j != addedVoxels.size() &&
-                    addedVoxels[j]->idx != j+size+theID*theStride)
-                {
-                  ++j;
-                }
-              if(j < addedVoxels.size())
-                {
-                  theMolecules[index] = addedVoxels[j];
-                  theMolecules[index]->idx = index+theID*theStride;
-                  theTags[index].vacantIdx = addedIdx[j];
-                }
-              else
-                {
-                  while(theMoleculeSize > 0 &&
-                        theMolecules[theMoleculeSize-1]->idx != 
-                        theMoleculeSize-1+theID*theStride)
-                    {
-                      --theMoleculeSize;
-                    }
-                  if(index < theMoleculeSize)
-                    {
-                      theMolecules[index] = theMolecules[--theMoleculeSize];
-                      theMolecules[index]->idx = index+theID*theStride;
-                      theTags[index] = theTags[theMoleculeSize];
-                    }
-                }
-            }
-        }
-      ++j;
-      if(j < addedVoxels.size())
-         {
-           for(; j != addedVoxels.size(); ++j)
-             {
-               if(addedVoxels[j]->idx == j+size+theID*theStride)
-                 {
-                   addMolecule(addedVoxels[j], addedIdx[j]);
-                 }
-             }
-         }
-      theVariable->setValue(theMoleculeSize);
-    }
-  void updateMoleculeList(const std::vector<unsigned>& removedMols,
-                          const std::vector<Voxel*>& addedVoxels)
-    {
-      unsigned j(0);
-      const unsigned size(theMoleculeSize);
-      for(unsigned i(0); i != removedMols.size(); ++i)
-        {
-          const unsigned index(removedMols[i]);
-          if(theMolecules[index]->idx != index+theID*theStride)
-            {
-              while(j != addedVoxels.size() &&
-                    addedVoxels[j]->idx != j+size+theID*theStride)
-                {
-                  ++j;
-                }
-              if(j < addedVoxels.size())
-                {
-                  theMolecules[index] = addedVoxels[j];
-                  theMolecules[index]->idx = index+theID*theStride;
-                }
-              else
-                {
-                  while(theMoleculeSize > 0 &&
-                        theMolecules[theMoleculeSize-1]->idx != 
-                        theMoleculeSize-1+theID*theStride)
-                    {
-                      --theMoleculeSize;
-                    }
-                  if(index < theMoleculeSize)
-                    {
-                      theMolecules[index] = theMolecules[--theMoleculeSize];
-                      theMolecules[index]->idx = index+theID*theStride;
-                    }
-                }
-            }
-        }
-      ++j;
-      if(j < addedVoxels.size())
-         {
-           for(; j != addedVoxels.size(); ++j)
-             {
-               if(addedVoxels[j]->idx == j+size+theID*theStride)
-                 {
-                   doAddMolecule(addedVoxels[j], theNullTag);
-                 }
-             }
-         }
-      theVariable->setValue(theMoleculeSize);
-    }
-  void updateMoleculeList(const unsigned removedSize,
-                          const std::vector<unsigned>& addedMols)
-    {
-      unsigned r(0);
-      unsigned a(0);
-      for(unsigned i(0); i < theMoleculeSize && r != removedSize; ++i)
-        {
-          if(getID(theMolecules[i]) != theID)
-            {
-              if(a != addedMols.size() && 
-                 getID(theLattice[addedMols[a]]) == theID)
-                {
-                  theMolecules[i] = &theLattice[addedMols[a++]];
-                }
-              else
-                {
-                  while(--theMoleculeSize > i &&
-                        getID(theMolecules[theMoleculeSize]) != theID) {};
-                  theMolecules[i] = theMolecules[theMoleculeSize];
-                }
-              ++r;
-            }
-        }
-      for(; a != addedMols.size(); ++a)
-        {
-          if(getID(theLattice[addedMols[a]]) == theID)
-            {
-              ++theMoleculeSize;
-              if(theMoleculeSize > theMolecules.size())
-                {
-                  theMolecules.push_back(&theLattice[addedMols[a]]);
-                }
-              else
-                {
-                  theMolecules[theMoleculeSize-1] = &theLattice[addedMols[a]];
-                }
-            }
-        }
-      theVariable->setValue(theMoleculeSize);
-    }
   //Even if it is a isCompVacant, this method will be called by
   //VisualizationLogProcess, or SNRP if it is Reactive, or DiffusionProcess
   //if it is Diffusive:
@@ -1510,19 +1369,46 @@ public:
         }
       return theNullTag;
     }
-  void addMolecule(Voxel* aVoxel)
-    {
-      addMolecule(aVoxel, theNullTag);
-    }
   Species* getMultiscaleVacantSpecies()
     {
       return theMultiscaleVacantSpecies;
     }
-  //This should only be called by isOnMultiscale and not by isMultiscale:
-  void addMolecule(Voxel* aVoxel, const unsigned vacantIdx)
+  void addMolecule(Voxel* aVoxel)
     {
-      doAddMolecule(aVoxel, theNullTag);
+      addMolecule(aVoxel, theNullTag);
+    }
+  void addMoleculeExMulti(Voxel* aVoxel, const Tag& aTag)
+    {
+      addMoleculeTagless(aVoxel);
+      theTags[theMoleculeSize-1].boundCnt = aTag.boundCnt;
+    }
+  void addMoleculeInMulti(Voxel* aVoxel, const unsigned vacantIdx)
+    {
+      addMoleculeTagless(aVoxel);
       theTags[theMoleculeSize-1].vacantIdx = vacantIdx;
+    }
+  void addMoleculeInMulti(Voxel* aVoxel, const unsigned vacantIdx,
+                          const Tag& aTag)
+    {
+      addMoleculeDirect(aVoxel);
+      theTags[theMoleculeSize-1].vacantIdx = vacantIdx;
+      theTags[theMoleculeSize-1].boundCnt = aTag.boundCnt;
+    }
+  void addMoleculeDirect(Voxel* aVoxel)
+    {
+      aVoxel->idx = theMoleculeSize+theStride*theID;
+      ++theMoleculeSize; 
+      if(theMoleculeSize > theMolecules.size())
+        {
+          theMolecules.resize(theMoleculeSize);
+          theTags.resize(theMoleculeSize);
+        }
+      theMolecules[theMoleculeSize-1] = aVoxel;
+      theVariable->setValue(theMoleculeSize);
+    }
+  void addMoleculeTagless(Voxel* aVoxel)
+    {
+      addMoleculeDirect(aVoxel);
     }
   void addMolecule(Voxel* aVoxel, Tag& aTag)
     {
@@ -1535,12 +1421,12 @@ public:
               if(aSpecies->getVacantSpecies() != theMultiscaleVacantSpecies)
                 {
                   addMultiscaleMolecule(aVoxel, theMoleculeSize);
-                  doAddMolecule(aVoxel, aTag);
+                  addMoleculeTagged(aVoxel, aTag);
                 }
             }
           else
             {
-              doAddMolecule(aVoxel, aTag);
+              addMoleculeTagged(aVoxel, aTag);
             }
         }
       else
@@ -1548,16 +1434,9 @@ public:
           aVoxel->idx = theID*theStride;
         }
     }
-  void doAddMolecule(Voxel* aVoxel, Tag& aTag)
+  void addMoleculeTagged(Voxel* aVoxel, Tag& aTag)
     {
-      aVoxel->idx = theMoleculeSize+theStride*theID;
-      ++theMoleculeSize; 
-      if(theMoleculeSize > theMolecules.size())
-        {
-          theMolecules.resize(theMoleculeSize);
-          theTags.resize(theMoleculeSize);
-        }
-      theMolecules[theMoleculeSize-1] = aVoxel;
+      addMoleculeTagless(aVoxel);
       if(isTagged)
         {
           //If it is theNullTag:
@@ -1571,12 +1450,6 @@ public:
               theTags[theMoleculeSize-1] = aTag;
             }
         }
-      /*
-      if(isDeoligomerize)
-        {
-        }
-        */
-      theVariable->setValue(theMoleculeSize);
     }
   bool isMultiscaleWalkPropensityRegular(const unsigned coordA, 
                                          const unsigned rowA,

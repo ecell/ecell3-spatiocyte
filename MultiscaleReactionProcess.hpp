@@ -120,13 +120,15 @@ public:
     }
   virtual void bind(Voxel* aVoxel, const unsigned vacantIdx)
     {
-      N->softRemoveMolecule(aVoxel);
-      M->addMolecule(aVoxel, vacantIdx);
+      const unsigned index(aVoxel->idx%theStride);
+      M->addMoleculeInMulti(aVoxel, vacantIdx, N->getTag(index));
+      N->softRemoveMolecule(index);
     }
   virtual void unbind(Voxel* aVoxel)
     {
-      M->softRemoveMolecule(aVoxel);
-      N->addMolecule(aVoxel);
+      const unsigned index(aVoxel->idx%theStride);
+      N->addMoleculeExMulti(aVoxel, M->getTag(index));
+      M->softRemoveMolecule(index);
     }
   virtual void finalizeReaction()
     {

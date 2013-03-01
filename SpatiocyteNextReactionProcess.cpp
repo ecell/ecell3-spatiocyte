@@ -553,7 +553,7 @@ bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
   if(a->getIsOnMultiscale() && c->getIsOnMultiscale())
     {
       unsigned vacantIdx(a->getTag(indexA).vacantIdx);
-      c->addMolecule(moleculeC, vacantIdx);
+      c->addMoleculeInMulti(moleculeC, vacantIdx, a->getTag(indexA));
       a->softRemoveMolecule(indexA);
     }
   else

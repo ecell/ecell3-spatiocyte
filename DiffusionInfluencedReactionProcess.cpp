@@ -128,7 +128,7 @@ void DiffusionInfluencedReactionProcess::reactWithMultiscaleComp(
     }
   if(M_p)
     {
-      M_p->addMolecule(moleculeM, vacantIdx);
+      M_p->addMoleculeInMulti(moleculeM, vacantIdx);
     }
   else
     {
@@ -163,7 +163,7 @@ void DiffusionInfluencedReactionProcess::reactInMultiscaleComp(
     {
       if(C->getIsOnMultiscale())
         {
-          C->addMolecule(molA, vacantIdxA);
+          C->addMoleculeInMulti(molA, vacantIdxA);
         }
       else
         {
@@ -175,7 +175,7 @@ void DiffusionInfluencedReactionProcess::reactInMultiscaleComp(
             {
               if(D->getIsOnMultiscale())
                 {
-                  D->addMolecule(molB, vacantIdxB);
+                  D->addMoleculeInMulti(molB, vacantIdxB);
                 }
               else
                 {
@@ -188,7 +188,7 @@ void DiffusionInfluencedReactionProcess::reactInMultiscaleComp(
     {
       if(C->getIsOnMultiscale())
         {
-          C->addMolecule(molB, vacantIdxB);
+          C->addMoleculeInMulti(molB, vacantIdxB);
         }
       else
         {
@@ -200,7 +200,7 @@ void DiffusionInfluencedReactionProcess::reactInMultiscaleComp(
             {
               if(D->getIsOnMultiscale())
                 {
-                  D->addMolecule(molA, vacantIdxA);
+                  D->addMoleculeInMulti(molA, vacantIdxA);
                 }
               else
                 {
