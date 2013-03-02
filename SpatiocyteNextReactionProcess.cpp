@@ -836,7 +836,7 @@ void SpatiocyteNextReactionProcess::initializeSecond()
   ReactionProcess::initializeSecond();
   //if second order, with A and B substrates, both of them
   //must be immobile, or A must be multiscale:
-  if (A && B)
+  if(A && B)
     {
       if(A->getDiffusionCoefficient() && !A->getIsMultiscale())
         { 
@@ -865,6 +865,13 @@ void SpatiocyteNextReactionProcess::initializeSecond()
                             "diffusion coefficient and not a multiscale " +
                             "species. Use DiffusionInfluencedReaction " +
                             "instead.");
+        }
+    }
+  if(A && C)
+    {
+      if(Deoligomerize)
+        {
+          A->setIsDeoligomerize(C);
         }
     }
 }

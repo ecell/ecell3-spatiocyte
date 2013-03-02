@@ -195,7 +195,7 @@ Species* SpatiocyteStepper::addSpecies(Variable* aVariable)
     {
       Species *aSpecies(new Species(this, aVariable, theSpecies.size(),
                           (int)aVariable->getValue(), theRan, VoxelRadius,
-                          theLattice));
+                          theLattice, theSpecies));
       theSpecies.push_back(aSpecies);
       return aSpecies;
     }
@@ -457,8 +457,7 @@ void SpatiocyteStepper::initSpecies()
   for(std::vector<Species*>::iterator i(theSpecies.begin());
       i != theSpecies.end(); ++i)
     {
-      (*i)->initialize(theSpecies.size(), theAdjoiningCoordSize, 
-                       theNullCoord, theNullID);
+      (*i)->initialize(theAdjoiningCoordSize, theNullCoord, theNullID);
     }
   for(std::vector<Comp*>::const_iterator i(theComps.begin());
       i != theComps.end(); ++i)
@@ -663,7 +662,9 @@ inline void SpatiocyteStepper::step()
 {
   do
     {
+      std::cout << "before:" << thePriorityQueue.getTop()->getIDString() << " " << getCurrentTime() << std::endl;
       thePriorityQueue.getTop()->fire();
+      checkSpecies();
     }
   while(thePriorityQueue.getTop()->getTime() == getCurrentTime());
   setNextTime(thePriorityQueue.getTop()->getTime());
@@ -706,6 +707,27 @@ void SpatiocyteStepper::checkSpecies()
                         aSpecies->size() << " vacidx wrong:" << j << std::endl;
                     }
                 }
+              if(aSpecies->getTag(j).boundCnt)
+                {
+                  unsigned cnt(0);
+                  Voxel* aVoxel(aSpecies->getMolecule(j));
+                  for(unsigned k(0); k != aVoxel->diffuseSize; ++k)
+                    {
+                      unsigned coord(aVoxel->adjoiningCoords[k]);
+                      if(theSpecies[aSpecies->getID(theLattice[
+                                      coord])]->getIsDeoligomerize())
+                        {
+                          cnt++;
+                        }
+                    }
+                  if(cnt != aSpecies->getTag(j).boundCnt)
+                    {
+                      std::cout << aSpecies->getIDString() << " j:" << j <<
+                        "error in deoligomerize cnt:" << cnt <<
+                        " expected:" << aSpecies->getTag(j).boundCnt <<
+                        std::endl;
+                    }
+                }
             }
         }
       else
@@ -746,7 +768,7 @@ void SpatiocyteStepper::registerComps()
   //Create one last species to represent a NULL Comp. This is for
   //voxels that do not belong to any Comps:
   Species* aSpecies(new Species(this, NULL, theSpecies.size(), 0, theRan,
-                                VoxelRadius, theLattice));
+                                VoxelRadius, theLattice, theSpecies));
   theSpecies.push_back(aSpecies);
   aSpecies->setComp(NULL);
   theNullID = aSpecies->getID(); 

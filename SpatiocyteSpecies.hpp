@@ -87,7 +87,8 @@ class Species
 public:
   Species(SpatiocyteStepper* aStepper, Variable* aVariable, int anID, 
           int anInitCoordSize, RandomLib::Random& aRng,
-          double voxelRadius, std::vector<Voxel>& aLattice):
+          double voxelRadius, std::vector<Voxel>& aLattice,
+          std::vector<Species*>& aSpeciesList):
     isCentered(false),
     isCompVacant(false),
     isDeoligomerize(false),
@@ -124,29 +125,34 @@ public:
     theStepper(aStepper),
     theVariable(aVariable),
     theCompVoxels(&theMolecules),
-    theLattice(aLattice) {}
+    theLattice(aLattice),
+    theSpecies(aSpeciesList) {}
   ~Species() {}
-  void initialize(int speciesSize, int anAdjoiningCoordSize,
-                  unsigned aNullCoord, unsigned aNullID)
+  void initialize(const int anAdjoiningCoordSize, const unsigned aNullCoord,
+                  const unsigned aNullID)
     {
+      const unsigned speciesSize(theSpecies.size());
       theAdjoiningCoordSize = anAdjoiningCoordSize;
       theNullCoord = aNullCoord;
       theNullID = aNullID;
-      theSpeciesSize = speciesSize;
-      theStride = UINT_MAX/theSpeciesSize;
+      theStride = UINT_MAX/speciesSize;
       theReactionProbabilities.resize(speciesSize);
       theDiffusionInfluencedReactions.resize(speciesSize);
-      theFinalizeReactions.resize(speciesSize);
+      isFinalizeReactions.resize(speciesSize);
       theMultiscaleUnbindIDs.resize(speciesSize);
       isMultiscaleBinderID.resize(speciesSize);
       isMultiscaleBoundID.resize(speciesSize);
-      for(int i(0); i != speciesSize; ++i)
+      isDeoligomerizeID.resize(speciesSize);
+      theDeoligomerizedProducts.resize(speciesSize);
+      for(unsigned i(0); i != speciesSize; ++i)
         {
           isMultiscaleBinderID[i] = false;
           isMultiscaleBoundID[i] = false;
+          isDeoligomerizeID[i] = false;
           theDiffusionInfluencedReactions[i] = NULL;
+          theDeoligomerizedProducts[i] = NULL;
           theReactionProbabilities[i] = 0;
-          theFinalizeReactions[i] = false;
+          isFinalizeReactions[i] = false;
         }
       if(theComp)
         {
@@ -174,6 +180,10 @@ public:
           isGaussianPopulation = true;
         }
       thePopulateProcess = aProcess;
+    }
+  bool getIsDeoligomerize()
+    {
+      return isDeoligomerize;
     }
   bool getIsOnMultiscale()
     {
@@ -218,10 +228,11 @@ public:
       theTagSpeciesList.push_back(aSpecies);
       aSpecies->addTaggedSpecies(this);
     }
-  void setIsDeoligomerize()
+  void setIsDeoligomerize(Species* aSpecies)
     {
       isDeoligomerize = true;
-      theBoundCnts.resize(theDiffuseSize);
+      theBoundCnts.resize(theDiffuseSize+1);
+      theDeoligomerizedProduct = aSpecies;
     }
   void setIsPeriodic()
     {
@@ -471,12 +482,29 @@ public:
             }
           if(isTagged)
             {
+              std::cout << "------------------------is tagged" << std::endl;
               for(unsigned i(0); i != theMoleculeSize; ++i)
                 {
                   theTags[i].origin = getCoord(i);
                 }
             }
         }
+      if(isDeoligomerize)
+        {
+          for(unsigned i(0); i != theSpecies.size(); ++i)
+            {
+              if(theSpecies[i]->getIsDeoligomerize())
+                {
+                  isDeoligomerizeID[i] = true;
+                  theDeoligomerizedProducts[i] = 
+                    theSpecies[i]->getDeoligomerizedProduct();
+                }
+            }
+        }
+    }
+  Species* getDeoligomerizedProduct()
+    {
+      return theDeoligomerizedProduct;
     }
   unsigned getCollisionCnt(unsigned anIndex)
     {
@@ -609,16 +637,16 @@ public:
     }
   void resetFinalizeReactions()
     {
-      for(unsigned i(0); i != theFinalizeReactions.size(); ++i)
+      for(unsigned i(0); i != isFinalizeReactions.size(); ++i)
         {
-          theFinalizeReactions[i] = false;
+          isFinalizeReactions[i] = false;
         }
     }
   void finalizeReactions()
     {
-      for(unsigned i(0); i != theFinalizeReactions.size(); ++i)
+      for(unsigned i(0); i != isFinalizeReactions.size(); ++i)
         {
-          if(theFinalizeReactions[i])
+          if(isFinalizeReactions[i])
             {
               theDiffusionInfluencedReactions[i]->finalizeReaction();
             }
@@ -694,7 +722,7 @@ public:
                       if(theCollision)
                         { 
                           ++collisionCnts[i];
-                          Species* targetSpecies(theStepper->id2species(tarID));
+                          Species* targetSpecies(theSpecies[tarID]);
                           targetSpecies->addCollision(target);
                           if(theCollision != 2)
                             {
@@ -805,7 +833,7 @@ public:
                       if(theCollision)
                         { 
                           ++collisionCnts[i];
-                          Species* targetSpecies(theStepper->id2species(tarID));
+                          Species* targetSpecies(theSpecies[tarID]);
                           targetSpecies->addCollision(target);
                           if(theCollision != 2)
                             {
@@ -1062,7 +1090,7 @@ public:
       const unsigned tarIndex(tar->idx%theStride);
       DiffusionInfluencedReactionProcess* aReaction(
                       theDiffusionInfluencedReactions[tarID]);
-      Species* tarSpecies(theStepper->id2species(tarID));
+      Species* tarSpecies(theSpecies[tarID]);
       if(aReaction->getA() == this)
         { 
           if(!aReaction->react(src, tar, srcIndex, tarIndex))
@@ -1094,7 +1122,7 @@ public:
           softRemoveMolecule(srcIndex);
           tarSpecies->softRemoveMolecule(tarIndex);
         }
-      theFinalizeReactions[tarID] = true;
+      isFinalizeReactions[tarID] = true;
     }
     */
   void react(Voxel* src, Voxel* tar, unsigned srcIndex)
@@ -1103,7 +1131,7 @@ public:
       const unsigned tarIndex(tar->idx%theStride);
       DiffusionInfluencedReactionProcess* aReaction(
                       theDiffusionInfluencedReactions[tarID]);
-      Species* tarSpecies(theStepper->id2species(tarID));
+      Species* tarSpecies(theSpecies[tarID]);
       if(aReaction->getIsReactWithMultiscaleComp())
         {
           if(tarSpecies->getIsMultiscaleComp())
@@ -1169,16 +1197,18 @@ public:
           //much slower when it is only diffusing without reacting:
           if(tarSpecies == this && theMoleculeSize-1 == tarIndex)
             {
+              std::cout << "here" << std::endl;
               --theMoleculeSize;
               softRemoveMolecule(srcIndex);
             }
           else
             {
+              std::cout << "here2" << std::endl;
               softRemoveMolecule(srcIndex);
               tarSpecies->softRemoveMolecule(tarIndex);
             }
         }
-      theFinalizeReactions[tarID] = true;
+      isFinalizeReactions[tarID] = true;
     }
   void setComp(Comp* aComp)
     {
@@ -1363,11 +1393,7 @@ public:
     }
   Tag& getTag(unsigned anIndex)
     {
-      if(isOnMultiscale || (isTagged && anIndex != theMoleculeSize))
-        {
-          return theTags[anIndex];
-        }
-      return theNullTag;
+      return theTags[anIndex];
     }
   Species* getMultiscaleVacantSpecies()
     {
@@ -1394,6 +1420,21 @@ public:
       theTags[theMoleculeSize-1].vacantIdx = vacantIdx;
       theTags[theMoleculeSize-1].boundCnt = aTag.boundCnt;
     }
+  void softAddMolecule(Voxel* aVoxel)
+    {
+      ++theMoleculeSize; 
+      if(theMoleculeSize > theMolecules.size())
+        {
+          theMolecules.resize(theMoleculeSize);
+          theTags.push_back({0, 0, 0, 0, 0});
+        }
+      else
+        {
+          theTags[theMoleculeSize-1] = {0, 0, 0, 0, 0};
+        }
+      theMolecules[theMoleculeSize-1] = aVoxel;
+      theVariable->setValue(theMoleculeSize);
+    }
   void addMoleculeDirect(Voxel* aVoxel)
     {
       aVoxel->idx = theMoleculeSize+theStride*theID;
@@ -1401,7 +1442,11 @@ public:
       if(theMoleculeSize > theMolecules.size())
         {
           theMolecules.resize(theMoleculeSize);
-          theTags.resize(theMoleculeSize);
+          theTags.push_back({0, 0, 0, 0, 0});
+        }
+      else
+        {
+          theTags[theMoleculeSize-1] = {0, 0, 0, 0, 0};
         }
       theMolecules[theMoleculeSize-1] = aVoxel;
       theVariable->setValue(theMoleculeSize);
@@ -1409,15 +1454,23 @@ public:
   void addMoleculeTagless(Voxel* aVoxel)
     {
       addMoleculeDirect(aVoxel);
+      if(isDeoligomerize)
+        {
+          addBounds(aVoxel);
+        }
     }
   void addMolecule(Voxel* aVoxel, Tag& aTag)
     {
+      if(getID(aVoxel) == theID)
+        {
+          std::cout << "this is so wrong===================================================================================" << std::endl;
+        }
       if(!isVacant)
         {
           if(isMultiscale)
             {
               //TODO: don't know what is this for
-              Species* aSpecies(theStepper->id2species(getID(aVoxel)));
+              Species* aSpecies(theSpecies[getID(aVoxel)]);
               if(aSpecies->getVacantSpecies() != theMultiscaleVacantSpecies)
                 {
                   addMultiscaleMolecule(aVoxel, theMoleculeSize);
@@ -1439,6 +1492,7 @@ public:
       addMoleculeTagless(aVoxel);
       if(isTagged)
         {
+          std::cout << "=================================================================------------------------is tagged" << std::endl;
           //If it is theNullTag:
           if(aTag.origin == theNullCoord)
             {
@@ -1767,13 +1821,13 @@ public:
     { 
       unsigned anID(getID(aVoxel));
       theDiffusionInfluencedReactions[anID]->bind(aVoxel, vacantIdx);
-      theFinalizeReactions[anID] = true;
+      isFinalizeReactions[anID] = true;
     }
   void unbindMultiscale(Voxel* aVoxel)
     {
       unsigned anID(theMultiscaleUnbindIDs[getID(aVoxel)]);
       theDiffusionInfluencedReactions[anID]->unbind(aVoxel);
-      theFinalizeReactions[anID] = true;
+      isFinalizeReactions[anID] = true;
     }
   void addCompVoxel(unsigned aCoord)
     {
@@ -1784,32 +1838,11 @@ public:
     }
   String getIDString(unsigned anID)
     {
-      Species* aSpecies(theStepper->id2species(anID));
-      Variable* aVariable(aSpecies->getVariable());
-      if(aVariable)
-        {
-          return "["+aVariable->getSystemPath().asString()+":"+
-            aVariable->getID()+"]["+int2str(aSpecies->getID())+"]";
-        }
-      else if(aSpecies->getID() == theNullID)
-        {
-          return "[theNullID]["+int2str(aSpecies->getID())+"]";
-        }
-      return "[unknown]";
+      return theSpecies[anID]->getIDString();
     }
   String getIDString(Species* aSpecies)
     {
-      Variable* aVariable(aSpecies->getVariable());
-      if(aVariable)
-        {
-          return "["+aVariable->getSystemPath().asString()+":"+
-            aVariable->getID()+"]["+int2str(aSpecies->getID())+"]";
-        }
-      else if(aSpecies->getID() == theNullID)
-        {
-          return "[theNullID]["+int2str(aSpecies->getID())+"]";
-        }
-      return "[unknown]";
+      return aSpecies->getIDString();
     }
   String getIDString()
     {
@@ -1856,7 +1889,7 @@ public:
     {
       if(isMultiscale)
         {
-          Species* aSpecies(theStepper->id2species(getID(aVoxel)));
+          Species* aSpecies(theSpecies[getID(aVoxel)]);
           if(aSpecies->getVacantSpecies() != theMultiscaleVacantSpecies)
             {
               softRemoveMolecule(getIndex(aVoxel));
@@ -1872,7 +1905,7 @@ public:
       if(isMultiscale)
         {
           //TODO: don't know what is this for
-          Species* aSpecies(theStepper->id2species(getID(aVoxel)));
+          Species* aSpecies(theSpecies[getID(aVoxel)]);
           if(aSpecies->getVacantSpecies() != theMultiscaleVacantSpecies)
             {
               removeMolecule(getIndex(aVoxel));
@@ -1891,8 +1924,159 @@ public:
           softRemoveMolecule(anIndex);
         }
     }
+  void addBounds(Voxel* aVoxel)
+    {
+      unsigned& cnt(theTags[theMoleculeSize-1].boundCnt);
+      cnt = 0;
+      std::cout << "adding:" << theStepper->getCurrentTime() << " size:" << theMoleculeSize << " coord:" << aVoxel->coord << std::endl;
+      std::cout << "  before me cnt:" << cnt << std::endl;
+      for(unsigned i(0); i != theDiffuseSize; ++i)
+        {
+          unsigned aCoord(aVoxel->adjoiningCoords[i]);
+          const unsigned anID(getID(theLattice[aCoord]));
+          if(isDeoligomerizeID[anID])
+            {
+              unsigned index(theLattice[aCoord].idx%theStride);
+              unsigned& adjCnt(theSpecies[anID]->getTag(index).boundCnt);
+              if(theSpecies[anID]->getMolecule(index) != &theLattice[aCoord])
+                {
+                  std::cout << "=================================================================error in index" << std::endl;
+                }
+              std::cout << "    i:" << i << " cnt:" << adjCnt << std::endl;
+              if(adjCnt)
+                {
+                  unsigned nCnt(0);
+                  for(unsigned j(0); j != theDiffuseSize; ++j)
+                    {
+                      unsigned aCoordB(theLattice[aCoord].adjoiningCoords[j]);
+                      const unsigned id(getID(theLattice[aCoordB]));
+                      if(aVoxel != &theLattice[aCoordB] &&
+                         isDeoligomerizeID[id])
+                        {
+                          nCnt++;
+                        }
+                    }
+                  if(nCnt != adjCnt)
+                    {
+                      theStepper->checkSpecies();
+                      theSpecies[4]->addMolecule(&theLattice[aCoord]);
+                      theSpecies[1]->softAddMolecule(aVoxel);
+                      std::cout << "---------------=====================================================error nCnt:" << nCnt << " adjCnt:" << adjCnt << " index:" << index << " anIndex:" << theMoleculeSize-1 << " coord:" << aCoord << std::endl;
+                    }
+                }
+            }
+        }
+      std::cout << "  during:" << std::endl;
+      for(unsigned i(0); i != theDiffuseSize; ++i)
+        {
+          unsigned aCoord(aVoxel->adjoiningCoords[i]);
+          const unsigned anID(getID(theLattice[aCoord]));
+          if(isDeoligomerizeID[anID])
+            {
+              cnt++;
+              unsigned index(theLattice[aCoord].idx%theStride);
+              unsigned& adjCnt(theSpecies[anID]->getTag(index).boundCnt);
+              adjCnt++;
+              std::cout << "    i:" << i << " cnt:" << adjCnt << std::endl;
+              /*
+              theBoundCnts[adjCnt++]--;
+              theBoundCnts[adjCnt]++;
+              */
+            }
+        }
+      std::cout << "  after me cnt:" << cnt << std::endl;
+      for(unsigned i(0); i != theDiffuseSize; ++i)
+        {
+          unsigned aCoord(aVoxel->adjoiningCoords[i]);
+          const unsigned anID(getID(theLattice[aCoord]));
+          if(isDeoligomerizeID[anID])
+            {
+              unsigned index(theLattice[aCoord].idx%theStride);
+              unsigned& adjCnt(theSpecies[anID]->getTag(index).boundCnt);
+              std::cout << "    i:" << i << " cnt:" << adjCnt << std::endl;
+            }
+        }
+      //theBoundCnts[cnt]++;
+    }
+  void removeBounds(const unsigned anIndex)
+    {
+      Voxel* aVoxel(theMolecules[anIndex]);
+      unsigned& cnt(theTags[theMoleculeSize-1].boundCnt);
+      std::cout << "removing:" << theStepper->getCurrentTime() << std::endl;
+      std::cout << "  before me cnt:" << cnt << std::endl;
+      //theBoundCnts[theTags[anIndex].boundCnt]--;
+      removeMoleculeDirect(anIndex);
+      for(unsigned i(0); i != theDiffuseSize; ++i)
+        {
+          unsigned aCoord(aVoxel->adjoiningCoords[i]);
+          const unsigned anID(getID(theLattice[aCoord]));
+          if(isDeoligomerizeID[anID])
+            {
+              unsigned index(theLattice[aCoord].idx%theStride);
+              unsigned& adjCnt(theSpecies[anID]->getTag(index).boundCnt);
+              std::cout << "    i:" << i << " cnt:" << adjCnt << std::endl;
+            }
+        }
+      std::cout << "  during:" << std::endl;
+      for(unsigned i(0); i != theDiffuseSize; ++i)
+        {
+          const unsigned aCoord(aVoxel->adjoiningCoords[i]);
+          const unsigned anID(getID(theLattice[aCoord]));
+          if(isDeoligomerizeID[anID])
+            {
+              const unsigned index(theLattice[aCoord].idx%theStride);
+              unsigned& adjCnt(theSpecies[anID]->getTag(index).boundCnt);
+              std::cout << "    i:" << i << " cnt:" << adjCnt << std::endl;
+              if(adjCnt == 1)
+                {
+                  std::cout << "     removing i:" << i << std::endl;
+                  theSpecies[anID]->removeMoleculeDirect(index);
+                  theDeoligomerizedProducts[anID]->addMolecule(
+                     &theLattice[aCoord]);
+                  //theBoundCnts[1]--;
+                }
+              else
+                {
+                  adjCnt--;
+                  std::cout << "    i:" << i << " cnt:" << adjCnt << std::endl;
+                  /*
+                  theBoundCnts[adjCnt--]--;
+                  theBoundCnts[adjCnt]++;
+                  */
+                }
+            }
+        }
+      std::cout << "  after:" << std::endl;
+      for(unsigned i(0); i != theDiffuseSize; ++i)
+        {
+          unsigned aCoord(aVoxel->adjoiningCoords[i]);
+          const unsigned anID(getID(theLattice[aCoord]));
+          if(isDeoligomerizeID[anID])
+            {
+              unsigned index(theLattice[aCoord].idx%theStride);
+              unsigned& adjCnt(theSpecies[anID]->getTag(index).boundCnt);
+              std::cout << "    i:" << i << " cnt:" << adjCnt << std::endl;
+            }
+        }
+    }
+  void removeMoleculeDirect(unsigned anIndex)
+    {
+      --theMoleculeSize;
+      if(theMoleculeSize > anIndex)
+        {
+          theMolecules[anIndex] = theMolecules[theMoleculeSize];
+          theMolecules[anIndex]->idx = anIndex+theStride*theID;
+          theTags[anIndex] = theTags[theMoleculeSize];
+        }
+      theVariable->setValue(theMoleculeSize);
+    }
   void softRemoveMolecule(unsigned anIndex)
     {
+      if(isDeoligomerize)
+        {
+          removeBounds(anIndex);
+          return;
+        }
       if(isMultiscale)
         {
           removeMultiscaleMolecule(theMolecules[anIndex],
@@ -1900,15 +2084,7 @@ public:
         }
       if(!isVacant)
         {
-          --theMoleculeSize;
-          if(theMoleculeSize > anIndex)
-            {
-              theMolecules[anIndex] = theMolecules[theMoleculeSize];
-              theMolecules[anIndex]->idx = anIndex+theStride*theID;
-              theTags[anIndex] = theTags[theMoleculeSize];
-            }
-          theVariable->setValue(theMoleculeSize);
-          return;
+          removeMoleculeDirect(anIndex);
         }
     }
   //Used to remove all molecules and free memory used to store the molecules
@@ -2769,6 +2945,7 @@ public:
       return true;
     }
   //Can aVoxel of this species replaced by aSpecies:
+  //TODO: simplify this:
   bool isReplaceable(Voxel* aVoxel, Species* aSpecies)
     {
       if(getComp() != aSpecies->getComp() &&
@@ -2776,6 +2953,7 @@ public:
         {
           return false;
         }
+      /* Just commenting this out since I don't know what it is for:
       if(aSpecies->getIsMultiscale())
         {
           if(aSpecies->isIntersectMultiscale(aVoxel->coord))
@@ -2783,6 +2961,7 @@ public:
               return false;
             }
         }
+        */
       if(getVacantID() != aSpecies->getID() && 
          aSpecies->getVacantID() != theID && 
          getVacantID() != aSpecies->getVacantID())
@@ -2844,7 +3023,6 @@ private:
   unsigned theNullCoord;
   unsigned theNullID;
   unsigned theRegLatticeCoord;
-  unsigned theSpeciesSize;
   unsigned theStride;
   unsigned theRotateSize;
   unsigned theVacantIdx;
@@ -2862,6 +3040,7 @@ private:
   RandomLib::Random& theRng;
   Species* theVacantSpecies;
   Species* theMultiscaleVacantSpecies;
+  Species* theDeoligomerizedProduct;
   Comp* theComp;
   MoleculePopulateProcessInterface* thePopulateProcess;
   SpatiocyteStepper* theStepper;
@@ -2873,7 +3052,8 @@ private:
   std::vector<std::vector<std::vector<std::vector<int> > > > theTarOffsets;
   std::vector<std::vector<std::vector<std::vector<int> > > > theSrcOffsets;
   std::vector<std::vector<std::vector<std::vector<int> > > > theRotOffsets;
-  std::vector<bool> theFinalizeReactions;
+  std::vector<bool> isDeoligomerizeID;
+  std::vector<bool> isFinalizeReactions;
   std::vector<bool> isMultiscaleBinderID;
   std::vector<bool> isMultiscaleBoundID;
   std::vector<unsigned> collisionCnts;
@@ -2896,6 +3076,8 @@ private:
   std::vector<Voxel>& theLattice;
   std::vector<std::vector<unsigned> > theIntersectLipids;
   std::vector<unsigned> theBoundCnts;
+  std::vector<Species*>& theSpecies;
+  std::vector<Species*> theDeoligomerizedProducts;
 };
 
 
