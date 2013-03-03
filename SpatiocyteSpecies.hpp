@@ -1940,12 +1940,10 @@ public:
               cnt++;
               unsigned index(theLattice[aCoord].idx%theStride);
               unsigned& adjCnt(theSpecies[anID]->getTag(index).boundCnt);
-              adjCnt++;
-              std::cout << "    i:" << i << " cnt:" << adjCnt << std::endl;
-              /*
+              //adjCnt++;
               theBoundCnts[adjCnt++]--;
+              std::cout << "    i:" << i << " cnt:" << adjCnt << std::endl;
               theBoundCnts[adjCnt]++;
-              */
             }
         }
       std::cout << "  after me cnt:" << cnt << std::endl;
@@ -1960,7 +1958,7 @@ public:
               std::cout << "    i:" << i << " cnt:" << adjCnt << std::endl;
             }
         }
-      //theBoundCnts[cnt]++;
+      theBoundCnts[cnt]++;
     }
   void removeBounds(const unsigned anIndex)
     {
@@ -1997,16 +1995,14 @@ public:
                   theSpecies[anID]->removeMoleculeDirect(index);
                   theDeoligomerizedProducts[anID]->addMolecule(
                      &theLattice[aCoord]);
-                  //theBoundCnts[1]--;
+                  theBoundCnts[1]--;
                 }
               else
                 {
-                  adjCnt--;
-                  std::cout << "    i:" << i << " cnt:" << adjCnt << std::endl;
-                  /*
+                  //adjCnt--;
                   theBoundCnts[adjCnt--]--;
+                  std::cout << "    i:" << i << " cnt:" << adjCnt << std::endl;
                   theBoundCnts[adjCnt]++;
-                  */
                 }
             }
         }

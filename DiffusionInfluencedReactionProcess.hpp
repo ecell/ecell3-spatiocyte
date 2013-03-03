@@ -113,7 +113,6 @@ protected:
   void reactVarD_AtoC(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactVarD_BtoC(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactVarD_NtoC(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactVarC(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactAeqC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactBeqC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactAeqC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
@@ -129,6 +128,7 @@ protected:
   void reactBtoC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactBtoC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactNtoC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactVarC(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactAeqC(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactBeqC(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactAtoC(Voxel*, Voxel*, const unsigned, const unsigned);
