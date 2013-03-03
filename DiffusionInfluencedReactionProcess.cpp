@@ -217,6 +217,67 @@ void DiffusionInfluencedReactionProcess::reactInMultiscaleComp(
     }
 }
 
+void DiffusionInfluencedReactionProcess::removeMolecule(Species* aSpecies, 
+                                                  Voxel* mol,
+                                                  const unsigned index) const
+{
+  if(A != B)
+    {
+      aSpecies->removeMolecule(index);
+    }
+  else
+    {
+      //If A == B, indexB is no longer valid after molA is removed,
+      //so need to use the current index to remove molB:
+      aSpecies->removeMolecule(mol);
+    }
+}
+
+void DiffusionInfluencedReactionProcess::removeMolecule(Species* substrate, 
+                                                        Voxel* mol,
+                                                        const unsigned index,
+                                                        Species* product) const
+{
+  if(A != B)
+    { 
+      product->addMolecule(mol, substrate->getTag(index));
+      substrate->softRemoveMolecule(index);
+    }
+  else
+    {
+      Tag& aTag(substrate->getTag(mol));
+      substrate->softRemoveMolecule(mol);
+      product->addMolecule(mol, aTag);
+    }
+}
+
+Voxel* DiffusionInfluencedReactionProcess::getPopulatableVoxel(
+                                                             Species* aSpecies,
+                                                             Voxel* molA,
+                                                             Voxel* molB)
+{
+  Voxel* mol(aSpecies->getRandomAdjoiningVoxel(molA, SearchVacant));
+  if(!mol)
+    {
+      mol = aSpecies->getRandomAdjoiningVoxel(molB, SearchVacant);
+    }
+  return mol;
+}
+
+Voxel* DiffusionInfluencedReactionProcess::getPopulatableVoxel(
+                                                             Species* aSpecies,
+                                                             Voxel* molA,
+                                                             Voxel* molB,
+                                                             Voxel* molC)
+{
+  Voxel* mol(aSpecies->getRandomAdjoiningVoxel(molA, molC, SearchVacant));
+  if(!mol)
+    {
+      mol = aSpecies->getRandomAdjoiningVoxel(molB, molC, SearchVacant);
+    }
+  return mol;
+}
+
 //A + B -> variableC + [D <- molA]
 void DiffusionInfluencedReactionProcess::reactVarC_AtoD(
                                                   Voxel* molA, Voxel* molB,
@@ -226,16 +287,7 @@ void DiffusionInfluencedReactionProcess::reactVarC_AtoD(
   variableC->addValue(1);
   D->addMolecule(molA, A->getTag(indexA));
   A->softRemoveMolecule(indexA);
-  if(A != B)
-    {
-      B->removeMolecule(indexB);
-    }
-  else
-    {
-      //If A == B, indexB is no longer valid after molA is removed,
-      //so need to use the current index to remove molB:
-      B->removeMolecule(molB);
-    }
+  removeMolecule(B, molB, indexB);
 }
 
 //A + B -> variableC + [D <- molB]
@@ -247,14 +299,7 @@ void DiffusionInfluencedReactionProcess::reactVarC_BtoD(
   variableC->addValue(1);
   D->addMolecule(molB, B->getTag(indexB));
   B->softRemoveMolecule(indexB);
-  if(A != B)
-    {
-      A->removeMolecule(indexA);
-    }
-  else
-    {
-      A->removeMolecule(molA);
-    }
+  removeMolecule(A, molA, indexA);
 }
 
 //A + B -> variableC + [D <- molN]
@@ -263,26 +308,14 @@ void DiffusionInfluencedReactionProcess::reactVarC_NtoD(
                                                   const unsigned indexA,
                                                   const unsigned indexB)
 { 
-  Voxel* mol(D->getRandomAdjoiningVoxel(molA, SearchVacant));
-  if(!mol)
+  Voxel* mol(getPopulatableVoxel(D, molA, molB));
+  if(mol)
     {
-      mol = D->getRandomAdjoiningVoxel(molB, SearchVacant);
-      if(!mol)
-        {
-          return;
-        }
-    }
-  variableC->addValue(1);
-  //TODO: need to use the correct tag here:
-  D->addMolecule(mol, A->getTag(indexA));
-  A->removeMolecule(indexA);
-  if(A != B)
-    {
-      B->removeMolecule(indexB);
-    }
-  else
-    {
-      B->removeMolecule(molB);
+      variableC->addValue(1);
+      //TODO: need to use the correct tag here:
+      D->addMolecule(mol, A->getTag(indexA));
+      A->removeMolecule(indexA);
+      removeMolecule(B, molB, indexB);
     }
 }
 
@@ -315,14 +348,7 @@ void DiffusionInfluencedReactionProcess::reactVarD_AtoC(
   variableD->addValue(1);
   C->addMolecule(molA, A->getTag(indexA));
   A->softRemoveMolecule(indexA);
-  if(A != B)
-    {
-      B->removeMolecule(indexB);
-    }
-  else
-    {
-      B->removeMolecule(molB);
-    }
+  removeMolecule(B, molB, indexB);
 }
 
 //A + B -> variableD + [C <- molB]
@@ -334,14 +360,7 @@ void DiffusionInfluencedReactionProcess::reactVarD_BtoC(
   variableD->addValue(1);
   C->addMolecule(molB, B->getTag(indexB));
   B->softRemoveMolecule(indexB);
-  if(A != B)
-    {
-      A->removeMolecule(indexA);
-    }
-  else
-    {
-      A->removeMolecule(molA);
-    }
+  removeMolecule(A, molA, indexA);
 }
 
 //A + B -> variableD + [C <- molN]
@@ -350,26 +369,14 @@ void DiffusionInfluencedReactionProcess::reactVarD_NtoC(
                                                   const unsigned indexA,
                                                   const unsigned indexB)
 { 
-  Voxel* mol(C->getRandomAdjoiningVoxel(molA, SearchVacant));
-  if(!mol)
+  Voxel* mol(getPopulatableVoxel(C, molA, molB));
+  if(mol)
     {
-      mol = C->getRandomAdjoiningVoxel(molB, SearchVacant);
-      if(!mol)
-        {
-          return;
-        }
-    }
-  variableD->addValue(1);
-  //TODO: need to use the correct tag here:
-  C->addMolecule(mol, A->getTag(indexA));
-  A->removeMolecule(indexA);
-  if(A != B)
-    {
-      B->removeMolecule(indexB);
-    }
-  else
-    {
-      B->removeMolecule(molB);
+      variableD->addValue(1);
+      //TODO: need to use the correct tag here:
+      C->addMolecule(mol, A->getTag(indexA));
+      A->removeMolecule(indexA);
+      removeMolecule(B, molB, indexB);
     }
 }
 
@@ -403,30 +410,7 @@ void DiffusionInfluencedReactionProcess::reactVarC(
 {
   variableC->addValue(1);
   A->removeMolecule(indexA);
-  if(A != B)
-    {
-      B->removeMolecule(indexB);
-    }
-  else
-    {
-      B->removeMolecule(molB);
-    }
-}
-
-//A + B -> [A == C] + [B == D]
-void DiffusionInfluencedReactionProcess::reactAeqC_BeqD(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
-{
-}
-
-//A + B -> [B == C] + [A == D]
-void DiffusionInfluencedReactionProcess::reactBeqC_AeqD(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
-{
+  removeMolecule(B, molB, indexB);
 }
 
 //A + B -> [A == C] + [D <- molB]
@@ -445,17 +429,12 @@ void DiffusionInfluencedReactionProcess::reactAeqC_NtoD(
                                                   const unsigned indexA,
                                                   const unsigned indexB)
 {
-  Voxel* mol(D->getRandomAdjoiningVoxel(molA, SearchVacant));
-  if(!mol)
+  Voxel* mol(getPopulatableVoxel(D, molA, molB));
+  if(mol)
     {
-      mol = D->getRandomAdjoiningVoxel(molB, SearchVacant);
-      if(!mol)
-        {
-          return;
-        }
+      D->addMolecule(mol, B->getTag(indexB));
+      B->removeMolecule(indexB);
     }
-  D->addMolecule(mol, B->getTag(indexB));
-  B->removeMolecule(indexB);
 }
 
 //A + B -> [B == C] + [D <- molA]
@@ -474,17 +453,12 @@ void DiffusionInfluencedReactionProcess::reactBeqC_NtoD(
                                                   const unsigned indexA,
                                                   const unsigned indexB)
 {
-  Voxel* mol(D->getRandomAdjoiningVoxel(molA, SearchVacant));
-  if(!mol)
+  Voxel* mol(getPopulatableVoxel(D, molA, molB));
+  if(mol)
     {
-      mol = D->getRandomAdjoiningVoxel(molB, SearchVacant);
-      if(!mol)
-        {
-          return;
-        }
+      D->addMolecule(mol, A->getTag(indexA));
+      A->removeMolecule(indexA);
     }
-  D->addMolecule(mol, A->getTag(indexA));
-  A->removeMolecule(indexA);
 }
 
 //A + B -> [C <- molB] + [A == D]
@@ -503,17 +477,12 @@ void DiffusionInfluencedReactionProcess::reactNtoC_AeqD(
                                                   const unsigned indexA,
                                                   const unsigned indexB)
 {
-  Voxel* mol(C->getRandomAdjoiningVoxel(molA, SearchVacant));
-  if(!mol)
+  Voxel* mol(getPopulatableVoxel(C, molA, molB));
+  if(mol)
     {
-      mol = C->getRandomAdjoiningVoxel(molB, SearchVacant);
-      if(!mol)
-        {
-          return;
-        }
+      C->addMolecule(mol, B->getTag(indexB));
+      B->removeMolecule(indexB);
     }
-  C->addMolecule(mol, B->getTag(indexB));
-  B->removeMolecule(indexB);
 }
 
 //A + B -> [C <- molA] + [B == D]
@@ -532,18 +501,14 @@ void DiffusionInfluencedReactionProcess::reactNtoC_BeqD(
                                                   const unsigned indexA,
                                                   const unsigned indexB)
 {
-  Voxel* mol(C->getRandomAdjoiningVoxel(molA, SearchVacant));
-  if(!mol)
+  Voxel* mol(getPopulatableVoxel(C, molA, molB));
+  if(mol)
     {
-      mol = C->getRandomAdjoiningVoxel(molB, SearchVacant);
-      if(!mol)
-        {
-          return;
-        }
+      C->addMolecule(mol, A->getTag(indexA));
+      A->removeMolecule(indexA);
     }
-  C->addMolecule(mol, A->getTag(indexA));
-  A->removeMolecule(indexA);
 }
+
 
 //A + B -> [C <- molA] + [D <- molB]
 void DiffusionInfluencedReactionProcess::reactAtoC_BtoD(
@@ -553,17 +518,7 @@ void DiffusionInfluencedReactionProcess::reactAtoC_BtoD(
 {
   C->addMolecule(molA, A->getTag(indexA));
   A->softRemoveMolecule(indexA);
-  if(A != B)
-    {
-      D->addMolecule(molB, B->getTag(indexB));
-      B->softRemoveMolecule(indexB);
-    }
-  else
-    {
-      Tag& aTag(B->getTag(molB));
-      B->softRemoveMolecule(molB);
-      D->addMolecule(molB, aTag);
-    }
+  removeMolecule(B, molB, indexB, D);
 }
 
 //A + B -> [C <- molA] + [D <- molN]
@@ -572,25 +527,13 @@ void DiffusionInfluencedReactionProcess::reactAtoC_NtoD(
                                                   const unsigned indexA,
                                                   const unsigned indexB)
 {
-  Voxel* mol(D->getRandomAdjoiningVoxel(molA, SearchVacant));
-  if(!mol)
+  Voxel* mol(getPopulatableVoxel(D, molA, molB));
+  if(mol)
     {
-      mol = D->getRandomAdjoiningVoxel(molB, SearchVacant);
-      if(!mol)
-        {
-          return;
-        }
-    }
-  D->addMolecule(mol, B->getTag(indexB));
-  C->addMolecule(molA, A->getTag(indexA));
-  A->softRemoveMolecule(indexA);
-  if(A != B)
-    {
-      B->removeMolecule(indexB);
-    }
-  else
-    {
-      B->removeMolecule(molB);
+      D->addMolecule(mol, B->getTag(indexB));
+      C->addMolecule(molA, A->getTag(indexA));
+      A->softRemoveMolecule(indexA);
+      removeMolecule(B, molB, indexB);
     }
 }
 
@@ -602,17 +545,7 @@ void DiffusionInfluencedReactionProcess::reactBtoC_AtoD(
 {
   C->addMolecule(molB, B->getTag(indexB));
   B->softRemoveMolecule(indexB);
-  if(A != B)
-    { 
-      D->addMolecule(molA, A->getTag(indexA));
-      A->softRemoveMolecule(indexA);
-    }
-  else
-    {
-      Tag& aTag(A->getTag(molA));
-      A->softRemoveMolecule(molA);
-      D->addMolecule(molA, aTag);
-    }
+  removeMolecule(A, molA, indexA, D);
 }
 
 //A + B -> [C <- molB] + [D <- molN]
@@ -621,25 +554,13 @@ void DiffusionInfluencedReactionProcess::reactBtoC_NtoD(
                                                   const unsigned indexA,
                                                   const unsigned indexB)
 {
-  Voxel* mol(D->getRandomAdjoiningVoxel(molA, SearchVacant));
-  if(!mol)
+  Voxel* mol(getPopulatableVoxel(D, molA, molB));
+  if(mol)
     {
-      mol = D->getRandomAdjoiningVoxel(molB, SearchVacant);
-      if(!mol)
-        {
-          return;
-        }
-    }
-  D->addMolecule(mol, A->getTag(indexA));
-  C->addMolecule(molB, B->getTag(indexB));
-  B->softRemoveMolecule(indexB);
-  if(A != B)
-    {
-      A->removeMolecule(indexA);
-    }
-  else
-    {
-      A->removeMolecule(molA);
+      D->addMolecule(mol, A->getTag(indexA));
+      C->addMolecule(molB, B->getTag(indexB));
+      B->softRemoveMolecule(indexB);
+      removeMolecule(A, molA, indexA);
     }
 }
 
@@ -649,34 +570,17 @@ void DiffusionInfluencedReactionProcess::reactNtoC_NtoD(
                                                   const unsigned indexA,
                                                   const unsigned indexB)
 {
-  Voxel* molC(C->getRandomAdjoiningVoxel(molA, SearchVacant));
-  if(!molC)
+  Voxel* molC(getPopulatableVoxel(C, molA, molB));
+  if(molC)
     {
-      molC = C->getRandomAdjoiningVoxel(molB, SearchVacant);
-      if(!molC)
+      Voxel* molD(getPopulatableVoxel(C, molA, molB, molC));
+      if(molD)
         {
-          return;
+          C->addMolecule(molC, A->getTag(indexA));
+          D->addMolecule(molD, B->getTag(indexB));
+          A->removeMolecule(indexA);
+          removeMolecule(B, molB, indexB);
         }
-    }
-  Voxel* molD(D->getRandomAdjoiningVoxel(molA, molC, SearchVacant));
-  if(!molD)
-    {
-      molD = D->getRandomAdjoiningVoxel(molB, molC, SearchVacant);
-      if(!molD)
-        {
-          return;
-        }
-    }
-  C->addMolecule(molC, A->getTag(indexA));
-  D->addMolecule(molD, B->getTag(indexB));
-  A->removeMolecule(indexA);
-  if(A != B)
-    {
-      B->removeMolecule(indexB);
-    }
-  else
-    {
-      B->removeMolecule(molB);
     }
 }
 
@@ -707,14 +611,7 @@ void DiffusionInfluencedReactionProcess::reactAtoC(
 {
   C->addMolecule(molA, A->getTag(indexA));
   A->softRemoveMolecule(indexA);
-  if(A != B)
-    {
-      B->removeMolecule(indexB);
-    }
-  else
-    {
-      B->removeMolecule(molB);
-    }
+  removeMolecule(B, molB, indexB);
 }
 
 //A + B -> [C <- molB]
@@ -725,14 +622,7 @@ void DiffusionInfluencedReactionProcess::reactBtoC(
 {
   C->addMolecule(molB, B->getTag(indexB));
   B->softRemoveMolecule(indexB);
-  if(A != B)
-    {
-      A->removeMolecule(indexA);
-    }
-  else
-    {
-      A->removeMolecule(molA);
-    }
+  removeMolecule(A, molA, indexA);
 }
 
 //A + B -> [C <- molN]
@@ -741,24 +631,12 @@ void DiffusionInfluencedReactionProcess::reactNtoC(
                                                   const unsigned indexA,
                                                   const unsigned indexB)
 {
-  Voxel* mol(C->getRandomAdjoiningVoxel(molA, SearchVacant));
-  if(!mol)
+  Voxel* mol(getPopulatableVoxel(C, molA, molB));
+  if(mol)
     {
-      mol = C->getRandomAdjoiningVoxel(molB, SearchVacant);
-      if(!mol)
-        {
-          return;
-        }
-    }
-  C->addMolecule(mol, A->getTag(indexA));
-  A->removeMolecule(indexA);
-  if(A != B)
-    {
-      B->removeMolecule(indexB);
-    }
-  else
-    {
-      B->removeMolecule(molB);
+      C->addMolecule(mol, A->getTag(indexA));
+      A->removeMolecule(indexA);
+      removeMolecule(B, molB, indexB);
     }
 }
 
@@ -836,12 +714,12 @@ void DiffusionInfluencedReactionProcess::setReactMethod()
       if(A == C && B == D)
         {
           //A + B -> [A == C] + [B == D]
-          reactM = &DiffusionInfluencedReactionProcess::reactAeqC_BeqD;
+          reactM = &DiffusionInfluencedReactionProcess::reactNone;
         }
       else if(B == C && A == D)
         {
           //A + B -> [B == C] + [A == D]
-          reactM = &DiffusionInfluencedReactionProcess::reactBeqC_AeqD;
+          reactM = &DiffusionInfluencedReactionProcess::reactNone;
         }
       else if(A == C)
         {

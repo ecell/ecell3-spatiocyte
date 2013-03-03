@@ -102,7 +102,12 @@ protected:
   void calculateReactionProbability();
   void addMoleculeE();
   void addMoleculeF();
+  void removeMolecule(Species*, Voxel*, const unsigned) const;
+  void removeMolecule(Species*, Voxel*, const unsigned, Species*) const;
+  Voxel* getPopulatableVoxel(Species*, Voxel*, Voxel*);
+  Voxel* getPopulatableVoxel(Species*, Voxel*, Voxel*, Voxel*);
   void setReactMethod();
+  void reactNone(Voxel*, Voxel*, const unsigned, const unsigned) {}
   void reactVarC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactVarC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactVarC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
@@ -113,8 +118,6 @@ protected:
   void reactVarD_AtoC(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactVarD_BtoC(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactVarD_NtoC(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactAeqC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactBeqC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactAeqC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactAeqC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactBeqC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
