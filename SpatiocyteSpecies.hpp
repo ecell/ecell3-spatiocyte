@@ -1136,11 +1136,11 @@ public:
         {
           if(tarSpecies->getIsMultiscaleComp())
             {
-              aReaction->reactWithMultiscaleComp(src, tar, srcIndex, tarIndex);
+              aReaction->react(src, tar, srcIndex, tarIndex);
             }
           else
             {
-              aReaction->reactWithMultiscaleComp(tar, src, tarIndex, srcIndex);
+              aReaction->react(tar, src, tarIndex, srcIndex);
             }
           softRemoveMolecule(srcIndex);
           if(!tarSpecies->getIsMultiscale())
@@ -1152,11 +1152,11 @@ public:
         {
           if(aReaction->getA() == this)
             { 
-              aReaction->reactInMultiscaleComp(src, tar, srcIndex, tarIndex);
+              aReaction->react(src, tar, srcIndex, tarIndex);
             }
           else
             {
-              aReaction->reactInMultiscaleComp(tar, src, tarIndex, srcIndex);
+              aReaction->react(tar, src, tarIndex, srcIndex);
             }
           if(tarSpecies == this && theMoleculeSize-1 == tarIndex)
             {
@@ -1176,36 +1176,11 @@ public:
         {
           if(aReaction->getA() == this)
             { 
-              if(!aReaction->react(src, tar, srcIndex, tarIndex))
-                {
-                  return;
-                }
+              aReaction->react(src, tar, srcIndex, tarIndex);
             }
           else
             {
-              if(!aReaction->react(tar, src, tarIndex, srcIndex))
-                {
-                  return;
-                }
-            }
-          //Soft remove the source molecule, i.e., keep the id:
-          //Soft remove the target molecule:
-          //Make sure the targetIndex is valid:
-          //Target and Source are same species:
-          //For some reason if I use theMolecules[sourceIndex] instead
-          //of getMolecule(sourceIndex) the walk method becomes
-          //much slower when it is only diffusing without reacting:
-          if(tarSpecies == this && theMoleculeSize-1 == tarIndex)
-            {
-              std::cout << "here" << std::endl;
-              --theMoleculeSize;
-              softRemoveMolecule(srcIndex);
-            }
-          else
-            {
-              std::cout << "here2" << std::endl;
-              softRemoveMolecule(srcIndex);
-              tarSpecies->softRemoveMolecule(tarIndex);
+              aReaction->react(tar, src, tarIndex, srcIndex);
             }
         }
       isFinalizeReactions[tarID] = true;
@@ -1394,6 +1369,10 @@ public:
   Tag& getTag(unsigned anIndex)
     {
       return theTags[anIndex];
+    }
+  Tag& getTag(Voxel* aVoxel)
+    {
+      return getTag(getIndex(aVoxel));
     }
   Species* getMultiscaleVacantSpecies()
     {
@@ -1866,23 +1845,9 @@ public:
     {
       return (*theCompVoxels)[index];
     }
-  unsigned getIndex(Voxel* aVoxel)
+  const unsigned getIndex(const Voxel* aVoxel) const
     {
-      //This is required by SNRP reactABC with B a lipid or vacant molecule:
-      if(getIsCompVacant())
-        {
-          return theMoleculeSize;
-        }
-      unsigned index(aVoxel->idx-theStride*theID);
-      if(index >= theMoleculeSize)
-        { 
-          std::cout << getIDString() << ":error in getting the index" << 
-            " size:" << theMoleculeSize << " idx:" << aVoxel->idx <<
-            " requested species:" << getIDString(aVoxel->idx/theStride) <<
-            " requested index(idx-stride*id):" << index << std::endl;
-          return 0;
-        }
-      return index;
+      return aVoxel->idx%theStride;
     }
   //it is soft remove because the id of the molecule is not changed:
   void softRemoveMolecule(Voxel* aVoxel)
@@ -1902,6 +1867,8 @@ public:
     }
   void removeMolecule(Voxel* aVoxel)
     {
+      //TODO: remove this multiscale part into another function specially
+      //for multiscale:
       if(isMultiscale)
         {
           //TODO: don't know what is this for
@@ -1911,10 +1878,7 @@ public:
               removeMolecule(getIndex(aVoxel));
             }
         }
-      if(!isVacant)
-        {
-          removeMolecule(getIndex(aVoxel));
-        }
+      removeMolecule(getIndex(aVoxel));
     }
   void removeMolecule(unsigned anIndex)
     {
@@ -2953,7 +2917,6 @@ public:
         {
           return false;
         }
-      /* Just commenting this out since I don't know what it is for:
       if(aSpecies->getIsMultiscale())
         {
           if(aSpecies->isIntersectMultiscale(aVoxel->coord))
@@ -2961,7 +2924,21 @@ public:
               return false;
             }
         }
-        */
+      if(getVacantID() != aSpecies->getID() && 
+         aSpecies->getVacantID() != theID && 
+         getVacantID() != aSpecies->getVacantID())
+        {
+          return false;
+        }
+      return true;
+    }
+  bool isReplaceable(Species* aSpecies)
+    {
+      if(getComp() != aSpecies->getComp() &&
+         theID != aSpecies->getVacantID())
+        {
+          return false;
+        }
       if(getVacantID() != aSpecies->getID() && 
          aSpecies->getVacantID() != theID && 
          getVacantID() != aSpecies->getVacantID())

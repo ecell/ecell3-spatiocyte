@@ -37,6 +37,8 @@
 
 LIBECS_DM_CLASS_EXTRA_1(DiffusionInfluencedReactionProcess, ReactionProcess, virtual DiffusionInfluencedReactionProcessInterface)
 { 
+  typedef void (DiffusionInfluencedReactionProcess::*Method)(Voxel*, Voxel*,
+                                       const unsigned, const unsigned);
 public:
   LIBECS_DM_OBJECT(DiffusionInfluencedReactionProcess, Process)
     {
@@ -75,7 +77,11 @@ public:
   virtual void checkSubstrates();
   virtual void initializeSecond();
   virtual void initializeThird();
-  virtual bool react(Voxel*, Voxel*, const unsigned, const unsigned);
+  virtual void react(Voxel* molA, Voxel* molB, const unsigned indexA,
+                     const unsigned indexB)
+    {
+      (this->*reactM)(molA, molB, indexA, indexB);
+    }
   virtual void reactInMultiscaleComp(Voxel*, Voxel*, const unsigned,
                                      const unsigned);
   virtual void reactWithMultiscaleComp(Voxel*, Voxel*, const unsigned,
@@ -96,6 +102,38 @@ protected:
   void calculateReactionProbability();
   void addMoleculeE();
   void addMoleculeF();
+  void setReactMethod();
+  void reactVarC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactVarC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactVarC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactVarC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactVarC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactVarD_AeqC(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactVarD_BeqC(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactVarD_AtoC(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactVarD_BtoC(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactVarD_NtoC(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactVarC(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactAeqC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactBeqC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactAeqC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactAeqC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactBeqC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactBeqC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactBtoC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactNtoC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactAtoC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactNtoC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactAtoC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactAtoC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactBtoC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactBtoC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactNtoC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactAeqC(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactBeqC(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactAtoC(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactBtoC(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactNtoC(Voxel*, Voxel*, const unsigned, const unsigned);
 protected:
   bool isReactInMultiscaleComp;
   bool isReactWithMultiscaleComp;
@@ -108,6 +146,7 @@ protected:
   Species* N;
   Species* M_p;
   Species* N_p;
+  Method reactM;
 };
 
 #endif /* __DiffusionInfluencedReactionProcess_hpp */

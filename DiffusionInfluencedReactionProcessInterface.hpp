@@ -38,7 +38,7 @@ class DiffusionInfluencedReactionProcessInterface
 { 
 public:
   virtual ~DiffusionInfluencedReactionProcessInterface() {}
-  virtual bool react(Voxel*, Voxel*, const unsigned, const unsigned) = 0;
+  virtual void react(Voxel*, Voxel*, const unsigned, const unsigned) = 0;
   virtual void finalizeReaction() = 0;
 };
 
