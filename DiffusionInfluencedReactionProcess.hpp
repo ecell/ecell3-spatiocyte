@@ -99,6 +99,7 @@ public:
       return isReactInMultiscaleComp;
     }
 protected:
+  unsigned getIdx(Species*, Voxel*, const unsigned);
   void calculateReactionProbability();
   void addMoleculeE();
   void addMoleculeF();
@@ -107,6 +108,7 @@ protected:
   Voxel* getPopulatableVoxel(Species*, Voxel*, Voxel*);
   Voxel* getPopulatableVoxel(Species*, Voxel*, Voxel*, Voxel*);
   void setReactMethod();
+  void setMultiscaleReactMethod();
   void reactNone(Voxel*, Voxel*, const unsigned, const unsigned) {}
   void reactVarC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactVarC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
@@ -131,12 +133,32 @@ protected:
   void reactBtoC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactBtoC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactNtoC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactVarC_VarD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactVarC(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactAeqC(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactBeqC(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactAtoC(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactBtoC(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactNtoC(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactMuAtoMuC(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactMuBtoMuC(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactAtoC_MuBtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactMuAtoMuC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactBtoC_MuAtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactMuBtoMuC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactAeqC_MuBtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactMuAeqMuC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactBeqC_MuAtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactMuBeqMuC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactMuBtoMuC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactBtoC_MuAeqMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactMuAtoMuC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactAtoC_MuBeqMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactAtoC_Multi(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactBtoC_Multi(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactMuAtoMuC_MuBtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactMuBeqMuC_MuAtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void throwException(String);
 protected:
   bool isReactInMultiscaleComp;
   bool isReactWithMultiscaleComp;

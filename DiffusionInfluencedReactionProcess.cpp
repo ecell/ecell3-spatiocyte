@@ -81,19 +81,22 @@ void DiffusionInfluencedReactionProcess::initializeThird()
       M = A;
       N = B;
       isReactWithMultiscaleComp = true;
-      reactM = &DiffusionInfluencedReactionProcess::reactWithMultiscaleComp;
+      //reactM = &DiffusionInfluencedReactionProcess::reactWithMultiscaleComp;
+      setMultiscaleReactMethod();
     }
   else if(!A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
     {
       N = A;
       M = B;
       isReactWithMultiscaleComp = true;
-      reactM = &DiffusionInfluencedReactionProcess::reactWithMultiscaleComp;
+      //reactM = &DiffusionInfluencedReactionProcess::reactWithMultiscaleComp;
+      setMultiscaleReactMethod();
     }
   else if(A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
     {
       isReactInMultiscaleComp = true;
-      reactM = &DiffusionInfluencedReactionProcess::reactInMultiscaleComp;
+      //reactM = &DiffusionInfluencedReactionProcess::reactInMultiscaleComp;
+      setMultiscaleReactMethod();
     }
   else
     {
@@ -148,6 +151,222 @@ void DiffusionInfluencedReactionProcess::reactWithMultiscaleComp(
     {
       moleculeN->idx = N->getVacantIdx();
     }
+}
+
+unsigned DiffusionInfluencedReactionProcess::getIdx(Species* aSpecies,
+                                                    Voxel* mol,
+                                                    const unsigned index)
+{
+  if(aSpecies->getIsOnMultiscale())
+    {
+      return aSpecies->getTag(index).vacantIdx;
+    }
+  return mol->idx;
+}
+
+
+//MuA + B -> [MuC <- MuA]
+void DiffusionInfluencedReactionProcess::reactMuAtoMuC(Voxel* molA,
+                                                       Voxel* molB,
+                                                       const unsigned indexA,
+                                                       const unsigned indexB)
+{
+  C->addMoleculeInMulti(molA, getIdx(A, molA, indexA));
+  B->removeMolecule(indexB);
+}
+  
+
+//A + MuB -> [MuC <- MuB]
+void DiffusionInfluencedReactionProcess::reactMuBtoMuC(Voxel* molA,
+                                                       Voxel* molB,
+                                                       const unsigned indexA,
+                                                       const unsigned indexB)
+{
+  C->addMoleculeInMulti(molB, getIdx(B, molB, indexB));
+  A->removeMolecule(indexA);
+}
+
+//A + MuB -> [C <- molA] + [MuD <- MuB]
+void DiffusionInfluencedReactionProcess::reactAtoC_MuBtoMuD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  C->addMolecule(molA);
+  A->softRemoveMolecule(indexA);
+  //A != B, since only B is in multiscale comp:
+  D->addMoleculeInMulti(molB, getIdx(B, molB, indexB));
+  B->softRemoveMolecule(indexB);
+}
+
+//MuA + B -> [MuC <- MuA] + [D <- molB]
+void DiffusionInfluencedReactionProcess::reactMuAtoMuC_BtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  C->addMoleculeInMulti(molA, getIdx(A, molA, indexA));
+  A->softRemoveMolecule(indexA);
+  D->addMolecule(molB);
+  B->softRemoveMolecule(indexB);
+}
+
+//MuA + B -> [C <- molB] + [MuD <- MuA]
+void DiffusionInfluencedReactionProcess::reactBtoC_MuAtoMuD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  C->addMolecule(molB);
+  B->softRemoveMolecule(indexB);
+  D->addMoleculeInMulti(molA, getIdx(A, molA, indexA));
+  A->softRemoveMolecule(indexA);
+}
+
+//A + MuB -> [MuC <- MuB] + [D <- molA]
+void DiffusionInfluencedReactionProcess::reactMuBtoMuC_AtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  C->addMoleculeInMulti(molB, getIdx(B, molB, indexB));
+  B->softRemoveMolecule(indexB);
+  D->addMolecule(molA);
+  A->softRemoveMolecule(indexA);
+}
+                  
+//A + MuB -> [A == C] + [MuD <- MuB]
+void DiffusionInfluencedReactionProcess::reactAeqC_MuBtoMuD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  D->addMoleculeInMulti(molB, getIdx(B, molB, indexB));
+  B->softRemoveMolecule(indexB);
+}
+
+//MuA + B -> [MuA == MuC] + [D <- molB]
+void DiffusionInfluencedReactionProcess::reactMuAeqMuC_BtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  D->addMolecule(molB);
+  B->softRemoveMolecule(indexB);
+}
+
+//MuA + B -> [B == C] + [MuD <- MuA]
+void DiffusionInfluencedReactionProcess::reactBeqC_MuAtoMuD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  D->addMoleculeInMulti(molA, getIdx(A, molA, indexA));
+  A->softRemoveMolecule(indexA);
+}
+
+//A + MuB -> [MuB == MuC] + [D <- molA]
+void DiffusionInfluencedReactionProcess::reactMuBeqMuC_AtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  D->addMolecule(molA);
+  A->softRemoveMolecule(indexA);
+}
+
+//A + MuB -> [MuC <- MuB] + [A == D]
+void DiffusionInfluencedReactionProcess::reactMuBtoMuC_AeqD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  C->addMoleculeInMulti(molB, getIdx(B, molB, indexB));
+  B->softRemoveMolecule(indexB);
+}
+
+//MuA + B -> [C <- molB] + [MuA == MuD]
+void DiffusionInfluencedReactionProcess::reactBtoC_MuAeqMuD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  C->addMolecule(molB);
+  B->softRemoveMolecule(indexB);
+}
+
+//MuA + B -> [MuC <- MuA] + [B == D]
+void DiffusionInfluencedReactionProcess::reactMuAtoMuC_BeqD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  C->addMoleculeInMulti(molA, getIdx(A, molA, indexA));
+  A->softRemoveMolecule(indexA);
+}
+
+//A + MuB -> [C <- molA] + [MuB == MuD]
+void DiffusionInfluencedReactionProcess::reactAtoC_MuBeqMuD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  C->addMolecule(molA);
+  A->softRemoveMolecule(indexA);
+}
+
+//MuA + B -> [C <- molB]
+void DiffusionInfluencedReactionProcess::reactBtoC_Multi(Voxel* molA,
+                                                         Voxel* molB,
+                                                         const unsigned indexA,
+                                                         const unsigned indexB)
+{
+  C->addMolecule(molB);
+  B->softRemoveMolecule(indexB);
+  if(A->getIsOnMultiscale())
+    {
+      molA->idx = A->getTag(indexA).vacantIdx;
+    }
+  A->softRemoveMolecule(indexA);
+}
+
+//A + MuB -> [C <- molA]
+void DiffusionInfluencedReactionProcess::reactAtoC_Multi(Voxel* molA,
+                                                         Voxel* molB,
+                                                         const unsigned indexA,
+                                                         const unsigned indexB)
+{
+  C->addMolecule(molA);
+  A->softRemoveMolecule(indexA);
+  if(B->getIsOnMultiscale())
+    {
+      molB->idx = B->getTag(indexB).vacantIdx;
+    }
+  B->softRemoveMolecule(indexB);
+}
+
+//A + B -> [MuC <- MuA] + [MuD <- MuB]
+void DiffusionInfluencedReactionProcess:: reactMuAtoMuC_MuBtoMuD(Voxel* molA,
+                                                         Voxel* molB,
+                                                         const unsigned indexA,
+                                                         const unsigned indexB)
+{
+  const unsigned idxA(getIdx(A, molA, indexA));
+  const unsigned idxB(getIdx(B, molB, indexB));
+  A->softRemoveMolecule(indexA);
+  removeMolecule(B, molB, indexB);
+  C->addMoleculeInMulti(molA, idxA);
+  D->addMoleculeInMulti(molB, idxB);
+}
+
+//A + B -> [MuB == MuC] + [MuD <- MuA]
+void DiffusionInfluencedReactionProcess::reactMuBeqMuC_MuAtoMuD(Voxel* molA,
+                                                         Voxel* molB,
+                                                         const unsigned indexA,
+                                                         const unsigned indexB)
+{
+  D->addMoleculeInMulti(molA, getIdx(A, molA, indexA));
+  A->softRemoveMolecule(indexA);
 }
 
 void DiffusionInfluencedReactionProcess::reactInMultiscaleComp(
@@ -279,10 +498,10 @@ Voxel* DiffusionInfluencedReactionProcess::getPopulatableVoxel(
 }
 
 //A + B -> variableC + [D <- molA]
-void DiffusionInfluencedReactionProcess::reactVarC_AtoD(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactVarC_AtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 {
   variableC->addValue(1);
   D->addMolecule(molA, A->getTag(indexA));
@@ -291,10 +510,10 @@ void DiffusionInfluencedReactionProcess::reactVarC_AtoD(
 }
 
 //A + B -> variableC + [D <- molB]
-void DiffusionInfluencedReactionProcess::reactVarC_BtoD(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactVarC_BtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 {
   variableC->addValue(1);
   D->addMolecule(molB, B->getTag(indexB));
@@ -303,10 +522,10 @@ void DiffusionInfluencedReactionProcess::reactVarC_BtoD(
 }
 
 //A + B -> variableC + [D <- molN]
-void DiffusionInfluencedReactionProcess::reactVarC_NtoD(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactVarC_NtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 { 
   Voxel* mol(getPopulatableVoxel(D, molA, molB));
   if(mol)
@@ -320,30 +539,30 @@ void DiffusionInfluencedReactionProcess::reactVarC_NtoD(
 }
 
 //A + B -> variableC + [D == molA]
-void DiffusionInfluencedReactionProcess::reactVarC_AeqD(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactVarC_AeqD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 {
   variableC->addValue(1);
   B->removeMolecule(indexB);
 }
 
 //A + B -> variableC + [D == molB]
-void DiffusionInfluencedReactionProcess::reactVarC_BeqD(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactVarC_BeqD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 {
   variableC->addValue(1);
   A->removeMolecule(indexA);
 }
 
 //A + B -> variableD + [C <- molA]
-void DiffusionInfluencedReactionProcess::reactVarD_AtoC(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactVarD_AtoC(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 {
   variableD->addValue(1);
   C->addMolecule(molA, A->getTag(indexA));
@@ -352,10 +571,10 @@ void DiffusionInfluencedReactionProcess::reactVarD_AtoC(
 }
 
 //A + B -> variableD + [C <- molB]
-void DiffusionInfluencedReactionProcess::reactVarD_BtoC(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactVarD_BtoC(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 {
   variableD->addValue(1);
   C->addMolecule(molB, B->getTag(indexB));
@@ -364,10 +583,10 @@ void DiffusionInfluencedReactionProcess::reactVarD_BtoC(
 }
 
 //A + B -> variableD + [C <- molN]
-void DiffusionInfluencedReactionProcess::reactVarD_NtoC(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactVarD_NtoC(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 { 
   Voxel* mol(getPopulatableVoxel(C, molA, molB));
   if(mol)
@@ -382,31 +601,42 @@ void DiffusionInfluencedReactionProcess::reactVarD_NtoC(
 
 
 //A + B -> variableD + [C == A]
-void DiffusionInfluencedReactionProcess::reactVarD_AeqC(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactVarD_AeqC(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 {
   variableD->addValue(1);
   B->removeMolecule(indexB);
 }
 
 //A + B -> variableD + [C == B]
-void DiffusionInfluencedReactionProcess::reactVarD_BeqC(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactVarD_BeqC(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 {
   variableD->addValue(1);
   A->removeMolecule(indexA);
 }
 
+//A + B -> variableC + variableD
+void DiffusionInfluencedReactionProcess::reactVarC_VarD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  variableC->addValue(1);
+  variableD->addValue(1);
+  A->removeMolecule(indexA);
+  removeMolecule(B, molB, indexB);
+}
 
 //A + B -> variableC
-void DiffusionInfluencedReactionProcess::reactVarC(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactVarC(Voxel* molA,
+                                                   Voxel* molB,
+                                                   const unsigned indexA,
+                                                   const unsigned indexB)
 {
   variableC->addValue(1);
   A->removeMolecule(indexA);
@@ -414,20 +644,20 @@ void DiffusionInfluencedReactionProcess::reactVarC(
 }
 
 //A + B -> [A == C] + [D <- molB]
-void DiffusionInfluencedReactionProcess::reactAeqC_BtoD(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactAeqC_BtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 {
   D->addMolecule(molB, B->getTag(indexB));
   B->softRemoveMolecule(indexB);
 }
 
 //A + B -> [A == C] + [D <- molN]
-void DiffusionInfluencedReactionProcess::reactAeqC_NtoD(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactAeqC_NtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 {
   Voxel* mol(getPopulatableVoxel(D, molA, molB));
   if(mol)
@@ -438,20 +668,20 @@ void DiffusionInfluencedReactionProcess::reactAeqC_NtoD(
 }
 
 //A + B -> [B == C] + [D <- molA]
-void DiffusionInfluencedReactionProcess::reactBeqC_AtoD(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactBeqC_AtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 {
   D->addMolecule(molA, A->getTag(indexA));
   A->softRemoveMolecule(indexA);
 }
 
 //A + B -> [B == C] + [D <- molN]
-void DiffusionInfluencedReactionProcess::reactBeqC_NtoD(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactBeqC_NtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 {
   Voxel* mol(getPopulatableVoxel(D, molA, molB));
   if(mol)
@@ -462,20 +692,20 @@ void DiffusionInfluencedReactionProcess::reactBeqC_NtoD(
 }
 
 //A + B -> [C <- molB] + [A == D]
-void DiffusionInfluencedReactionProcess::reactBtoC_AeqD(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactBtoC_AeqD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 {
   C->addMolecule(molB, B->getTag(indexB));
   B->softRemoveMolecule(indexB);
 }
 
 //A + B -> [C <- molN] + [A == D]
-void DiffusionInfluencedReactionProcess::reactNtoC_AeqD(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactNtoC_AeqD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 {
   Voxel* mol(getPopulatableVoxel(C, molA, molB));
   if(mol)
@@ -486,20 +716,20 @@ void DiffusionInfluencedReactionProcess::reactNtoC_AeqD(
 }
 
 //A + B -> [C <- molA] + [B == D]
-void DiffusionInfluencedReactionProcess::reactAtoC_BeqD(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactAtoC_BeqD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 {
   C->addMolecule(molA, A->getTag(indexA));
   A->softRemoveMolecule(indexA);
 }
 
 //A + B -> [C <- molN] + [B == D]
-void DiffusionInfluencedReactionProcess::reactNtoC_BeqD(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactNtoC_BeqD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 {
   Voxel* mol(getPopulatableVoxel(C, molA, molB));
   if(mol)
@@ -511,10 +741,10 @@ void DiffusionInfluencedReactionProcess::reactNtoC_BeqD(
 
 
 //A + B -> [C <- molA] + [D <- molB]
-void DiffusionInfluencedReactionProcess::reactAtoC_BtoD(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactAtoC_BtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 {
   C->addMolecule(molA, A->getTag(indexA));
   A->softRemoveMolecule(indexA);
@@ -538,10 +768,10 @@ void DiffusionInfluencedReactionProcess::reactAtoC_NtoD(
 }
 
 //A + B -> [C <- molB] + [D <- molA]
-void DiffusionInfluencedReactionProcess::reactBtoC_AtoD(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactBtoC_AtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 {
   C->addMolecule(molB, B->getTag(indexB));
   B->softRemoveMolecule(indexB);
@@ -549,10 +779,10 @@ void DiffusionInfluencedReactionProcess::reactBtoC_AtoD(
 }
 
 //A + B -> [C <- molB] + [D <- molN]
-void DiffusionInfluencedReactionProcess::reactBtoC_NtoD(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactBtoC_NtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 {
   Voxel* mol(getPopulatableVoxel(D, molA, molB));
   if(mol)
@@ -565,10 +795,10 @@ void DiffusionInfluencedReactionProcess::reactBtoC_NtoD(
 }
 
 //A + B -> [C <- molN] + [D <- molN]
-void DiffusionInfluencedReactionProcess::reactNtoC_NtoD(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactNtoC_NtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
 {
   Voxel* molC(getPopulatableVoxel(C, molA, molB));
   if(molC)
@@ -584,30 +814,26 @@ void DiffusionInfluencedReactionProcess::reactNtoC_NtoD(
     }
 }
 
-
 //A + B -> [A == C]
-void DiffusionInfluencedReactionProcess::reactAeqC(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactAeqC(Voxel* molA, Voxel* molB,
+                                                   const unsigned indexA,
+                                                   const unsigned indexB)
 {
   B->removeMolecule(indexB);
 }
 
 //A + B -> [B == C]
-void DiffusionInfluencedReactionProcess::reactBeqC(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactBeqC(Voxel* molA, Voxel* molB,
+                                                   const unsigned indexA,
+                                                   const unsigned indexB)
 {
   A->removeMolecule(indexA);
 }
 
 //A + B -> [C <- molA]
-void DiffusionInfluencedReactionProcess::reactAtoC(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactAtoC(Voxel* molA, Voxel* molB,
+                                                   const unsigned indexA,
+                                                   const unsigned indexB)
 {
   C->addMolecule(molA, A->getTag(indexA));
   A->softRemoveMolecule(indexA);
@@ -615,10 +841,9 @@ void DiffusionInfluencedReactionProcess::reactAtoC(
 }
 
 //A + B -> [C <- molB]
-void DiffusionInfluencedReactionProcess::reactBtoC(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactBtoC(Voxel* molA, Voxel* molB,
+                                                   const unsigned indexA,
+                                                   const unsigned indexB)
 {
   C->addMolecule(molB, B->getTag(indexB));
   B->softRemoveMolecule(indexB);
@@ -626,10 +851,9 @@ void DiffusionInfluencedReactionProcess::reactBtoC(
 }
 
 //A + B -> [C <- molN]
-void DiffusionInfluencedReactionProcess::reactNtoC(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
+void DiffusionInfluencedReactionProcess::reactNtoC(Voxel* molA, Voxel* molB,
+                                                   const unsigned indexA,
+                                                   const unsigned indexB)
 {
   Voxel* mol(getPopulatableVoxel(C, molA, molB));
   if(mol)
@@ -637,6 +861,337 @@ void DiffusionInfluencedReactionProcess::reactNtoC(
       C->addMolecule(mol, A->getTag(indexA));
       A->removeMolecule(indexA);
       removeMolecule(B, molB, indexB);
+    }
+}
+
+void DiffusionInfluencedReactionProcess::throwException(String aString)
+{
+  THROW_EXCEPTION(ValueError, String(getPropertyInterface().getClassName()) +
+                  "[" + getFullID().asString() + "]: " + aString + " is not " +
+                  "yet implemented.");
+}
+
+void DiffusionInfluencedReactionProcess::setMultiscaleReactMethod()
+{
+  if(variableC && D)
+    {
+      if(A == D)
+        {
+          //A + B -> variableC + [A == D]
+          throwException("reactVarC_AeqD_Multi");
+        }
+      else if(B == D)
+        {
+          //A + B -> variableC + [B == D]
+          throwException("reactVarC_BeqD_Multi");
+        }
+      else
+        { 
+          if(A->isReplaceable(D))
+            {
+              //A + B -> variableC + [D <- molA]
+              throwException("reactVarC_AtoD_Multi");
+            }
+          else if(B->isReplaceable(D))
+            {
+              //A + B -> variableC + [D <- molB]
+              throwException("reactVarC_BtoD_Multi");
+            }
+          else
+            {
+              //A + B -> variableC + [D <- molN]
+              throwException("reactVarC_NtoD_Multi");
+            }
+        }
+    }
+  else if(variableD && C)
+    {
+      if(A == C)
+        {
+          //A + B -> variableD + [A == C]
+          throwException("reactVarD_AeqC_Multi");
+        }
+      else if(B == C)
+        {
+          //A + B -> variableD + [B == C]
+          throwException("reactVarD_BeqC_Multi");
+        }
+      else
+        { 
+          if(A->isReplaceable(C))
+            {
+              //A + B -> variableD + [C <- molA]
+              throwException("reactVarD_AtoC_Multi");
+            }
+          else if(B->isReplaceable(C))
+            {
+              //A + B -> variableD + [C <- molB]
+              throwException("reactVarD_BtoC_Multi");
+            }
+          else
+            {
+              //A + B -> variableD + [C <- molN]
+              throwException("reactVarD_NtoC_Multi");
+            }
+        }
+    }
+  else if(variableC)
+    {
+      if(variableD)
+        {
+          //A + B -> variableC + variableD
+          throwException("reactVarC_VarD_Multi");
+        }
+      else
+        {
+          //A + B -> variableC
+          throwException("reactVarC_Multi");
+        }
+    }
+  else if(D)
+    {
+      if(A == C && B == D)
+        {
+          //A + B -> [A == C] + [B == D]
+          reactM = &DiffusionInfluencedReactionProcess::reactNone;
+        }
+      else if(B == C && A == D)
+        {
+          //A + B -> [B == C] + [A == D]
+          reactM = &DiffusionInfluencedReactionProcess::reactNone;
+        }
+      else if(A == C)
+        {
+          if(B->isReplaceable(D))
+            {
+              if(B->getIsMultiscaleComp() && !A->getIsMultiscaleComp())
+                {
+                  //A + B -> [A == C] + [MuD <- MuB]
+                  reactM = 
+                    &DiffusionInfluencedReactionProcess::reactAeqC_MuBtoMuD;
+                }
+              else if(!B->getIsMultiscaleComp() && A->getIsMultiscaleComp())
+                {
+                  //A + B -> [MuA == MuC] + [D <- molB]
+                  reactM = 
+                    &DiffusionInfluencedReactionProcess::reactMuAeqMuC_BtoD;
+                }
+              else
+                {
+                  //A + B -> [MuA == MuC] + [MuD <- MuB]
+                  throwException("reactMuAeqMuC_MuBtoMuD");
+                }
+            }
+          else
+            {
+              //A + B -> [A == C] + [D <- molN]
+              throwException("reactAeqC_NtoD_Multi");
+            }
+        }
+      else if(B == C)
+        {
+          if(A->isReplaceable(D))
+            {
+              if(A->getIsMultiscaleComp() && !B->getIsMultiscaleComp())
+                {
+                  //A + B -> [B == C] + [MuD <- MuA]
+                  reactM = 
+                    &DiffusionInfluencedReactionProcess::reactBeqC_MuAtoMuD;
+                }
+              else if(!A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
+                {
+                  //A + B -> [MuB == MuC] + [D <- molA]
+                  reactM = 
+                    &DiffusionInfluencedReactionProcess::reactMuBeqMuC_AtoD;
+                }
+              else
+                {
+                  //A + B -> [MuB == MuC] + [MuD <- MuA]
+                  reactM = 
+                    &DiffusionInfluencedReactionProcess::reactMuBeqMuC_MuAtoMuD;
+                }
+            }
+          else
+            {
+              //A + B -> [B == C] + [D <- molN]
+              throwException("reactBeqC_NtoD_Multi");
+            }
+        }
+      else if(A == D)
+        {
+          if(B->isReplaceable(C))
+            {
+              if(B->getIsMultiscaleComp() && !A->getIsMultiscaleComp())
+                {
+                  //A + B -> [MuC <- MuB] + [A == D]
+                  reactM = 
+                    &DiffusionInfluencedReactionProcess::reactMuBtoMuC_AeqD;
+                }
+              else if(!B->getIsMultiscaleComp() && A->getIsMultiscaleComp())
+                {
+                  //A + B -> [C <- molB] + [MuA == MuD] 
+                  reactM = 
+                    &DiffusionInfluencedReactionProcess::reactBtoC_MuAeqMuD;
+                }
+              else
+                {
+                  //A + B -> [MuC <- MuB] + [MuA == MuD]
+                  throwException("reactMuBtoMuC_MuAeqMuD");
+                }
+            }
+          else
+            {
+              //A + B -> [C <- molN] + [A == D]
+              throwException("reactNtoC_AeqD_Multi");
+            }
+        }
+      else if(B == D)
+        {
+          if(A->isReplaceable(C))
+            {
+              if(A->getIsMultiscaleComp() && !B->getIsMultiscaleComp())
+                {
+                  //A + B -> [MuC <- MuA] + [B == D]
+                  reactM = 
+                    &DiffusionInfluencedReactionProcess::reactMuAtoMuC_BeqD;
+                }
+              else if(!A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
+                {
+                  //A + B -> [C <- molA] + [MuB == MuD] 
+                  reactM = 
+                    &DiffusionInfluencedReactionProcess::reactAtoC_MuBeqMuD;
+                }
+              else
+                {
+                  //A + B -> [MuC <- MuA] + [MuB == MuD] 
+                  throwException("reactMuAtoMuC_MuBeqMuD");
+                }
+            }
+          else
+            {
+              //A + B -> [C <- molN] + [B == D]
+              throwException("reactNtoC_BeqD_Multi");
+            }
+        }
+      else
+        {
+          if(A->isReplaceable(C))
+            {
+              if(B->isReplaceable(D))
+                {
+                  if(B->getIsMultiscaleComp() && !A->getIsMultiscaleComp())
+                    {
+                      //A + B -> [C <- molA] + [MuD <- MuB]
+                      reactM = 
+                        &DiffusionInfluencedReactionProcess::reactAtoC_MuBtoMuD;
+                    }
+                  else if(!B->getIsMultiscaleComp() && A->getIsMultiscaleComp())
+                    {
+                      //A + B -> [MuC <- MuA] + [D <- molB]
+                      reactM = 
+                        &DiffusionInfluencedReactionProcess::reactMuAtoMuC_BtoD;
+                    }
+                  else
+                    {
+                      //A + B -> [MuC <- MuA] + [MuD <- MuB]
+                      reactM = &DiffusionInfluencedReactionProcess::
+                        reactMuAtoMuC_MuBtoMuD;
+                    }
+                }
+              else
+                {
+                  //A + B -> [C <- molA] + [D <- molN]
+                  throwException("reactAtoC_NtoD_Multi");
+                }
+            }
+          else if(B->isReplaceable(C))
+            {
+              if(A->isReplaceable(D))
+                {
+                  if(A->getIsMultiscaleComp() && !B->getIsMultiscaleComp())
+                    {
+                      //A + B -> [C <- molB] + [MuD <- MuA]
+                      reactM = 
+                        &DiffusionInfluencedReactionProcess::reactBtoC_MuAtoMuD;
+                    }
+                  else if(!A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
+                    {
+                      //A + B -> [MuC <- MuB] + [D <- molA]
+                      reactM = 
+                        &DiffusionInfluencedReactionProcess::reactMuBtoMuC_AtoD;
+                    }
+                  else
+                    {
+                      //A + B -> [MuC <- MuB] + [MuD <- MuA]
+                      throwException("reactMuBtoMuC_MuAtoMuD");
+                    }
+                }
+              else
+                {
+                  //A + B -> [C <- molB] + [D <- molN]
+                  throwException("reactBtoC_NtoD_Multi");
+                }
+            }
+          else
+            {
+              //A + B -> [C <- molN] + [D <- molN]
+              throwException("reactNtoC_NtoD_Multi");
+            }
+        }
+    }
+  else
+    {
+      if(A == C)
+        {
+          //A + B -> [A == C]
+          throwException("reactAeqC_Multi");
+        }
+      else if(B == C)
+        {
+          //A + B -> [B == C]
+          throwException("reactBeqC_Multi");
+        }
+      else if(A->isReplaceable(C))
+        {
+          if(A->getIsMultiscaleComp() && !B->getIsMultiscaleComp())
+            {
+              //A + B -> [MuC <- MuA]
+              reactM = &DiffusionInfluencedReactionProcess::reactMuAtoMuC;
+            }
+          else if(!A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
+            {
+              //A + B -> [C <- molA]
+              reactM = &DiffusionInfluencedReactionProcess::reactAtoC_Multi;
+            }
+          else
+            {
+              //A + B -> [MuC <- MuA]
+              throwException("reactMuAtoMuC");
+            }
+        }
+      else if(B->isReplaceable(C))
+        {
+          if(B->getIsMultiscaleComp() && !A->getIsMultiscaleComp())
+            {
+              //A + B -> [MuC <- MuB]
+              reactM = &DiffusionInfluencedReactionProcess::reactMuBtoMuC;
+            }
+          else if(!B->getIsMultiscaleComp() && A->getIsMultiscaleComp())
+            {
+              //A + B -> [C <- molB]
+              reactM = &DiffusionInfluencedReactionProcess::reactBtoC_Multi;
+            }
+          else
+            {
+              //A + B -> [MuC <- MuB]
+              throwException("reactMuBtoMuC");
+            }
+        }
+      else
+        {
+          //A + B -> [C <- molN]
+          throwException("reactNtoC_Multi");
+        }
     }
 }
 
@@ -706,8 +1261,16 @@ void DiffusionInfluencedReactionProcess::setReactMethod()
     }
   else if(variableC)
     {
-      //A + B -> variableC
-      reactM = &DiffusionInfluencedReactionProcess::reactVarC;
+      if(variableD)
+        {
+          //A + B -> variableC + variableD
+          reactM = &DiffusionInfluencedReactionProcess::reactVarC_VarD;
+        }
+      else
+        {
+          //A + B -> variableC
+          reactM = &DiffusionInfluencedReactionProcess::reactVarC;
+        }
     }
   else if(D)
     {

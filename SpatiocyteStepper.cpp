@@ -662,9 +662,9 @@ inline void SpatiocyteStepper::step()
 {
   do
     {
-      std::cout << "before:" << thePriorityQueue.getTop()->getIDString() << " " << getCurrentTime() << std::endl;
+      //std::cout << "before:" << thePriorityQueue.getTop()->getIDString() << " " << getCurrentTime() << std::endl;
       thePriorityQueue.getTop()->fire();
-      checkSpecies();
+      //checkSpecies();
     }
   while(thePriorityQueue.getTop()->getTime() == getCurrentTime());
   setNextTime(thePriorityQueue.getTop()->getTime());

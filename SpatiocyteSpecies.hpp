@@ -1131,57 +1131,13 @@ public:
       const unsigned tarIndex(tar->idx%theStride);
       DiffusionInfluencedReactionProcess* aReaction(
                       theDiffusionInfluencedReactions[tarID]);
-      Species* tarSpecies(theSpecies[tarID]);
-      if(aReaction->getIsReactWithMultiscaleComp())
-        {
-          if(tarSpecies->getIsMultiscaleComp())
-            {
-              aReaction->react(src, tar, srcIndex, tarIndex);
-            }
-          else
-            {
-              aReaction->react(tar, src, tarIndex, srcIndex);
-            }
-          softRemoveMolecule(srcIndex);
-          if(!tarSpecies->getIsMultiscale())
-            {
-              tarSpecies->softRemoveMolecule(tarIndex);
-            }
-        }
-      else if(aReaction->getIsReactInMultiscaleComp())
-        {
-          if(aReaction->getA() == this)
-            { 
-              aReaction->react(src, tar, srcIndex, tarIndex);
-            }
-          else
-            {
-              aReaction->react(tar, src, tarIndex, srcIndex);
-            }
-          if(tarSpecies == this && theMoleculeSize-1 == tarIndex)
-            {
-              --theMoleculeSize;
-              softRemoveMolecule(srcIndex);
-            }
-          else
-            {
-              softRemoveMolecule(srcIndex);
-              if(!tarSpecies->getIsMultiscale())
-                {
-                  tarSpecies->softRemoveMolecule(tarIndex);
-                }
-            }
+      if(aReaction->getA() == this)
+        { 
+          aReaction->react(src, tar, srcIndex, tarIndex);
         }
       else
         {
-          if(aReaction->getA() == this)
-            { 
-              aReaction->react(src, tar, srcIndex, tarIndex);
-            }
-          else
-            {
-              aReaction->react(tar, src, tarIndex, srcIndex);
-            }
+          aReaction->react(tar, src, tarIndex, srcIndex);
         }
       isFinalizeReactions[tarID] = true;
     }
@@ -1440,10 +1396,12 @@ public:
     }
   void addMolecule(Voxel* aVoxel, Tag& aTag)
     {
+      /*
       if(getID(aVoxel) == theID)
         {
           std::cout << "this is so wrong===================================================================================" << std::endl;
         }
+        */
       if(!isVacant)
         {
           if(isMultiscale)
@@ -1471,7 +1429,6 @@ public:
       addMoleculeTagless(aVoxel);
       if(isTagged)
         {
-          std::cout << "=================================================================------------------------is tagged" << std::endl;
           //If it is theNullTag:
           if(aTag.origin == theNullCoord)
             {
