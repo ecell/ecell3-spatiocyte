@@ -45,9 +45,7 @@ public:
     {
       INHERIT_PROPERTIES(DiffusionInfluencedReactionProcess);
     }
-  MultiscaleReactionProcess():
-    M(NULL),
-    N(NULL) {}
+  MultiscaleReactionProcess() {}
   virtual ~MultiscaleReactionProcess() {}
   virtual void initializeThird();
   virtual void initializeMultiscaleWalkBindUnbind();
@@ -91,6 +89,10 @@ protected:
   void reactMuAtoMuC_MuBtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactMuBeqMuC_MuAtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
   void throwException(String);
+  void setReactVarC_D();
+  void setReactVarD_C();
+  void setReactD();
+  void setReactC();
 protected:
   Species* M;
   Species* N;

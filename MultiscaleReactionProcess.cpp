@@ -355,69 +355,313 @@ void MultiscaleReactionProcess::throwException(String aString)
                   "yet implemented.");
 }
 
+void MultiscaleReactionProcess::setReactVarC_D()
+{
+  if(A == D)
+    {
+      //A + B -> variableC + [A == D]
+      throwException("reactVarC_AeqD_Multi");
+    }
+  else if(B == D)
+    {
+      //A + B -> variableC + [B == D]
+      throwException("reactVarC_BeqD_Multi");
+    }
+  else
+    { 
+      if(A->isReplaceable(D))
+        {
+          //A + B -> variableC + [D <- molA]
+          throwException("reactVarC_AtoD_Multi");
+        }
+      else if(B->isReplaceable(D))
+        {
+          //A + B -> variableC + [D <- molB]
+          throwException("reactVarC_BtoD_Multi");
+        }
+      else
+        {
+          //A + B -> variableC + [D <- molN]
+          throwException("reactVarC_NtoD_Multi");
+        }
+    }
+}
+
+void MultiscaleReactionProcess::setReactVarD_C()
+{
+  if(A == C)
+    {
+      //A + B -> variableD + [A == C]
+      throwException("reactVarD_AeqC_Multi");
+    }
+  else if(B == C)
+    {
+      //A + B -> variableD + [B == C]
+      throwException("reactVarD_BeqC_Multi");
+    }
+  else
+    { 
+      if(A->isReplaceable(C))
+        {
+          //A + B -> variableD + [C <- molA]
+          throwException("reactVarD_AtoC_Multi");
+        }
+      else if(B->isReplaceable(C))
+        {
+          //A + B -> variableD + [C <- molB]
+          throwException("reactVarD_BtoC_Multi");
+        }
+      else
+        {
+          //A + B -> variableD + [C <- molN]
+          throwException("reactVarD_NtoC_Multi");
+        }
+    }
+}
+
+void MultiscaleReactionProcess::setReactC()
+{
+  if(A == C)
+    {
+      //A + B -> [A == C]
+      throwException("reactAeqC_Multi");
+    }
+  else if(B == C)
+    {
+      //A + B -> [B == C]
+      throwException("reactBeqC_Multi");
+    }
+  else if(A->isReplaceable(C))
+    {
+      if(A->getIsMultiscaleComp() && !B->getIsMultiscaleComp())
+        {
+          //A + B -> [MuC <- MuA]
+          reactM = &MultiscaleReactionProcess::reactMuAtoMuC;
+        }
+      else if(!A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
+        {
+          //A + B -> [C <- molA]
+          reactM = &MultiscaleReactionProcess::reactAtoC_Multi;
+        }
+      else
+        {
+          //A + B -> [MuC <- MuA]
+          throwException("reactMuAtoMuC");
+        }
+    }
+  else if(B->isReplaceable(C))
+    {
+      if(B->getIsMultiscaleComp() && !A->getIsMultiscaleComp())
+        {
+          //A + B -> [MuC <- MuB]
+          reactM = &MultiscaleReactionProcess::reactMuBtoMuC;
+        }
+      else if(!B->getIsMultiscaleComp() && A->getIsMultiscaleComp())
+        {
+          //A + B -> [C <- molB]
+          reactM = &MultiscaleReactionProcess::reactBtoC_Multi;
+        }
+      else
+        {
+          //A + B -> [MuC <- MuB]
+          throwException("reactMuBtoMuC");
+        }
+    }
+  else
+    {
+      //A + B -> [C <- molN]
+      throwException("reactNtoC_Multi");
+    }
+}
+
+void MultiscaleReactionProcess::setReactD()
+{
+  if(A == C && B == D)
+    {
+      //A + B -> [A == C] + [B == D]
+      reactM = &MultiscaleReactionProcess::reactNone;
+    }
+  else if(B == C && A == D)
+    {
+      //A + B -> [B == C] + [A == D]
+      reactM = &MultiscaleReactionProcess::reactNone;
+    }
+  else if(A == C)
+    {
+      if(B->isReplaceable(D))
+        {
+          if(B->getIsMultiscaleComp() && !A->getIsMultiscaleComp())
+            {
+              //A + B -> [A == C] + [MuD <- MuB]
+              reactM = &MultiscaleReactionProcess::reactAeqC_MuBtoMuD;
+            }
+          else if(!B->getIsMultiscaleComp() && A->getIsMultiscaleComp())
+            {
+              //A + B -> [MuA == MuC] + [D <- molB]
+              reactM = &MultiscaleReactionProcess::reactMuAeqMuC_BtoD;
+            }
+          else
+            {
+              //A + B -> [MuA == MuC] + [MuD <- MuB]
+              throwException("reactMuAeqMuC_MuBtoMuD");
+            }
+        }
+      else
+        {
+          //A + B -> [A == C] + [D <- molN]
+          throwException("reactAeqC_NtoD_Multi");
+        }
+    }
+  else if(B == C)
+    {
+      if(A->isReplaceable(D))
+        {
+          if(A->getIsMultiscaleComp() && !B->getIsMultiscaleComp())
+            {
+              //A + B -> [B == C] + [MuD <- MuA]
+              reactM = &MultiscaleReactionProcess::reactBeqC_MuAtoMuD;
+            }
+          else if(!A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
+            {
+              //A + B -> [MuB == MuC] + [D <- molA]
+              reactM = &MultiscaleReactionProcess::reactMuBeqMuC_AtoD;
+            }
+          else
+            {
+              //A + B -> [MuB == MuC] + [MuD <- MuA]
+              reactM = &MultiscaleReactionProcess::reactMuBeqMuC_MuAtoMuD;
+            }
+        }
+      else
+        {
+          //A + B -> [B == C] + [D <- molN]
+          throwException("reactBeqC_NtoD_Multi");
+        }
+    }
+  else if(A == D)
+    {
+      if(B->isReplaceable(C))
+        {
+          if(B->getIsMultiscaleComp() && !A->getIsMultiscaleComp())
+            {
+              //A + B -> [MuC <- MuB] + [A == D]
+              reactM = &MultiscaleReactionProcess::reactMuBtoMuC_AeqD;
+            }
+          else if(!B->getIsMultiscaleComp() && A->getIsMultiscaleComp())
+            {
+              //A + B -> [C <- molB] + [MuA == MuD] 
+              reactM = &MultiscaleReactionProcess::reactBtoC_MuAeqMuD;
+            }
+          else
+            {
+              //A + B -> [MuC <- MuB] + [MuA == MuD]
+              throwException("reactMuBtoMuC_MuAeqMuD");
+            }
+        }
+      else
+        {
+          //A + B -> [C <- molN] + [A == D]
+          throwException("reactNtoC_AeqD_Multi");
+        }
+    }
+  else if(B == D)
+    {
+      if(A->isReplaceable(C))
+        {
+          if(A->getIsMultiscaleComp() && !B->getIsMultiscaleComp())
+            {
+              //A + B -> [MuC <- MuA] + [B == D]
+              reactM = &MultiscaleReactionProcess::reactMuAtoMuC_BeqD;
+            }
+          else if(!A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
+            {
+              //A + B -> [C <- molA] + [MuB == MuD] 
+              reactM = &MultiscaleReactionProcess::reactAtoC_MuBeqMuD;
+            }
+          else
+            {
+              //A + B -> [MuC <- MuA] + [MuB == MuD] 
+              throwException("reactMuAtoMuC_MuBeqMuD");
+            }
+        }
+      else
+        {
+          //A + B -> [C <- molN] + [B == D]
+          throwException("reactNtoC_BeqD_Multi");
+        }
+    }
+  else
+    {
+      if(A->isReplaceable(C))
+        {
+          if(B->isReplaceable(D))
+            {
+              if(B->getIsMultiscaleComp() && !A->getIsMultiscaleComp())
+                {
+                  //A + B -> [C <- molA] + [MuD <- MuB]
+                  reactM = &MultiscaleReactionProcess::reactAtoC_MuBtoMuD;
+                }
+              else if(!B->getIsMultiscaleComp() && A->getIsMultiscaleComp())
+                {
+                  //A + B -> [MuC <- MuA] + [D <- molB]
+                  reactM = &MultiscaleReactionProcess::reactMuAtoMuC_BtoD;
+                }
+              else
+                {
+                  //A + B -> [MuC <- MuA] + [MuD <- MuB]
+                  reactM = &MultiscaleReactionProcess::
+                    reactMuAtoMuC_MuBtoMuD;
+                }
+            }
+          else
+            {
+              //A + B -> [C <- molA] + [D <- molN]
+              throwException("reactAtoC_NtoD_Multi");
+            }
+        }
+      else if(B->isReplaceable(C))
+        {
+          if(A->isReplaceable(D))
+            {
+              if(A->getIsMultiscaleComp() && !B->getIsMultiscaleComp())
+                {
+                  //A + B -> [C <- molB] + [MuD <- MuA]
+                  reactM = &MultiscaleReactionProcess::reactBtoC_MuAtoMuD;
+                }
+              else if(!A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
+                {
+                  //A + B -> [MuC <- MuB] + [D <- molA]
+                  reactM = &MultiscaleReactionProcess::reactMuBtoMuC_AtoD;
+                }
+              else
+                {
+                  //A + B -> [MuC <- MuB] + [MuD <- MuA]
+                  throwException("reactMuBtoMuC_MuAtoMuD");
+                }
+            }
+          else
+            {
+              //A + B -> [C <- molB] + [D <- molN]
+              throwException("reactBtoC_NtoD_Multi");
+            }
+        }
+      else
+        {
+          //A + B -> [C <- molN] + [D <- molN]
+          throwException("reactNtoC_NtoD_Multi");
+        }
+    }
+}
+
 void MultiscaleReactionProcess::setReactMethod()
 {
   if(variableC && D)
     {
-      if(A == D)
-        {
-          //A + B -> variableC + [A == D]
-          throwException("reactVarC_AeqD_Multi");
-        }
-      else if(B == D)
-        {
-          //A + B -> variableC + [B == D]
-          throwException("reactVarC_BeqD_Multi");
-        }
-      else
-        { 
-          if(A->isReplaceable(D))
-            {
-              //A + B -> variableC + [D <- molA]
-              throwException("reactVarC_AtoD_Multi");
-            }
-          else if(B->isReplaceable(D))
-            {
-              //A + B -> variableC + [D <- molB]
-              throwException("reactVarC_BtoD_Multi");
-            }
-          else
-            {
-              //A + B -> variableC + [D <- molN]
-              throwException("reactVarC_NtoD_Multi");
-            }
-        }
+      setReactVarC_D();
     }
   else if(variableD && C)
     {
-      if(A == C)
-        {
-          //A + B -> variableD + [A == C]
-          throwException("reactVarD_AeqC_Multi");
-        }
-      else if(B == C)
-        {
-          //A + B -> variableD + [B == C]
-          throwException("reactVarD_BeqC_Multi");
-        }
-      else
-        { 
-          if(A->isReplaceable(C))
-            {
-              //A + B -> variableD + [C <- molA]
-              throwException("reactVarD_AtoC_Multi");
-            }
-          else if(B->isReplaceable(C))
-            {
-              //A + B -> variableD + [C <- molB]
-              throwException("reactVarD_BtoC_Multi");
-            }
-          else
-            {
-              //A + B -> variableD + [C <- molN]
-              throwException("reactVarD_NtoC_Multi");
-            }
-        }
+      setReactVarD_C();
     }
   else if(variableC)
     {
@@ -434,236 +678,13 @@ void MultiscaleReactionProcess::setReactMethod()
     }
   else if(D)
     {
-      if(A == C && B == D)
-        {
-          //A + B -> [A == C] + [B == D]
-          reactM = &MultiscaleReactionProcess::reactNone;
-        }
-      else if(B == C && A == D)
-        {
-          //A + B -> [B == C] + [A == D]
-          reactM = &MultiscaleReactionProcess::reactNone;
-        }
-      else if(A == C)
-        {
-          if(B->isReplaceable(D))
-            {
-              if(B->getIsMultiscaleComp() && !A->getIsMultiscaleComp())
-                {
-                  //A + B -> [A == C] + [MuD <- MuB]
-                  reactM = &MultiscaleReactionProcess::reactAeqC_MuBtoMuD;
-                }
-              else if(!B->getIsMultiscaleComp() && A->getIsMultiscaleComp())
-                {
-                  //A + B -> [MuA == MuC] + [D <- molB]
-                  reactM = &MultiscaleReactionProcess::reactMuAeqMuC_BtoD;
-                }
-              else
-                {
-                  //A + B -> [MuA == MuC] + [MuD <- MuB]
-                  throwException("reactMuAeqMuC_MuBtoMuD");
-                }
-            }
-          else
-            {
-              //A + B -> [A == C] + [D <- molN]
-              throwException("reactAeqC_NtoD_Multi");
-            }
-        }
-      else if(B == C)
-        {
-          if(A->isReplaceable(D))
-            {
-              if(A->getIsMultiscaleComp() && !B->getIsMultiscaleComp())
-                {
-                  //A + B -> [B == C] + [MuD <- MuA]
-                  reactM = &MultiscaleReactionProcess::reactBeqC_MuAtoMuD;
-                }
-              else if(!A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
-                {
-                  //A + B -> [MuB == MuC] + [D <- molA]
-                  reactM = &MultiscaleReactionProcess::reactMuBeqMuC_AtoD;
-                }
-              else
-                {
-                  //A + B -> [MuB == MuC] + [MuD <- MuA]
-                  reactM = &MultiscaleReactionProcess::reactMuBeqMuC_MuAtoMuD;
-                }
-            }
-          else
-            {
-              //A + B -> [B == C] + [D <- molN]
-              throwException("reactBeqC_NtoD_Multi");
-            }
-        }
-      else if(A == D)
-        {
-          if(B->isReplaceable(C))
-            {
-              if(B->getIsMultiscaleComp() && !A->getIsMultiscaleComp())
-                {
-                  //A + B -> [MuC <- MuB] + [A == D]
-                  reactM = &MultiscaleReactionProcess::reactMuBtoMuC_AeqD;
-                }
-              else if(!B->getIsMultiscaleComp() && A->getIsMultiscaleComp())
-                {
-                  //A + B -> [C <- molB] + [MuA == MuD] 
-                  reactM = &MultiscaleReactionProcess::reactBtoC_MuAeqMuD;
-                }
-              else
-                {
-                  //A + B -> [MuC <- MuB] + [MuA == MuD]
-                  throwException("reactMuBtoMuC_MuAeqMuD");
-                }
-            }
-          else
-            {
-              //A + B -> [C <- molN] + [A == D]
-              throwException("reactNtoC_AeqD_Multi");
-            }
-        }
-      else if(B == D)
-        {
-          if(A->isReplaceable(C))
-            {
-              if(A->getIsMultiscaleComp() && !B->getIsMultiscaleComp())
-                {
-                  //A + B -> [MuC <- MuA] + [B == D]
-                  reactM = &MultiscaleReactionProcess::reactMuAtoMuC_BeqD;
-                }
-              else if(!A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
-                {
-                  //A + B -> [C <- molA] + [MuB == MuD] 
-                  reactM = &MultiscaleReactionProcess::reactAtoC_MuBeqMuD;
-                }
-              else
-                {
-                  //A + B -> [MuC <- MuA] + [MuB == MuD] 
-                  throwException("reactMuAtoMuC_MuBeqMuD");
-                }
-            }
-          else
-            {
-              //A + B -> [C <- molN] + [B == D]
-              throwException("reactNtoC_BeqD_Multi");
-            }
-        }
-      else
-        {
-          if(A->isReplaceable(C))
-            {
-              if(B->isReplaceable(D))
-                {
-                  if(B->getIsMultiscaleComp() && !A->getIsMultiscaleComp())
-                    {
-                      //A + B -> [C <- molA] + [MuD <- MuB]
-                      reactM = &MultiscaleReactionProcess::reactAtoC_MuBtoMuD;
-                    }
-                  else if(!B->getIsMultiscaleComp() && A->getIsMultiscaleComp())
-                    {
-                      //A + B -> [MuC <- MuA] + [D <- molB]
-                      reactM = &MultiscaleReactionProcess::reactMuAtoMuC_BtoD;
-                    }
-                  else
-                    {
-                      //A + B -> [MuC <- MuA] + [MuD <- MuB]
-                      reactM = &MultiscaleReactionProcess::
-                        reactMuAtoMuC_MuBtoMuD;
-                    }
-                }
-              else
-                {
-                  //A + B -> [C <- molA] + [D <- molN]
-                  throwException("reactAtoC_NtoD_Multi");
-                }
-            }
-          else if(B->isReplaceable(C))
-            {
-              if(A->isReplaceable(D))
-                {
-                  if(A->getIsMultiscaleComp() && !B->getIsMultiscaleComp())
-                    {
-                      //A + B -> [C <- molB] + [MuD <- MuA]
-                      reactM = &MultiscaleReactionProcess::reactBtoC_MuAtoMuD;
-                    }
-                  else if(!A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
-                    {
-                      //A + B -> [MuC <- MuB] + [D <- molA]
-                      reactM = &MultiscaleReactionProcess::reactMuBtoMuC_AtoD;
-                    }
-                  else
-                    {
-                      //A + B -> [MuC <- MuB] + [MuD <- MuA]
-                      throwException("reactMuBtoMuC_MuAtoMuD");
-                    }
-                }
-              else
-                {
-                  //A + B -> [C <- molB] + [D <- molN]
-                  throwException("reactBtoC_NtoD_Multi");
-                }
-            }
-          else
-            {
-              //A + B -> [C <- molN] + [D <- molN]
-              throwException("reactNtoC_NtoD_Multi");
-            }
-        }
+      setReactD();
     }
   else
     {
-      if(A == C)
-        {
-          //A + B -> [A == C]
-          throwException("reactAeqC_Multi");
-        }
-      else if(B == C)
-        {
-          //A + B -> [B == C]
-          throwException("reactBeqC_Multi");
-        }
-      else if(A->isReplaceable(C))
-        {
-          if(A->getIsMultiscaleComp() && !B->getIsMultiscaleComp())
-            {
-              //A + B -> [MuC <- MuA]
-              reactM = &MultiscaleReactionProcess::reactMuAtoMuC;
-            }
-          else if(!A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
-            {
-              //A + B -> [C <- molA]
-              reactM = &MultiscaleReactionProcess::reactAtoC_Multi;
-            }
-          else
-            {
-              //A + B -> [MuC <- MuA]
-              throwException("reactMuAtoMuC");
-            }
-        }
-      else if(B->isReplaceable(C))
-        {
-          if(B->getIsMultiscaleComp() && !A->getIsMultiscaleComp())
-            {
-              //A + B -> [MuC <- MuB]
-              reactM = &MultiscaleReactionProcess::reactMuBtoMuC;
-            }
-          else if(!B->getIsMultiscaleComp() && A->getIsMultiscaleComp())
-            {
-              //A + B -> [C <- molB]
-              reactM = &MultiscaleReactionProcess::reactBtoC_Multi;
-            }
-          else
-            {
-              //A + B -> [MuC <- MuB]
-              throwException("reactMuBtoMuC");
-            }
-        }
-      else
-        {
-          //A + B -> [C <- molN]
-          throwException("reactNtoC_Multi");
-        }
+      setReactC();
     }
 }
+
 
 

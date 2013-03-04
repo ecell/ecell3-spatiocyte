@@ -752,19 +752,6 @@ void DiffusionInfluencedReactionProcess::addMoleculeE()
   E->addMolecule(moleculeE);
 }
 
-void DiffusionInfluencedReactionProcess::finalizeReaction()
-{
-  //The number of molecules may have changed for both reactant and product
-  //species. We need to update SpatiocyteNextReactionProcesses which are
-  //dependent on these species:
-  for(std::vector<SpatiocyteProcess*>::const_iterator 
-      i(theInterruptedProcesses.begin());
-      i!=theInterruptedProcesses.end(); ++i)
-    {
-      (*i)->substrateValueChanged(theSpatiocyteStepper->getCurrentTime());
-    }
-}
-
 void DiffusionInfluencedReactionProcess::calculateReactionProbability()
 {
   //Refer to the paper for the description of the variables used in this

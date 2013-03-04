@@ -78,8 +78,20 @@ public:
     }
   virtual void bind(Voxel*, const unsigned) {}
   virtual void unbind(Voxel*) {}
+  virtual void finalizeReaction()
+    {
+      //The number of molecules may have changed for both reactant and product
+      //species. We need to update SpatiocyteNextReactionProcesses which are
+      //dependent on these species:
+      for(std::vector<SpatiocyteProcess*>::const_iterator 
+          i(theInterruptedProcesses.begin());
+          i!=theInterruptedProcesses.end(); ++i)
+        {
+          (*i)->substrateValueChanged(theSpatiocyteStepper->getCurrentTime());
+        }
+    }
   virtual void printParameters();
-  virtual void finalizeReaction();
+  virtual void setReactMethod();
 protected:
   void calculateReactionProbability();
   void addMoleculeE();
@@ -88,7 +100,6 @@ protected:
   void removeMolecule(Species*, Voxel*, const unsigned, Species*) const;
   Voxel* getPopulatableVoxel(Species*, Voxel*, Voxel*);
   Voxel* getPopulatableVoxel(Species*, Voxel*, Voxel*, Voxel*);
-  virtual void setReactMethod();
   void reactNone(Voxel*, Voxel*, const unsigned, const unsigned) {}
   void reactVarC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactVarC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
