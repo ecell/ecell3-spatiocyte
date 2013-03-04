@@ -1077,8 +1077,10 @@ void SpatiocyteNextReactionProcess::initializeFourth()
                   pFormula << "[aVolume:compB.Volume:" << aVolume << "]";
                 }
             }
-          //unit of k is in m^3/s
-          p = k/aVolume;
+          //unit of k is in (m^3)^(totalCoefficient-1)/s
+          //we need to convert k to p which has the unit 1/s
+          int totalCoefficient(coefficientA+coefficientB);
+          p = k/(pow(aVolume, sqrt(totalCoefficient*totalCoefficient)-1));
           pFormula << "[k/aVolume:" << k << "/" << aVolume << "]";
         }
       //If surface (+surface) <= k(surface)(surface) or
@@ -1117,8 +1119,10 @@ void SpatiocyteNextReactionProcess::initializeFourth()
                   pFormula << "[anArea:compB.Area:" << anArea << "]";
                 }
             }
-          //unit of k is in m^2/s
-          p = k/anArea;
+          //unit of k is in (m^2)^(totalCoefficient-1)/s
+          //we need to convert k to p which has the unit 1/s
+          int totalCoefficient(coefficientA+coefficientB);
+          p = k/(pow(anArea, sqrt(totalCoefficient*totalCoefficient)-1));
           pFormula << "[k/anArea:" << k << "/" << anArea << "]";
         }
       else

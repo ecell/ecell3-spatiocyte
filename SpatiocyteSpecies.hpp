@@ -143,14 +143,12 @@ public:
       isMultiscaleBinderID.resize(speciesSize);
       isMultiscaleBoundID.resize(speciesSize);
       isDeoligomerizeID.resize(speciesSize);
-      theDeoligomerizedProducts.resize(speciesSize);
       for(unsigned i(0); i != speciesSize; ++i)
         {
           isMultiscaleBinderID[i] = false;
           isMultiscaleBoundID[i] = false;
           isDeoligomerizeID[i] = false;
           theDiffusionInfluencedReactions[i] = NULL;
-          theDeoligomerizedProducts[i] = NULL;
           theReactionProbabilities[i] = 0;
           isFinalizeReactions[i] = false;
         }
@@ -482,7 +480,6 @@ public:
             }
           if(isTagged)
             {
-              std::cout << "------------------------is tagged" << std::endl;
               for(unsigned i(0); i != theMoleculeSize; ++i)
                 {
                   theTags[i].origin = getCoord(i);
@@ -496,15 +493,9 @@ public:
               if(theSpecies[i]->getIsDeoligomerize())
                 {
                   isDeoligomerizeID[i] = true;
-                  theDeoligomerizedProducts[i] = 
-                    theSpecies[i]->getDeoligomerizedProduct();
                 }
             }
         }
-    }
-  Species* getDeoligomerizedProduct()
-    {
-      return theDeoligomerizedProduct;
     }
   unsigned getCollisionCnt(unsigned anIndex)
     {
@@ -1354,12 +1345,6 @@ public:
     }
   void addMolecule(Voxel* aVoxel, Tag& aTag)
     {
-      /*
-      if(getID(aVoxel) == theID)
-        {
-          std::cout << "this is so wrong===================================================================================" << std::endl;
-        }
-        */
       if(!isVacant)
         {
           if(isMultiscale)
@@ -1862,6 +1847,32 @@ public:
         }
     }
     */
+  void addBound(const unsigned index)
+    {
+      theBoundCnts[theTags[index].boundCnt++]--;
+      theBoundCnts[theTags[index].boundCnt]++;
+    }
+  void removeBound(const unsigned index)
+    {
+      Tag& aTag(theTags[index]);
+      theBoundCnts[aTag.boundCnt--]--;
+      theBoundCnts[aTag.boundCnt]++;
+      if(!aTag.boundCnt)
+        {
+          Voxel* aVoxel(theMolecules[index]);
+          if(isOnMultiscale)
+            {
+              theDeoligomerizedProduct->addMoleculeInMulti(aVoxel,
+                                                           aTag.vacantIdx);
+              removeMoleculeDirect(index);
+            }
+          else
+            {
+              removeMoleculeDirect(index);
+              theDeoligomerizedProduct->addMolecule(aVoxel);
+            }
+        }
+    }
   void addBounds(Voxel* aVoxel)
     {
       unsigned& cnt(theTags[theMoleculeSize-1].boundCnt);
@@ -1873,10 +1884,7 @@ public:
           if(isDeoligomerizeID[anID])
             {
               cnt++;
-              unsigned index(theLattice[aCoord].idx%theStride);
-              unsigned& adjCnt(theSpecies[anID]->getTag(index).boundCnt);
-              theBoundCnts[adjCnt++]--;
-              theBoundCnts[adjCnt]++;
+              theSpecies[anID]->addBound(theLattice[aCoord].idx%theStride);
             }
         }
       theBoundCnts[cnt]++;
@@ -1892,20 +1900,7 @@ public:
           const unsigned anID(getID(theLattice[aCoord]));
           if(isDeoligomerizeID[anID])
             {
-              const unsigned index(theLattice[aCoord].idx%theStride);
-              unsigned& adjCnt(theSpecies[anID]->getTag(index).boundCnt);
-              if(adjCnt == 1)
-                {
-                  theSpecies[anID]->removeMoleculeDirect(index);
-                  theDeoligomerizedProducts[anID]->addMolecule(
-                     &theLattice[aCoord]);
-                  theBoundCnts[1]--;
-                }
-              else
-                {
-                  theBoundCnts[adjCnt--]--;
-                  theBoundCnts[adjCnt]++;
-                }
+              theSpecies[anID]->removeBound(theLattice[aCoord].idx%theStride);
             }
         }
     }
@@ -2940,7 +2935,6 @@ private:
   std::vector<std::vector<unsigned> > theIntersectLipids;
   std::vector<unsigned> theBoundCnts;
   std::vector<Species*>& theSpecies;
-  std::vector<Species*> theDeoligomerizedProducts;
 };
 
 
