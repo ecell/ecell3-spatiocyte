@@ -58,13 +58,13 @@ populator.UniformRadiusZ = 0.99
 #react.VariableReferenceList = [['_', 'Variable:/Surface:MinD', '1']]
 #react.p = 1
 
-react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:react')
+react = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:react')
 react.VariableReferenceList = [['_', 'Variable:/Surface:MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '1']]
 react.p = 1
 
-react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:dissocPG_MinD')
+react = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:dissocPG_MinD')
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/:Lipid', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG', '1']]
@@ -77,14 +77,14 @@ react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '1']]
 react.p = 0.1
 
-react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:nucleatePGs_PGs_MinD')
+react = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:nucleatePGs_PGs_MinD')
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '1']]
 react.p = 0.1
 
-react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:nucleatePGs_MinD')
+react = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:nucleatePGs_MinD')
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '1']]
@@ -98,21 +98,21 @@ react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '1']]
 react.p = 0.5
 
-react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:extendPGs_MinD')
+react = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:extendPGs_MinD')
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '1']]
 react.p = 0.5
 
-react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:extendPGs_PGs_MinD')
+react = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:extendPGs_PGs_MinD')
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '1']]
 react.p = 0.5
 
-react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:extendPGs_PGs_MinD2')
+react = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:extendPGs_PGs_MinD2')
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '1']]
@@ -129,6 +129,7 @@ react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:di
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/:Lipid', '0']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG', '1']]
+react.Deoligomerize = 0
 react.ImplicitUnbind = 1
 react.SearchVacant = 0
 react.k = 1.5e+6
@@ -137,6 +138,7 @@ react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:di
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:MinD', '0']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '1']]
+react.Deoligomerize = 0
 react.ImplicitUnbind = 1
 react.SearchVacant = 0
 react.k = 1.5e+6
@@ -145,6 +147,7 @@ react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:di
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/:Lipid', '0']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '1']]
+react.Deoligomerize = 0
 react.ImplicitUnbind = 1
 react.SearchVacant = 0
 react.k = 1.5e+6
@@ -157,7 +160,7 @@ react.k = 1.5e+6
 #diffuser.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
 #diffuser.D = 5e-12
 
-rotator = theSimulator.createEntity('DiffusionProcess', 'Process:/:rotateMinD')
+rotator = theSimulator.createEntity('DiffusionProcess', 'Process:/:ro----------tateMinD')
 rotator.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
 rotator.D = 1e-12
 
@@ -166,16 +169,16 @@ rotator.D = 1e-12
 #rotator.D = 1e-12
 #rotator.Propensity = 1
 
-diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:propenMinD')
+diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:pro--------------penMinD')
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
 diffuser.D = 10e-12
 diffuser.Propensity = 1
 
-diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffusePG')
+diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diff------------usePG')
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:PG']]
 diffuser.D = 10e-12
 
-diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffusePG_MinD')
+diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diff----------------------usePG_MinD')
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD']]
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:MinD', '-1']]
 diffuser.D = 10e-12
@@ -221,7 +224,7 @@ import time
 run(1e-6)
 print "Done stirring. Now running..."
 start = time.time()
-run(0.01)
+run(0.001)
 end = time.time()
 duration = end-start
 print duration
