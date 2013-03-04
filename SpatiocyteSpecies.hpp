@@ -1131,13 +1131,59 @@ public:
       const unsigned tarIndex(tar->idx%theStride);
       DiffusionInfluencedReactionProcess* aReaction(
                       theDiffusionInfluencedReactions[tarID]);
-      if(aReaction->getA() == this)
-        { 
-          aReaction->react(src, tar, srcIndex, tarIndex);
+      /*
+      Species* tarSpecies(theSpecies[tarID]);
+      if(aReaction->getIsReactWithMultiscaleComp())
+        {
+          if(tarSpecies->getIsMultiscaleComp())
+            {
+              aReaction->react(src, tar, srcIndex, tarIndex);
+            }
+          else
+            {
+              aReaction->react(tar, src, tarIndex, srcIndex);
+            }
+          softRemoveMolecule(srcIndex);
+          if(!tarSpecies->getIsMultiscale())
+            {
+              tarSpecies->softRemoveMolecule(tarIndex);
+            }
+        }
+      else if(aReaction->getIsReactInMultiscaleComp())
+        {
+          if(aReaction->getA() == this)
+            { 
+              aReaction->react(src, tar, srcIndex, tarIndex);
+            }
+          else
+            {
+              aReaction->react(tar, src, tarIndex, srcIndex);
+            }
+          if(tarSpecies == this && theMoleculeSize-1 == tarIndex)
+            {
+              --theMoleculeSize;
+              softRemoveMolecule(srcIndex);
+            }
+          else
+            {
+              softRemoveMolecule(srcIndex);
+              if(!tarSpecies->getIsMultiscale())
+                {
+                  tarSpecies->softRemoveMolecule(tarIndex);
+                }
+            }
         }
       else
+      */
         {
-          aReaction->react(tar, src, tarIndex, srcIndex);
+          if(aReaction->getA() == this)
+            { 
+              aReaction->react(src, tar, srcIndex, tarIndex);
+            }
+          else
+            {
+              aReaction->react(tar, src, tarIndex, srcIndex);
+            }
         }
       isFinalizeReactions[tarID] = true;
     }
