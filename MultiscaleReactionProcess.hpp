@@ -38,86 +38,29 @@
 
 LIBECS_DM_CLASS(MultiscaleReactionProcess, DiffusionInfluencedReactionProcess)
 { 
+  typedef void (MultiscaleReactionProcess::*Method)(Voxel*, Voxel*,
+                                              const unsigned, const unsigned);
 public:
   LIBECS_DM_OBJECT(MultiscaleReactionProcess, Process)
     {
       INHERIT_PROPERTIES(DiffusionInfluencedReactionProcess);
     }
-  MultiscaleReactionProcess() {}
+  MultiscaleReactionProcess():
+    isReactInMultiscaleComp(false),
+    isReactWithMultiscaleComp(false),
+    M(NULL),
+    N(NULL),
+    M_p(NULL),
+    N_p(NULL) {}
   virtual ~MultiscaleReactionProcess() {}
-  virtual void initializeThird()
-    { 
-      //Set up the following:
-      //theMultiscale = isMultiscale species 
-      //M = a species on multiscale (isOnMultiscale)
-      //N = a normal species that can bind with theMultiscaleSpecies to become
-      //    M
-      //This must be in initializeSecond or later since we need to know
-      //if a species is multiscale, which is only set by the
-      //CompartmentProcess in initializeFirst:
-      if(A->getIsMultiscale())
-        {
-          theMultiscale = A;
-          N = B;
-        }
-      else if(B->getIsMultiscale())
-        {
-          theMultiscale = B;
-          N = A;
-        }
-      else
-        {
-          THROW_EXCEPTION(ValueError, String(
-             getPropertyInterface().getClassName()) + " [" + 
-              getFullID().asString() + "]: This process must have at least " +
-             "one multiscale substrate species.");
-        }
-      if(N->getVacantSpecies() == theMultiscale)
-        {
-          THROW_EXCEPTION(ValueError, String(
-             getPropertyInterface().getClassName()) + " [" + 
-              getFullID().asString() + "]: The substrate " + 
-              getIDString(N) + "'s vacant species is " +
-              getIDString(theMultiscale) + " which is a multiscale species. " +
-              "This reaction only expects the product's vacant species to be " +
-              "a multiscale species. You should probably invert the " +
-              "substrate with the product species to reverse the reaction.");
-        }
-      if(!D)
-        {
-          THROW_EXCEPTION(ValueError, String(
-             getPropertyInterface().getClassName()) + " [" + 
-              getFullID().asString() + "]: This process must have two " +
-              "products.");
-        }
-      if(C->getIsMultiscale() && D->getIsOnMultiscale())
-        {
-          M = D;
-        }
-      else if(C->getIsOnMultiscale() && D->getIsMultiscale())
-        {
-          M = C;
-        }
-      else
-        {
-          THROW_EXCEPTION(ValueError, String(
-             getPropertyInterface().getClassName()) + " [" + 
-              getFullID().asString() + "]: This process must have at least " +
-             "one product species on multiscale.");
-        }
-      //This must be set in
-      //initializeThird since it requires vacant species properties
-      //set by DiffusionProcess in initializeSecond:
-
-      //If it is a dissociation reaction,
-      //M diffuses on theMultiscale,
-      //M unbinds from theMultiscale to become N:
-      theMultiscale->setMultiscaleBindIDs(N->getID(), M->getID());
-      theMultiscale->setMultiscaleUnbindIDs(M->getID(), N->getID());
-      theMultiscale->setDiffusionInfluencedReaction(
-            dynamic_cast<DiffusionInfluencedReactionProcess*>(this),
-            N->getID(), 1); 
-    }
+  virtual void initializeThird();
+  virtual void initializeMultiscaleWalkBindUnbind();
+  virtual void initializeMultiscaleCompReaction();
+  virtual void setReactMethod();
+  virtual void reactWithMultiscaleComp(Voxel*, Voxel*, const unsigned,
+                                       const unsigned);
+  virtual void reactInMultiscaleComp(Voxel*, Voxel*, const unsigned,
+                                       const unsigned);
   virtual void bind(Voxel* aVoxel, const unsigned vacantIdx)
     {
       const unsigned index(aVoxel->idx%theStride);
@@ -134,8 +77,49 @@ public:
     {
       DiffusionInfluencedReactionProcess::finalizeReaction();
     }
+  virtual void react(Voxel* molA, Voxel* molB, const unsigned indexA,
+                     const unsigned indexB)
+    {
+      (this->*reactM)(molA, molB, indexA, indexB);
+    }
 protected:
+  unsigned getIdx(Species*, Voxel*, const unsigned);
+  void reactMuAtoMuC(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactMuBtoMuC(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactAtoC_MuBtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactMuAtoMuC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactBtoC_MuAtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactMuBtoMuC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactAeqC_MuBtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactMuAeqMuC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactBeqC_MuAtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactMuBeqMuC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactMuBtoMuC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactBtoC_MuAeqMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactMuAtoMuC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactAtoC_MuBeqMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactAtoC_Multi(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactBtoC_Multi(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactMuAtoMuC_MuBtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactMuBeqMuC_MuAtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void throwException(String);
+  virtual bool getIsReactWithMultiscaleComp()
+    {
+      return isReactWithMultiscaleComp;
+    }
+  virtual bool getIsReactInMultiscaleComp()
+    {
+      return isReactInMultiscaleComp;
+    }
+protected:
+  bool isReactInMultiscaleComp;
+  bool isReactWithMultiscaleComp;
+  Species* M;
+  Species* N;
+  Species* M_p;
+  Species* N_p;
   Species* theMultiscale;
+  Method reactM;
 };
 
 #endif /* __MultiscaleReactionProcess_hpp */

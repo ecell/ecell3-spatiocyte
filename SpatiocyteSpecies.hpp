@@ -1891,6 +1891,65 @@ public:
           softRemoveMolecule(anIndex);
         }
     }
+  /*
+  void addBounds(Voxel* aVoxel)
+    {
+      unsigned& cnt(theTags[theMoleculeSize-1].boundCnt);
+      cnt = 0;
+      for(unsigned i(0); i != theDiffuseSize; ++i)
+        {
+          unsigned aCoord(aVoxel->adjoiningCoords[i]);
+          const unsigned anID(getID(theLattice[aCoord]));
+          if(isDeoligomerizeID[anID])
+            {
+              cnt++;
+              unsigned index(theLattice[aCoord].idx%theStride);
+              unsigned& adjCnt(theSpecies[anID]->getTag(index).boundCnt);
+              theBoundCnts[adjCnt++]--;
+              theBoundCnts[adjCnt]++;
+            }
+        }
+      theBoundCnts[cnt]++;
+    }
+  void removeBounds(const unsigned anIndex)
+    {
+      Voxel* aVoxel(theMolecules[anIndex]);
+      theBoundCnts[theTags[anIndex].boundCnt]--;
+      removeMoleculeDirect(anIndex);
+      for(unsigned i(0); i != theDiffuseSize; ++i)
+        {
+          const unsigned aCoord(aVoxel->adjoiningCoords[i]);
+          const unsigned anID(getID(theLattice[aCoord]));
+          if(isDeoligomerizeID[anID])
+            {
+              const unsigned index(theLattice[aCoord].idx%theStride);
+              unsigned& adjCnt(theSpecies[anID]->getTag(index).boundCnt);
+              if(adjCnt == 1)
+                {
+                  if(theSpecies[anID]->getIsOnMultiscale())
+                    {
+                      Tag& aTag(theSpecies[anID]->getTag(index));
+                      theDeoligomerizedProducts[anID]->addMoleculeInMulti(
+                         &theLattice[aCoord], aTag.vacantIdx, aTag);
+                      theSpecies[anID]->removeMoleculeDirect(index);
+                    }
+                  else
+                    {
+                      theSpecies[anID]->removeMoleculeDirect(index);
+                      theDeoligomerizedProducts[anID]->addMolecule(
+                         &theLattice[aCoord]);
+                    }
+                  theBoundCnts[1]--;
+                }
+              else if(adjCnt)
+                {
+                  theBoundCnts[adjCnt--]--;
+                  theBoundCnts[adjCnt]++;
+                }
+            }
+        }
+    }
+    */
   void addBounds(Voxel* aVoxel)
     {
       unsigned& cnt(theTags[theMoleculeSize-1].boundCnt);

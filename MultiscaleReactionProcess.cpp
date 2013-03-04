@@ -31,3 +31,778 @@
 #include "MultiscaleReactionProcess.hpp"
 
 LIBECS_DM_INIT(MultiscaleReactionProcess, Process); 
+
+
+void MultiscaleReactionProcess::initializeThird()
+{
+  if(k == -1 && p == -1)
+    {
+      initializeMultiscaleWalkBindUnbind();
+    }
+  else
+    {
+      initializeMultiscaleCompReaction();
+      DiffusionInfluencedReactionProcess::initializeThird();
+    }
+}
+
+void MultiscaleReactionProcess::initializeMultiscaleWalkBindUnbind()
+{ 
+  //Set up the following:
+  //theMultiscale = isMultiscale species 
+  //M = a species on multiscale (isOnMultiscale)
+  //N = a normal species that can bind with theMultiscaleSpecies to become
+  //    M
+  //This must be in initializeSecond or later since we need to know
+  //if a species is multiscale, which is only set by the
+  //CompartmentProcess in initializeFirst:
+  if(A->getIsMultiscale())
+    {
+      theMultiscale = A;
+      N = B;
+    }
+  else if(B->getIsMultiscale())
+    {
+      theMultiscale = B;
+      N = A;
+    }
+  else
+    {
+      THROW_EXCEPTION(ValueError, String(
+         getPropertyInterface().getClassName()) + " [" + 
+          getFullID().asString() + "]: This process must have at least " +
+         "one multiscale substrate species.");
+    }
+  if(N->getVacantSpecies() == theMultiscale)
+    {
+      THROW_EXCEPTION(ValueError, String(
+         getPropertyInterface().getClassName()) + " [" + 
+          getFullID().asString() + "]: The substrate " + 
+          getIDString(N) + "'s vacant species is " +
+          getIDString(theMultiscale) + " which is a multiscale species. " +
+          "This reaction only expects the product's vacant species to be " +
+          "a multiscale species. You should probably invert the " +
+          "substrate with the product species to reverse the reaction.");
+    }
+  if(!D)
+    {
+      THROW_EXCEPTION(ValueError, String(
+         getPropertyInterface().getClassName()) + " [" + 
+          getFullID().asString() + "]: This process must have two " +
+          "products.");
+    }
+  if(C->getIsMultiscale() && D->getIsOnMultiscale())
+    {
+      M = D;
+    }
+  else if(C->getIsOnMultiscale() && D->getIsMultiscale())
+    {
+      M = C;
+    }
+  else
+    {
+      THROW_EXCEPTION(ValueError, String(
+         getPropertyInterface().getClassName()) + " [" + 
+          getFullID().asString() + "]: This process must have at least " +
+         "one product species on multiscale.");
+    }
+  //This must be set in
+  //initializeThird since it requires vacant species properties
+  //set by DiffusionProcess in initializeSecond:
+
+  //If it is a dissociation reaction,
+  //M diffuses on theMultiscale,
+  //M unbinds from theMultiscale to become N:
+  theMultiscale->setMultiscaleBindIDs(N->getID(), M->getID());
+  theMultiscale->setMultiscaleUnbindIDs(M->getID(), N->getID());
+  theMultiscale->setDiffusionInfluencedReaction(
+        dynamic_cast<DiffusionInfluencedReactionProcess*>(this),
+        N->getID(), 1); 
+}
+
+void MultiscaleReactionProcess::initializeMultiscaleCompReaction()
+{
+  if(A->getIsMultiscaleComp() && !B->getIsMultiscaleComp())
+    {
+      M = A;
+      N = B;
+      isReactWithMultiscaleComp = true;
+      //reactM = &MultiscaleReactionProcess::reactWithMultiscaleComp;
+      //setReactMethod();
+    }
+  else if(!A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
+    {
+      N = A;
+      M = B;
+      isReactWithMultiscaleComp = true;
+      //reactM = &MultiscaleReactionProcess::reactWithMultiscaleComp;
+      //setReactMethod();
+    }
+  else if(A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
+    {
+      isReactInMultiscaleComp = true;
+      //reactM = &MultiscaleReactionProcess::reactInMultiscaleComp;
+      //setReactMethod();
+    }
+  else
+    {
+      THROW_EXCEPTION(ValueError, String(
+             getPropertyInterface().getClassName()) + " [" + 
+              getFullID().asString() + "]: This process must have at least " +
+             "one multiscale substrate species or a substrate diffusing on " +
+             "a multiscale species.");
+    }
+  if(isReactWithMultiscaleComp)
+    {
+      if(C->getIsMultiscaleComp())
+        {
+          M_p = C;
+          if(D)
+            {
+              N_p = D;
+            }
+        }
+      else
+        {
+          N_p = C;
+          if(D)
+            {
+              M_p = D;
+            }
+        }
+    }
+}
+
+//M -> isMultiscaleComp (isMultiscale or isOnMultiscale)
+//N -> normal species (not isMultiscaleComp)
+void MultiscaleReactionProcess::reactWithMultiscaleComp(
+                                       Voxel* moleculeN, Voxel* moleculeM,
+                                       const unsigned indexN,
+                                       const unsigned indexM)
+{
+  unsigned vacantIdx(moleculeM->idx);
+  if(M->getIsOnMultiscale())
+    {
+      vacantIdx = M->getTag(indexM).vacantIdx; 
+    }
+  if(M_p)
+    {
+      M_p->addMoleculeInMulti(moleculeM, vacantIdx);
+    }
+  else
+    {
+      moleculeM->idx = vacantIdx;
+    }
+  if(N_p)
+    {
+      N_p->addMolecule(moleculeN);
+    }
+  else
+    {
+      moleculeN->idx = N->getVacantIdx();
+    }
+}
+
+unsigned MultiscaleReactionProcess::getIdx(Species* aSpecies,
+                                                    Voxel* mol,
+                                                    const unsigned index)
+{
+  if(aSpecies->getIsOnMultiscale())
+    {
+      return aSpecies->getTag(index).vacantIdx;
+    }
+  return mol->idx;
+}
+
+
+//MuA + B -> [MuC <- MuA]
+void MultiscaleReactionProcess::reactMuAtoMuC(Voxel* molA,
+                                                       Voxel* molB,
+                                                       const unsigned indexA,
+                                                       const unsigned indexB)
+{
+  C->addMoleculeInMulti(molA, getIdx(A, molA, indexA));
+  B->removeMolecule(indexB);
+}
+  
+
+//A + MuB -> [MuC <- MuB]
+void MultiscaleReactionProcess::reactMuBtoMuC(Voxel* molA,
+                                                       Voxel* molB,
+                                                       const unsigned indexA,
+                                                       const unsigned indexB)
+{
+  C->addMoleculeInMulti(molB, getIdx(B, molB, indexB));
+  A->removeMolecule(indexA);
+}
+
+//A + MuB -> [C <- molA] + [MuD <- MuB]
+void MultiscaleReactionProcess::reactAtoC_MuBtoMuD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  C->addMolecule(molA);
+  A->softRemoveMolecule(indexA);
+  //A != B, since only B is in multiscale comp:
+  D->addMoleculeInMulti(molB, getIdx(B, molB, indexB));
+  B->softRemoveMolecule(indexB);
+}
+
+//MuA + B -> [MuC <- MuA] + [D <- molB]
+void MultiscaleReactionProcess::reactMuAtoMuC_BtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  C->addMoleculeInMulti(molA, getIdx(A, molA, indexA));
+  A->softRemoveMolecule(indexA);
+  D->addMolecule(molB);
+  B->softRemoveMolecule(indexB);
+}
+
+//MuA + B -> [C <- molB] + [MuD <- MuA]
+void MultiscaleReactionProcess::reactBtoC_MuAtoMuD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  C->addMolecule(molB);
+  B->softRemoveMolecule(indexB);
+  D->addMoleculeInMulti(molA, getIdx(A, molA, indexA));
+  A->softRemoveMolecule(indexA);
+}
+
+//A + MuB -> [MuC <- MuB] + [D <- molA]
+void MultiscaleReactionProcess::reactMuBtoMuC_AtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  C->addMoleculeInMulti(molB, getIdx(B, molB, indexB));
+  B->softRemoveMolecule(indexB);
+  D->addMolecule(molA);
+  A->softRemoveMolecule(indexA);
+}
+                  
+//A + MuB -> [A == C] + [MuD <- MuB]
+void MultiscaleReactionProcess::reactAeqC_MuBtoMuD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  D->addMoleculeInMulti(molB, getIdx(B, molB, indexB));
+  B->softRemoveMolecule(indexB);
+}
+
+//MuA + B -> [MuA == MuC] + [D <- molB]
+void MultiscaleReactionProcess::reactMuAeqMuC_BtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  D->addMolecule(molB);
+  B->softRemoveMolecule(indexB);
+}
+
+//MuA + B -> [B == C] + [MuD <- MuA]
+void MultiscaleReactionProcess::reactBeqC_MuAtoMuD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  D->addMoleculeInMulti(molA, getIdx(A, molA, indexA));
+  A->softRemoveMolecule(indexA);
+}
+
+//A + MuB -> [MuB == MuC] + [D <- molA]
+void MultiscaleReactionProcess::reactMuBeqMuC_AtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  D->addMolecule(molA);
+  A->softRemoveMolecule(indexA);
+}
+
+//A + MuB -> [MuC <- MuB] + [A == D]
+void MultiscaleReactionProcess::reactMuBtoMuC_AeqD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  C->addMoleculeInMulti(molB, getIdx(B, molB, indexB));
+  B->softRemoveMolecule(indexB);
+}
+
+//MuA + B -> [C <- molB] + [MuA == MuD]
+void MultiscaleReactionProcess::reactBtoC_MuAeqMuD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  C->addMolecule(molB);
+  B->softRemoveMolecule(indexB);
+}
+
+//MuA + B -> [MuC <- MuA] + [B == D]
+void MultiscaleReactionProcess::reactMuAtoMuC_BeqD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  C->addMoleculeInMulti(molA, getIdx(A, molA, indexA));
+  A->softRemoveMolecule(indexA);
+}
+
+//A + MuB -> [C <- molA] + [MuB == MuD]
+void MultiscaleReactionProcess::reactAtoC_MuBeqMuD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  C->addMolecule(molA);
+  A->softRemoveMolecule(indexA);
+}
+
+//MuA + B -> [C <- molB]
+void MultiscaleReactionProcess::reactBtoC_Multi(Voxel* molA,
+                                                         Voxel* molB,
+                                                         const unsigned indexA,
+                                                         const unsigned indexB)
+{
+  C->addMolecule(molB);
+  B->softRemoveMolecule(indexB);
+  if(A->getIsOnMultiscale())
+    {
+      molA->idx = A->getTag(indexA).vacantIdx;
+    }
+  A->softRemoveMolecule(indexA);
+}
+
+//A + MuB -> [C <- molA]
+void MultiscaleReactionProcess::reactAtoC_Multi(Voxel* molA,
+                                                         Voxel* molB,
+                                                         const unsigned indexA,
+                                                         const unsigned indexB)
+{
+  C->addMolecule(molA);
+  A->softRemoveMolecule(indexA);
+  if(B->getIsOnMultiscale())
+    {
+      molB->idx = B->getTag(indexB).vacantIdx;
+    }
+  B->softRemoveMolecule(indexB);
+}
+
+//A + B -> [MuC <- MuA] + [MuD <- MuB]
+void MultiscaleReactionProcess:: reactMuAtoMuC_MuBtoMuD(Voxel* molA,
+                                                         Voxel* molB,
+                                                         const unsigned indexA,
+                                                         const unsigned indexB)
+{
+  const unsigned idxA(getIdx(A, molA, indexA));
+  const unsigned idxB(getIdx(B, molB, indexB));
+  A->softRemoveMolecule(indexA);
+  removeMolecule(B, molB, indexB);
+  C->addMoleculeInMulti(molA, idxA);
+  D->addMoleculeInMulti(molB, idxB);
+}
+
+//A + B -> [MuB == MuC] + [MuD <- MuA]
+void MultiscaleReactionProcess::reactMuBeqMuC_MuAtoMuD(Voxel* molA,
+                                                         Voxel* molB,
+                                                         const unsigned indexA,
+                                                         const unsigned indexB)
+{
+  D->addMoleculeInMulti(molA, getIdx(A, molA, indexA));
+  A->softRemoveMolecule(indexA);
+}
+
+void MultiscaleReactionProcess::reactInMultiscaleComp(Voxel* molA, Voxel* molB,
+                                                      const unsigned indexA,
+                                                      const unsigned indexB)
+{
+  unsigned vacantIdxA(molA->idx);
+  if(A->getIsOnMultiscale())
+    {
+      vacantIdxA = A->getTag(indexA).vacantIdx; 
+    }
+  unsigned vacantIdxB(molB->idx);
+  if(B->getIsOnMultiscale())
+    {
+      vacantIdxB = B->getTag(indexB).vacantIdx; 
+    }
+  if(A->isReplaceable(molA, C))
+    {
+      if(C->getIsOnMultiscale())
+        {
+          C->addMoleculeInMulti(molA, vacantIdxA);
+        }
+      else
+        {
+          molA->idx = vacantIdxA;
+        }
+      if(D)
+        {
+          if(B->isReplaceable(molB, D))
+            {
+              if(D->getIsOnMultiscale())
+                {
+                  D->addMoleculeInMulti(molB, vacantIdxB);
+                }
+              else
+                {
+                  molB->idx = vacantIdxB;
+                }
+            }
+        }
+    }
+  else if(B->isReplaceable(molB, C))
+    {
+      if(C->getIsOnMultiscale())
+        {
+          C->addMoleculeInMulti(molB, vacantIdxB);
+        }
+      else
+        {
+          molB->idx = vacantIdxB;
+        }
+      if(D)
+        {
+          if(A->isReplaceable(molA, D))
+            {
+              if(D->getIsOnMultiscale())
+                {
+                  D->addMoleculeInMulti(molA, vacantIdxA);
+                }
+              else
+                {
+                  molA->idx = vacantIdxA;
+                }
+            }
+        }
+    }
+}
+
+void MultiscaleReactionProcess::throwException(String aString)
+{
+  THROW_EXCEPTION(ValueError, String(getPropertyInterface().getClassName()) +
+                  "[" + getFullID().asString() + "]: " + aString + " is not " +
+                  "yet implemented.");
+}
+
+void MultiscaleReactionProcess::setReactMethod()
+{
+  /*
+  if(variableC && D)
+    {
+      if(A == D)
+        {
+          //A + B -> variableC + [A == D]
+          throwException("reactVarC_AeqD_Multi");
+        }
+      else if(B == D)
+        {
+          //A + B -> variableC + [B == D]
+          throwException("reactVarC_BeqD_Multi");
+        }
+      else
+        { 
+          if(A->isReplaceable(D))
+            {
+              //A + B -> variableC + [D <- molA]
+              throwException("reactVarC_AtoD_Multi");
+            }
+          else if(B->isReplaceable(D))
+            {
+              //A + B -> variableC + [D <- molB]
+              throwException("reactVarC_BtoD_Multi");
+            }
+          else
+            {
+              //A + B -> variableC + [D <- molN]
+              throwException("reactVarC_NtoD_Multi");
+            }
+        }
+    }
+  else if(variableD && C)
+    {
+      if(A == C)
+        {
+          //A + B -> variableD + [A == C]
+          throwException("reactVarD_AeqC_Multi");
+        }
+      else if(B == C)
+        {
+          //A + B -> variableD + [B == C]
+          throwException("reactVarD_BeqC_Multi");
+        }
+      else
+        { 
+          if(A->isReplaceable(C))
+            {
+              //A + B -> variableD + [C <- molA]
+              throwException("reactVarD_AtoC_Multi");
+            }
+          else if(B->isReplaceable(C))
+            {
+              //A + B -> variableD + [C <- molB]
+              throwException("reactVarD_BtoC_Multi");
+            }
+          else
+            {
+              //A + B -> variableD + [C <- molN]
+              throwException("reactVarD_NtoC_Multi");
+            }
+        }
+    }
+  else if(variableC)
+    {
+      if(variableD)
+        {
+          //A + B -> variableC + variableD
+          throwException("reactVarC_VarD_Multi");
+        }
+      else
+        {
+          //A + B -> variableC
+          throwException("reactVarC_Multi");
+        }
+    }
+*/
+   if(D)
+    {
+      if(A == C && B == D)
+        {
+          //A + B -> [A == C] + [B == D]
+          reactM = &MultiscaleReactionProcess::reactNone;
+        }
+      else if(B == C && A == D)
+        {
+          //A + B -> [B == C] + [A == D]
+          reactM = &MultiscaleReactionProcess::reactNone;
+        }
+      else if(A == C)
+        {
+          if(B->isReplaceable(D))
+            {
+              if(B->getIsMultiscaleComp() && !A->getIsMultiscaleComp())
+                {
+                  //A + B -> [A == C] + [MuD <- MuB]
+                  reactM = &MultiscaleReactionProcess::reactAeqC_MuBtoMuD;
+                }
+              else if(!B->getIsMultiscaleComp() && A->getIsMultiscaleComp())
+                {
+                  //A + B -> [MuA == MuC] + [D <- molB]
+                  reactM = &MultiscaleReactionProcess::reactMuAeqMuC_BtoD;
+                }
+              else
+                {
+                  //A + B -> [MuA == MuC] + [MuD <- MuB]
+                  throwException("reactMuAeqMuC_MuBtoMuD");
+                }
+            }
+          else
+            {
+              //A + B -> [A == C] + [D <- molN]
+              throwException("reactAeqC_NtoD_Multi");
+            }
+        }
+      else if(B == C)
+        {
+          if(A->isReplaceable(D))
+            {
+              if(A->getIsMultiscaleComp() && !B->getIsMultiscaleComp())
+                {
+                  //A + B -> [B == C] + [MuD <- MuA]
+                  reactM = &MultiscaleReactionProcess::reactBeqC_MuAtoMuD;
+                }
+              else if(!A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
+                {
+                  //A + B -> [MuB == MuC] + [D <- molA]
+                  reactM = &MultiscaleReactionProcess::reactMuBeqMuC_AtoD;
+                }
+              else
+                {
+                  //A + B -> [MuB == MuC] + [MuD <- MuA]
+                  reactM = &MultiscaleReactionProcess::reactMuBeqMuC_MuAtoMuD;
+                }
+            }
+          else
+            {
+              //A + B -> [B == C] + [D <- molN]
+              throwException("reactBeqC_NtoD_Multi");
+            }
+        }
+      else if(A == D)
+        {
+          if(B->isReplaceable(C))
+            {
+              if(B->getIsMultiscaleComp() && !A->getIsMultiscaleComp())
+                {
+                  //A + B -> [MuC <- MuB] + [A == D]
+                  reactM = &MultiscaleReactionProcess::reactMuBtoMuC_AeqD;
+                }
+              else if(!B->getIsMultiscaleComp() && A->getIsMultiscaleComp())
+                {
+                  //A + B -> [C <- molB] + [MuA == MuD] 
+                  reactM = &MultiscaleReactionProcess::reactBtoC_MuAeqMuD;
+                }
+              else
+                {
+                  //A + B -> [MuC <- MuB] + [MuA == MuD]
+                  throwException("reactMuBtoMuC_MuAeqMuD");
+                }
+            }
+          else
+            {
+              //A + B -> [C <- molN] + [A == D]
+              throwException("reactNtoC_AeqD_Multi");
+            }
+        }
+      else if(B == D)
+        {
+          if(A->isReplaceable(C))
+            {
+              if(A->getIsMultiscaleComp() && !B->getIsMultiscaleComp())
+                {
+                  //A + B -> [MuC <- MuA] + [B == D]
+                  reactM = &MultiscaleReactionProcess::reactMuAtoMuC_BeqD;
+                }
+              else if(!A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
+                {
+                  //A + B -> [C <- molA] + [MuB == MuD] 
+                  reactM = &MultiscaleReactionProcess::reactAtoC_MuBeqMuD;
+                }
+              else
+                {
+                  //A + B -> [MuC <- MuA] + [MuB == MuD] 
+                  throwException("reactMuAtoMuC_MuBeqMuD");
+                }
+            }
+          else
+            {
+              //A + B -> [C <- molN] + [B == D]
+              throwException("reactNtoC_BeqD_Multi");
+            }
+        }
+      else
+        {
+          if(A->isReplaceable(C))
+            {
+              if(B->isReplaceable(D))
+                {
+                  if(B->getIsMultiscaleComp() && !A->getIsMultiscaleComp())
+                    {
+                      //A + B -> [C <- molA] + [MuD <- MuB]
+                      reactM = &MultiscaleReactionProcess::reactAtoC_MuBtoMuD;
+                    }
+                  else if(!B->getIsMultiscaleComp() && A->getIsMultiscaleComp())
+                    {
+                      //A + B -> [MuC <- MuA] + [D <- molB]
+                      reactM = &MultiscaleReactionProcess::reactMuAtoMuC_BtoD;
+                    }
+                  else
+                    {
+                      //A + B -> [MuC <- MuA] + [MuD <- MuB]
+                      reactM = &MultiscaleReactionProcess::
+                        reactMuAtoMuC_MuBtoMuD;
+                    }
+                }
+              else
+                {
+                  //A + B -> [C <- molA] + [D <- molN]
+                  throwException("reactAtoC_NtoD_Multi");
+                }
+            }
+          else if(B->isReplaceable(C))
+            {
+              if(A->isReplaceable(D))
+                {
+                  if(A->getIsMultiscaleComp() && !B->getIsMultiscaleComp())
+                    {
+                      //A + B -> [C <- molB] + [MuD <- MuA]
+                      reactM = &MultiscaleReactionProcess::reactBtoC_MuAtoMuD;
+                    }
+                  else if(!A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
+                    {
+                      //A + B -> [MuC <- MuB] + [D <- molA]
+                      reactM = &MultiscaleReactionProcess::reactMuBtoMuC_AtoD;
+                    }
+                  else
+                    {
+                      //A + B -> [MuC <- MuB] + [MuD <- MuA]
+                      throwException("reactMuBtoMuC_MuAtoMuD");
+                    }
+                }
+              else
+                {
+                  //A + B -> [C <- molB] + [D <- molN]
+                  throwException("reactBtoC_NtoD_Multi");
+                }
+            }
+          else
+            {
+              //A + B -> [C <- molN] + [D <- molN]
+              throwException("reactNtoC_NtoD_Multi");
+            }
+        }
+    }
+  else
+    {
+      if(A == C)
+        {
+          //A + B -> [A == C]
+          throwException("reactAeqC_Multi");
+        }
+      else if(B == C)
+        {
+          //A + B -> [B == C]
+          throwException("reactBeqC_Multi");
+        }
+      else if(A->isReplaceable(C))
+        {
+          if(A->getIsMultiscaleComp() && !B->getIsMultiscaleComp())
+            {
+              //A + B -> [MuC <- MuA]
+              reactM = &MultiscaleReactionProcess::reactMuAtoMuC;
+            }
+          else if(!A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
+            {
+              //A + B -> [C <- molA]
+              reactM = &MultiscaleReactionProcess::reactAtoC_Multi;
+            }
+          else
+            {
+              //A + B -> [MuC <- MuA]
+              throwException("reactMuAtoMuC");
+            }
+        }
+      else if(B->isReplaceable(C))
+        {
+          if(B->getIsMultiscaleComp() && !A->getIsMultiscaleComp())
+            {
+              //A + B -> [MuC <- MuB]
+              reactM = &MultiscaleReactionProcess::reactMuBtoMuC;
+            }
+          else if(!B->getIsMultiscaleComp() && A->getIsMultiscaleComp())
+            {
+              //A + B -> [C <- molB]
+              reactM = &MultiscaleReactionProcess::reactBtoC_Multi;
+            }
+          else
+            {
+              //A + B -> [MuC <- MuB]
+              throwException("reactMuBtoMuC");
+            }
+        }
+      else
+        {
+          //A + B -> [C <- molN]
+          throwException("reactNtoC_Multi");
+        }
+    }
+}
+
+
