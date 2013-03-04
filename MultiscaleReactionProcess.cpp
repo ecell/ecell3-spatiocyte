@@ -122,84 +122,13 @@ void MultiscaleReactionProcess::initializeMultiscaleWalkBindUnbind()
 
 void MultiscaleReactionProcess::initializeMultiscaleCompReaction()
 {
-  if(A->getIsMultiscaleComp() && !B->getIsMultiscaleComp())
-    {
-      M = A;
-      N = B;
-      isReactWithMultiscaleComp = true;
-      //reactM = &MultiscaleReactionProcess::reactWithMultiscaleComp;
-      //setReactMethod();
-    }
-  else if(!A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
-    {
-      N = A;
-      M = B;
-      isReactWithMultiscaleComp = true;
-      //reactM = &MultiscaleReactionProcess::reactWithMultiscaleComp;
-      //setReactMethod();
-    }
-  else if(A->getIsMultiscaleComp() && B->getIsMultiscaleComp())
-    {
-      isReactInMultiscaleComp = true;
-      //reactM = &MultiscaleReactionProcess::reactInMultiscaleComp;
-      //setReactMethod();
-    }
-  else
+  if(!A->getIsMultiscaleComp() && !B->getIsMultiscaleComp())
     {
       THROW_EXCEPTION(ValueError, String(
              getPropertyInterface().getClassName()) + " [" + 
               getFullID().asString() + "]: This process must have at least " +
              "one multiscale substrate species or a substrate diffusing on " +
              "a multiscale species.");
-    }
-  if(isReactWithMultiscaleComp)
-    {
-      if(C->getIsMultiscaleComp())
-        {
-          M_p = C;
-          if(D)
-            {
-              N_p = D;
-            }
-        }
-      else
-        {
-          N_p = C;
-          if(D)
-            {
-              M_p = D;
-            }
-        }
-    }
-}
-
-//M -> isMultiscaleComp (isMultiscale or isOnMultiscale)
-//N -> normal species (not isMultiscaleComp)
-void MultiscaleReactionProcess::reactWithMultiscaleComp(
-                                       Voxel* moleculeN, Voxel* moleculeM,
-                                       const unsigned indexN,
-                                       const unsigned indexM)
-{
-  unsigned vacantIdx(moleculeM->idx);
-  if(M->getIsOnMultiscale())
-    {
-      vacantIdx = M->getTag(indexM).vacantIdx; 
-    }
-  if(M_p)
-    {
-      M_p->addMoleculeInMulti(moleculeM, vacantIdx);
-    }
-  else
-    {
-      moleculeM->idx = vacantIdx;
-    }
-  if(N_p)
-    {
-      N_p->addMolecule(moleculeN);
-    }
-  else
-    {
-      moleculeN->idx = N->getVacantIdx();
     }
 }
 
@@ -419,72 +348,6 @@ void MultiscaleReactionProcess::reactMuBeqMuC_MuAtoMuD(Voxel* molA,
   A->softRemoveMolecule(indexA);
 }
 
-void MultiscaleReactionProcess::reactInMultiscaleComp(Voxel* molA, Voxel* molB,
-                                                      const unsigned indexA,
-                                                      const unsigned indexB)
-{
-  unsigned vacantIdxA(molA->idx);
-  if(A->getIsOnMultiscale())
-    {
-      vacantIdxA = A->getTag(indexA).vacantIdx; 
-    }
-  unsigned vacantIdxB(molB->idx);
-  if(B->getIsOnMultiscale())
-    {
-      vacantIdxB = B->getTag(indexB).vacantIdx; 
-    }
-  if(A->isReplaceable(molA, C))
-    {
-      if(C->getIsOnMultiscale())
-        {
-          C->addMoleculeInMulti(molA, vacantIdxA);
-        }
-      else
-        {
-          molA->idx = vacantIdxA;
-        }
-      if(D)
-        {
-          if(B->isReplaceable(molB, D))
-            {
-              if(D->getIsOnMultiscale())
-                {
-                  D->addMoleculeInMulti(molB, vacantIdxB);
-                }
-              else
-                {
-                  molB->idx = vacantIdxB;
-                }
-            }
-        }
-    }
-  else if(B->isReplaceable(molB, C))
-    {
-      if(C->getIsOnMultiscale())
-        {
-          C->addMoleculeInMulti(molB, vacantIdxB);
-        }
-      else
-        {
-          molB->idx = vacantIdxB;
-        }
-      if(D)
-        {
-          if(A->isReplaceable(molA, D))
-            {
-              if(D->getIsOnMultiscale())
-                {
-                  D->addMoleculeInMulti(molA, vacantIdxA);
-                }
-              else
-                {
-                  molA->idx = vacantIdxA;
-                }
-            }
-        }
-    }
-}
-
 void MultiscaleReactionProcess::throwException(String aString)
 {
   THROW_EXCEPTION(ValueError, String(getPropertyInterface().getClassName()) +
@@ -494,7 +357,6 @@ void MultiscaleReactionProcess::throwException(String aString)
 
 void MultiscaleReactionProcess::setReactMethod()
 {
-  /*
   if(variableC && D)
     {
       if(A == D)
@@ -570,8 +432,7 @@ void MultiscaleReactionProcess::setReactMethod()
           throwException("reactVarC_Multi");
         }
     }
-*/
-   if(D)
+  else if(D)
     {
       if(A == C && B == D)
         {

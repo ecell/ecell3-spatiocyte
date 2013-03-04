@@ -46,21 +46,13 @@ public:
       INHERIT_PROPERTIES(DiffusionInfluencedReactionProcess);
     }
   MultiscaleReactionProcess():
-    isReactInMultiscaleComp(false),
-    isReactWithMultiscaleComp(false),
     M(NULL),
-    N(NULL),
-    M_p(NULL),
-    N_p(NULL) {}
+    N(NULL) {}
   virtual ~MultiscaleReactionProcess() {}
   virtual void initializeThird();
   virtual void initializeMultiscaleWalkBindUnbind();
   virtual void initializeMultiscaleCompReaction();
   virtual void setReactMethod();
-  virtual void reactWithMultiscaleComp(Voxel*, Voxel*, const unsigned,
-                                       const unsigned);
-  virtual void reactInMultiscaleComp(Voxel*, Voxel*, const unsigned,
-                                       const unsigned);
   virtual void bind(Voxel* aVoxel, const unsigned vacantIdx)
     {
       const unsigned index(aVoxel->idx%theStride);
@@ -72,10 +64,6 @@ public:
       const unsigned index(aVoxel->idx%theStride);
       N->addMoleculeExMulti(aVoxel, M->getTag(index));
       M->softRemoveMolecule(index);
-    }
-  virtual void finalizeReaction()
-    {
-      DiffusionInfluencedReactionProcess::finalizeReaction();
     }
   virtual void react(Voxel* molA, Voxel* molB, const unsigned indexA,
                      const unsigned indexB)
@@ -103,21 +91,9 @@ protected:
   void reactMuAtoMuC_MuBtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactMuBeqMuC_MuAtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
   void throwException(String);
-  virtual bool getIsReactWithMultiscaleComp()
-    {
-      return isReactWithMultiscaleComp;
-    }
-  virtual bool getIsReactInMultiscaleComp()
-    {
-      return isReactInMultiscaleComp;
-    }
 protected:
-  bool isReactInMultiscaleComp;
-  bool isReactWithMultiscaleComp;
   Species* M;
   Species* N;
-  Species* M_p;
-  Species* N_p;
   Species* theMultiscale;
   Method reactM;
 };
