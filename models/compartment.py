@@ -125,11 +125,20 @@ react.p = 0.5
 #react.VariableReferenceList = [['_', 'Variable:/:MinD', '1']]
 #react.k = 20000
 
-react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:dissocPGs')
+#react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:dissocPGs')
+#react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '-1']]
+#react.VariableReferenceList = [['_', 'Variable:/Surface:MinD', '0']]
+#react.VariableReferenceList = [['_', 'Variable:/Surface:PG', '1']]
+#react.Deoligomerize = 0
+#react.ImplicitUnbind = 1
+#react.SearchVacant = 0
+#react.k = 1.5e+6
+
+react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:dissocPGsLip')
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/:Lipid', '0']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG', '1']]
-react.Deoligomerize = 0
+react.Deoligomerize = 1
 react.ImplicitUnbind = 1
 react.SearchVacant = 0
 react.k = 1.5e+6
@@ -138,7 +147,7 @@ react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:di
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:MinD', '0']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '1']]
-react.Deoligomerize = 0
+react.Deoligomerize = 1
 react.ImplicitUnbind = 1
 react.SearchVacant = 0
 react.k = 1.5e+6
@@ -147,7 +156,7 @@ react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:di
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/:Lipid', '0']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '1']]
-react.Deoligomerize = 0
+react.Deoligomerize = 1
 react.ImplicitUnbind = 1
 react.SearchVacant = 0
 react.k = 1.5e+6
@@ -224,7 +233,7 @@ import time
 run(1e-6)
 print "Done stirring. Now running..."
 start = time.time()
-run(0.001)
+run(0.01)
 end = time.time()
 duration = end-start
 print duration
