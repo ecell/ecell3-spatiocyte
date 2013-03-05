@@ -678,6 +678,11 @@ void SpatiocyteStepper::checkSpecies()
       Species* aSpecies(theSpecies[i]);
       if(!aSpecies->getIsCompVacant())
         {
+          std::vector<unsigned> boundCnts;
+          if(aSpecies->getIsDeoligomerize())
+            {
+              boundCnts.resize(7);
+            }
           for(unsigned j(0); j != aSpecies->size(); ++j)
             {
               Voxel* aVoxel(aSpecies->getMolecule(j));
@@ -709,6 +714,7 @@ void SpatiocyteStepper::checkSpecies()
                 }
               if(aSpecies->getTag(j).boundCnt)
                 {
+                  boundCnts[aSpecies->getTag(j).boundCnt]++;
                   unsigned cnt(0);
                   Voxel* aVoxel(aSpecies->getMolecule(j));
                   for(unsigned k(0); k != aVoxel->diffuseSize; ++k)
@@ -727,6 +733,16 @@ void SpatiocyteStepper::checkSpecies()
                         " expected:" << aSpecies->getTag(j).boundCnt <<
                         std::endl;
                     }
+                }
+            }
+          for(unsigned j(0); j < boundCnts.size(); ++j)
+            {
+              if(boundCnts[j] != aSpecies->getBoundCnts()[j])
+                {
+                  std::cout << aSpecies->getIDString() << " j:" << j <<
+                    "error in deoligomerize total boundCnts:" << 
+                    aSpecies->getBoundCnts()[j] <<
+                    " expected:" << boundCnts[j] << std::endl;
                 }
             }
         }

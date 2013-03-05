@@ -1291,7 +1291,11 @@ public:
     {
       //use direct since we don't want to count bounds:
       addMoleculeDirect(aVoxel);
-      theTags[theMoleculeSize-1].boundCnt = boundCnt;
+      if(isDeoligomerize)
+        {
+          theTags[theMoleculeSize-1].boundCnt = boundCnt;
+          theBoundCnts[boundCnt]++;
+        }
     }
   void addMoleculeInMulti(Voxel* aVoxel, const unsigned vacantIdx,
                           const unsigned boundCnt)
@@ -1299,7 +1303,11 @@ public:
       //use direct since we don't want to count bounds:
       addMoleculeDirect(aVoxel);
       theTags[theMoleculeSize-1].vacantIdx = vacantIdx;
-      theTags[theMoleculeSize-1].boundCnt = boundCnt;
+      if(isDeoligomerize)
+        {
+          theTags[theMoleculeSize-1].boundCnt = boundCnt;
+          theBoundCnts[boundCnt]++;
+        }
     }
   void addMoleculeInMulti(Voxel* aVoxel, const unsigned vacantIdx)
     {
@@ -1799,7 +1807,6 @@ public:
     {
       Tag& aTag(theTags[index]);
       theBoundCnts[aTag.boundCnt--]--;
-      theBoundCnts[aTag.boundCnt]++;
       if(!aTag.boundCnt)
         {
           Voxel* aVoxel(theMolecules[index]);
@@ -1814,6 +1821,10 @@ public:
               removeMoleculeDirect(index);
               theDeoligomerizedProduct->addMolecule(aVoxel);
             }
+        }
+      else
+        {
+          theBoundCnts[aTag.boundCnt]++;
         }
     }
   void addBounds(Voxel* aVoxel)
@@ -1846,6 +1857,25 @@ public:
               theSpecies[anID]->removeBound(theLattice[aCoord].idx%theStride);
             }
         }
+    }
+  std::vector<unsigned>& getBoundCnts()
+    {
+      return theBoundCnts;
+    }
+  void removeMoleculeBoundDirect(unsigned anIndex)
+    {
+      if(isDeoligomerize)
+        {
+          theBoundCnts[theTags[anIndex].boundCnt]--;
+        }
+      --theMoleculeSize;
+      if(theMoleculeSize > anIndex)
+        {
+          theMolecules[anIndex] = theMolecules[theMoleculeSize];
+          theMolecules[anIndex]->idx = anIndex+theStride*theID;
+          theTags[anIndex] = theTags[theMoleculeSize];
+        }
+      theVariable->setValue(theMoleculeSize);
     }
   void removeMoleculeDirect(unsigned anIndex)
     {

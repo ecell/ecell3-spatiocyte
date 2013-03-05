@@ -55,13 +55,13 @@ public:
     {
       const unsigned index(aVoxel->idx%theStride);
       M->addMoleculeInMulti(aVoxel, vacantIdx, N->getTag(index).boundCnt);
-      N->softRemoveMolecule(index);
+      N->removeMoleculeBoundDirect(index);
     }
   virtual void unbind(Voxel* aVoxel)
     {
       const unsigned index(aVoxel->idx%theStride);
       N->addMoleculeExMulti(aVoxel, M->getTag(index).boundCnt);
-      M->softRemoveMolecule(index);
+      M->removeMoleculeBoundDirect(index);
     }
   virtual void react(Voxel* molA, Voxel* molB, const unsigned indexA,
                      const unsigned indexB)
