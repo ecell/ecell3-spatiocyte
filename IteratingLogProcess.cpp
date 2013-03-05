@@ -73,8 +73,10 @@ void IteratingLogProcess::initializeLastOnce()
   theLogValues.resize(timePoints);
   for(unsigned int i(0); i != timePoints; ++i)
     {
-      theLogValues[i].resize(theProcessSpecies.size());
-      for(unsigned int j(0); j != theProcessSpecies.size(); ++j)
+      theLogValues[i].resize(theProcessSpecies.size()+
+                             theProcessVariables.size());
+      for(unsigned int j(0);
+          j != theProcessSpecies.size()+theProcessVariables.size(); ++j)
         {
           theLogValues[i][j] = 0;
         }
@@ -123,7 +125,8 @@ void IteratingLogProcess::saveFile()
   for(unsigned int i(0); i != timePoints; ++i)
     {
       theLogFile << std::setprecision(15) << aTime;
-      for(unsigned int j(0); j != theProcessSpecies.size(); ++j)
+      for(unsigned int j(0);
+          j != theProcessSpecies.size()+theProcessVariables.size(); ++j)
         {
           theLogFile << "," << std::setprecision(15) <<
             theLogValues[i][j]/theTotalIterations;
@@ -150,7 +153,8 @@ void IteratingLogProcess::saveBackup()
       for(unsigned int i(0); i != timePoints; ++i)
         {
           aFile << std::setprecision(15) << aTime;
-          for(unsigned int j(0); j != theProcessSpecies.size(); ++j)
+          for(unsigned int j(0);
+              j != theProcessSpecies.size()+theProcessVariables.size(); ++j)
             {
               aFile << "," << std::setprecision(15) <<
                 theLogValues[i][j]/completedIterations;
@@ -208,6 +212,11 @@ void IteratingLogProcess::logValues()
         {
           theLogValues[timePointCnt][i] += aSpecies->getVariable()->getValue();
         }
+    }
+  unsigned size(theProcessSpecies.size());
+  for(unsigned int i(0); i != theProcessVariables.size(); ++i)
+    {
+      theLogValues[timePointCnt][i+size] += theProcessVariables[i]->getValue();
     }
 }
 

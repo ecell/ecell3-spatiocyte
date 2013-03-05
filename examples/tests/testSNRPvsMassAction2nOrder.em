@@ -69,4 +69,15 @@ System System(/)
                             [_ Variable:/:Cm 1];    
       k                     1e-45;
     }
+   Process IteratingLogProcess(logiter)
+    {
+      VariableReferenceList [_ Variable:/:Am]
+                            [_ Variable:/:Bm]
+                            [_ Variable:/:Cm]
+                            [_ Variable:/:A]
+                            [_ Variable:/:B]
+                            [_ Variable:/:C];
+      LogInterval 1;
+      LogEnd 10;
+    }
 }

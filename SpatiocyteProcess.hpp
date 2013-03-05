@@ -99,6 +99,10 @@ public:
               Species* aSpecies(theSpatiocyteStepper->addSpecies(aVariable));
               theProcessSpecies.push_back(aSpecies);
             }
+          else
+            {
+              theProcessVariables.push_back(aVariable);
+            }
           if((*i).getCoefficient() > 0)
             {
               thePositiveVariableReferences.push_back(*i);
@@ -232,6 +236,7 @@ protected:
   SpatiocyteStepper* theSpatiocyteStepper;
   std::vector<Species*> theSpecies;
   std::vector<Species*> theProcessSpecies;
+  std::vector<Variable*> theProcessVariables;
   std::vector<Voxel>* theLattice;
   VariableReferenceVector thePositiveVariableReferences;
   VariableReferenceVector theNegativeVariableReferences;

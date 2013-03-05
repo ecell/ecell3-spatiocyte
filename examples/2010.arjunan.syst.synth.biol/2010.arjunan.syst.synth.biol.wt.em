@@ -97,6 +97,15 @@ System System(/)
                             [_ Variable:/Surface:MinDEED];
       LogInterval 0.1;
     }
+  Process IteratingLogProcess(logiter)
+    {
+      VariableReferenceList [_ Variable:/Surface:MinEE]
+                            [_ Variable:/Surface:MinD]
+                            [_ Variable:/Surface:MinDEE]
+                            [_ Variable:/Surface:MinDEED];
+      LogInterval 1e-3;
+      LogEnd 1;
+    }
   Process MoleculePopulateProcess(populate)
     {
       VariableReferenceList [_ Variable:/:MinDatp ]
