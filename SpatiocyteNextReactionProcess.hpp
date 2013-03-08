@@ -115,7 +115,8 @@ public:
     {
       return true;
     }
-  virtual double getInterval();
+  virtual double getNewInterval();
+  virtual double getInterval(double);
   virtual void fire();
   virtual void initializeFourth();
   virtual void printParameters();
@@ -148,6 +149,7 @@ protected:
   double SpaceA;
   double SpaceB;
   double SpaceC;
+  double theInversePropensity;
   unsigned Deoligomerize;
   int BindingSite;
   int ImplicitUnbind;

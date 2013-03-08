@@ -1173,9 +1173,9 @@ void SpatiocyteNextReactionProcess::printParameters()
     {
       std::cout << " + " << getIDString(variableD);
     }
-  double interval(getInterval());
-  double propensity(1/(this->*theInversePropensityMethod)());
-  if(interval == libecs::INF)
+  double interval(theTime-getStepper()->getCurrentTime());
+  double propensity(1/theInversePropensity);
+  if(theTime == libecs::INF)
     {
       bool a(false);
       bool b(false);
@@ -1201,8 +1201,8 @@ void SpatiocyteNextReactionProcess::printParameters()
           variableB->addValue(1);
           vB = true;
         }
-      interval = getInterval();
-      propensity = 1/(this->*theInversePropensityMethod)(); 
+      interval = getNewInterval();
+      propensity = 1/(theInversePropensity); 
       if(a)
         {
           A->getVariable()->addValue(-1);
@@ -1219,12 +1219,13 @@ void SpatiocyteNextReactionProcess::printParameters()
         {
           variableB->addValue(-1);
         }
+      getNewInterval();
     }
   std::cout << " k:" << k << " p = " << pFormula.str() << " = " << p
     << " nextTime:" << interval << " propensity:" << propensity << std::endl;
 }
 
-double SpatiocyteNextReactionProcess::getInterval()
+double SpatiocyteNextReactionProcess::getNewInterval()
 {
   /*
   if(A && B)
@@ -1233,7 +1234,19 @@ double SpatiocyteNextReactionProcess::getInterval()
       return interval;
     }
     */
-  return (this->*theInversePropensityMethod)()*(-log(theRng->FixedU()));
+  theInversePropensity = (this->*theInversePropensityMethod)();
+  return theInversePropensity*(-log(theRng->FixedU()));
+}
+
+double SpatiocyteNextReactionProcess::getInterval(double aCurrentTime)
+{
+  if(theTime == libecs::INF)
+    {
+      return getNewInterval();
+    }
+  const double oldInversePropensity(theInversePropensity);
+  theInversePropensity = (this->*theInversePropensityMethod)();
+  return theInversePropensity/oldInversePropensity*(theTime-aCurrentTime);
 }
 
 //Find out if this process is interrupted by the aReactionProcess

@@ -119,14 +119,18 @@ public:
     }
   void requeue()
     {
-      theTime += getInterval(); // do this only for the Processes in Q
+      theTime += getNewInterval(); // do this only for the Processes in Q
       thePriorityQueue->moveTop(); // do this only for the Processes in Q
     }
   virtual bool isInterrupted(ReactionProcess* aProcess)
     {
       return false;
     }
-  virtual double getInterval()
+  virtual double getInterval(double aCurrentTime)
+    {
+      return theInterval;
+    }
+  virtual double getNewInterval()
     {
       return theInterval;
     }
@@ -174,7 +178,7 @@ public:
   virtual void substrateValueChanged(double aCurrentTime)
     {
       const double anOldTime(theTime);
-      theTime = aCurrentTime + getInterval();
+      theTime = aCurrentTime + getInterval(aCurrentTime);
       if(theTime >= anOldTime)
         {
           thePriorityQueue->moveDown(theQueueID);

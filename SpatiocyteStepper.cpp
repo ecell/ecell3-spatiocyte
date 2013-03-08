@@ -607,7 +607,7 @@ void SpatiocyteStepper::initPriorityQueue()
       if(aSpatiocyteProcess)
         {
           aSpatiocyteProcess->setTime(aCurrentTime+
-                                      aSpatiocyteProcess->getInterval());
+                                      aSpatiocyteProcess->getNewInterval());
           aSpatiocyteProcess->setPriorityQueue(&thePriorityQueue);
           //Not all SpatiocyteProcesses are inserted into the priority queue.
           //Only the following processes are inserted in the PriorityQueue and

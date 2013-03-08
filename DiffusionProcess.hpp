@@ -33,7 +33,6 @@
 #define __DiffusionProcess_hpp
 
 #include <sstream>
-#include <MethodProxy.hpp>
 #include "SpatiocyteProcess.hpp"
 #include "SpatiocyteSpecies.hpp"
 
