@@ -962,6 +962,7 @@ void SpatiocyteNextReactionProcess::initializeFourth()
     }
   double aVolume(0);
   double anArea(0);
+  //Now let's determine the velocity, p (which has the unit 1/s)
   if(theOrder == 0)
     {
       double aSpace(0);

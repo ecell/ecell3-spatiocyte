@@ -101,7 +101,8 @@ void MoleculePopulateProcess::checkProcess()
   for(std::vector<Species*>::iterator i(theSpecies.begin());
       i !=theSpecies.end(); ++i)
     {
-      if((*i)->getVariable() && (*i)->getVariable()->getValue() != 0 &&
+      if(!(*i)->getIsVacant() && (*i)->getVariable() && 
+         (*i)->getVariable()->getValue() != 0 &&
          std::find(aVariables.begin(), aVariables.end(),
                    (*i)->getVariable()) == aVariables.end())
         {
