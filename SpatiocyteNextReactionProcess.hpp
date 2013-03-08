@@ -34,13 +34,13 @@
 #define __SpatiocyteNextReactionProcess_hpp
 
 #include <sstream>
-#include <MethodProxy.hpp>
 #include "ReactionProcess.hpp"
 
 LIBECS_DM_CLASS(SpatiocyteNextReactionProcess, ReactionProcess)
 { 
-  typedef MethodProxy<SpatiocyteNextReactionProcess, Real> RealMethodProxy; 
-  typedef Real (SpatiocyteNextReactionProcess::*PDMethodPtr)(Variable*);
+  typedef double (SpatiocyteNextReactionProcess::
+                  *InversePropensityMethod)(void); 
+  typedef double (SpatiocyteNextReactionProcess::*PDMethodPtr)(Variable*);
 public:
   LIBECS_DM_OBJECT(SpatiocyteNextReactionProcess, Process)
     {
@@ -51,7 +51,6 @@ public:
       PROPERTYSLOT_SET_GET(Integer, Deoligomerize);
       PROPERTYSLOT_SET_GET(Integer, BindingSite);
       PROPERTYSLOT_SET_GET(Integer, ImplicitUnbind);
-      PROPERTYSLOT_GET_NO_LOAD_SAVE(Real, Propensity);
     }
   SpatiocyteNextReactionProcess():
     initSizeA(0),
@@ -64,8 +63,8 @@ public:
     Deoligomerize(0),
     BindingSite(-1),
     ImplicitUnbind(0),
-    theGetPropensityMethodPtr(RealMethodProxy::create<
-            &SpatiocyteNextReactionProcess::getPropensity_ZerothOrder>()) {}
+    theInversePropensityMethod(&SpatiocyteNextReactionProcess::
+                               getInversePropensityZerothOrder) {}
   virtual ~SpatiocyteNextReactionProcess() {}
   SIMPLE_SET_GET_METHOD(Real, SpaceA);
   SIMPLE_SET_GET_METHOD(Real, SpaceB);
@@ -112,31 +111,6 @@ public:
     }
   virtual void initializeSecond();
   virtual void initializeThird();
-  GET_METHOD(Real, Propensity)
-    {
-      Real aPropensity(theGetPropensityMethodPtr(this));
-      if(aPropensity < 0.0)
-        {
-          THROW_EXCEPTION(SimulationError, "Variable value <= -1.0");
-          return 0.0;
-        }
-      else
-        {
-          return aPropensity;
-        }
-    }
-  GET_METHOD(Real, Propensity_R)
-    {
-      Real aPropensity(getPropensity());
-      if(aPropensity > 0.0)
-        {
-          return 1.0/aPropensity;
-        }
-      else
-        {
-          return libecs::INF;
-        }
-    }
   virtual bool isContinuous() 
     {
       return true;
@@ -161,10 +135,10 @@ protected:
   virtual Voxel* reactvAC(Variable*, Species*);
   virtual Comp* getComp2D(Species*);
   virtual Voxel* reactvAvBC(Species*);
-  Real getPropensity_ZerothOrder(); 
-  Real getPropensity_FirstOrder();
-  Real getPropensity_SecondOrder_TwoSubstrates(); 
-  Real getPropensity_SecondOrder_OneSubstrate();
+  double getInversePropensityZerothOrder(); 
+  double getInversePropensityFirstOrder();
+  double getInversePropensitySecondOrderHomo(); 
+  double getInversePropensitySecondOrderHetero(); 
   void removeMoleculeE();
 protected:
   double initSizeA;
@@ -179,7 +153,7 @@ protected:
   int ImplicitUnbind;
   unsigned nextIndexA;
   std::stringstream pFormula;
-  RealMethodProxy theGetPropensityMethodPtr;  
+  InversePropensityMethod theInversePropensityMethod;  
   std::vector<Voxel*> moleculesA;
 };
 
