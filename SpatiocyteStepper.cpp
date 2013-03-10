@@ -379,6 +379,7 @@ Species* SpatiocyteStepper::variable2species(Variable* aVariable)
 
 void SpatiocyteStepper::checkModel()
 {
+  std::vector<Process*> aProcessList;
   //check if nonHD species are being used by non-SpatiocyteProcesses
   Model::StepperMap aStepperMap(getModel()->getStepperMap());  
   for(Model::StepperMap::const_iterator i(aStepperMap.begin());
@@ -390,7 +391,11 @@ void SpatiocyteStepper::checkModel()
           for(std::vector<Process*>::const_iterator j(aProcessVector.begin());
               j != aProcessVector.end(); ++j)
             {
-              if(!dynamic_cast<SpatiocyteProcessInterface*>(*j))
+              if(dynamic_cast<SpatiocyteProcessInterface*>(*j))
+                {
+                  aProcessList.push_back(*j);
+                }
+              else
                 {
                   Process::VariableReferenceVector aVariableReferenceVector( 
                                    (*j)->getVariableReferenceVector());
@@ -412,11 +417,16 @@ void SpatiocyteStepper::checkModel()
                                 "by non-SpatiocyteProcess: " +
                                 (*j)->getFullID().asString());
                             }
-                        } 
+                        }
                     }
                 }
             }
         }
+    }
+  for(std::vector<Process*>::const_iterator i(aProcessList.begin());
+      i != aProcessList.end(); ++i)
+    {
+      theProcessVector.push_back(*i);
     }
 }
 

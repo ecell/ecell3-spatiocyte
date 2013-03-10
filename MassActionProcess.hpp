@@ -41,26 +41,22 @@ LIBECS_DM_CLASS(MassActionProcess, SpatiocyteNextReactionProcess)
 public:
   LIBECS_DM_OBJECT(MassActionProcess, Process)
     {
-      INHERIT_PROPERTIES(Process);
-      PROPERTYSLOT_SET_GET(Real, k);
+      INHERIT_PROPERTIES(SpatiocyteNextReactionProcess);
     }
-  MassActionProcess():
-    k(0),
-    theSpace(0) {}
+  MassActionProcess() {}
   virtual ~MassActionProcess() {}
-  SIMPLE_SET_GET_METHOD(Real, k);
   virtual void fire();
   virtual void initialize()
     {
-      ReactionProcess::initialize();
+      SpatiocyteNextReactionProcess::initialize();
+      isPriorityQueued = false;
+      isExternInterrupted = false;
     }
   virtual bool isContinuous() const
     {
         return true;
     }
 protected:
-  double k;
-  double theSpace;
 };
 
 #endif /* __MassActionProcess_hpp */

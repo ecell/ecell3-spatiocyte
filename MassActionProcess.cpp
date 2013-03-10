@@ -34,23 +34,7 @@ LIBECS_DM_INIT(MassActionProcess, Process);
 
 void MassActionProcess::fire()
 { 
-  if(!theSpace)
-    {
-      for(VariableReferenceVector::iterator
-          i(theVariableReferenceVector.begin());
-          i != theVariableReferenceVector.end(); ++i)
-        {
-          Variable* aVariable((*i).getVariable()); 
-          theSpace = 
-            aVariable->getSuperSystem()->getSizeVariable()->getValue()*1e-3;
-          if(theSpace)
-            {
-              break;
-            }
-        }
-    }
-  double velocity(k);
-  velocity *= theSpace;
+  double velocity(p);
   for(VariableReferenceVector::iterator
       s(theVariableReferenceVector.begin());
       s != theZeroVariableReferenceIterator; ++s)
@@ -60,14 +44,14 @@ void MassActionProcess::fire()
       do
         {
           ++aCoefficient;
-          velocity *= aVariableReference.getVariable()->getValue()/theSpace;
+          velocity *= aVariableReference.getVariable()->getValue();
         }
       while(aCoefficient != 0); 
       if(velocity < 0)
         {
           velocity = 0;
         }
-    } 
+    }
   setFlux(velocity);
   for(VariableReferenceVector::iterator
       s(theVariableReferenceVector.begin());
@@ -78,6 +62,6 @@ void MassActionProcess::fire()
         {
           aVariableReference.getVariable()->setValue(0);
         }
-    } 
+    }
 }
 
