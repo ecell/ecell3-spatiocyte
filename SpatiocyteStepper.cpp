@@ -36,10 +36,10 @@
 #include <libecs/Process.hpp>
 #include <libecs/Stepper.hpp>
 #include <libecs/VariableReference.hpp>
-#include "SpatiocyteStepper.hpp"
-#include "SpatiocyteSpecies.hpp"
-#include "SpatiocyteProcessInterface.hpp"
-#include "ReactionProcessInterface.hpp"
+#include <SpatiocyteStepper.hpp>
+#include <SpatiocyteSpecies.hpp>
+#include <SpatiocyteProcessInterface.hpp>
+#include <ReactionProcessInterface.hpp>
 
 LIBECS_DM_INIT(SpatiocyteStepper, Stepper);
 
@@ -390,27 +390,30 @@ void SpatiocyteStepper::checkModel()
           for(std::vector<Process*>::const_iterator j(aProcessVector.begin());
               j != aProcessVector.end(); ++j)
             {
-              Process::VariableReferenceVector aVariableReferenceVector( 
-                               (*j)->getVariableReferenceVector());
-              for(Process::VariableReferenceVector::const_iterator 
-                  k(aVariableReferenceVector.begin());
-                  k != aVariableReferenceVector.end(); ++k)
-                { 
-                  const VariableReference& aNewVariableReference(*k);
-                  Variable* aVariable(aNewVariableReference.getVariable()); 
-                  for(std::vector<Species*>::iterator m(theSpecies.begin());
-                      m !=theSpecies.end(); ++m)
-                    {
-                      if((*m)->getVariable() == aVariable)
+              if(!dynamic_cast<SpatiocyteProcessInterface*>(*j))
+                {
+                  Process::VariableReferenceVector aVariableReferenceVector( 
+                                   (*j)->getVariableReferenceVector());
+                  for(Process::VariableReferenceVector::const_iterator 
+                      k(aVariableReferenceVector.begin());
+                      k != aVariableReferenceVector.end(); ++k)
+                    { 
+                      const VariableReference& aNewVariableReference(*k);
+                      Variable* aVariable(aNewVariableReference.getVariable()); 
+                      for(std::vector<Species*>::iterator m(theSpecies.begin());
+                          m !=theSpecies.end(); ++m)
                         {
-                          THROW_EXCEPTION(ValueError, 
-                            getPropertyInterface().getClassName() +
-                            ": " + aVariable->getFullID().asString()  +  
-                            " is a non-HD species but it is being used " +
-                            "by non-SpatiocyteProcess: " +
-                            (*j)->getFullID().asString());
-                        }
-                    } 
+                          if((*m)->getVariable() == aVariable)
+                            {
+                              THROW_EXCEPTION(ValueError, 
+                                getPropertyInterface().getClassName() +
+                                ": " + aVariable->getFullID().asString()  +  
+                                " is a non-HD species but it is being used " +
+                                "by non-SpatiocyteProcess: " +
+                                (*j)->getFullID().asString());
+                            }
+                        } 
+                    }
                 }
             }
         }

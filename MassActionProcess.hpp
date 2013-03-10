@@ -32,11 +32,11 @@
 #ifndef __MassActionProcess_hpp
 #define __MassActionProcess_hpp
 
-#include <ContinuousProcess.hpp>
-#include "SpatiocyteStepper.hpp"
-#include "SpatiocyteCommon.hpp"
+#include <SpatiocyteNextReactionProcess.hpp>
+#include <SpatiocyteStepper.hpp>
+#include <SpatiocyteCommon.hpp>
 
-LIBECS_DM_CLASS(MassActionProcess, ContinuousProcess)
+LIBECS_DM_CLASS(MassActionProcess, SpatiocyteNextReactionProcess)
 { 
 public:
   LIBECS_DM_OBJECT(MassActionProcess, Process)
@@ -52,8 +52,11 @@ public:
   virtual void fire();
   virtual void initialize()
     {
-      Process::initialize();
-      declareUnidirectional();
+      ReactionProcess::initialize();
+    }
+  virtual bool isContinuous() const
+    {
+        return true;
     }
 protected:
   double k;

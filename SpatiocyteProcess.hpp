@@ -79,7 +79,7 @@ public:
         }
       isInitialized = true;
       Process::initialize();
-      theSpatiocyteStepper = dynamic_cast<SpatiocyteStepper*>(getStepper());
+      setSpatiocyteStepper();
       theSortedVariableReferences.resize(theVariableReferenceVector.size());
       for(VariableReferenceVector::iterator
           i(theVariableReferenceVector.begin());
@@ -116,6 +116,22 @@ public:
               theZeroVariableReferences.push_back(*i);
             }
         }
+    }
+  void setSpatiocyteStepper()
+    {
+      Model::StepperMap aStepperMap(getModel()->getStepperMap());  
+      for(Model::StepperMap::const_iterator i(aStepperMap.begin());
+          i != aStepperMap.end(); ++i )
+        {   
+          theSpatiocyteStepper = dynamic_cast<SpatiocyteStepper*>(i->second);
+          if(theSpatiocyteStepper)
+            {
+              return;
+            }
+        }
+      THROW_EXCEPTION(ValueError, getPropertyInterface().getClassName() +
+                      ": " + getFullID().asString() +  
+                      " SpatiocyteStepper has not been declared.");
     }
   void requeue()
     {
