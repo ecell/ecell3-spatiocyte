@@ -26,13 +26,13 @@
 
 #include <sstream>
 #include <Variable.hpp>
-#include "SpatiocyteCommon.hpp"
-#include "SpatiocyteStepper.hpp"
-#include "SpatiocyteProcessInterface.hpp"
-#include "SpatiocyteNextReactionProcess.hpp"
-#include "DiffusionInfluencedReactionProcess.hpp"
-#include "MoleculePopulateProcessInterface.hpp"
-#include "Vector.hpp"
+#include <SpatiocyteCommon.hpp>
+#include <SpatiocyteStepper.hpp>
+#include <SpatiocyteProcessInterface.hpp>
+#include <SpatiocyteNextReactionProcess.hpp>
+#include <DiffusionInfluencedReactionProcess.hpp>
+#include <MoleculePopulateProcessInterface.hpp>
+#include <Vector.hpp>
 
 // The size of Coord must be 128 bytes to avoid cacheline splits
 // The Core 2 has 64-byte cacheline
@@ -495,6 +495,12 @@ public:
                   isDeoligomerizeID[i] = true;
                 }
             }
+        }
+      if(!isVacant && !getIsPopulated())
+        {
+          THROW_EXCEPTION(ValueError, getIDString() +
+             ": has a non-zero value:" + int2str(getVariable()->getValue()) +
+            " but is not populated.");
         }
     }
   unsigned getCollisionCnt(unsigned anIndex)

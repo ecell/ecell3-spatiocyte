@@ -2,6 +2,7 @@ OBJS=\
 SpatiocyteVisualizer
 
 DMS=\
+SpatiocyteODEStepper\
 SpatiocyteStepper\
 SpatiocyteProcess\
 MassActionProcess\

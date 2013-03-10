@@ -46,6 +46,7 @@ public:
   MassActionProcess() {}
   virtual ~MassActionProcess() {}
   virtual void fire();
+  virtual void finalizeFire();
   virtual void initialize()
     {
       SpatiocyteNextReactionProcess::initialize();
@@ -56,7 +57,6 @@ public:
     {
         return true;
     }
-protected:
 };
 
 #endif /* __MassActionProcess_hpp */

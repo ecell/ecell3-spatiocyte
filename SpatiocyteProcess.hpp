@@ -67,6 +67,7 @@ public:
   virtual void initializeLastOnce() {}
   virtual void printParameters() {}
   virtual void updateResizedLattice() {}
+  virtual void finalizeFire() {}
   virtual void prepreinitialize()
     {
       //Process::prepreinitialize();

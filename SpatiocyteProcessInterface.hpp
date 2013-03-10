@@ -32,7 +32,8 @@
 #ifndef __SPATIOCYTEPROCESSINTERFACE_HPP
 #define __SPATIOCYTEPROCESSINTERFACE_HPP
 
-#include "SpatiocyteCommon.hpp"
+#include <RandomLib/Random.hpp>
+#include <SpatiocyteCommon.hpp>
 
 class SpatiocyteProcessInterface
 { 
@@ -62,6 +63,7 @@ public:
   virtual bool getIsExternInterrupted() = 0;
   virtual double getNewInterval() = 0;
   virtual String getIDString() = 0;
+  virtual void finalizeFire() = 0;
 };
 
 #endif /* __SPATIOCYTEPROCESSINTERFACE_HPP */

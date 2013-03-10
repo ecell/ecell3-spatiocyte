@@ -34,25 +34,19 @@ LIBECS_DM_INIT(MassActionProcess, Process);
 
 void MassActionProcess::fire()
 { 
-  double velocity(p);
-  for(VariableReferenceVector::iterator
-      s(theVariableReferenceVector.begin());
-      s != theZeroVariableReferenceIterator; ++s)
+  const double flux((this->*theInversePropensityMethod)());
+  if(flux != libecs::INF)
     {
-      VariableReference aVariableReference(*s);
-      Integer aCoefficient(aVariableReference.getCoefficient());
-      do
-        {
-          ++aCoefficient;
-          velocity *= aVariableReference.getVariable()->getValue();
-        }
-      while(aCoefficient != 0); 
-      if(velocity < 0)
-        {
-          velocity = 0;
-        }
+      setFlux(1/flux);
     }
-  setFlux(velocity);
+  else
+    {
+      setFlux(0);
+    }
+}
+
+void MassActionProcess::finalizeFire()
+{ 
   for(VariableReferenceVector::iterator
       s(theVariableReferenceVector.begin());
       s != theZeroVariableReferenceIterator; ++s)
@@ -64,4 +58,3 @@ void MassActionProcess::fire()
         }
     }
 }
-

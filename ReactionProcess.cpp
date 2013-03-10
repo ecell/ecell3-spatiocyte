@@ -47,10 +47,10 @@ void ReactionProcess::calculateOrder()
           //The first reactant, A:
           if(A == NULL && variableA == NULL)
             {
+              coefficientA = aCoefficient;
               if(aVariable->getName() == "HD")
                 {
                   variableA = aVariable;
-                  coefficientA = aCoefficient;
                 }
               else
                 {
@@ -60,10 +60,10 @@ void ReactionProcess::calculateOrder()
           //The second reactant, B:
           else
             {
+              coefficientB = aCoefficient;
               if(aVariable->getName() == "HD")
                 {
                   variableB = aVariable;
-                  coefficientB = aCoefficient;
                 }
               else
                 {
@@ -76,10 +76,10 @@ void ReactionProcess::calculateOrder()
           //The first product, C:
           if(C == NULL && variableC == NULL)
             {
+              coefficientC = aCoefficient;
               if(aVariable->getName() == "HD")
                 {
                   variableC = aVariable;
-                  coefficientC = aCoefficient;
                 }
               else
                 {
@@ -89,10 +89,10 @@ void ReactionProcess::calculateOrder()
           //The second product, D:
           else if(D == NULL && variableD == NULL)
             {
+              coefficientC = aCoefficient;
               if(aVariable->getName() == "HD")
                 {
                   variableD = aVariable;
-                  coefficientC = aCoefficient;
                 }
               else
                 {
@@ -102,10 +102,10 @@ void ReactionProcess::calculateOrder()
           //The third product, F:
           else if(F == NULL && variableF == NULL)
             {
+              coefficientF = aCoefficient;
               if(aVariable->getName() == "HD")
                 {
                   variableF = aVariable;
-                  coefficientF = aCoefficient;
                 }
               else
                 {
@@ -116,10 +116,10 @@ void ReactionProcess::calculateOrder()
       //aCoefficient == 0:
       else
         {
+          coefficientE = aCoefficient;
           if(aVariable->getName() == "HD")
             {
               variableE = aVariable;
-              coefficientE = aCoefficient;
             }
           else
             {
