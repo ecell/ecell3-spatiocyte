@@ -85,6 +85,7 @@ void SpatiocyteNextReactionProcess::fire()
             {
               if(!reactAC(A, C))
                 {
+                  requeue();
                   return;
                 }
             }
@@ -127,6 +128,7 @@ void SpatiocyteNextReactionProcess::fire()
              }
           else
             {
+              requeue();
               return;
             }
         }
@@ -345,6 +347,7 @@ void SpatiocyteNextReactionProcess::fire()
             {
               if(!reactAC(nonHD, C))
                 {
+                  requeue();
                   return;
                 }
               HD->addValue(coefficient);
@@ -375,6 +378,7 @@ void SpatiocyteNextReactionProcess::fire()
                 }
               if(!reactAC(nonHD, nonHD_p))
                 {
+                  requeue();
                   return;
                 }
               HD->addValue(coefficient);
@@ -531,7 +535,6 @@ bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
   if(ImplicitUnbind && 
      E->getRandomAdjoiningVoxel(moleculeA, E, SearchVacant) == NULL)
     {
-      requeue();
       return false;
     }
   moleculeC = NULL;
@@ -546,7 +549,6 @@ bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
         {
           //Only proceed if we can find an adjoining vacant voxel
           //of nonND which can be occupied by C:
-          requeue();
           return false;
         }
     }

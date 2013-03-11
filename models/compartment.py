@@ -1,6 +1,8 @@
 sim = theSimulator.createStepper('SpatiocyteStepper', 'SS')
 sim.VoxelRadius = 2.74e-9
 sim.SearchVacant = 0
+step = theSimulator.createStepper('SpatiocyteODEStepper', 'DE')
+step.MaxStepInterval = 1e-5
 
 theSimulator.rootSystem.StepperID = 'SS'
 theSimulator.createEntity('Variable', 'Variable:/:GEOMETRY').Value = 0
@@ -134,32 +136,35 @@ react.p = 0.5
 #react.SearchVacant = 0
 #react.k = 1.5e+6
 
-react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:dissocPGsLip')
+react = theSimulator.createEntity('MassActionProcess', 'Process:/:dissocPGsLip')
+react.StepperID = 'DE'
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/:Lipid', '0']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG', '1']]
 react.Deoligomerize = 1
 react.ImplicitUnbind = 1
 react.SearchVacant = 0
-react.k = 1.5e+6
+react.k = 1.3e+6
 
-react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:dissocMinDPGs')
+react = theSimulator.createEntity('MassActionProcess', 'Process:/:dissocMinDPGs')
+react.StepperID = 'DE'
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:MinD', '0']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '1']]
 react.Deoligomerize = 1
 react.ImplicitUnbind = 1
 react.SearchVacant = 0
-react.k = 1.5e+6
+react.k = 1.3e+6
 
-react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:dissocMinDPGss')
+react = theSimulator.createEntity('MassActionProcess', 'Process:/:dissocMinDPGss')
+react.StepperID = 'DE'
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/:Lipid', '0']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '1']]
 react.Deoligomerize = 1
 react.ImplicitUnbind = 1
 react.SearchVacant = 0
-react.k = 1.5e+6
+react.k = 1.3e+6
 
 #diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseMinDv')
 #diffuser.VariableReferenceList = [['_', 'Variable:/:MinD']]

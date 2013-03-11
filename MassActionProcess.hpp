@@ -57,6 +57,7 @@ public:
     {
         return true;
     }
+  virtual void substrateValueChanged(double) {}
 };
 
 #endif /* __MassActionProcess_hpp */

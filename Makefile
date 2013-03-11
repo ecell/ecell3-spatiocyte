@@ -5,7 +5,6 @@ DMS=\
 SpatiocyteODEStepper\
 SpatiocyteStepper\
 SpatiocyteProcess\
-MassActionProcess\
 VisualizationLogProcess\
 H5VisualizationLogProcess\
 TagProcess\
@@ -17,6 +16,7 @@ IteratingLogProcess\
 DiffusionInfluencedReactionProcess\
 MicroscopyTrackingProcess\
 DiffusionProcess\
+MassActionProcess\
 CoordinateLogProcess\
 HistogramLogProcess\
 MoleculePopulateProcess\
@@ -80,6 +80,9 @@ OscillationAnalysisProcess.so: 	OscillationAnalysisProcess.cpp
 
 SpatiocyteNextReactionProcess.so: 	SpatiocyteNextReactionProcess.cpp
 	$(ECELL3_DMC) -o SpatiocyteNextReactionProcess.so --ldflags=ReactionProcess.so SpatiocyteNextReactionProcess.cpp
+
+MassActionProcess.so: 	MassActionProcess.cpp
+	$(ECELL3_DMC) -o MassActionProcess.so --ldflags=SpatiocyteNextReactionProcess.so MassActionProcess.cpp
 
 TagProcess.so: 	TagProcess.cpp
 	$(ECELL3_DMC) -o TagProcess.so --ldflags="SpatiocyteProcess.so" TagProcess.cpp

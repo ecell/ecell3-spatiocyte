@@ -28,7 +28,8 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
-#include "MassActionProcess.hpp"
+#include <MassActionProcess.hpp>
+#include <SpatiocyteSpecies.hpp>
 
 LIBECS_DM_INIT(MassActionProcess, Process); 
 
@@ -37,6 +38,7 @@ void MassActionProcess::fire()
   setFlux((this->*thePropensityMethod)());
 }
 
+/*
 void MassActionProcess::finalizeFire()
 { 
   for(VariableReferenceVector::iterator
@@ -50,3 +52,20 @@ void MassActionProcess::finalizeFire()
         }
     }
 }
+*/
+
+void MassActionProcess::finalizeFire()
+{ 
+  if(A->getVariable()->getValue() < 0)
+    {
+      A->getVariable()->setValue(0);
+    }
+  unsigned nReact(A->size()-A->getVariable()->getValue());
+  while(nReact)
+    {
+      reactAC(A, C);
+      --nReact;
+    }
+}
+
+
