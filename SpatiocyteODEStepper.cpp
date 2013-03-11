@@ -87,6 +87,16 @@ public:
             (*i)->finalizeFire();
           }
       }
+    /*
+    bool isDependentOn( Stepper const* aStepper )
+      {
+        return false;
+      }
+    virtual void interrupt(Time aTime)
+      {
+        AdaptiveDifferentialStepper::interrupt(aTime);
+      }
+      */
     SET_METHOD( Integer, MaxIterationNumber )
     {
         theMaxIterationNumber = value;
@@ -138,7 +148,6 @@ public:
     virtual void initialize();
     virtual void updateInternalState( Real aStepInterval );
     virtual bool calculate( Real aStepInterval );
-
     void initializeStepper();
 
     void calculateJacobian();

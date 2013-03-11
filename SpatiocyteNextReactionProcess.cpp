@@ -1242,20 +1242,19 @@ double SpatiocyteNextReactionProcess::getInterval(double aCurrentTime)
   return libecs::INF;
 }
 
-//Find out if this process is interrupted by the aReactionProcess
-//by checking if any of the modified variables of aReactionProcess is a
+//Find out if this process is interrupted by the aProcess
+//by checking if any of the modified variables of aProcess is a
 //substrate of this process:
-bool SpatiocyteNextReactionProcess::isInterrupted(ReactionProcess*
-                                                  aReactionProcess)
+bool SpatiocyteNextReactionProcess::isDependentOn(const Process* aProcess) const
 {
-  //First get the unique Variables of the aReactionProcess:
-  std::vector<Variable*> aVariables;
-  VariableReferenceVector
-    aVariableReferences(aReactionProcess->getVariableReferenceVector()); 
-  for(VariableReferenceVector::iterator i(aVariableReferences.begin());
+  //First get the unique Variables of the aProcess:
+  std::vector<const Variable*> aVariables;
+  const VariableReferenceVector&
+    aVariableReferences(aProcess->getVariableReferenceVector()); 
+  for(VariableReferenceVector::const_iterator i(aVariableReferences.begin());
       i != aVariableReferences.end(); ++i)
     {
-      Variable* aVariable((*i).getVariable());
+      const Variable* aVariable((*i).getVariable());
       if(std::find(aVariables.begin(), aVariables.end(), aVariable) ==
          aVariables.end())
         {
@@ -1263,7 +1262,7 @@ bool SpatiocyteNextReactionProcess::isInterrupted(ReactionProcess*
         }
     }
   //Find out if the values of the unique variables will be changed
-  //by the ReactionProcess aReactionProcess, i.e., netCoefficient != 0:
+  //by the Process aProcess, i.e., netCoefficient != 0:
   std::vector<int> aNetCoefficients;
   aNetCoefficients.resize(aVariables.size());
   for(std::vector<int>::iterator i(aNetCoefficients.begin());
@@ -1271,10 +1270,10 @@ bool SpatiocyteNextReactionProcess::isInterrupted(ReactionProcess*
     {
       (*i) = 0;
     }
-  for(VariableReferenceVector::iterator i(aVariableReferences.begin());
+  for(VariableReferenceVector::const_iterator i(aVariableReferences.begin());
       i != aVariableReferences.end(); ++i)
     {
-      for(std::vector<Variable*>::const_iterator j(aVariables.begin());
+      for(std::vector<const Variable*>::const_iterator j(aVariables.begin());
           j != aVariables.end(); ++j)
         {
           if((*i).getVariable() == (*j))
@@ -1285,13 +1284,14 @@ bool SpatiocyteNextReactionProcess::isInterrupted(ReactionProcess*
     }
   //Check if any variable with netCoefficient != 0 is a substrate
   //of this process:
-  for(VariableReferenceVector::iterator i(theVariableReferenceVector.begin());
+  for(VariableReferenceVector::const_iterator
+      i(theVariableReferenceVector.begin());
       i != theVariableReferenceVector.end(); ++i)
     {
       if((*i).isAccessor())
         {
-          for(std::vector<Variable*>::const_iterator j(aVariables.begin());
-              j != aVariables.end(); ++j)
+          for(std::vector<const Variable*>::const_iterator
+              j(aVariables.begin()); j != aVariables.end(); ++j)
             {
               if((*i).getVariable() == (*j) && 
                  aNetCoefficients[j-aVariables.begin()])
@@ -1322,7 +1322,7 @@ void SpatiocyteNextReactionProcess::calculateOrder()
       //Two unique substrate species:
       //A + B -> products:
       if(getZeroVariableReferenceOffset() == 2)
-        {  
+        {
           thePropensityMethod = &SpatiocyteNextReactionProcess::
             getPropensitySecondOrderHetero;
         }
@@ -1336,4 +1336,23 @@ void SpatiocyteNextReactionProcess::calculateOrder()
     }
 }
 
-
+void SpatiocyteNextReactionProcess::checkExternStepperInterrupted()
+{
+  Model::StepperMap aStepperMap(getModel()->getStepperMap());  
+  for(Model::StepperMap::const_iterator i(aStepperMap.begin());
+      i != aStepperMap.end(); ++i )
+    {
+      if(i->second != getStepper())
+        {
+          std::vector<Process*> aProcessVector(i->second->getProcessVector());
+          for(std::vector<Process*>::const_iterator j(aProcessVector.begin());
+              j != aProcessVector.end(); ++j)
+            {
+              if(isDependentOn(*j))
+                {
+                  isExternInterrupted = true;
+                }
+            }
+        }
+    }
+}

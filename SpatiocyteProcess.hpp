@@ -139,7 +139,7 @@ public:
       theTime += getNewInterval(); // do this only for the Processes in Q
       thePriorityQueue->moveTop(); // do this only for the Processes in Q
     }
-  virtual bool isInterrupted(ReactionProcess* aProcess)
+  virtual bool isDependentOn(const Process* aProcess) const
     {
       return false;
     }

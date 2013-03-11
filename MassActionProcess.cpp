@@ -60,7 +60,13 @@ void MassActionProcess::finalizeFire()
     {
       A->getVariable()->setValue(0);
     }
-  unsigned nReact(A->size()-A->getVariable()->getValue());
+  unsigned nReact(A->getVariable()->getValue());
+  if(nReact != A->getVariable()->getValue() &&
+     theRng->Fixed()+nReact > A->getVariable()->getValue())
+    {
+      ++nReact;
+    }
+  nReact = A->size()-nReact;
   while(nReact)
     {
       reactAC(A, C);

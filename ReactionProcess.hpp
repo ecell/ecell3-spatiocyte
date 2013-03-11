@@ -81,10 +81,6 @@ public:
   SIMPLE_SET_GET_METHOD(Real, k);
   SIMPLE_SET_GET_METHOD(Real, p);
   SIMPLE_SET_GET_METHOD(Integer, SearchVacant);
-  virtual bool isInterrupted(ReactionProcess*)
-    {
-      return false;
-    }
   virtual void fire()
     {
       const double aCurrentTime(theTime); // do this only for the Processes in Q
@@ -134,7 +130,7 @@ public:
   //This method is called to set the list of processes which will be
   //interrupted by this process. To determine if this process
   //needs to interrupt another process X, this process will call the
-  //isInterrupted method of X with this process as the argument:
+  //isDependentOn method of X with this process as the argument:
   virtual void setInterruption(std::vector<Process*> const &aProcessList)
     {
       for(std::vector<Process*>::const_iterator i(aProcessList.begin());
@@ -144,8 +140,8 @@ public:
             aReactionProcess(dynamic_cast<ReactionProcess*>(*i));
           SpatiocyteProcess*
             aSpatiocyteProcess(dynamic_cast<SpatiocyteProcess*>(*i));
-          if(this != aReactionProcess && 
-             aSpatiocyteProcess->isInterrupted(this))
+          Process* me(dynamic_cast<Process*>(this));
+          if(this != aReactionProcess && aSpatiocyteProcess->isDependentOn(me))
             {
               theInterruptedProcesses.push_back(aSpatiocyteProcess);
             }

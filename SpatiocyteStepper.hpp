@@ -58,6 +58,12 @@ public:
     theNormalizedVoxelRadius(0.5) {}
   virtual ~SpatiocyteStepper() {}
   virtual void initialize();
+  /*
+  bool isDependentOn(const Stepper*)
+    {
+      return false;
+    }
+    */
   // need to check interrupt when we suddenly stop the simulation, do we
   // need to update the priority queue?
   virtual void interrupt(double);

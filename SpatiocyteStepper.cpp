@@ -112,16 +112,19 @@ void SpatiocyteStepper::initialize()
 
 void SpatiocyteStepper::interrupt(double aTime)
 {
-  setCurrentTime(aTime); 
-  for(std::vector<Process*>::const_iterator 
-      i(theExternInterruptedProcesses.begin());
-      i != theExternInterruptedProcesses.end(); ++i)
-    {      
-      SpatiocyteProcessInterface*
-        aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
-      aProcess->substrateValueChanged(getCurrentTime()); 
+  if(theExternInterruptedProcesses.size())
+    {
+      setCurrentTime(aTime); 
+      for(std::vector<Process*>::const_iterator 
+          i(theExternInterruptedProcesses.begin());
+          i != theExternInterruptedProcesses.end(); ++i)
+        {      
+          SpatiocyteProcessInterface*
+            aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
+          aProcess->substrateValueChanged(getCurrentTime()); 
+        }
+      setNextTime(thePriorityQueue.getTop()->getTime());
     }
-  setNextTime(thePriorityQueue.getTop()->getTime());
 }
 
 void SpatiocyteStepper::finalizeSpecies()

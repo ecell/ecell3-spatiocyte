@@ -80,7 +80,7 @@ public:
         }
       ReactionProcess::initialize();
       isPriorityQueued = true;
-      isExternInterrupted = true;
+      checkExternStepperInterrupted();
       if(!(getOrder() == 0 || getOrder() == 1 || getOrder() == 2))
         {
           if(getZeroVariableReferenceOffset() > 2)
@@ -120,7 +120,7 @@ public:
   virtual void fire();
   virtual void initializeFourth();
   virtual void printParameters();
-  virtual bool isInterrupted(ReactionProcess*);
+  virtual bool isDependentOn(const Process*) const;
 protected:
   void updateMoleculesA();
   double getIntervalUnbindAB();
@@ -141,6 +141,7 @@ protected:
   double getPropensitySecondOrderHomo(); 
   double getPropensitySecondOrderHetero(); 
   void removeMoleculeE();
+  void checkExternStepperInterrupted();
 protected:
   double initSizeA;
   double initSizeB;
