@@ -1,5 +1,5 @@
 Stepper SpatiocyteStepper(SS) { VoxelRadius 6e-9; }
-Stepper SpatiocyteODEStepper(DE) { MaxStepInterval 1e-5; }
+Stepper ODEStepper(DE) { MaxStepInterval 1e-5; }
 
 System System(/)
 {

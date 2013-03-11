@@ -38,22 +38,6 @@ void MassActionProcess::fire()
   setFlux((this->*thePropensityMethod)());
 }
 
-/*
-void MassActionProcess::finalizeFire()
-{ 
-  for(VariableReferenceVector::iterator
-      s(theVariableReferenceVector.begin());
-      s != theZeroVariableReferenceIterator; ++s)
-    {
-      VariableReference aVariableReference(*s);
-      if(aVariableReference.getVariable()->getValue() < 0)
-        {
-          aVariableReference.getVariable()->setValue(0);
-        }
-    }
-}
-*/
-
 void MassActionProcess::finalizeFire()
 { 
   if(A->getVariable()->getValue() < 0)
@@ -72,6 +56,18 @@ void MassActionProcess::finalizeFire()
       reactAC(A, C);
       --nReact;
     }
+  /*
+  for(VariableReferenceVector::iterator
+      s(theVariableReferenceVector.begin());
+      s != theZeroVariableReferenceIterator; ++s)
+    {
+      VariableReference aVariableReference(*s);
+      if(aVariableReference.getVariable()->getValue() < 0)
+        {
+          aVariableReference.getVariable()->setValue(0);
+        }
+    }
+    */
 }
 
 
