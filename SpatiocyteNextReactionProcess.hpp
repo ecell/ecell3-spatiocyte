@@ -39,7 +39,7 @@
 LIBECS_DM_CLASS(SpatiocyteNextReactionProcess, ReactionProcess)
 { 
   typedef double (SpatiocyteNextReactionProcess::
-                  *InversePropensityMethod)(void); 
+                  *PropensityMethod)(void); 
   typedef double (SpatiocyteNextReactionProcess::*PDMethodPtr)(Variable*);
 public:
   LIBECS_DM_OBJECT(SpatiocyteNextReactionProcess, Process)
@@ -63,8 +63,8 @@ public:
     Deoligomerize(0),
     BindingSite(-1),
     ImplicitUnbind(0),
-    theInversePropensityMethod(&SpatiocyteNextReactionProcess::
-                               getInversePropensityZerothOrder) {}
+    thePropensityMethod(&SpatiocyteNextReactionProcess::
+                               getPropensityZerothOrder) {}
   virtual ~SpatiocyteNextReactionProcess() {}
   SIMPLE_SET_GET_METHOD(Real, SpaceA);
   SIMPLE_SET_GET_METHOD(Real, SpaceB);
@@ -136,10 +136,10 @@ protected:
   virtual Voxel* reactvAC(Variable*, Species*);
   virtual Comp* getComp2D(Species*);
   virtual Voxel* reactvAvBC(Species*);
-  double getInversePropensityZerothOrder(); 
-  double getInversePropensityFirstOrder();
-  double getInversePropensitySecondOrderHomo(); 
-  double getInversePropensitySecondOrderHetero(); 
+  double getPropensityZerothOrder(); 
+  double getPropensityFirstOrder();
+  double getPropensitySecondOrderHomo(); 
+  double getPropensitySecondOrderHetero(); 
   void removeMoleculeE();
 protected:
   double initSizeA;
@@ -149,13 +149,13 @@ protected:
   double SpaceA;
   double SpaceB;
   double SpaceC;
-  double theInversePropensity;
+  double thePropensity;
   unsigned Deoligomerize;
   int BindingSite;
   int ImplicitUnbind;
   unsigned nextIndexA;
   std::stringstream pFormula;
-  InversePropensityMethod theInversePropensityMethod;  
+  PropensityMethod thePropensityMethod;  
   std::vector<Voxel*> moleculesA;
 };
 

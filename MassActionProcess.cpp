@@ -34,15 +34,7 @@ LIBECS_DM_INIT(MassActionProcess, Process);
 
 void MassActionProcess::fire()
 { 
-  const double flux((this->*theInversePropensityMethod)());
-  if(flux != libecs::INF)
-    {
-      setFlux(1/flux);
-    }
-  else
-    {
-      setFlux(0);
-    }
+  setFlux((this->*thePropensityMethod)());
 }
 
 void MassActionProcess::finalizeFire()

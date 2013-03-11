@@ -688,27 +688,18 @@ Voxel* SpatiocyteNextReactionProcess::reactvAvBC(Species* c)
 }
 
 
-double SpatiocyteNextReactionProcess::getInversePropensityZerothOrder() 
+double SpatiocyteNextReactionProcess::getPropensityZerothOrder() 
 {
-  if(p)
-    {
-      return 1/p;
-    }
-  return libecs::INF;
+  return p;
 }
 
-double SpatiocyteNextReactionProcess::getInversePropensityFirstOrder() 
+double SpatiocyteNextReactionProcess::getPropensityFirstOrder() 
 {
-  double aValue(theVariableReferenceVector[0].getVariable()->getValue());
-  if(aValue > 0)
-    {
-      return 1/(p*aValue);
-    }
-  return libecs::INF;
+  return p*theVariableReferenceVector[0].getVariable()->getValue();
 }
 
 //Need to solve homodimerization reaction of two substrate species (Size-1):
-double SpatiocyteNextReactionProcess::getInversePropensitySecondOrderHetero() 
+double SpatiocyteNextReactionProcess::getPropensitySecondOrderHetero() 
 {
   if(A)
     {
@@ -729,14 +720,10 @@ double SpatiocyteNextReactionProcess::getInversePropensitySecondOrderHetero()
     {
       sizeB = pow(sizeB, sqrt(coefficientB*coefficientB));
     }
-  if(sizeA > 0 && sizeB > 0)
-    {
-      return 1/(p*sizeA*sizeB);
-    }
-  return libecs::INF;
+  return p*sizeA*sizeB;
 }
 
-double SpatiocyteNextReactionProcess::getInversePropensitySecondOrderHomo() 
+double SpatiocyteNextReactionProcess::getPropensitySecondOrderHomo() 
 {
   if(A)
     {
@@ -744,11 +731,7 @@ double SpatiocyteNextReactionProcess::getInversePropensitySecondOrderHomo()
     }
   double aValue(theVariableReferenceVector[0].getVariable()->getValue());
   //There must be two or more molecules:
-  if(aValue > 1)
-    {
-      return 1/(p*aValue*(aValue-1));
-    }
-  return libecs::INF;
+  return p*aValue*(aValue-1);
 }
 
 
@@ -1174,7 +1157,7 @@ void SpatiocyteNextReactionProcess::printParameters()
       std::cout << " + " << getIDString(variableD);
     }
   double interval(theTime-getStepper()->getCurrentTime());
-  double propensity(1/theInversePropensity);
+  double propensity(thePropensity);
   if(theTime == libecs::INF)
     {
       bool a(false);
@@ -1202,7 +1185,7 @@ void SpatiocyteNextReactionProcess::printParameters()
           vB = true;
         }
       interval = getNewInterval();
-      propensity = 1/(theInversePropensity); 
+      propensity = thePropensity; 
       if(a)
         {
           A->getVariable()->addValue(-1);
@@ -1234,8 +1217,12 @@ double SpatiocyteNextReactionProcess::getNewInterval()
       return interval;
     }
     */
-  theInversePropensity = (this->*theInversePropensityMethod)();
-  return theInversePropensity*(-log(theRng->FixedU()));
+  thePropensity = (this->*thePropensityMethod)();
+  if(thePropensity)
+    {
+      return -log(theRng->FixedU())/thePropensity;
+    }
+  return libecs::INF;
 }
 
 double SpatiocyteNextReactionProcess::getInterval(double aCurrentTime)
@@ -1244,9 +1231,13 @@ double SpatiocyteNextReactionProcess::getInterval(double aCurrentTime)
     {
       return getNewInterval();
     }
-  const double oldInversePropensity(theInversePropensity);
-  theInversePropensity = (this->*theInversePropensityMethod)();
-  return theInversePropensity/oldInversePropensity*(theTime-aCurrentTime);
+  const double oldPropensity(thePropensity);
+  thePropensity = (this->*thePropensityMethod)();
+  if(thePropensity)
+    {
+      return oldPropensity/thePropensity*(theTime-aCurrentTime);
+    }
+  return libecs::INF;
 }
 
 //Find out if this process is interrupted by the aReactionProcess
@@ -1316,13 +1307,13 @@ void SpatiocyteNextReactionProcess::calculateOrder()
   ReactionProcess::calculateOrder();
   if(theOrder == 0) // no substrate
     {
-      theInversePropensityMethod = &SpatiocyteNextReactionProcess::
-        getInversePropensityZerothOrder;
+      thePropensityMethod = &SpatiocyteNextReactionProcess::
+        getPropensityZerothOrder;
     }
   else if(theOrder == 1) // one substrate, first order.
     {
-      theInversePropensityMethod = &SpatiocyteNextReactionProcess::
-        getInversePropensityFirstOrder;
+      thePropensityMethod = &SpatiocyteNextReactionProcess::
+        getPropensityFirstOrder;
     }
   else
     { 
@@ -1330,15 +1321,15 @@ void SpatiocyteNextReactionProcess::calculateOrder()
       //A + B -> products:
       if(getZeroVariableReferenceOffset() == 2)
         {  
-          theInversePropensityMethod = &SpatiocyteNextReactionProcess::
-            getInversePropensitySecondOrderHetero;
+          thePropensityMethod = &SpatiocyteNextReactionProcess::
+            getPropensitySecondOrderHetero;
         }
       //One substrate species, second order
       //A + A -> products:
       else
         {
-          theInversePropensityMethod = &SpatiocyteNextReactionProcess::
-            getInversePropensitySecondOrderHomo;
+          thePropensityMethod = &SpatiocyteNextReactionProcess::
+            getPropensitySecondOrderHomo;
         }
     }
 }

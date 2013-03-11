@@ -1,5 +1,5 @@
 Stepper SpatiocyteStepper(SS) { VoxelRadius 6e-9; }
-Stepper ODEStepper(DE) { MaxStepInterval 1e-5; }
+Stepper SpatiocyteODEStepper(DE) { MaxStepInterval 1e-5; }
 
 System System(/)
 {
@@ -46,13 +46,16 @@ System System(/)
     }
     Variable Variable( Bm )
     {
-        Name HD;
         Value   10000;
     }
     Variable Variable( Cm )
     {
         Name HD;
         Value  0;  
+    }
+   Process MoleculePopulateProcess( pop )
+    {
+      VariableReferenceList [_ Variable:/:Bm]; 
     }
    Process SpatiocyteNextReactionProcess( reaction )
     {
