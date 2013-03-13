@@ -28,35 +28,55 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
+#include <SpatiocyteTauLeapProcess.hpp>
+#include <SpatiocyteSpecies.hpp>
 
-#ifndef __MassActionProcess_hpp
-#define __MassActionProcess_hpp
+LIBECS_DM_INIT(SpatiocyteTauLeapProcess, Process); 
 
-#include <SpatiocyteNextReactionProcess.hpp>
-
-LIBECS_DM_CLASS(MassActionProcess, SpatiocyteNextReactionProcess)
-{ 
-public:
-  LIBECS_DM_OBJECT(MassActionProcess, Process)
+void SpatiocyteTauLeapProcess::set_g(unsigned& currHOR, RealMethod& g_method,
+                                     const int v)
+{
+  unsigned aHOR(0);
+  RealMethod aG;
+  if(theOrder == 1)
     {
-      INHERIT_PROPERTIES(SpatiocyteNextReactionProcess);
+      aG = &SpatiocyteTauLeapProcess::g_order_1;
+      aHOR = 1;
     }
-  MassActionProcess() {}
-  virtual ~MassActionProcess() {}
-  virtual void fire();
-  virtual void finalizeFire();
-  virtual void initialize()
+  else if(theOrder == 2)
     {
-      SpatiocyteNextReactionProcess::initialize();
-      isPriorityQueued = false;
-      isExternInterrupted = false;
+      if(v == -1)
+        {
+          aG = &SpatiocyteTauLeapProcess::g_order_2_1;
+          aHOR = 21;
+        }
+      else
+        {
+          aG = &SpatiocyteTauLeapProcess::g_order_2_2;
+          aHOR = 22;
+        }
     }
-  virtual bool isContinuous() const
+  else if(theOrder == 3)
     {
-        return true;
+      if(v == -1)
+        {
+          aG = &SpatiocyteTauLeapProcess::g_order_3_1;
+          aHOR = 31;
+        }
+      else if(v == -2)
+        {
+          aG = &SpatiocyteTauLeapProcess::g_order_3_2;
+          aHOR = 32;
+        }
+      else
+        {
+          aG = &SpatiocyteTauLeapProcess::g_order_3_3;
+          aHOR = 33;
+        }
     }
-  virtual void substrateValueChanged(double) {}
-};
-
-#endif /* __MassActionProcess_hpp */
-
+  if(aHOR > currHOR)
+    {
+      currHOR = aHOR;
+      g_method = aG;
+    }
+}

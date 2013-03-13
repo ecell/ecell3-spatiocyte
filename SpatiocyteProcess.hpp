@@ -134,10 +134,28 @@ public:
                       ": " + getFullID().asString() +  
                       " SpatiocyteStepper has not been declared.");
     }
-  void requeue()
+  virtual void requeue()
     {
       theTime += getNewInterval(); // do this only for the Processes in Q
       thePriorityQueue->moveTop(); // do this only for the Processes in Q
+    }
+  void enqueue(double aCurrentTime)
+    {
+      const double anOldTime(theTime);
+      theTime = aCurrentTime + getNewInterval();
+      if(theTime >= anOldTime)
+        {
+          thePriorityQueue->moveDown(theQueueID);
+        }
+      else if(theTime < anOldTime)
+        {
+          thePriorityQueue->moveUp(theQueueID);
+        }          
+    }
+  void unqueue()
+    {
+      theTime = libecs::INF;
+      thePriorityQueue->moveDown(theQueueID);
     }
   virtual bool isDependentOn(const Process* aProcess) const
     {

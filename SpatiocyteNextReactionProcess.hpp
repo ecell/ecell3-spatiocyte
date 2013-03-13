@@ -38,9 +38,7 @@
 
 LIBECS_DM_CLASS(SpatiocyteNextReactionProcess, ReactionProcess)
 { 
-  typedef double (SpatiocyteNextReactionProcess::
-                  *PropensityMethod)(void); 
-  typedef double (SpatiocyteNextReactionProcess::*PDMethodPtr)(Variable*);
+  typedef double (SpatiocyteNextReactionProcess::*PropensityMethod)(void); 
 public:
   LIBECS_DM_OBJECT(SpatiocyteNextReactionProcess, Process)
     {

@@ -716,11 +716,11 @@ double SpatiocyteNextReactionProcess::getPropensitySecondOrderHetero()
   //Required for HD species when substrate coefficient is < -1
   if(variableA)
     {
-      sizeA = pow(sizeA, sqrt(coefficientA*coefficientA));
+      sizeA = pow(sizeA, -coefficientA);
     }
   if(variableB)
     {
-      sizeB = pow(sizeB, sqrt(coefficientB*coefficientB));
+      sizeB = pow(sizeB, -coefficientB);
     }
   return p*sizeA*sizeB;
 }
@@ -1055,7 +1055,7 @@ void SpatiocyteNextReactionProcess::initializeFourth()
           //unit of k is in (m^3)^(totalCoefficient-1)/s
           //we need to convert k to p which has the unit 1/s
           int totalCoefficient(coefficientA+coefficientB);
-          p = k/(pow(aVolume, sqrt(totalCoefficient*totalCoefficient)-1));
+          p = k/(pow(aVolume, fabs(totalCoefficient)-1));
           pFormula << "[k/aVolume:" << k << "/" << aVolume << "]";
         }
       //If surface (+surface) <= k(surface)(surface) or
@@ -1097,7 +1097,7 @@ void SpatiocyteNextReactionProcess::initializeFourth()
           //unit of k is in (m^2)^(totalCoefficient-1)/s
           //we need to convert k to p which has the unit 1/s
           int totalCoefficient(coefficientA+coefficientB);
-          p = k/(pow(anArea, sqrt(totalCoefficient*totalCoefficient)-1));
+          p = k/(pow(anArea, fabs(totalCoefficient)-1));
           pFormula << "[k/anArea:" << k << "/" << anArea << "]";
         }
       else

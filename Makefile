@@ -17,6 +17,7 @@ DiffusionInfluencedReactionProcess\
 MicroscopyTrackingProcess\
 DiffusionProcess\
 MassActionProcess\
+SpatiocyteTauLeapProcess\
 CoordinateLogProcess\
 HistogramLogProcess\
 MoleculePopulateProcess\
@@ -83,6 +84,9 @@ SpatiocyteNextReactionProcess.so: 	SpatiocyteNextReactionProcess.cpp
 
 MassActionProcess.so: 	MassActionProcess.cpp
 	$(ECELL3_DMC) -o MassActionProcess.so --ldflags=SpatiocyteNextReactionProcess.so MassActionProcess.cpp
+
+SpatiocyteTauLeapProcess.so: 	SpatiocyteTauLeapProcess.cpp
+	$(ECELL3_DMC) -o SpatiocyteTauLeapProcess.so --ldflags=SpatiocyteNextReactionProcess.so SpatiocyteTauLeapProcess.cpp
 
 TagProcess.so: 	TagProcess.cpp
 	$(ECELL3_DMC) -o TagProcess.so --ldflags="SpatiocyteProcess.so" TagProcess.cpp
