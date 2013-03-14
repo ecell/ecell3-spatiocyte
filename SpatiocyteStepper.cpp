@@ -623,14 +623,13 @@ void SpatiocyteStepper::initPriorityQueue()
       if(aSpatiocyteProcess)
         {
           aSpatiocyteProcess->setTime(aCurrentTime+
-                                      aSpatiocyteProcess->getInitInterval());
+                                      aSpatiocyteProcess->getNewInterval());
           aSpatiocyteProcess->setPriorityQueue(&thePriorityQueue);
           //Not all SpatiocyteProcesses are inserted into the priority queue.
           //Only the following processes are inserted in the PriorityQueue and
           //executed at simulation steps according to their execution times:
           if(aSpatiocyteProcess->getIsPriorityQueued())
             {
-              std::cout << "queuing:" << aSpatiocyteProcess->getIDString() << std::endl;
               aSpatiocyteProcess->setQueueID(
                                    thePriorityQueue.push(aSpatiocyteProcess));
               //ExternInterrupted processes are processes which are
@@ -679,7 +678,7 @@ inline void SpatiocyteStepper::step()
 {
   do
     {
-      std::cout << "before:" << thePriorityQueue.getTop()->getIDString() << " " << getCurrentTime() << std::endl;
+      //std::cout << "before:" << thePriorityQueue.getTop()->getIDString() << " " << getCurrentTime() << std::endl;
       thePriorityQueue.getTop()->fire();
       //checkSpecies();
     }

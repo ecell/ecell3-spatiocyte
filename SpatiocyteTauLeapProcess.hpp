@@ -136,12 +136,10 @@ public:
     }
   virtual double getInterval(double aCurrentTime)
     {
-      std::cout << "calling getInterval:" << getIDString() << std::endl;
       return getNewInterval();
     }
   virtual double getNewInterval()
     {
-      std::cout << "tau1:" << tau1 << " a0:" << a0 << " theTime:" << theTime << " " << getStepper()->getCurrentTime() << " id:" << getIDString() << std::endl;
       if(!theState && currSSA)
         {
           --currSSA;
@@ -157,17 +155,14 @@ public:
             {
               theState = 0;
               currSSA = nSSA-1;
-              std::cout << "set state 0 currSSA:" << currSSA << std::endl;
               return -log(theRng->FixedU())/a0;
             }
           tau2 = (a0_c == 0)? libecs::INF : -log(theRng->FixedU())/a0_c;
           if(tau1 < tau2)
             {
-              std::cout << "set state 1" << std::endl;
               theState = 1;
               return tau1;
             }
-          std::cout << "set state 2" << std::endl;
           theState = 2;
           return tau2;
         }
@@ -178,15 +173,12 @@ public:
       switch(theState)
         {
         case 0:
-          std::cout << "firing 0:" << currSSA << " time:" << theTime << std::endl;
           fireSSA();
           break;
         case 1:
-          std::cout << "firing 1" << std::endl;
           fireNonCritical(tau1);
           break;
         case 2:
-          std::cout << "firing 2" << std::endl;
           fireCritical();
           fireNonCritical(tau2);
           break;
@@ -213,13 +205,9 @@ public:
         {
           if(!R[j]->getIsCritical())
             {
-              std::cout << "reacting:" << R[j]->getIDString() << " val:" << R[j]->getPropensity()*aTau << " tau:" << aTau << std::endl;
               const unsigned K(poisson(R[j]->getPropensity()*aTau));
-              std::cout << "reacting:" << R[j]->getIDString() << " K:" << K
-                << std::endl;
               for(unsigned i(0); i != K; ++i)
                 {
-                  std::cout << "i:" << i << std::endl;
                   R[j]->react();
                 }
             }
