@@ -169,6 +169,10 @@ public:
     {
       return theInterval;
     }
+  virtual double getInitInterval()
+    {
+      return getNewInterval();
+    }
   virtual void setPriorityQueue(ProcessPriorityQueue* aPriorityQueue)
     {
       thePriorityQueue = aPriorityQueue;

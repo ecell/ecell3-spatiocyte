@@ -36,6 +36,16 @@ LIBECS_DM_INIT(SpatiocyteNextReactionProcess, Process);
 
 void SpatiocyteNextReactionProcess::fire()
 {
+  if(react())
+    {
+      ReactionProcess::fire();
+      return;
+    }
+  requeue();
+}
+
+bool SpatiocyteNextReactionProcess::react()
+{
   if(A)
     {
       A->updateMolecules();
@@ -51,8 +61,7 @@ void SpatiocyteNextReactionProcess::fire()
           moleculeC = C->getRandomCompVoxel(SearchVacant);
           if(moleculeC == NULL)
             {
-              requeue();
-              return;
+              return false;
             }
           C->addMolecule(moleculeC);
         }
@@ -68,14 +77,11 @@ void SpatiocyteNextReactionProcess::fire()
         {
           if(BindingSite == -1)
             {
-              if(!reactACD(A, C, D))
-                {
-                  return;
-                }
+              return reactACD(A, C, D);
             }
-          else if(!reactACDbind(A, C, D))
+          else
             {
-              return;
+              return reactACDbind(A, C, D);
             }
         }
       //nonHD_A -> nonHD_C:
@@ -83,15 +89,11 @@ void SpatiocyteNextReactionProcess::fire()
         {
           if(BindingSite == -1)
             {
-              if(!reactAC(A, C))
-                {
-                  requeue();
-                  return;
-                }
+              return reactAC(A, C);
             }
-          else if(!reactACbind(A, C))
+          else
             {
-              return;
+              return reactACbind(A, C);
             }
         }
       //nonHD_A -> HD_C + HD_D:
@@ -128,8 +130,7 @@ void SpatiocyteNextReactionProcess::fire()
              }
           else
             {
-              requeue();
-              return;
+              return false;
             }
         }
       //HD_A -> nonHD_C:
@@ -138,8 +139,7 @@ void SpatiocyteNextReactionProcess::fire()
           moleculeC = reactvAC(variableA, C);
           if(moleculeC == NULL)
             {
-              requeue();
-              return;
+              return false;
             }
           else
             {
@@ -185,8 +185,7 @@ void SpatiocyteNextReactionProcess::fire()
             }
           if(moleculeC == NULL || moleculeD == NULL)
             {
-              requeue();
-              return;
+              return false;
             }
           variableA->addValue(coefficientA);
           C->addMolecule(moleculeC);
@@ -221,8 +220,7 @@ void SpatiocyteNextReactionProcess::fire()
           moleculeP = reactvAC(variableA, nonHD_p);
           if(moleculeP == NULL)
             {
-              requeue();
-              return;
+              return false;
             }
           variableA->addValue(coefficientA);
           nonHD_p->addMolecule(moleculeP);
@@ -249,8 +247,7 @@ void SpatiocyteNextReactionProcess::fire()
               moleculeC = reactvAvBC(C);
               if(moleculeC == NULL)
                 {
-                  requeue();
-                  return;
+                  return false;
                 }
               variableA->addValue(coefficientA);
               variableB->addValue(coefficientB);
@@ -280,8 +277,7 @@ void SpatiocyteNextReactionProcess::fire()
               moleculeP = reactvAvBC(nonHD_p);
               if(moleculeP == NULL)
                 {
-                  requeue();
-                  return;
+                  return false;
                 }
               variableA->addValue(coefficientA);
               variableB->addValue(coefficientB);
@@ -309,8 +305,7 @@ void SpatiocyteNextReactionProcess::fire()
                 }
               if(moleculeC == NULL || moleculeD == NULL)
                 {
-                  requeue();
-                  return;
+                  return false;
                 }
               variableA->addValue(coefficientA);
               variableB->addValue(coefficientB);
@@ -337,7 +332,7 @@ void SpatiocyteNextReactionProcess::fire()
             { 
               if(!reactACD(nonHD, C, D))
                 {
-                  return;
+                  return false;
                 }
               HD->addValue(coefficient);
             }
@@ -347,8 +342,7 @@ void SpatiocyteNextReactionProcess::fire()
             {
               if(!reactAC(nonHD, C))
                 {
-                  requeue();
-                  return;
+                  return false;
                 }
               HD->addValue(coefficient);
             }
@@ -378,8 +372,7 @@ void SpatiocyteNextReactionProcess::fire()
                 }
               if(!reactAC(nonHD, nonHD_p))
                 {
-                  requeue();
-                  return;
+                  return false;
                 }
               HD->addValue(coefficient);
               HD_p->addValue(coefficient_p);
@@ -391,6 +384,7 @@ void SpatiocyteNextReactionProcess::fire()
           //nonHD + nonHD -> nonHD + nonHD
           if(C && D)
             {
+              //always true reaction:
               reactABCD();
             }
           //nonHD + nonHD -> nonHD
@@ -399,20 +393,18 @@ void SpatiocyteNextReactionProcess::fire()
               //multiNonHD + nonHD -> nonHD
               if(A->getIsMultiscale())
                 {
-                  if(!reactMultiABC())
-                    {
-                      return;
-                    }
+                  return reactMultiABC();
                 }
               //nonHD + nonHD -> nonHD
               else
                 {
+                  //always true reaction:
                   reactABC();
                 }
             }
         }
     }
-  ReactionProcess::fire();
+  return true;
 }
 
 //MultiNonHD.nonHD -> nonHD
@@ -423,7 +415,6 @@ bool SpatiocyteNextReactionProcess::reactMultiABC()
   moleculeC = C->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
   if(moleculeC == NULL)
     {
-      requeue();
       return false;
     }
   A->removeMolecule(nextIndexA);
@@ -486,7 +477,6 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
                                              SearchVacant);
       if(moleculeD == NULL)
         {
-          requeue();
           return false;
         }
     }
@@ -498,7 +488,6 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
                                              SearchVacant);
       if(moleculeC == NULL)
         {
-          requeue();
           return false;
         }
     }
@@ -509,14 +498,12 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
         {
           //Only proceed if we can find an adjoining vacant voxel
           //of nonND which can be occupied by C:
-          requeue();
           return false;
         }
       moleculeD = d->getRandomAdjoiningVoxel(moleculeC, moleculeC,
                                              SearchVacant);
       if(moleculeD == NULL)
         {
-          requeue();
           return false;
         }
     }
@@ -596,7 +583,6 @@ bool SpatiocyteNextReactionProcess::reactACbind(Species* a, Species* c)
     {
       //Only proceed if we can find an adjoining vacant voxel
       //of nonND which can be occupied by C:
-      requeue();
       return false;
     }
   Tag tagA(a->getTag(indexA));
@@ -620,7 +606,6 @@ bool SpatiocyteNextReactionProcess::reactACDbind(Species* a, Species* c,
       moleculeD = d->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
       if(moleculeD == NULL)
         {
-          requeue();
           return false;
         }
       Tag tagA(a->getTag(indexA));
@@ -1186,7 +1171,7 @@ void SpatiocyteNextReactionProcess::printParameters()
           variableB->addValue(1);
           vB = true;
         }
-      interval = getNewInterval();
+      interval = getInitInterval();
       propensity = thePropensity; 
       if(a)
         {
@@ -1204,7 +1189,7 @@ void SpatiocyteNextReactionProcess::printParameters()
         {
           variableB->addValue(-1);
         }
-      getNewInterval();
+      getInitInterval();
     }
   std::cout << " k:" << k << " p = " << pFormula.str() << " = " << p
     << " nextTime:" << interval << " propensity:" << propensity << std::endl;

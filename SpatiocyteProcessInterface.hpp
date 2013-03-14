@@ -62,6 +62,7 @@ public:
   virtual bool getIsPriorityQueued() = 0;
   virtual bool getIsExternInterrupted() = 0;
   virtual double getNewInterval() = 0;
+  virtual double getInitInterval() = 0;
   virtual String getIDString() = 0;
   virtual void finalizeFire() = 0;
 };

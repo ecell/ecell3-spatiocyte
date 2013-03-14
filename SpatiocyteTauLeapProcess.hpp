@@ -46,12 +46,18 @@ public:
     }
   SpatiocyteTauLeapProcess():
     isParent(false),
+    currSSA(0),
     n(10),
     n_c(10),
+    nSSA(100),
     epsilon(0.03) {}
   virtual ~SpatiocyteTauLeapProcess() {}
   virtual void initialize()
     {
+      if(isInitialized)
+        {
+          return;
+        }
       SpatiocyteNextReactionProcess::initialize();
       const std::vector<Process*>& aProcesses(
                       theSpatiocyteStepper->getProcessVector());
@@ -103,7 +109,7 @@ public:
           isPriorityQueued = false;
         }
     }
-  bool getIsParent()
+  bool getIsParent() const
     {
       return isParent;
     }
@@ -120,29 +126,48 @@ public:
         }
       return L;
     }
+  virtual double getInitInterval()
+    {
+      if(getIsParent())
+        {
+          return getNewInterval();
+        }
+      return libecs::INF;
+    }
   virtual double getInterval(double aCurrentTime)
     {
-      return getNewInterval(aCurrentTime);
+      std::cout << "calling getInterval:" << getIDString() << std::endl;
+      return getNewInterval();
     }
-  virtual double getNewInterval(double aCurrentTime)
+  virtual double getNewInterval()
     {
-      double a0(0);
+      std::cout << "tau1:" << tau1 << " a0:" << a0 << " theTime:" << theTime << " " << getStepper()->getCurrentTime() << " id:" << getIDString() << std::endl;
+      if(!theState && currSSA)
+        {
+          --currSSA;
+          updateTotalPropensity();
+          return -log(theRng->FixedU())/a0;
+        }
+      a0 = 0;
       double a0_c(0);
-      tau1 = getTau(a0, a0_c);
+      tau1 = getTau(a0_c);
       if(a0)
         {
           if(tau1 < n/a0)
             {
-              std::cout << "do SSA" << std::endl;
               theState = 0;
-              return libecs::INF;
+              currSSA = nSSA-1;
+              std::cout << "set state 0 currSSA:" << currSSA << std::endl;
+              return -log(theRng->FixedU())/a0;
             }
           tau2 = (a0_c == 0)? libecs::INF : -log(theRng->FixedU())/a0_c;
           if(tau1 < tau2)
             {
+              std::cout << "set state 1" << std::endl;
               theState = 1;
               return tau1;
             }
+          std::cout << "set state 2" << std::endl;
           theState = 2;
           return tau2;
         }
@@ -153,21 +178,34 @@ public:
       switch(theState)
         {
         case 0:
-          std::cout << "firing SSA" << std::endl;
+          std::cout << "firing 0:" << currSSA << " time:" << theTime << std::endl;
+          fireSSA();
           break;
         case 1:
+          std::cout << "firing 1" << std::endl;
           fireNonCritical(tau1);
           break;
         case 2:
+          std::cout << "firing 2" << std::endl;
           fireCritical();
           fireNonCritical(tau2);
           break;
         }
-      SpatiocyteNextReactionProcess::requeue();
+      ReactionProcess::fire();
     }
-  void fireChild()
+  void fireSSA()
     {
-      SpatiocyteNextReactionProcess::fire();
+      const double a0r(a0*theRng->Fixed());
+      double aSum(0);
+      for(unsigned j(0); j != R.size(); ++j)
+        {
+          aSum += R[j]->getPropensity();
+          if(aSum > a0r)
+            {
+              R[j]->react();
+              return;
+            }
+        }
     }
   void fireNonCritical(const double aTau)
     {
@@ -175,10 +213,14 @@ public:
         {
           if(!R[j]->getIsCritical())
             {
+              std::cout << "reacting:" << R[j]->getIDString() << " val:" << R[j]->getPropensity()*aTau << " tau:" << aTau << std::endl;
               const unsigned K(poisson(R[j]->getPropensity()*aTau));
+              std::cout << "reacting:" << R[j]->getIDString() << " K:" << K
+                << std::endl;
               for(unsigned i(0); i != K; ++i)
                 {
-                  R[j]->fireChild();
+                  std::cout << "i:" << i << std::endl;
+                  R[j]->react();
                 }
             }
         }
@@ -190,7 +232,7 @@ public:
         {
           if(R[j]->getIsCritical())
             {
-              R[j]->fireChild();
+              R[j]->react();
               return;
             }
         }
@@ -198,7 +240,7 @@ public:
         {
           if(R[i]->getIsCritical())
             {
-              R[i]->fireChild();
+              R[i]->react();
               return;
             }
         }
@@ -219,6 +261,20 @@ public:
     }
   unsigned poisson(double _mean)
     {
+      using std::exp;
+      if(_mean < 10)
+        {
+          double p(exp(-_mean));
+          unsigned x(0);
+          double u(theRng->Fixed());
+          while(u > p)
+            {
+              u = u-p;
+              ++x;
+              p = _mean*p/x;
+            }
+          return x;
+        }
       using std::floor;
       using std::abs;
       using std::log; 
@@ -278,15 +334,22 @@ public:
             }
         }
     }
-  virtual void requeue() {}
-  double getTau(double& a0, double& a0_c)
+  void updateTotalPropensity()
+    {
+      a0 = 0;
+      for(unsigned j(0); j != R.size(); ++j)
+        {
+          a0 += R[j]->getNewPropensity();
+        }
+    }
+  double getTau(double& a0_c)
     {
       double tau(libecs::INF);
       std::vector<double> mu(S_rs.size(), 0);
       std::vector<double> sigma(S_rs.size(), 0);
       for(unsigned j(0); j != R.size(); ++j)
         {
-          const double a(R[j]->getPropensity());
+          const double a(R[j]->getNewPropensity());
           if(a)
             {
               a0 += a;
@@ -333,9 +396,36 @@ public:
           sigma_p[S_index[i]] += v_netNeg[i]*aMu;
         }
     }
-  double getPropensity()
+  virtual bool isDependentOn(const Process* aProcess) const
     {
-      return (this->*thePropensityMethod)();
+      if(dynamic_cast<const SpatiocyteTauLeapProcess*>(aProcess))
+        {
+          return false;
+        }
+      else if(getIsParent())
+        {
+          for(unsigned j(0); j != R.size(); ++j)
+            {
+              if(R[j]->isChildDependentOn(aProcess))
+                {
+                  return true;
+                }
+            }
+        }
+      return false;
+    }
+  bool isChildDependentOn(const Process* aProcess) const
+    {
+      return SpatiocyteNextReactionProcess::isDependentOn(aProcess);
+    }
+  double getPropensity() const
+    {
+      return thePropensity;
+    }
+  double getNewPropensity()
+    {
+      thePropensity = (this->*thePropensityMethod)();
+      return thePropensity;
     }
   double getEpsilon()
     {
@@ -458,9 +548,12 @@ public:
 private:
   bool isCritical;
   bool isParent;
+  unsigned currSSA;
   unsigned n;
   unsigned n_c;
   unsigned theState;
+  unsigned nSSA;
+  double a0;
   double epsilon;
   double tau1;
   double tau2;

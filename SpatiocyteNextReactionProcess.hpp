@@ -119,6 +119,7 @@ public:
   virtual void initializeFourth();
   virtual void printParameters();
   virtual bool isDependentOn(const Process*) const;
+  virtual bool react();
 protected:
   void updateMoleculesA();
   double getIntervalUnbindAB();
