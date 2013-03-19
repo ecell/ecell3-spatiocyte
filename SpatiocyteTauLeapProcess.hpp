@@ -50,7 +50,7 @@ public:
     n(10),
     n_c(10),
     nSSA(100),
-    epsilon(0.003) {}
+    epsilon(0.03) {}
   virtual ~SpatiocyteTauLeapProcess() {}
   virtual void initialize()
     {
