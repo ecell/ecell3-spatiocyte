@@ -53,6 +53,66 @@ System System(/)
         Name HD;
         Value  0;  
     }
+    Variable Variable( At )
+    {
+        Name HD;
+        Value   10000;
+    }
+    Variable Variable( Bt )
+    {
+        Name HD;
+        Value   10000;
+    }
+    Variable Variable( Ct )
+    {
+        Name HD;
+        Value  0;  
+    }
+    Variable Variable( An )
+    {
+        Name HD;
+        Value   1000;
+    }
+    Variable Variable( Bn )
+    {
+        Name HD;
+        Value   0;
+    }
+    Variable Variable( Cn )
+    {
+        Name HD;
+        Value  0;  
+    }
+    Variable Variable( Ans )
+    {
+        Name HD;
+        Value   1000;
+    }
+    Variable Variable( Bns )
+    {
+        Name HD;
+        Value   0;
+    }
+    Variable Variable( Cns )
+    {
+        Name HD;
+        Value  0;  
+    }
+    Variable Variable( Ano )
+    {
+        Name HD;
+        Value   1000;
+    }
+    Variable Variable( Bno )
+    {
+        Name HD;
+        Value   0;
+    }
+    Variable Variable( Cno )
+    {
+        Name HD;
+        Value  0;  
+    }
    Process MoleculePopulateProcess( pop )
     {
       VariableReferenceList [_ Variable:/:Bm]; 
@@ -71,6 +131,51 @@ System System(/)
                             [_ Variable:/:Bm -1]   
                             [_ Variable:/:Cm 1];    
       k                     1e-45;
+    }
+   Process SpatiocyteTauLeapProcess( reaction3 )
+    {
+      VariableReferenceList [_ Variable:/:At -2]   
+                            [_ Variable:/:Bt -1]   
+                            [_ Variable:/:Ct 1];    
+      k                     1e-45;
+    }
+   Process SpatiocyteTauLeapProcess( reaction4 )
+    {
+      VariableReferenceList [_ Variable:/:An -1]   
+                            [_ Variable:/:Bn 1];    
+      k                     0.1;
+    }
+   Process SpatiocyteTauLeapProcess( reaction5 )
+    {
+      VariableReferenceList [_ Variable:/:Bn -1]   
+                            [_ Variable:/:Cn 1];    
+      k                     0.025;
+    }
+   Process SpatiocyteNextReactionProcess( reaction6 )
+    {
+      VariableReferenceList [_ Variable:/:Ans -1]   
+                            [_ Variable:/:Bns 1];    
+      k                     0.1;
+    }
+   Process SpatiocyteNextReactionProcess( reaction7 )
+    {
+      VariableReferenceList [_ Variable:/:Bns -1]   
+                            [_ Variable:/:Cns 1];    
+      k                     0.025;
+    }
+   Process MassActionProcess( reaction8 )
+    {
+      StepperID       DE;
+      VariableReferenceList [_ Variable:/:Ano -1]   
+                            [_ Variable:/:Bno 1];    
+      k                     0.1;
+    }
+   Process MassActionProcess( reaction9 )
+    {
+      StepperID       DE;
+      VariableReferenceList [_ Variable:/:Bno -1]   
+                            [_ Variable:/:Cno 1];    
+      k                     0.025;
     }
    Process IteratingLogProcess(logiter)
     {

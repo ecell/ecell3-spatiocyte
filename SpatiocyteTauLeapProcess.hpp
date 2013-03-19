@@ -50,7 +50,7 @@ public:
     n(10),
     n_c(10),
     nSSA(100),
-    epsilon(0.03) {}
+    epsilon(0.003) {}
   virtual ~SpatiocyteTauLeapProcess() {}
   virtual void initialize()
     {
@@ -247,63 +247,58 @@ public:
         10.604602902745251,
         12.801827480081469};
     }
-  unsigned poisson(double _mean)
+  unsigned poisson(const double mean) const
     {
-      using std::exp;
-      if(_mean < 10)
+      if(mean < 10)
         {
-          double p(exp(-_mean));
+          double p(exp(-mean));
           unsigned x(0);
           double u(theRng->Fixed());
           while(u > p)
             {
               u = u-p;
               ++x;
-              p = _mean*p/x;
+              p = mean*p/x;
             }
           return x;
         }
-      using std::floor;
-      using std::abs;
-      using std::log; 
-      using std::sqrt;
-      _ptrd.smu = sqrt(_mean);
-      _ptrd.b = 0.931 + 2.53 * _ptrd.smu;
-      _ptrd.a = -0.059 + 0.02483 * _ptrd.b;
-      _ptrd.inv_alpha = 1.1239 + 1.1328 / (_ptrd.b - 3.4);
-      _ptrd.v_r = 0.9277 - 3.6224 / (_ptrd.b - 2);
+      const double psmu(sqrt(mean));
+      const double pb(0.931 + 2.53 * psmu);
+      const double pa(-0.059 + 0.02483 * pb);
+      const double pinv_alpha(1.1239 + 1.1328 / (pb - 3.4));
+      const double pv_r(0.9277 - 3.6224 / (pb - 2));
       while(true)
         {
           double u;
           double v(theRng->Fixed());
-          if(v <= 0.86*_ptrd.v_r)
+          if(v <= 0.86*pv_r)
             {
-              u = v/_ptrd.v_r - 0.43;
+              u = v/pv_r - 0.43;
               return static_cast<unsigned>(floor(
-                (2*_ptrd.a/(0.5-abs(u)) + _ptrd.b)*u + _mean + 0.445));
-            } 
-          if(v >= _ptrd.v_r)
+                (2*pa/(0.5-abs(u)) + pb)*u + mean + 0.445));
+            }
+          if(v >= pv_r)
             {
               u = theRng->Fixed() - 0.5;
             }
           else
             {
-              u = v/_ptrd.v_r - 0.93;
+              u = v/pv_r - 0.93;
               u = ((u < 0)? -0.5 : 0.5) - u;
-              v = theRng->Fixed()*_ptrd.v_r;
+              v = theRng->Fixed()*pv_r;
             } 
           const double us(0.5 - abs(u));
           if(us < 0.013 && v > us)
             {
               continue;
             } 
-          const double K(floor((2*_ptrd.a/us + _ptrd.b)*u+_mean+0.445));
-          v = v*_ptrd.inv_alpha/(_ptrd.a/(us*us) + _ptrd.b); 
+          const double K(floor((2*pa/us + pb)*u+mean+0.445));
+          v = v*pinv_alpha/(pa/(us*us) + pb); 
           const double log_sqrt_2pi(0.91893853320467267); 
           if(K >= 10)
             {
-              if(log(v*_ptrd.smu) <= (K + 0.5)*log(_mean/K)
-                               - _mean
+              if(log(v*psmu) <= (K + 0.5)*log(mean/K)
+                               - mean
                                - log_sqrt_2pi
                                + K
                                - (1/12. - (1/360. - 1/(1260.*K*K))/(K*K))/K)
@@ -313,8 +308,8 @@ public:
             }
           else if(K >= 0)
             {
-              if(log(v) <= K*log(_mean)
-                           - _mean
+              if(log(v) <= K*log(mean)
+                           - mean
                            - poisson_table[static_cast<unsigned>(K)])
                 {
                   return static_cast<unsigned>(K);
@@ -556,14 +551,6 @@ private:
   std::vector<Variable*> S_netNeg;
   std::vector<Variable*> S_rs;
   std::vector<double> poisson_table;
-  struct
-    {
-      double v_r;
-      double a;
-      double b;
-      double smu;
-      double inv_alpha;
-    } _ptrd;
 };
 
 #endif /* __SpatiocyteTauLeapProcess_hpp */
