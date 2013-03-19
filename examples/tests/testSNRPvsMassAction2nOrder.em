@@ -46,6 +46,7 @@ System System(/)
     }
     Variable Variable( Bm )
     {
+        Name HD;
         Value   10000;
     }
     Variable Variable( Cm )
@@ -113,16 +114,19 @@ System System(/)
         Name HD;
         Value  0;  
     }
-   Process MoleculePopulateProcess( pop )
-    {
-      VariableReferenceList [_ Variable:/:Bm]; 
-    }
    Process SpatiocyteNextReactionProcess( reaction )
     {
       VariableReferenceList [_ Variable:/:A -2]   
                             [_ Variable:/:B -1]   
                             [_ Variable:/:C 1];    
       k                     1e-45;
+    }
+   Process SpatiocyteNextReactionProcess( reaction_ )
+    {
+      VariableReferenceList [_ Variable:/:C -1]   
+                            [_ Variable:/:A 2]   
+                            [_ Variable:/:B 1];    
+      k                     1;
     }
    Process MassActionProcess( reaction2 )
     {
@@ -132,12 +136,27 @@ System System(/)
                             [_ Variable:/:Cm 1];    
       k                     1e-45;
     }
+   Process MassActionProcess( reaction2_ )
+    {
+      StepperID       DE;
+      VariableReferenceList [_ Variable:/:Cm -1]   
+                            [_ Variable:/:Am 2]   
+                            [_ Variable:/:Bm 1];    
+      k                     1;
+    }
    Process SpatiocyteTauLeapProcess( reaction3 )
     {
       VariableReferenceList [_ Variable:/:At -2]   
                             [_ Variable:/:Bt -1]   
                             [_ Variable:/:Ct 1];    
       k                     1e-45;
+    }
+   Process SpatiocyteTauLeapProcess( reaction3_ )
+    {
+      VariableReferenceList [_ Variable:/:Ct -1]   
+                            [_ Variable:/:At 2]   
+                            [_ Variable:/:Bt 1];    
+      k                     1;
     }
    Process SpatiocyteTauLeapProcess( reaction4 )
     {

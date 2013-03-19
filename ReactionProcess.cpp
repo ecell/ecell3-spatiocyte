@@ -89,7 +89,7 @@ void ReactionProcess::calculateOrder()
           //The second product, D:
           else if(D == NULL && variableD == NULL)
             {
-              coefficientC = aCoefficient;
+              coefficientD = aCoefficient;
               if(aVariable->getName() == "HD")
                 {
                   variableD = aVariable;

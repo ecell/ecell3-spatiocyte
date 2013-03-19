@@ -68,10 +68,6 @@ public:
   virtual void printParameters() {}
   virtual void updateResizedLattice() {}
   virtual void finalizeFire() {}
-  virtual void prepreinitialize()
-    {
-      //Process::prepreinitialize();
-    }
   virtual void initialize()
     {
       if(isInitialized)
