@@ -134,31 +134,16 @@ react.p = 0.5
 #react.SearchVacant = 0
 #react.k = 1.5e+6
 
-react = theSimulator.createEntity('SpatiocyteTauLeapProcess', 'Process:/:dissocPGsLip')
+react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:dissocPGsLip')
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '-1']]
-react.VariableReferenceList = [['_', 'Variable:/:Lipid', '0']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG', '1']]
 react.Deoligomerize = 6
-react.ImplicitUnbind = 1
-react.SearchVacant = 0
 react.k = 216666
 
-react = theSimulator.createEntity('SpatiocyteTauLeapProcess', 'Process:/:dissocMinDPGs')
+react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:dissocMinDPGs')
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '-1']]
-react.VariableReferenceList = [['_', 'Variable:/Surface:MinD', '0']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '1']]
 react.Deoligomerize = 6
-react.ImplicitUnbind = 1
-react.SearchVacant = 0
-react.k = 216666
-
-react = theSimulator.createEntity('SpatiocyteTauLeapProcess', 'Process:/:dissocMinDPGss')
-react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '-1']]
-react.VariableReferenceList = [['_', 'Variable:/:Lipid', '0']]
-react.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '1']]
-react.Deoligomerize = 6
-react.ImplicitUnbind = 1
-react.SearchVacant = 0
 react.k = 216666
 
 #diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseMinDv')

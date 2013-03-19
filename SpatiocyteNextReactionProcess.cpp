@@ -89,7 +89,14 @@ bool SpatiocyteNextReactionProcess::react()
         {
           if(BindingSite == -1)
             {
-              return reactAC(A, C);
+              if(theDeoligomerIndex)
+                {
+                  return reactDeoligomerize(A, C);
+                }
+              else
+                {
+                  return reactAC(A, C);
+                }
             }
           else
             {
@@ -515,6 +522,40 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
 }
 
 //nonHD (+ E) -> nonHD
+bool SpatiocyteNextReactionProcess::reactDeoligomerize(Species* a, Species* c)
+{
+  unsigned indexA(a->getRandomOligomerIndex(theDeoligomerIndex));
+  moleculeA = a->getMolecule(indexA);
+  moleculeC = NULL;
+  if(a->getVacantID() == c->getVacantID() || a->getID() == c->getVacantID())
+    {
+      moleculeC = moleculeA;
+    }
+  else
+    {
+      moleculeC = c->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
+      if(moleculeC == NULL)
+        {
+          //Only proceed if we can find an adjoining vacant voxel
+          //of nonND which can be occupied by C:
+          return false;
+        }
+    }
+  if(a->getIsOnMultiscale() && c->getIsOnMultiscale())
+    {
+      c->addMoleculeInMulti(moleculeC, a->getTag(indexA).vacantIdx);
+      a->softRemoveMolecule(indexA);
+    }
+  else
+    {
+      Tag tagA(a->getTag(indexA));
+      a->removeMolecule(indexA);
+      c->addMolecule(moleculeC, tagA);
+    }
+  return true;
+}
+
+//nonHD (+ E) -> nonHD
 bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
 {
   unsigned indexA(a->getRandomIndex());
@@ -685,6 +726,11 @@ double SpatiocyteNextReactionProcess::getPropensityFirstOrder()
   return p*theVariableReferenceVector[0].getVariable()->getValue();
 }
 
+double SpatiocyteNextReactionProcess::getPropensityFirstOrderDeoligomerize() 
+{
+  return p*A->getBoundCnt(theDeoligomerIndex);
+}
+
 //Need to solve homodimerization reaction of two substrate species (Size-1):
 double SpatiocyteNextReactionProcess::getPropensitySecondOrderHetero() 
 {
@@ -798,23 +844,28 @@ void SpatiocyteNextReactionProcess::preinitialize()
       setDeoligomerIndex(Deoligomerize);
       for(unsigned i(0); i != Deoligomerize-1; ++i)
         {
+          const unsigned aDeoligomerIndex(i+1);
           Process* aProcess(SpatiocyteStepper::createProcess(
              getPropertyInterface().getClassName(),
-             String(getFullID().getID()+int2str(i+1)),
+             String(getFullID().getID()+int2str(aDeoligomerIndex)),
              getStepper()->getModel()->getSystem(getFullID().getSystemPath()),
              getStepper()->getModel()));
           aProcess->setStepper(getStepper());
           aProcess->setPriority(getPriority());
           SpatiocyteNextReactionProcess* aSNRP(
                      dynamic_cast<SpatiocyteNextReactionProcess*>(aProcess));
-          aSNRP->setk(k);
-          aSNRP->setp(p);
+          aSNRP->setk(k/aDeoligomerIndex);
+          //aSNRP->setp(p/aDeoligomerIndex);
+          std::cout << aSNRP->getIDString() << " k:" << aSNRP->getk() << " p:" << p << std::endl;
           aSNRP->setSearchVacant(SearchVacant);
-          aSNRP->setDeoligomerIndex(i+1);
+          aSNRP->setDeoligomerIndex(aDeoligomerIndex);
           aSNRP->setImplicitUnbind(ImplicitUnbind);
           aSNRP->setVariableReferences(theVariableReferenceVector);
           aProcess->preinitialize();
         }
+      setk(k/Deoligomerize);
+      std::cout << getIDString() << " k:" << k << " p:" << p << std::endl;
+      //setp(p/Deoligomerize);
     }
 }
 
@@ -1337,8 +1388,16 @@ void SpatiocyteNextReactionProcess::calculateOrder()
     }
   else if(theOrder == 1) // one substrate, first order.
     {
-      thePropensityMethod = &SpatiocyteNextReactionProcess::
-        getPropensityFirstOrder;
+      if(theDeoligomerIndex)
+        {
+          thePropensityMethod = &SpatiocyteNextReactionProcess::
+            getPropensityFirstOrderDeoligomerize;
+        }
+      else
+        {
+          thePropensityMethod = &SpatiocyteNextReactionProcess::
+            getPropensityFirstOrder;
+        }
     }
   else
     { 

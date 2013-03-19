@@ -128,6 +128,7 @@ protected:
   virtual void calculateOrder();
   virtual bool reactACD(Species*, Species*, Species*);
   virtual bool reactAC(Species*, Species*);
+  virtual bool reactDeoligomerize(Species*, Species*);
   virtual bool reactACbind(Species*, Species*);
   virtual bool reactACDbind(Species*, Species*, Species*);
   virtual void reactABCD();
@@ -138,6 +139,7 @@ protected:
   virtual Voxel* reactvAvBC(Species*);
   double getPropensityZerothOrder(); 
   double getPropensityFirstOrder();
+  double getPropensityFirstOrderDeoligomerize();
   double getPropensitySecondOrderHomo(); 
   double getPropensitySecondOrderHetero(); 
   void removeMoleculeE();

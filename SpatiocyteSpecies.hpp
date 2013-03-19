@@ -1864,6 +1864,10 @@ public:
             }
         }
     }
+  unsigned getBoundCnt(const unsigned anIndex)
+    {
+      return theBoundCnts[anIndex];
+    }
   std::vector<unsigned>& getBoundCnts()
     {
       return theBoundCnts;
@@ -2088,6 +2092,27 @@ public:
   unsigned getRandomIndex()
     {
       return theRng.Integer(theMoleculeSize);
+    }
+  unsigned getRandomOligomerIndex(const unsigned boundCnt)
+    {
+      const unsigned start(theRng.Integer(theMoleculeSize));
+      for(unsigned i(start); i != theMoleculeSize; ++i)
+        {
+          if(theTags[i].boundCnt == boundCnt)
+            {
+              return i;
+            }
+        }
+      for(unsigned i(0); i != start; ++i)
+        {
+          if(theTags[i].boundCnt == boundCnt)
+            {
+              return i;
+            }
+        }
+      std::cout << "shouldn't get here deoligomerize:" << getIDString() <<
+        std::endl;
+      return 0;
     }
   Voxel* getRandomMolecule()
     {
