@@ -1144,25 +1144,40 @@ void SpatiocyteStepper::setSystemSize(System* aSystem, double aSize)
     }
   else
     {
-      createVariable(aSystem, "SIZE")->setValue(aSize);
+      createVariable("SIZE", aSystem, getModel())->setValue(aSize);
     }
 }
 
-Variable* SpatiocyteStepper::createVariable(System* aSystem, String anID)
+Variable* SpatiocyteStepper::createVariable(const String& anID,
+                                            const System* aSystem,
+                                            Model* aModel)
 {
   String anEntityType("Variable");
   SystemPath aSystemPath(aSystem->getSystemPath());
   aSystemPath.push_back(aSystem->getID());
   FullID aFullID(anEntityType, aSystemPath, anID);
   Variable* aVariable(reinterpret_cast<Variable*>(
-                              getModel()->createEntity("Variable", aFullID)));
+                              aModel->createEntity("Variable", aFullID)));
   aVariable->setValue(0);
   return aVariable;
 }
 
+Process* SpatiocyteStepper::createProcess(const String& aClassname,
+                                          const String& anID,
+                                          const System* aSystem,
+                                          Model* aModel)
+{
+  String anEntityType("Process");
+  SystemPath aSystemPath(aSystem->getSystemPath());
+  aSystemPath.push_back(aSystem->getID());
+  FullID aFullID(anEntityType, aSystemPath, anID);
+  return reinterpret_cast<Process*>(aModel->createEntity(aClassname, aFullID));
+}
+
+
 Species* SpatiocyteStepper::createSpecies(System* aSystem, String anID)
 {
-  Variable* aVariable(createVariable(aSystem, anID));
+  Variable* aVariable(createVariable(anID, aSystem, getModel()));
   return addSpecies(aVariable);
 }
 

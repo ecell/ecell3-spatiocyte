@@ -226,10 +226,10 @@ public:
       theTagSpeciesList.push_back(aSpecies);
       aSpecies->addTaggedSpecies(this);
     }
-  void setIsDeoligomerize(Species* aSpecies)
+  void setIsDeoligomerize(Species* aSpecies, const unsigned aSize)
     {
       isDeoligomerize = true;
-      theBoundCnts.resize(theDiffuseSize+1);
+      theBoundCnts.resize(aSize+1);
       theDeoligomerizedProduct = aSpecies;
     }
   void setIsPeriodic()

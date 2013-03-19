@@ -71,7 +71,9 @@ public:
   void createSpecies();
   Species* addSpecies(Variable*);
   Species* createSpecies(System*, String);
-  Variable* createVariable(System*, String);
+  static Variable* createVariable(const String&, const System*, Model*);
+  static Process* createProcess(const String&, const String&, const System*,
+                                Model*);
   Species* getSpecies(Variable*);
   std::vector<Species*> getSpecies();
   Point coord2point(unsigned);

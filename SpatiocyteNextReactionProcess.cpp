@@ -790,6 +790,44 @@ void SpatiocyteNextReactionProcess::updateMoleculesA()
     }
 }
 
+void SpatiocyteNextReactionProcess::preinitialize()
+{
+  ReactionProcess::preinitialize();
+  if(Deoligomerize)
+    {
+      setDeoligomerIndex(Deoligomerize);
+      for(unsigned i(0); i != Deoligomerize-1; ++i)
+        {
+          Process* aProcess(SpatiocyteStepper::createProcess(
+             getPropertyInterface().getClassName(),
+             String(getFullID().getID()+int2str(i+1)),
+             getStepper()->getModel()->getSystem(getFullID().getSystemPath()),
+             getStepper()->getModel()));
+          aProcess->setStepper(getStepper());
+          aProcess->setPriority(getPriority());
+          SpatiocyteNextReactionProcess* aSNRP(
+                     dynamic_cast<SpatiocyteNextReactionProcess*>(aProcess));
+          aSNRP->setk(k);
+          aSNRP->setp(p);
+          aSNRP->setSearchVacant(SearchVacant);
+          aSNRP->setDeoligomerIndex(i+1);
+          aSNRP->setImplicitUnbind(ImplicitUnbind);
+          aSNRP->setVariableReferences(theVariableReferenceVector);
+          aProcess->preinitialize();
+        }
+    }
+}
+
+void SpatiocyteNextReactionProcess::setDeoligomerIndex(const unsigned anIndex)
+{
+  theDeoligomerIndex = anIndex;
+}
+
+void SpatiocyteNextReactionProcess::setVariableReferences(const VariableReferenceVector& aVariableReferenceVector)
+{
+  theVariableReferenceVector = aVariableReferenceVector;
+}
+
 void SpatiocyteNextReactionProcess::initializeSecond()
 {
   ReactionProcess::initializeSecond();
@@ -830,7 +868,7 @@ void SpatiocyteNextReactionProcess::initializeSecond()
     {
       if(Deoligomerize)
         {
-          A->setIsDeoligomerize(C);
+          A->setIsDeoligomerize(C, Deoligomerize);
         }
     }
 }

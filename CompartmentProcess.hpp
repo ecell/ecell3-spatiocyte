@@ -149,6 +149,14 @@ public:
             {
               theVacantCompSpecies.push_back(aSpecies);
             }
+          if(RegularLattice)
+            {
+              aSpecies->setIsRegularLattice(theDiffuseSize);
+            }
+          if(Periodic)
+            {
+              aSpecies->setIsPeriodic();
+            }
         }
       if(!DiffuseRadius)
         {
@@ -186,14 +194,6 @@ public:
           //to be overwritten by DiffusionProcess in initializeSecond:
           theLipidCompSpecies[i]->setVacantSpecies(theLipidSpecies);
           theLipidCompSpecies[i]->setComp(theComp);
-          if(RegularLattice)
-            {
-              theLipidCompSpecies[i]->setIsRegularLattice(theDiffuseSize);
-            }
-          if(Periodic)
-            {
-              theLipidCompSpecies[i]->setIsPeriodic();
-            }
         }
       for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
         {
@@ -205,14 +205,6 @@ public:
           if(theLipidSpecies)
             {
               theVacantCompSpecies[i]->setIsMultiscale();
-            }
-          if(RegularLattice)
-            {
-              theVacantCompSpecies[i]->setIsRegularLattice(theDiffuseSize);
-            }
-          if(Periodic)
-            {
-              theVacantCompSpecies[i]->setIsPeriodic();
             }
         }
     }

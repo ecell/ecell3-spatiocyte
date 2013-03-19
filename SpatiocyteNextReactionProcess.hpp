@@ -107,6 +107,7 @@ public:
           initSizeD = variableD->getValue();
         }
     }
+  virtual void preinitialize();
   virtual void initializeSecond();
   virtual void initializeThird();
   virtual bool isContinuous() 
@@ -141,6 +142,8 @@ protected:
   double getPropensitySecondOrderHetero(); 
   void removeMoleculeE();
   void checkExternStepperInterrupted();
+  void setVariableReferences(const VariableReferenceVector&);
+  void setDeoligomerIndex(const unsigned);
 protected:
   double initSizeA;
   double initSizeB;
@@ -154,6 +157,7 @@ protected:
   int BindingSite;
   int ImplicitUnbind;
   unsigned nextIndexA;
+  unsigned theDeoligomerIndex;
   std::stringstream pFormula;
   PropensityMethod thePropensityMethod;  
   std::vector<Voxel*> moleculesA;
