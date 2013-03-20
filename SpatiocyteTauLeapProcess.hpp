@@ -50,7 +50,7 @@ public:
     n(10),
     n_c(10),
     nSSA(100),
-    epsilon(0.003) {}
+    epsilon(0.03) {}
   virtual ~SpatiocyteTauLeapProcess() {}
   virtual void initialize()
     {
@@ -134,21 +134,121 @@ public:
         }
       return libecs::INF;
     }
+  double getTau(const double anEpsilon)
+    {
+      double tau(libecs::INF);
+      std::vector<double> mu(S_rs.size(), 0);
+      std::vector<double> sigma(S_rs.size(), 0);
+      for(unsigned j(0); j != R.size(); ++j)
+        {
+          const double a(R[j]->getNewPropensity());
+          if(a)
+            {
+              a0 += a;
+              //If the reaction is non-critical:
+              if(R[j]->getL() >= n_c)
+                {
+                  R[j]->addMuSigma(mu, sigma, a);
+                }
+              else
+                {
+                  a0_c += a;
+                  R[j]->setIsCritical();
+                }
+            }
+        }
+      for(unsigned i(0); i != S_rs.size(); ++i)
+        {
+          const double x(S_rs[i]->getValue());
+          const double ex_g(std::max(anEpsilon*x/(this->*g[i])(x), 1.0));
+          const double tmp(std::min(ex_g/fabs(mu[i]), ex_g*ex_g/sigma[i]));
+          if(tmp < tau)
+            {
+              tau = tmp;
+            }
+        }
+      return tau;
+    }
+  void update_a0()
+    {
+      a0 = 0;
+      for(unsigned j(0); j != R.size(); ++j)
+        {
+          a0 += R[j]->getNewPropensity();
+        }
+    }
+  void update_a0_a0_c()
+    {
+      a0 = 0;
+      a0_c = 0;
+      for(unsigned j(0); j != R.size(); ++j)
+        {
+          const double a(R[j]->getNewPropensity());
+          if(a)
+            {
+              a0 += a;
+              //If the reaction is non-critical:
+              if(R[j]->getL() < n_c)
+                {
+                  a0_c += a;
+                  R[j]->setIsCritical();
+                }
+            }
+        }
+    }
   virtual double getInterval(double aCurrentTime)
     {
-      return getNewInterval();
-    }
-  virtual double getNewInterval()
-    {
+      if(theTime == libecs::INF)
+        {
+          return getNewInterval();
+        }
       if(!theState && currSSA)
         {
           --currSSA;
-          updateTotalPropensity();
+          const double a0_old(a0); 
+          update_a0();
+          return a0_old/a0*(theTime-aCurrentTime);
+        }
+      //std::cout << "old:" << getIDString() << std::endl;
+      const double a0_old(a0); 
+      const double a0_c_old(a0_c); 
+      update_a0_a0_c();
+      const double tau1_old(tau1);
+      tau1 = a0_old/a0*tau1;
+      epsilon = (aCurrentTime-(theTime-tau1_old))/tau1*epsilon;
+      if(a0)
+        {
+          if(tau1 < n/a0)
+            {
+              currSSA = nSSA-1;
+              if(!theState)
+                {
+                  return a0_old/a0*(theTime-aCurrentTime);
+                }
+              theState = 0;
+              return -log(theRng->FixedU())/a0;
+            }
+          tau2 = (a0_c == 0)? libecs::INF:a0_c_old/a0_c*tau2;
+          if(tau1 < tau2)
+            {
+              theState = 1;
+              return tau1;
+            }
+          theState = 2;
+          return tau2;
+        }
+      return libecs::INF;
+    }
+  virtual double getNewInterval()
+    {
+      //std::cout << "new:" << getIDString() << std::endl;
+      if(!theState && currSSA)
+        {
+          --currSSA;
+          update_a0();
           return -log(theRng->FixedU())/a0;
         }
-      a0 = 0;
-      double a0_c(0);
-      tau1 = getTau(a0_c);
+      tau1 = getTau(epsilon);
       if(a0)
         {
           if(tau1 < n/a0)
@@ -173,12 +273,15 @@ public:
       switch(theState)
         {
         case 0:
+          //std::cout << "fire 0" << std::endl;
           fireSSA();
           break;
         case 1:
+          //std::cout << "fire 1" << std::endl;
           fireNonCritical(tau1);
           break;
         case 2:
+          //std::cout << "fire 2" << std::endl;
           fireCritical();
           fireNonCritical(tau2);
           break;
@@ -194,6 +297,7 @@ public:
           aSum += R[j]->getPropensity();
           if(aSum > a0r)
             {
+              //std::cout << "ssa:" << R[j]->getIDString() << std::endl;
               R[j]->react();
               return;
             }
@@ -208,6 +312,7 @@ public:
               const unsigned K(poisson(R[j]->getPropensity()*aTau));
               for(unsigned i(0); i != K; ++i)
                 {
+                  //std::cout << "noncrit:" << R[j]->getIDString() << std::endl;
                   R[j]->react();
                 }
             }
@@ -220,6 +325,7 @@ public:
         {
           if(R[j]->getIsCritical())
             {
+              //std::cout << "crit:" << R[j]->getIDString() << std::endl;
               R[j]->react();
               return;
             }
@@ -228,6 +334,7 @@ public:
         {
           if(R[i]->getIsCritical())
             {
+              //std::cout << "crit:" << R[j]->getIDString() << std::endl;
               R[i]->react();
               return;
             }
@@ -316,49 +423,6 @@ public:
                 }
             }
         }
-    }
-  void updateTotalPropensity()
-    {
-      a0 = 0;
-      for(unsigned j(0); j != R.size(); ++j)
-        {
-          a0 += R[j]->getNewPropensity();
-        }
-    }
-  double getTau(double& a0_c)
-    {
-      double tau(libecs::INF);
-      std::vector<double> mu(S_rs.size(), 0);
-      std::vector<double> sigma(S_rs.size(), 0);
-      for(unsigned j(0); j != R.size(); ++j)
-        {
-          const double a(R[j]->getNewPropensity());
-          if(a)
-            {
-              a0 += a;
-              //If the reaction is non-critical:
-              if(R[j]->getL() >= n_c)
-                {
-                  R[j]->addMuSigma(mu, sigma, a);
-                }
-              else
-                {
-                  a0_c += a;
-                  R[j]->setIsCritical();
-                }
-            }
-        }
-      for(unsigned i(0); i != S_rs.size(); ++i)
-        {
-          const double x(S_rs[i]->getValue());
-          const double ex_g(std::max(epsilon*x/(this->*g[i])(x), 1.0));
-          const double tmp(std::min(ex_g/fabs(mu[i]), ex_g*ex_g/sigma[i]));
-          if(tmp < tau)
-            {
-              tau = tmp;
-            }
-        }
-      return tau;
     }
   void setIsCritical()
     {
@@ -537,7 +601,9 @@ private:
   unsigned theState;
   unsigned nSSA;
   double a0;
+  double a0_c;
   double epsilon;
+  double old_epsilon;
   double tau1;
   double tau2;
   std::vector<unsigned> S_index;
