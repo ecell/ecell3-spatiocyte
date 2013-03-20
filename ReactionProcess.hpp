@@ -83,16 +83,14 @@ public:
   SIMPLE_SET_GET_METHOD(Integer, SearchVacant);
   virtual void fire()
     {
-      const double aCurrentTime(theTime); // do this only for the Processes in Q
       requeue(); //theTop in thePriorityQueue is still this process since
       //we have not interrupted other processes to update their queue. 
       //So it is valid to call requeue, which only requeues theTop process, 
       //assuming it to be this process.
-      for(std::vector<SpatiocyteProcess*>::const_iterator 
-          i(theInterruptedProcesses.begin());
-          i!=theInterruptedProcesses.end(); ++i)
-        {
-          (*i)->substrateValueChanged(aCurrentTime);
+      for(unsigned i(0); i != theInterruptedProcesses.size(); ++i)
+        { 
+          theSpatiocyteStepper->addInterruptedProcess(
+                                                theInterruptedProcesses[i]);
         }
     }
   GET_METHOD(Integer, Order)
@@ -138,8 +136,8 @@ public:
         {
           ReactionProcess*
             aReactionProcess(dynamic_cast<ReactionProcess*>(*i));
-          SpatiocyteProcess*
-            aSpatiocyteProcess(dynamic_cast<SpatiocyteProcess*>(*i));
+          SpatiocyteProcessInterface*
+            aSpatiocyteProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
           Process* me(dynamic_cast<Process*>(this));
           if(this != aReactionProcess && aSpatiocyteProcess->isDependentOn(me))
             {
@@ -232,7 +230,7 @@ protected:
   Voxel* moleculeF;
   Voxel* moleculeP;
   Voxel* moleculeS;
-  std::vector<SpatiocyteProcess*> theInterruptedProcesses;
+  std::vector<SpatiocyteProcessInterface*> theInterruptedProcesses;
 };
 
 #endif /* __ReactionProcess_hpp */

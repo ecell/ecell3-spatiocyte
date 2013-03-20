@@ -83,11 +83,10 @@ public:
       //The number of molecules may have changed for both reactant and product
       //species. We need to update SpatiocyteNextReactionProcesses which are
       //dependent on these species:
-      for(std::vector<SpatiocyteProcess*>::const_iterator 
-          i(theInterruptedProcesses.begin());
-          i!=theInterruptedProcesses.end(); ++i)
-        {
-          (*i)->substrateValueChanged(theSpatiocyteStepper->getCurrentTime());
+      for(unsigned i(0); i != theInterruptedProcesses.size(); ++i)
+        { 
+          theSpatiocyteStepper->addInterruptedProcess(
+                                                theInterruptedProcesses[i]);
         }
     }
   virtual void printParameters();

@@ -117,7 +117,9 @@ public:
   unsigned getID(const Voxel&) const;
   unsigned getID(const Voxel*) const;
   virtual GET_METHOD(Real, TimeScale) { return 0; }
+  void addInterruptedProcess(SpatiocyteProcessInterface*);
 private:
+  void interruptProcesses(const double);
   void setCompsCenterPoint();
   void setIntersectingCompartmentList();
   void setIntersectingParent();
@@ -214,6 +216,7 @@ private:
   std::vector<Voxel> theLattice;
   std::vector<Process*> theExternInterruptedProcesses;
   RandomLib::Random theRan;
+  std::vector<SpatiocyteProcessInterface*> theInterruptedProcesses;
 };
 
 #endif /* __SpatiocyteStepper_hpp */

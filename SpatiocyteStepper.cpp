@@ -683,9 +683,28 @@ inline void SpatiocyteStepper::step()
       //checkSpecies();
     }
   while(thePriorityQueue.getTop()->getTime() == getCurrentTime());
+  interruptProcesses(getCurrentTime());
   setNextTime(thePriorityQueue.getTop()->getTime());
-} 
+}
 
+void SpatiocyteStepper::addInterruptedProcess(
+                                      SpatiocyteProcessInterface* aProcess)
+{
+  if(std::find(theInterruptedProcesses.begin(), theInterruptedProcesses.end(),
+               aProcess) == theInterruptedProcesses.end())
+    {
+      theInterruptedProcesses.push_back(aProcess);
+    }
+}
+
+void SpatiocyteStepper::interruptProcesses(const double aCurrentTime)
+{
+  for(unsigned i(0); i != theInterruptedProcesses.size(); ++i)
+    {
+      theInterruptedProcesses[i]->substrateValueChanged(aCurrentTime);
+    }
+  theInterruptedProcesses.resize(0);
+}
 
 void SpatiocyteStepper::checkSpecies()
 {

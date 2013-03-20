@@ -220,10 +220,6 @@ public:
     }
   virtual void fire()
     {
-      //you must requeue before diffusing and reacting the molecules
-      //because requeue calls the moveTop method and the moveTop method
-      //becomes invalid once other processes are requeued by 
-      //substrateValueChanged in DiffusionInfluencedReactionProcess:
       requeue();
       theDiffusionSpecies->resetFinalizeReactions();
       (this->*theWalkMethod)();

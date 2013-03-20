@@ -25,10 +25,7 @@ MultiscaleReactionProcess\
 PeriodicBoundaryDiffusionProcess\
 RotationProcess
 #OscillationAnalysisProcess\
-#PolymerFragmentationProcess\
-MicrotubuleProcess\
-PolymerizationParameterProcess\
-PolymerizationProcess
+MicrotubuleProcess
 
 export CXXFLAGS = -Wall -O3 -g -std=c++0x
 ECELL3_DMC = ecell3-dmc --cxxflags="-I. -lpthread -lRandom"
@@ -106,17 +103,8 @@ MultiscaleReactionProcess.so: 	MultiscaleReactionProcess.cpp
 CompartmentGrowthProcess.so: 	CompartmentGrowthProcess.cpp
 	$(ECELL3_DMC) -o CompartmentGrowthProcess.so --ldflags="SpatiocyteProcess.so" CompartmentGrowthProcess.cpp
 
-PolymerizationParameterProcess.so: 	PolymerizationParameterProcess.cpp
-	$(ECELL3_DMC) -o PolymerizationParameterProcess.so --ldflags="SpatiocyteProcess.so" PolymerizationParameterProcess.cpp
-
-PolymerizationProcess.so: 	PolymerizationProcess.cpp
-	$(ECELL3_DMC) -o PolymerizationProcess.so --ldflags="SpatiocyteProcess.so DiffusionInfluencedReactionProcess.so PolymerFragmentationProcess.so" PolymerizationProcess.cpp
-
 PeriodicBoundaryDiffusionProcess.so: 	PeriodicBoundaryDiffusionProcess.cpp
 	$(ECELL3_DMC) -o PeriodicBoundaryDiffusionProcess.so --ldflags=DiffusionProcess.so PeriodicBoundaryDiffusionProcess.cpp
-
-PolymerFragmentationProcess.so: 	PolymerFragmentationProcess.cpp
-	$(ECELL3_DMC) -o PolymerFragmentationProcess.so --ldflags=ReactionProcess.so PolymerFragmentationProcess.cpp
 
 dms: $(SOS) 
 

@@ -648,15 +648,6 @@ public:
               theDiffusionInfluencedReactions[i]->finalizeReaction();
             }
         }
-      /*
-      for(unsigned i(0); i != theInterruptedProcesses.size(); ++i)
-        {
-          //theInterruptedProcesses are the processes that will always be
-          //interrupted at the end of a walk:
-          theInterruptedProcesses[i
-            ]->substrateValueChanged(theStepper->getCurrentTime());
-        }
-        */
     }
   void addCollision(Voxel* aVoxel)
     {
@@ -2118,15 +2109,6 @@ public:
     {
       return theMolecules[getRandomIndex()];
     }
-  void addInterruptedProcess(SpatiocyteNextReactionProcess* aProcess)
-    {
-      if(std::find(theInterruptedProcesses.begin(),
-                   theInterruptedProcesses.end(), aProcess) == 
-         theInterruptedProcesses.end())
-        {
-          theInterruptedProcesses.push_back(aProcess);
-        }
-    }
   int getBendIndex(double aBendAngle)
     {
       for(unsigned i(0); i != theBendAngles.size(); ++i)
@@ -2933,7 +2915,6 @@ private:
   std::vector<Species*> theTagSpeciesList;
   std::vector<DiffusionInfluencedReactionProcess*> 
     theDiffusionInfluencedReactions;
-  std::vector<SpatiocyteNextReactionProcess*> theInterruptedProcesses;
   std::vector<Origin> theMoleculeOrigins;
   std::vector<Voxel>& theLattice;
   std::vector<std::vector<unsigned> > theIntersectLipids;

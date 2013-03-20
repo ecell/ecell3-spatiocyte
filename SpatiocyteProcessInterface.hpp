@@ -65,6 +65,7 @@ public:
   virtual double getInitInterval() = 0;
   virtual String getIDString() = 0;
   virtual void finalizeFire() = 0;
+  virtual bool isDependentOn(const Process*) const = 0;
 };
 
 #endif /* __SPATIOCYTEPROCESSINTERFACE_HPP */

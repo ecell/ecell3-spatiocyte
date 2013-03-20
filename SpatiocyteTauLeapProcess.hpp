@@ -47,10 +47,11 @@ public:
   SpatiocyteTauLeapProcess():
     isParent(false),
     currSSA(0),
-    n(10),
-    n_c(10),
-    nSSA(100),
-    epsilon(0.03) {}
+    n(1),
+    n_c(1),
+    nSSA(1),
+    epsilon(0.03),
+    epsilon_old(0.03) {}
   virtual ~SpatiocyteTauLeapProcess() {}
   virtual void initialize()
     {
@@ -152,6 +153,7 @@ public:
                 }
               else
                 {
+                  std::cout << "setting crit" << std::endl;
                   a0_c += a;
                   R[j]->setIsCritical();
                 }
@@ -160,7 +162,8 @@ public:
       for(unsigned i(0); i != S_rs.size(); ++i)
         {
           const double x(S_rs[i]->getValue());
-          const double ex_g(std::max(anEpsilon*x/(this->*g[i])(x), 1.0));
+          //const double ex_g(std::max(anEpsilon*x/(this->*g[i])(x), 1.0));
+          const double ex_g(1);
           const double tmp(std::min(ex_g/fabs(mu[i]), ex_g*ex_g/sigma[i]));
           if(tmp < tau)
             {
@@ -191,13 +194,28 @@ public:
               if(R[j]->getL() < n_c)
                 {
                   a0_c += a;
-                  R[j]->setIsCritical();
                 }
             }
         }
     }
   virtual double getInterval(double aCurrentTime)
     {
+      double time(aCurrentTime-lastTime);
+      //std::cout << "time:" << time << std::endl;
+      double aTau(getNewInterval());
+      if(aTau > time)
+        {
+          aTau -= time;
+        }
+      else
+        {
+          aTau = 1e-15;
+        }
+      //std::cout << "tau:" << aTau << std::endl;
+      //std::cout << "-----------------------------------------interrupt:" << aCurrentTime << " tau:" << aTau << std::endl;
+      return aTau;
+      /*
+      std::cout << "old" << std::endl;
       if(theTime == libecs::INF)
         {
           return getNewInterval();
@@ -207,15 +225,23 @@ public:
           --currSSA;
           const double a0_old(a0); 
           update_a0();
-          return a0_old/a0*(theTime-aCurrentTime);
+          double t(a0_old/a0*(theTime-aCurrentTime));
+          std::cout << "old ssaTau:" << t << std::endl;
+          return t;
         }
       //std::cout << "old:" << getIDString() << std::endl;
       const double a0_old(a0); 
       const double a0_c_old(a0_c); 
-      update_a0_a0_c();
-      const double tau1_old(tau1);
-      tau1 = a0_old/a0*tau1;
-      epsilon = (aCurrentTime-(theTime-tau1_old))/tau1*epsilon;
+      update_a0();
+      const double diff(aCurrentTime-(theTime-tau1));
+      const double ratio((aCurrentTime-(theTime-tau1))/(a0_old/a0*tau1));
+      std::cout << "diff:" << diff << " ratio:" << ratio << " a0_old:" << a0_old << " a0:" << a0 << " tau1:" << tau1 << std::endl;
+      if(ratio)
+        {
+          epsilon = (aCurrentTime-(theTime-tau1))/(a0_old/a0*tau1)*epsilon;
+        }
+      tau1 = getTau(epsilon);
+      std::cout << "epsilon:" << epsilon << std::endl;
       if(a0)
         {
           if(tau1 < n/a0)
@@ -223,48 +249,67 @@ public:
               currSSA = nSSA-1;
               if(!theState)
                 {
-                  return a0_old/a0*(theTime-aCurrentTime);
+                  double t(a0_old/a0*(theTime-aCurrentTime));
+                  std::cout << "old ssaTau2:" << t << std::endl;
+                  return t;
                 }
               theState = 0;
-              return -log(theRng->FixedU())/a0;
+              double t(-log(theRng->FixedU())/a0);
+              std::cout << "old ssaTau3:" << t << std::endl;
+              return t;
             }
           tau2 = (a0_c == 0)? libecs::INF:a0_c_old/a0_c*tau2;
           if(tau1 < tau2)
             {
               theState = 1;
+              std::cout << "old tau1:" << tau1 << std::endl;
               return tau1;
             }
           theState = 2;
+          std::cout << "old tau2:" << tau2 << std::endl;
           return tau2;
         }
       return libecs::INF;
+      */
     }
   virtual double getNewInterval()
     {
+      lastTime = getStepper()->getCurrentTime();
       //std::cout << "new:" << getIDString() << std::endl;
       if(!theState && currSSA)
         {
           --currSSA;
           update_a0();
-          return -log(theRng->FixedU())/a0;
+          double t(-log(theRng->FixedU())/a0);
+          //std::cout << "ssaTau:" << t << std::endl;
+          return t;
         }
       tau1 = getTau(epsilon);
       if(a0)
         {
+          /*
           if(tau1 < n/a0)
             {
+              std::cout << "do ssa" << std::endl;
               theState = 0;
-              currSSA = nSSA-1;
-              return -log(theRng->FixedU())/a0;
+              currSSA = nSSA;
+              double t(-log(theRng->FixedU())/a0);
+              //std::cout << "ssaTau2:" << t << std::endl;
+              return t;
             }
-          tau2 = (a0_c == 0)? libecs::INF : -log(theRng->FixedU())/a0_c;
+          /*tau2 = (a0_c == 0)? libecs::INF : -log(theRng->FixedU())/a0_c;
           if(tau1 < tau2)
             {
+            */
               theState = 1;
+              //std::cout << getStepper()->getCurrentTime() << " tau1:" << tau1 << std::endl;
               return tau1;
+              /*
             }
+          //std::cout << "tau2:" << tau2 << std::endl;
           theState = 2;
           return tau2;
+          */
         }
       return libecs::INF;
     }
@@ -310,6 +355,7 @@ public:
           if(!R[j]->getIsCritical())
             {
               const unsigned K(poisson(R[j]->getPropensity()*aTau));
+              //std::cout << "K:" << K << std::endl;
               for(unsigned i(0); i != K; ++i)
                 {
                   //std::cout << "noncrit:" << R[j]->getIDString() << std::endl;
@@ -603,9 +649,10 @@ private:
   double a0;
   double a0_c;
   double epsilon;
-  double old_epsilon;
+  double epsilon_old;
   double tau1;
   double tau2;
+  double lastTime;
   std::vector<unsigned> S_index;
   std::vector<unsigned> HOR;
   std::vector<int> v_neg;
