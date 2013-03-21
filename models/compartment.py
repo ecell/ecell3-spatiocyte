@@ -76,7 +76,7 @@ react = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:dissoc
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/:Lipid', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG', '1']]
-react.p = 0.4
+react.p = 0.3
 
 react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:nucleatePGs')
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG', '-1']]
@@ -104,28 +104,28 @@ react.VariableReferenceList = [['_', 'Variable:/Surface:PG', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '1']]
-react.p = 0.5
+react.p = 0.1
 
 react = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:extendPGs_MinD')
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '1']]
-react.p = 0.5
+react.p = 0.1
 
 react = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:extendPGs_PGs_MinD')
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '1']]
-react.p = 0.5
+react.p = 0.1
 
 react = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:extendPGs_PGs_MinD2')
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '1']]
-react.p = 0.5
+react.p = 0.1
 
 #react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:desorp')
 #react.VariableReferenceList = [['_', 'Variable:/Surface:MinD', '-1']]
@@ -147,14 +147,16 @@ react = theSimulator.createEntity('SpatiocyteTauLeapProcess', 'Process:/:dissocP
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG', '1']]
 react.Deoligomerize = 6
-react.k = 216666
+react.SearchVacant = 1
+react.k = 1e+5
 
 #react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:dissocMinDPGs')
 react = theSimulator.createEntity('SpatiocyteTauLeapProcess', 'Process:/:dissocMinDPGs')
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '1']]
 react.Deoligomerize = 6
-react.k = 216666
+react.SearchVacant = 1
+react.k = 1e+5
 
 #diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseMinDv')
 #diffuser.VariableReferenceList = [['_', 'Variable:/:MinD']]
@@ -164,9 +166,9 @@ react.k = 216666
 #diffuser.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
 #diffuser.D = 5e-12
 
-rotator = theSimulator.createEntity('DiffusionProcess', 'Process:/:rotateMinD')
-rotator.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
-rotator.D = 1e-12
+#rotator = theSimulator.createEntity('DiffusionProcess', 'Process:/:rotateMinD')
+#rotator.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
+#rotator.D = 1e-12
 
 #rotator = theSimulator.createEntity('DiffusionProcess', 'Process:/:rotatePropenMinD')
 #rotator.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
@@ -175,7 +177,7 @@ rotator.D = 1e-12
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:propenMinD')
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
-diffuser.D = 10e-12
+diffuser.D = 1e-12
 diffuser.Propensity = 1
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffusePG')
