@@ -162,8 +162,8 @@ public:
       for(unsigned i(0); i != S_rs.size(); ++i)
         {
           const double x(S_rs[i]->getValue());
-          //const double ex_g(std::max(anEpsilon*x/(this->*g[i])(x), 1.0));
-          const double ex_g(1);
+          const double ex_g(std::max(anEpsilon*x/(this->*g[i])(x), 1.0));
+          //const double ex_g(1);
           const double tmp(std::min(ex_g/fabs(mu[i]), ex_g*ex_g/sigma[i]));
           if(tmp < tau)
             {
@@ -204,16 +204,11 @@ public:
         {
           return getNewInterval();
         }
-      const double a0_old(a0);
-      update_a0();
-      if(a0)
-        {
-          return a0_old/a0*(theTime-aCurrentTime);
-        }
-      return libecs::INF;
+      return std::max(lastTime+getNewInterval()-aCurrentTime, 0.0);
     }
   virtual double getNewInterval()
     {
+      lastTime = getStepper()->getCurrentTime();
       //std::cout << "new:" << getIDString() << std::endl;
       if(!theState && currSSA)
         {
@@ -591,6 +586,7 @@ private:
   double epsilon_old;
   double tau1;
   double tau2;
+  double lastTime;
   std::vector<unsigned> S_index;
   std::vector<unsigned> HOR;
   std::vector<int> v_neg;
