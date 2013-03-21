@@ -241,6 +241,10 @@ public:
       isRegularLattice = true;
       theDiffuseSize = aDiffuseSize;
     }
+  void setWalkPropensity(const double aPropensity)
+    {
+      theWalkPropensity = aPropensity;
+    }
   bool getIsRegularLattice()
     {
       return isRegularLattice;
@@ -1396,8 +1400,8 @@ public:
                                          const std::vector<int>& tarOffsets,
                                          const std::vector<int>& srcOffsets)
     {
-      unsigned tarCnt(0);
-      unsigned srcCnt(0);
+      int tarCnt(0);
+      int srcCnt(0);
       //count tar
       for(unsigned i(0); i != tarOffsets.size(); ++i)
         {
@@ -1426,7 +1430,7 @@ public:
                 }
             }
         }
-      if(tarCnt >= srcCnt)
+      if(theRng.Fixed() < exp((tarCnt-srcCnt)/theWalkPropensity))
         {
           return true;
         }
@@ -1455,7 +1459,7 @@ public:
               ++tarCnt;
             }
         }
-      if(tarCnt >= srcCnt)
+      if(theRng.Fixed() < exp((tarCnt-srcCnt)/theWalkPropensity))
         {
           return true;
         }
@@ -2460,6 +2464,8 @@ public:
                  aSurfaceNormal, theOffsets[rowA%2]);
       setOffsets(rowB, coordB, nDist, aLipidStart, nLipidRadius, aSubunitAngle,
                  aSurfaceNormal, theOffsets[rowB%2]);
+      theTotalLipidSites = theOffsets[0][0].size();
+      std::cout << "total sites:" << theTotalLipidSites << std::endl;
     }
   void setOffsets(const unsigned row, const unsigned coordA, const double nDist,
                   const Point& aLipidStart, const double nLipidRadius,
@@ -2874,6 +2880,7 @@ private:
   unsigned vacRows;
   unsigned vacStartCoord;
   unsigned theVacantID;
+  unsigned theTotalLipidSites;
   int thePolymerDirectionality;
   double D;
   double theDiffuseRadius;
@@ -2881,6 +2888,7 @@ private:
   double theMoleculeRadius;
   double theVoxelRadius;
   double theWalkProbability;
+  double theWalkPropensity;
   RandomLib::Random& theRng;
   Species* theVacantSpecies;
   Species* theMultiscaleVacantSpecies;

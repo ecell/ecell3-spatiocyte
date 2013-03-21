@@ -163,6 +163,7 @@ public:
         {
           if(Propensity)
             {
+              theDiffusionSpecies->setWalkPropensity(Propensity);
               if(theDiffusionSpecies->getIsRegularLattice())
                 {
                   theWalkMethod = 
