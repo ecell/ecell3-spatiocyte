@@ -36,6 +36,14 @@ logger.VariableReferenceList = [['_', 'Variable:/Surface:PGs']]
 logger.LogInterval = 1e-5
 logger.MultiscaleStructure = 0
 
+#iterator = theSimulator.createEntity('IteratingLogProcess', 'Process:/:iterate')
+#iterator.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD']]
+#iterator.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD']]
+#iterator.VariableReferenceList = [['_', 'Variable:/Surface:PG']]
+#iterator.VariableReferenceList = [['_', 'Variable:/Surface:PGs']]
+#iterator.LogInterval = 1e-5
+#iterator.LogEnd = 0.009
+
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop')
 populator.VariableReferenceList = [['_', 'Variable:/Surface:PG']]
 populator.VariableReferenceList = [['_', 'Variable:/:MinD']]
@@ -134,13 +142,15 @@ react.p = 0.5
 #react.SearchVacant = 0
 #react.k = 1.5e+6
 
-react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:dissocPGsLip')
+#react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:dissocPGsLip')
+react = theSimulator.createEntity('SpatiocyteTauLeapProcess', 'Process:/:dissocPGsLip')
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG', '1']]
 react.Deoligomerize = 6
 react.k = 216666
 
-react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:dissocMinDPGs')
+#react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:dissocMinDPGs')
+react = theSimulator.createEntity('SpatiocyteTauLeapProcess', 'Process:/:dissocMinDPGs')
 react.VariableReferenceList = [['_', 'Variable:/Surface:PGs_MinD', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '1']]
 react.Deoligomerize = 6
@@ -154,7 +164,7 @@ react.k = 216666
 #diffuser.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
 #diffuser.D = 5e-12
 
-rotator = theSimulator.createEntity('DiffusionProcess', 'Process:/:ro----------tateMinD')
+rotator = theSimulator.createEntity('DiffusionProcess', 'Process:/:rotateMinD')
 rotator.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
 rotator.D = 1e-12
 
@@ -163,16 +173,16 @@ rotator.D = 1e-12
 #rotator.D = 1e-12
 #rotator.Propensity = 1
 
-diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:pro--------------penMinD')
+diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:propenMinD')
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
 diffuser.D = 10e-12
 diffuser.Propensity = 1
 
-diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diff------------usePG')
+diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffusePG')
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:PG']]
 diffuser.D = 10e-12
 
-diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diff----------------------usePG_MinD')
+diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffusePG_MinD')
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD']]
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:MinD', '-1']]
 diffuser.D = 10e-12
