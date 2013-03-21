@@ -58,11 +58,18 @@ public:
       if(D > 0)
         {
           double r_v(theDiffusionSpecies->getDiffuseRadius());
-          double alpha(0.5); //default for 1D diffusion
+          double alpha(2); //default for 1D diffusion
           if(theDiffusionSpecies->getDimension() == 2)
             {
-              alpha = pow((2*sqrt(2)+4*sqrt(3)+3*sqrt(6)+sqrt(22))/
-                           (6*sqrt(2)+4*sqrt(3)+3*sqrt(6)), 2);
+              if(theDiffusionSpecies->getIsRegularLattice())
+                {
+                  alpha = 1;
+                }
+              else
+                {
+                  alpha = pow((2*sqrt(2)+4*sqrt(3)+3*sqrt(6)+sqrt(22))/
+                              (6*sqrt(2)+4*sqrt(3)+3*sqrt(6)), 2);
+                }
             }
           else if(theDiffusionSpecies->getDimension() == 3)
             {

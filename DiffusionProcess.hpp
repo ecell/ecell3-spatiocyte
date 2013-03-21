@@ -44,12 +44,14 @@ public:
     {
       INHERIT_PROPERTIES(Process);
       PROPERTYSLOT_SET_GET(Real, D);
+      PROPERTYSLOT_SET_GET(Real, Interval);
       PROPERTYSLOT_SET_GET(Real, P);
       PROPERTYSLOT_SET_GET(Real, Propensity);
       PROPERTYSLOT_SET_GET(Real, WalkProbability);
     }
   DiffusionProcess():
     D(0),
+    Interval(0),
     P(1),
     Propensity(0),
     WalkProbability(1),
@@ -58,6 +60,7 @@ public:
     theWalkMethod(&DiffusionProcess::walk) {}
   virtual ~DiffusionProcess() {}
   SIMPLE_SET_GET_METHOD(Real, D);
+  SIMPLE_SET_GET_METHOD(Real, Interval);
   SIMPLE_SET_GET_METHOD(Real, P);
   SIMPLE_SET_GET_METHOD(Real, Propensity);
   SIMPLE_SET_GET_METHOD(Real, WalkProbability);
@@ -142,17 +145,28 @@ public:
       if(D > 0)
         {
           double r_v(theDiffusionSpecies->getDiffuseRadius());
-          double alpha(0.5); //default for 1D diffusion
+          double alpha(2); //default for 1D diffusion
           if(theDiffusionSpecies->getDimension() == 2)
             {
-              alpha = pow((2*sqrt(2)+4*sqrt(3)+3*sqrt(6)+sqrt(22))/
-                           (6*sqrt(2)+4*sqrt(3)+3*sqrt(6)), 2);
+              if(theDiffusionSpecies->getIsRegularLattice())
+                {
+                  alpha = 1;
+                }
+              else
+                {
+                  alpha = pow((2*sqrt(2)+4*sqrt(3)+3*sqrt(6)+sqrt(22))/
+                              (6*sqrt(2)+4*sqrt(3)+3*sqrt(6)), 2);
+                }
             }
           else if(theDiffusionSpecies->getDimension() == 3)
             {
               alpha = 2.0/3;
             }
           theInterval = alpha*r_v*r_v*WalkProbability/D;
+        }
+      else if(Interval > 0)
+        {
+          theInterval = Interval;
         }
       theDiffusionSpecies->setDiffusionInterval(theInterval);
       if(theDiffusionSpecies->getIsDiffusiveVacant())
@@ -274,6 +288,7 @@ public:
     */
 protected:
   double D;
+  double Interval;
   double P;
   double Propensity;
   double WalkProbability;

@@ -177,7 +177,7 @@ react.k = 1e+5
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:propenMinD')
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
-diffuser.D = 1e-12
+diffuser.Interval = 6e-7
 diffuser.Propensity = 1
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffusePG')
@@ -220,7 +220,7 @@ fil.Length = 1e-7
 fil.Width = 1e-7
 #fil.Filaments = 4
 fil.SubunitRadius = 1.74e-9
-fil.SubunitAngle = 0.7
+fil.SubunitAngle = 0
 fil.DiffuseRadius = 0.436e-9
 fil.LipidRadius = 0.436e-9
 fil.Periodic = 1
