@@ -50,10 +50,7 @@ public:
     n(1),
     n_c(1),
     nSSA(1),
-    epsilon(0.03),
-    epsilon_min(0.03),
-    epsilon_max(0),
-    epsilon_old(0.03) {}
+    epsilon(0.03) {}
   virtual ~SpatiocyteTauLeapProcess() {}
   virtual void initialize()
     {
@@ -166,7 +163,6 @@ public:
                 }
               else
                 {
-                  std::cout << "setting crit" << std::endl;
                   a0_c += a;
                   R[j]->setIsCritical();
                 }
@@ -221,52 +217,47 @@ public:
         {
           return getNewInterval();
         }
-      tau1 = aCurrentTime-lastTime;
+      const double a0_old(a0); 
+      switch(theState)
+        {
+        case 0:
+          update_a0();
+          return a0_old/a0*(theTime-aCurrentTime);
+        case 1:
+          tau1 = aCurrentTime-lastTime;
+          break;
+        case 2:
+          tau2 = aCurrentTime-lastTime;
+          break;
+        }
       return 0;
-      /*
-      tau1 = getTau(epsilon);
-      return std::max(lastTime+tau1-aCurrentTime, 0.0);
-      */
     }
   virtual double getNewInterval()
     {
-      epsilon_old = epsilon;
       lastTime = getStepper()->getCurrentTime();
-      //std::cout << "new:" << getIDString() << std::endl;
       if(!theState && currSSA)
         {
           --currSSA;
           update_a0();
-          double t(-log(theRng->FixedU())/a0);
-          //std::cout << "ssaTau:" << t << std::endl;
-          return t;
+          return -log(theRng->FixedU())/a0;
         }
       tau1 = getTau(epsilon);
       if(a0)
         {
-          /*
           if(tau1 < n/a0)
             {
-              std::cout << "do ssa" << std::endl;
               theState = 0;
               currSSA = nSSA;
-              double t(-log(theRng->FixedU())/a0);
-              //std::cout << "ssaTau2:" << t << std::endl;
-              return t;
+              return -log(theRng->FixedU())/a0;
             }
-          /*tau2 = (a0_c == 0)? libecs::INF : -log(theRng->FixedU())/a0_c;
+          tau2 = (a0_c == 0)? libecs::INF : -log(theRng->FixedU())/a0_c;
           if(tau1 < tau2)
             {
-            */
               theState = 1;
-              //std::cout << getStepper()->getCurrentTime() << " tau1:" << tau1 << std::endl;
               return tau1;
-              /*
             }
-          //std::cout << "tau2:" << tau2 << std::endl;
           theState = 2;
           return tau2;
-          */
         }
       return libecs::INF;
     }
@@ -275,15 +266,12 @@ public:
       switch(theState)
         {
         case 0:
-          //std::cout << "fire 0" << std::endl;
           fireSSA();
           break;
         case 1:
-          //std::cout << "fire 1" << std::endl;
           fireNonCritical(tau1);
           break;
         case 2:
-          //std::cout << "fire 2" << std::endl;
           fireCritical();
           fireNonCritical(tau2);
           break;
@@ -299,7 +287,6 @@ public:
           aSum += R[j]->getPropensity();
           if(aSum > a0r)
             {
-              //std::cout << "ssa:" << R[j]->getIDString() << std::endl;
               R[j]->react();
               return;
             }
@@ -312,10 +299,8 @@ public:
           if(!R[j]->getIsCritical())
             {
               const unsigned K(poisson(R[j]->getPropensity()*aTau));
-              //std::cout << "K:" << K << std::endl;
               for(unsigned i(0); i != K; ++i)
                 {
-                  //std::cout << "noncrit:" << R[j]->getIDString() << std::endl;
                   R[j]->react();
                 }
             }
@@ -328,7 +313,6 @@ public:
         {
           if(R[j]->getIsCritical())
             {
-              //std::cout << "crit:" << R[j]->getIDString() << std::endl;
               R[j]->react();
               return;
             }
@@ -337,7 +321,6 @@ public:
         {
           if(R[i]->getIsCritical())
             {
-              //std::cout << "crit:" << R[j]->getIDString() << std::endl;
               R[i]->react();
               return;
             }
@@ -595,9 +578,6 @@ private:
   double a0;
   double a0_c;
   double epsilon;
-  double epsilon_old;
-  double epsilon_min;
-  double epsilon_max;
   double tau1;
   double tau2;
   double lastTime;
