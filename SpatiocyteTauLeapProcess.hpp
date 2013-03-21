@@ -200,81 +200,20 @@ public:
     }
   virtual double getInterval(double aCurrentTime)
     {
-      double time(aCurrentTime-lastTime);
-      //std::cout << "time:" << time << std::endl;
-      double aTau(getNewInterval());
-      if(aTau > time)
-        {
-          aTau -= time;
-        }
-      else
-        {
-          aTau = 1e-15;
-        }
-      //std::cout << "tau:" << aTau << std::endl;
-      //std::cout << "-----------------------------------------interrupt:" << aCurrentTime << " tau:" << aTau << std::endl;
-      return aTau;
-      /*
-      std::cout << "old" << std::endl;
       if(theTime == libecs::INF)
         {
           return getNewInterval();
         }
-      if(!theState && currSSA)
-        {
-          --currSSA;
-          const double a0_old(a0); 
-          update_a0();
-          double t(a0_old/a0*(theTime-aCurrentTime));
-          std::cout << "old ssaTau:" << t << std::endl;
-          return t;
-        }
-      //std::cout << "old:" << getIDString() << std::endl;
-      const double a0_old(a0); 
-      const double a0_c_old(a0_c); 
+      const double a0_old(a0);
       update_a0();
-      const double diff(aCurrentTime-(theTime-tau1));
-      const double ratio((aCurrentTime-(theTime-tau1))/(a0_old/a0*tau1));
-      std::cout << "diff:" << diff << " ratio:" << ratio << " a0_old:" << a0_old << " a0:" << a0 << " tau1:" << tau1 << std::endl;
-      if(ratio)
-        {
-          epsilon = (aCurrentTime-(theTime-tau1))/(a0_old/a0*tau1)*epsilon;
-        }
-      tau1 = getTau(epsilon);
-      std::cout << "epsilon:" << epsilon << std::endl;
       if(a0)
         {
-          if(tau1 < n/a0)
-            {
-              currSSA = nSSA-1;
-              if(!theState)
-                {
-                  double t(a0_old/a0*(theTime-aCurrentTime));
-                  std::cout << "old ssaTau2:" << t << std::endl;
-                  return t;
-                }
-              theState = 0;
-              double t(-log(theRng->FixedU())/a0);
-              std::cout << "old ssaTau3:" << t << std::endl;
-              return t;
-            }
-          tau2 = (a0_c == 0)? libecs::INF:a0_c_old/a0_c*tau2;
-          if(tau1 < tau2)
-            {
-              theState = 1;
-              std::cout << "old tau1:" << tau1 << std::endl;
-              return tau1;
-            }
-          theState = 2;
-          std::cout << "old tau2:" << tau2 << std::endl;
-          return tau2;
+          return a0_old/a0*(theTime-aCurrentTime);
         }
       return libecs::INF;
-      */
     }
   virtual double getNewInterval()
     {
-      lastTime = getStepper()->getCurrentTime();
       //std::cout << "new:" << getIDString() << std::endl;
       if(!theState && currSSA)
         {
@@ -652,7 +591,6 @@ private:
   double epsilon_old;
   double tau1;
   double tau2;
-  double lastTime;
   std::vector<unsigned> S_index;
   std::vector<unsigned> HOR;
   std::vector<int> v_neg;
