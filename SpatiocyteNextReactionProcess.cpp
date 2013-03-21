@@ -524,6 +524,10 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
 //nonHD (+ E) -> nonHD
 bool SpatiocyteNextReactionProcess::reactDeoligomerize(Species* a, Species* c)
 {
+  if(!A->getBoundCnt(theDeoligomerIndex))
+    {
+      return false;
+    }
   unsigned indexA(a->getRandomOligomerIndex(theDeoligomerIndex));
   moleculeA = a->getMolecule(indexA);
   moleculeC = NULL;

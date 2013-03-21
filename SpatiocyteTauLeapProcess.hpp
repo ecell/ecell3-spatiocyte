@@ -51,6 +51,8 @@ public:
     n_c(1),
     nSSA(1),
     epsilon(0.03),
+    epsilon_min(0.03),
+    epsilon_max(0),
     epsilon_old(0.03) {}
   virtual ~SpatiocyteTauLeapProcess() {}
   virtual void initialize()
@@ -135,6 +137,17 @@ public:
         }
       return libecs::INF;
     }
+  void addMuSigma(std::vector<double>& mu_p, std::vector<double>& sigma_p,
+                  const double& a)
+    {
+      isCritical = false;
+      for(unsigned i(0); i != S_netNeg.size(); ++i)
+        {
+          const double aMu(v_netNeg[i]*a);
+          mu_p[S_index[i]] += aMu;
+          sigma_p[S_index[i]] += v_netNeg[i]*aMu;
+        }
+    }
   double getTau(const double anEpsilon)
     {
       double tau(libecs::INF);
@@ -161,13 +174,17 @@ public:
         }
       for(unsigned i(0); i != S_rs.size(); ++i)
         {
-          const double x(S_rs[i]->getValue());
-          const double ex_g(std::max(anEpsilon*x/(this->*g[i])(x), 1.0));
-          //const double ex_g(1);
-          const double tmp(std::min(ex_g/fabs(mu[i]), ex_g*ex_g/sigma[i]));
-          if(tmp < tau)
+          if(mu[i])
             {
-              tau = tmp;
+              const double x(S_rs[i]->getValue());
+              //(this->*g[i])(x) is always nonzero even if x is zero:
+              const double ex_g(std::max(anEpsilon*x/(this->*g[i])(x), 1.0));
+              //const double ex_g(1);
+              const double tmp(std::min(ex_g/fabs(mu[i]), ex_g*ex_g/sigma[i]));
+              if(tmp < tau)
+                {
+                  tau = tmp;
+                }
             }
         }
       return tau;
@@ -204,10 +221,16 @@ public:
         {
           return getNewInterval();
         }
-      return std::max(lastTime+getNewInterval()-aCurrentTime, 0.0);
+      tau1 = aCurrentTime-lastTime;
+      return 0;
+      /*
+      tau1 = getTau(epsilon);
+      return std::max(lastTime+tau1-aCurrentTime, 0.0);
+      */
     }
   virtual double getNewInterval()
     {
+      epsilon_old = epsilon;
       lastTime = getStepper()->getCurrentTime();
       //std::cout << "new:" << getIDString() << std::endl;
       if(!theState && currSSA)
@@ -412,17 +435,6 @@ public:
     {
       return isCritical;
     }
-  void addMuSigma(std::vector<double>& mu_p, std::vector<double>& sigma_p,
-                  const double& a)
-    {
-      isCritical = false;
-      for(unsigned i(0); i != S_netNeg.size(); ++i)
-        {
-          const double aMu(v_netNeg[i]*a);
-          mu_p[S_index[i]] += aMu;
-          sigma_p[S_index[i]] += v_netNeg[i]*aMu;
-        }
-    }
   virtual bool isDependentOn(const Process* aProcess) const
     {
       if(dynamic_cast<const SpatiocyteTauLeapProcess*>(aProcess))
@@ -584,6 +596,8 @@ private:
   double a0_c;
   double epsilon;
   double epsilon_old;
+  double epsilon_min;
+  double epsilon_max;
   double tau1;
   double tau2;
   double lastTime;
