@@ -101,6 +101,7 @@ public:
     isMultiscaleComp(false),
     isOffLattice(false),
     isOnMultiscale(false),
+    isOrigins(true),
     isPeriodic(false),
     isPolymer(false),
     isReactiveVacant(false),
@@ -116,6 +117,7 @@ public:
     theRotateSize(1),
     D(0),
     theDiffuseRadius(voxelRadius),
+    nDiffuseRadius(0.5),
     theDiffusionInterval(libecs::INF),
     theMoleculeRadius(voxelRadius),
     theVoxelRadius(voxelRadius),
@@ -409,15 +411,32 @@ public:
       double aDisplacement(0);
       for(unsigned i(0); i < theMoleculeSize; ++i)
         {
-          Point aCurrentPoint(theStepper->getPeriodicPoint(
-                                                 getCoord(i),
-                                                 theDimension,
-                                                 &theMoleculeOrigins[i]));
+          Point aCurrentPoint;
+          if(isOrigins)
+            {
+              aCurrentPoint = getPeriodicPoint(i);
+            }
+          else
+            {
+              aCurrentPoint = theStepper->getPeriodicPoint(getCoord(i),
+                                                           theDimension,
+                                                   &theMoleculeOrigins[i]);
+            }
           double aDistance(getDistance(&theMoleculeOrigins[i].point,
                                        &aCurrentPoint));
           aDisplacement += aDistance*aDistance;
         }
-      return aDisplacement*pow(theDiffuseRadius*2, 2)/theMoleculeSize;
+      return aDisplacement*pow(theStepper->getVoxelRadius()*2, 2)/
+        theMoleculeSize;
+    }
+  Point getPeriodicPoint(const unsigned index)
+    {
+      Origin& anOrigin(theMoleculeOrigins[index]);
+      Point aPoint(getPoint(index));
+      aPoint.x += anOrigin.layer*(theComp->lengthX+nDiffuseRadius);
+      aPoint.y += anOrigin.row*(lipRows*nDiffuseRadius*sqrt(3));
+      aPoint.z += anOrigin.col*(lipCols*nDiffuseRadius*2);
+      return aPoint;
     }
   void setCollision(unsigned aCollision)
     {
@@ -1047,6 +1066,39 @@ public:
             }
         }
     }
+  void walkMultiscaleRegularOrigins()
+    {
+      const unsigned beginMoleculeSize(theMoleculeSize);
+      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
+        {
+          Voxel* source(theMolecules[i]);
+          const unsigned srcCoord(source->coord-vacStartCoord);
+          const unsigned tarIndex(theRng.Integer(theDiffuseSize)); 
+          const unsigned row(srcCoord/lipCols);
+          int tarCoord(srcCoord+theAdjoinOffsets[row%2][tarIndex]);
+          Origin anOrigin(theMoleculeOrigins[i]);
+          if(!isInLatticeOrigins(tarCoord, theRowOffsets[tarIndex]+row,
+                                 anOrigin))
+            {
+              continue;
+            }
+          Voxel* target(&theLattice[tarCoord+vacStartCoord]);
+          if(getID(target) == theVacantID)
+            {
+              if(!isIntersectMultiscaleRegular(srcCoord, row,
+                       theTarOffsets[row%2][theTags[i].rotIndex][tarIndex]))
+                {
+                  moveMultiscaleMoleculeRegular(srcCoord, row, 
+                     theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
+                     theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex], i);
+                  source->idx = target->idx;
+                  target->idx = i+theStride*theID;
+                  theMolecules[i] = target;
+                  theMoleculeOrigins[i] = anOrigin;
+                }
+            }
+        }
+    }
   void walkVacant()
     {
       updateVacantMolecules();
@@ -1638,17 +1690,63 @@ public:
         }
       return false;
     }
-  bool isInLattice(int& coord, const int offset)
+  bool isInLatticeOrigins(int& coord, const int tarRow, Origin& anOrigin)
     {
       if(isPeriodic)
         {
           if(coord < 0)
             {
-              coord += lipCols*(offset-(coord+1)/lipCols+1);
+              if((coord+1)/lipCols+1 > -tarRow)
+                {
+                  --anOrigin.col;
+                }
+              else if((coord+1)/lipCols+1 < -tarRow)
+                {
+                  ++anOrigin.col;
+                }
+              coord += lipCols*(tarRow-(coord+1)/lipCols+1);
             }
           else
             {
-              coord += lipCols*(offset-(coord/lipCols));
+              if(coord/lipCols < tarRow)
+                {
+                  --anOrigin.col;
+                }
+              else if(coord/lipCols > tarRow)
+                {
+                  ++anOrigin.col;
+                }
+              coord += lipCols*(tarRow-(coord/lipCols));
+            }
+          if(coord < 0)
+            {
+              coord += lipRows*lipCols;
+              --anOrigin.row;
+            }
+          else if(coord >= lipRows*lipCols)
+            {
+              coord -= lipRows*lipCols;
+              ++anOrigin.row;
+            }
+        }
+      else if(coord/lipCols != tarRow || coord < 0 ||
+              coord >= lipRows*lipCols)
+        {
+          return false;
+        }
+      return true;
+    }
+  bool isInLattice(int& coord, const int rowOffset)
+    {
+      if(isPeriodic)
+        {
+          if(coord < 0)
+            {
+              coord += lipCols*(rowOffset-(coord+1)/lipCols+1);
+            }
+          else
+            {
+              coord += lipCols*(rowOffset-(coord/lipCols));
             }
           if(coord < 0)
             {
@@ -1659,7 +1757,8 @@ public:
               coord -= lipRows*lipCols;
             }
         }
-      else if(coord/lipCols != offset || coord < 0 || coord >= lipRows*lipCols)
+      else if(coord/lipCols != rowOffset || coord < 0 ||
+              coord >= lipRows*lipCols)
         {
           return false;
         }
@@ -1939,13 +2038,18 @@ public:
     {
       return theInitCoordSize;
     }
+  void unsetIsOrigins()
+    {
+      isOrigins = false;
+    }
   void initMoleculeOrigins()
     {
+      isOrigins = true;
       theMoleculeOrigins.resize(theMoleculeSize);
       for(unsigned i(0); i < theMoleculeSize; ++i)
         {
           Origin& anOrigin(theMoleculeOrigins[i]);
-          anOrigin.point = theStepper->coord2point(getCoord(i));
+          anOrigin.point = getPoint(i);
           anOrigin.row = 0;
           anOrigin.layer = 0;
           anOrigin.col = 0;
@@ -2033,10 +2137,12 @@ public:
     {
       theMoleculeRadius = aRadius;
       theDiffuseRadius = aRadius;
+      nDiffuseRadius = theDiffuseRadius/(theStepper->getVoxelRadius()*2);
     }
   void setDiffuseRadius(double aRadius)
     {
       theDiffuseRadius = aRadius;
+      nDiffuseRadius = theDiffuseRadius/(theStepper->getVoxelRadius()*2);
     }
   Species* getDiffusionInfluencedReactantPair()
     {
@@ -2852,6 +2958,7 @@ private:
   bool isMultiscaleComp;
   bool isOffLattice;
   bool isOnMultiscale;
+  bool isOrigins;
   bool isPeriodic;
   bool isPolymer;
   bool isReactiveVacant;
@@ -2883,6 +2990,7 @@ private:
   unsigned theTotalLipidSites;
   int thePolymerDirectionality;
   double D;
+  double nDiffuseRadius;
   double theDiffuseRadius;
   double theDiffusionInterval;
   double theMoleculeRadius;

@@ -43,6 +43,8 @@ public:
   LIBECS_DM_OBJECT(DiffusionProcess, Process)
     {
       INHERIT_PROPERTIES(Process);
+      PROPERTYSLOT_SET_GET(Integer, Origins);
+      PROPERTYSLOT_SET_GET(Integer, RegularLattice);
       PROPERTYSLOT_SET_GET(Real, D);
       PROPERTYSLOT_SET_GET(Real, Interval);
       PROPERTYSLOT_SET_GET(Real, P);
@@ -50,6 +52,8 @@ public:
       PROPERTYSLOT_SET_GET(Real, WalkProbability);
     }
   DiffusionProcess():
+    Origins(0),
+    RegularLattice(0),
     D(0),
     Interval(0),
     P(1),
@@ -59,6 +63,8 @@ public:
     theVacantSpecies(NULL),
     theWalkMethod(&DiffusionProcess::walk) {}
   virtual ~DiffusionProcess() {}
+  SIMPLE_SET_GET_METHOD(Integer, Origins);
+  SIMPLE_SET_GET_METHOD(Integer, RegularLattice);
   SIMPLE_SET_GET_METHOD(Real, D);
   SIMPLE_SET_GET_METHOD(Real, Interval);
   SIMPLE_SET_GET_METHOD(Real, P);
@@ -148,7 +154,7 @@ public:
           double alpha(2); //default for 1D diffusion
           if(theDiffusionSpecies->getDimension() == 2)
             {
-              if(theDiffusionSpecies->getIsRegularLattice())
+              if(RegularLattice || theDiffusionSpecies->getIsRegularLattice())
                 {
                   alpha = 1;
                 }
@@ -169,6 +175,10 @@ public:
           theInterval = Interval;
         }
       theDiffusionSpecies->setDiffusionInterval(theInterval);
+      if(Origins)
+        {
+          theDiffusionSpecies->initMoleculeOrigins();
+        }
       if(theDiffusionSpecies->getIsDiffusiveVacant())
         {
           theWalkMethod = &DiffusionProcess::walkVacant;
@@ -192,7 +202,15 @@ public:
             {
               if(theDiffusionSpecies->getIsRegularLattice())
                 {
-                  theWalkMethod = &DiffusionProcess::walkMultiscaleRegular;
+                  if(Origins)
+                    {
+                      theWalkMethod = 
+                        &DiffusionProcess::walkMultiscaleRegularOrigins;
+                    }
+                  else
+                    {
+                      theWalkMethod = &DiffusionProcess::walkMultiscaleRegular;
+                    }
                 }
               else
                 {
@@ -268,6 +286,10 @@ public:
     {
       theDiffusionSpecies->walkMultiscaleRegular();
     }
+  void walkMultiscaleRegularOrigins() const
+    {
+      theDiffusionSpecies->walkMultiscaleRegularOrigins();
+    }
   void walkMultiscalePropensityRegular() const
     {
       theDiffusionSpecies->walkMultiscalePropensityRegular();
@@ -287,6 +309,8 @@ public:
     }
     */
 protected:
+  unsigned Origins;
+  unsigned RegularLattice;
   double D;
   double Interval;
   double P;

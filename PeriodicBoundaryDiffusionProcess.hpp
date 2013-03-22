@@ -55,20 +55,13 @@ public:
   void initializeFourth()
     {
       DiffusionProcess::initializeFourth();
-      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
-          i != theProcessSpecies.end(); ++i)
-        {
-          (*i)->initMoleculeOrigins();
-        }
+      theDiffusionSpecies->initMoleculeOrigins();
+      theDiffusionSpecies->unsetIsOrigins();
     }
   virtual void fire()
     {
       DiffusionProcess::fire();
-      for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
-          i != theProcessSpecies.end(); ++i)
-        {
-          (*i)->relocateBoundaryMolecules();
-        }
+      theDiffusionSpecies->relocateBoundaryMolecules();
     }
 };
 

@@ -179,6 +179,7 @@ diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:propenMinD')
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
 diffuser.Interval = 6e-7
 diffuser.Propensity = 1
+diffuser.Origins = 1
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffusePG')
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:PG']]
@@ -209,6 +210,13 @@ multi.VariableReferenceList = [['_', 'Variable:/Surface:MinD', '-1']]
 multi.VariableReferenceList = [['_', 'Variable:/Surface:PG', '-1']]
 multi.VariableReferenceList = [['_', 'Variable:/Surface:PG_MinD', '1']]
 multi.VariableReferenceList = [['_', 'Variable:/Surface:MinD', '1']]
+
+iterator = theSimulator.createEntity('IteratingLogProcess', 'Process:/:iterate')
+iterator.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
+iterator.Iterations = 1
+iterator.LogEnd = 0.0099
+iterator.LogInterval = 1e-3
+iterator.Displacement = 1
 
 fil = theSimulator.createEntity('CompartmentProcess', 'Process:/:filam')
 fil.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
