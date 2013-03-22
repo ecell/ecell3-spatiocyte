@@ -97,6 +97,7 @@ public:
     isFixedAdjoins(false),
     isGaussianPopulation(false),
     isInContact(false),
+    isInterface(false),
     isMultiscale(false),
     isMultiscaleComp(false),
     isOffLattice(false),
@@ -116,8 +117,8 @@ public:
     theMoleculeSize(0),
     theRotateSize(1),
     D(0),
-    theDiffuseRadius(voxelRadius),
     nDiffuseRadius(0.5),
+    theDiffuseRadius(voxelRadius),
     theDiffusionInterval(libecs::INF),
     theMoleculeRadius(voxelRadius),
     theVoxelRadius(voxelRadius),
@@ -181,6 +182,10 @@ public:
         }
       thePopulateProcess = aProcess;
     }
+  bool getIsInterface()
+    {
+      return isInterface;
+    }
   bool getIsDeoligomerize()
     {
       return isDeoligomerize;
@@ -237,6 +242,10 @@ public:
   void setIsPeriodic()
     {
       isPeriodic = true;
+    }
+  void setIsInterface()
+    {
+      isInterface = true;
     }
   void setIsRegularLattice(unsigned aDiffuseSize)
     {
@@ -519,12 +528,14 @@ public:
                 }
             }
         }
+      /*
       if(!isVacant && !getIsPopulated())
         {
           THROW_EXCEPTION(ValueError, getIDString() +
              ": has a non-zero value:" + int2str(getVariable()->getValue()) +
             " but is not populated.");
         }
+        */
     }
   unsigned getCollisionCnt(unsigned anIndex)
     {
@@ -2954,6 +2965,7 @@ private:
   bool isFixedAdjoins;
   bool isGaussianPopulation;
   bool isInContact;
+  bool isInterface;
   bool isMultiscale;
   bool isMultiscaleComp;
   bool isOffLattice;

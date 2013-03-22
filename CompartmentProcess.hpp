@@ -129,6 +129,7 @@ public:
       SpatiocyteProcess::initialize();
       theInterfaceSpecies = theSpatiocyteStepper->addSpecies(
                                                        theInterfaceVariable);
+      theInterfaceSpecies->setIsInterface();
       theVacantSpecies = theSpatiocyteStepper->addSpecies(theVacantVariable);
       if(LipidRadius)
         {
