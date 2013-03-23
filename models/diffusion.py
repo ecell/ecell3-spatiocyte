@@ -1,5 +1,5 @@
 sim = theSimulator.createStepper('SpatiocyteStepper', 'SS')
-sim.VoxelRadius = 2.74e-9
+sim.VoxelRadius = 2.5e-9
 sim.SearchVacant = 0
 
 theSimulator.rootSystem.StepperID = 'SS'
@@ -19,10 +19,10 @@ theSimulator.createEntity('Variable', 'Variable:/Surface:VACANT')
 
 theSimulator.createEntity('Variable', 'Variable:/Surface:MinD').Value = 1
 
-logger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:logger')
-logger.VariableReferenceList = [['_', 'Variable:/:Vacant']]
-logger.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
-#logger.LogInterval = 1e-5
+#logger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:logger')
+#logger.VariableReferenceList = [['_', 'Variable:/:Vacant']]
+#logger.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
+#logger.LogInterval = 1e-2;
 #logger.MultiscaleStructure = 0
 
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop')
@@ -30,15 +30,17 @@ populator.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:propenMinD')
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
-diffuser.D = 1e-10
+diffuser.D = 1e-13
 diffuser.Origins = 1
 
 iterator = theSimulator.createEntity('IteratingLogProcess', 'Process:/:iterate')
 iterator.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
-iterator.Iterations = 1
-iterator.LogEnd = 0.0099
-iterator.LogInterval = 1e-3
-iterator.Displacement = 1
+iterator.Iterations = 100
+iterator.LogEnd = 99
+iterator.LogInterval = 1
+iterator.Diffusion = 1
+iterator.SaveCounts = 50
+iterator.FileName = "mind.csv"
 
 fil = theSimulator.createEntity('CompartmentProcess', 'Process:/:filam')
 fil.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
@@ -46,18 +48,19 @@ fil.Length = 1e-7
 fil.Width = 1e-7
 fil.Autofit = 1
 #fil.Filaments = 4
-fil.SubunitRadius = 1.74e-9
+fil.SubunitRadius = 0.4e-9
 fil.SubunitAngle = 0
-fil.DiffuseRadius = 0.436e-9
-fil.LipidRadius = 0.436e-9
+fil.DiffuseRadius = 0.4e-9
+fil.LipidRadius = 0.4e-9
 fil.Periodic = 1
 fil.RegularLattice = 1
+
 
 import time
 run(1e-6)
 print "Done stirring. Now running..."
 start = time.time()
-run(0.01)
+run(100)
 end = time.time()
 duration = end-start
 print duration

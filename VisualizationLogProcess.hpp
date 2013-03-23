@@ -139,6 +139,7 @@ public:
   virtual void fire()
     {
       logSpecies();
+      theLogFile.flush();
       if(LogInterval > 0)
         {
           theTime += LogInterval;

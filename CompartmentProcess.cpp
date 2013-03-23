@@ -220,6 +220,7 @@ void CompartmentProcess::initializeThird()
     }
   theVacantSpecies->setIsPopulated();
   theLipidSpecies->setIsPopulated();
+  theInterfaceSpecies->setIsPopulated();
 }
 
 // y:width:rows:filaments
@@ -615,8 +616,6 @@ void CompartmentProcess::interfaceSubunits()
   enlistNonIntersectInterfaceVoxels();
   setDiffuseSize(subStartCoord, lipStartCoord);
   enlistSubunitInterfaceAdjoins();
-  theVacantSpecies->setIsPopulated();
-  theInterfaceSpecies->setIsPopulated();
 }
 
 void CompartmentProcess::enlistInterfaceVoxels()

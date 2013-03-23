@@ -443,8 +443,8 @@ public:
       Origin& anOrigin(theMoleculeOrigins[index]);
       Point aPoint(getPoint(index));
       aPoint.x += anOrigin.layer*(theComp->lengthX+nDiffuseRadius);
-      aPoint.y += anOrigin.row*(lipRows*nDiffuseRadius*sqrt(3));
-      aPoint.z += anOrigin.col*(lipCols*nDiffuseRadius*2);
+      aPoint.y += anOrigin.row*lipRows*nDiffuseRadius*sqrt(3);
+      aPoint.z += anOrigin.col*lipCols*nDiffuseRadius*2;
       return aPoint;
     }
   void setCollision(unsigned aCollision)
@@ -528,14 +528,12 @@ public:
                 }
             }
         }
-      /*
       if(!isVacant && !getIsPopulated())
         {
           THROW_EXCEPTION(ValueError, getIDString() +
              ": has a non-zero value:" + int2str(getVariable()->getValue()) +
             " but is not populated.");
         }
-        */
     }
   unsigned getCollisionCnt(unsigned anIndex)
     {
@@ -716,6 +714,7 @@ public:
             }
           Voxel* target(&theLattice[source->adjoiningCoords[
                         theRng.Integer(size)]]);
+          //Voxel* target(&theLattice[source->adjoiningCoords[1]]);
           if(getID(target) == theVacantID)
             {
               if(theWalkProbability == 1 || theRng.Fixed() < theWalkProbability)
@@ -1085,6 +1084,7 @@ public:
           Voxel* source(theMolecules[i]);
           const unsigned srcCoord(source->coord-vacStartCoord);
           const unsigned tarIndex(theRng.Integer(theDiffuseSize)); 
+          //const unsigned tarIndex(0);
           const unsigned row(srcCoord/lipCols);
           int tarCoord(srcCoord+theAdjoinOffsets[row%2][tarIndex]);
           Origin anOrigin(theMoleculeOrigins[i]);
@@ -1096,8 +1096,7 @@ public:
           Voxel* target(&theLattice[tarCoord+vacStartCoord]);
           if(getID(target) == theVacantID)
             {
-              if(!isIntersectMultiscaleRegular(srcCoord, row,
-                       theTarOffsets[row%2][theTags[i].rotIndex][tarIndex]))
+              //if(!isIntersectMultiscaleRegular(srcCoord, row, theTarOffsets[row%2][theTags[i].rotIndex][tarIndex]))
                 {
                   moveMultiscaleMoleculeRegular(srcCoord, row, 
                      theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
@@ -2035,9 +2034,8 @@ public:
         {
           for(unsigned i(0); i < theMoleculeSize; ++i)
             {
-              theMolecules[i]->idx = theVacantSpecies->getID()*theStride;
+              removeMolecule(i);
             }
-          theMoleculeSize = 0;
           theVariable->setValue(theMoleculeSize);
         }
     }
@@ -2502,6 +2500,10 @@ public:
     {
       double nDist((aLipid->getMoleculeRadius()+theMoleculeRadius)/
                    (2*theVoxelRadius));
+      if(aLipid->getMoleculeRadius() >= theMoleculeRadius)
+        {
+          nDist = 1.5*theMoleculeRadius/(2*theVoxelRadius);
+        }
       //Traverse through the entire compartment voxels:
       unsigned endA(vacStartCoord+theVacantSpecies->size());
       theIntersectLipids.resize(theVacantSpecies->size());
@@ -2559,6 +2561,10 @@ public:
       setAdjoinOffsets(anAdjoinOffsets, aRowOffsets);
       double nDist((aLipid->getMoleculeRadius()+theMoleculeRadius)/
                    (2*theVoxelRadius));
+      if(aLipid->getMoleculeRadius() >= theMoleculeRadius)
+        {
+          nDist = 1.5*theMoleculeRadius/(2*theVoxelRadius);
+        }
       theRegLatticeCoord = lipRows/2*lipCols+lipCols/2;
       theOffsets.resize(2);
       unsigned rowA(aVacantRows/2);
