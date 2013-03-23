@@ -1096,7 +1096,7 @@ public:
           Voxel* target(&theLattice[tarCoord+vacStartCoord]);
           if(getID(target) == theVacantID)
             {
-              //if(!isIntersectMultiscaleRegular(srcCoord, row, theTarOffsets[row%2][theTags[i].rotIndex][tarIndex]))
+              if(!isIntersectMultiscaleRegular(srcCoord, row, theTarOffsets[row%2][theTags[i].rotIndex][tarIndex]))
                 {
                   moveMultiscaleMoleculeRegular(srcCoord, row, 
                      theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
@@ -2588,7 +2588,6 @@ public:
       setOffsets(rowB, coordB, nDist, aLipidStart, nLipidRadius, aSubunitAngle,
                  aSurfaceNormal, theOffsets[rowB%2]);
       theTotalLipidSites = theOffsets[0][0].size();
-      std::cout << "total sites:" << theTotalLipidSites << std::endl;
     }
   void setOffsets(const unsigned row, const unsigned coordA, const double nDist,
                   const Point& aLipidStart, const double nLipidRadius,

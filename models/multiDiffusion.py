@@ -23,7 +23,7 @@ theSimulator.createEntity('Variable', 'Variable:/Surface:MinD').Value = 1
 #logger.VariableReferenceList = [['_', 'Variable:/:Vacant']]
 #logger.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
 #logger.LogInterval = 1e-2;
-#logger.MultiscaleStructure = 0
+#logger.MultiscaleStructure = 1
 
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop')
 populator.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
@@ -40,7 +40,7 @@ iterator.LogEnd = 99
 iterator.LogInterval = 1
 iterator.Diffusion = 1
 iterator.SaveCounts = 500
-iterator.FileName = "mind.csv"
+iterator.FileName = "ulti.csv"
 
 fil = theSimulator.createEntity('CompartmentProcess', 'Process:/:filam')
 fil.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
@@ -48,7 +48,7 @@ fil.Length = 1e-7
 fil.Width = 1e-7
 fil.Autofit = 1
 #fil.Filaments = 4
-fil.SubunitRadius = 0.4e-9
+fil.SubunitRadius = 1.74e-9
 fil.SubunitAngle = 0
 fil.DiffuseRadius = 0.4e-9
 fil.LipidRadius = 0.4e-9
