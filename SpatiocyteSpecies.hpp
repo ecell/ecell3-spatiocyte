@@ -411,6 +411,32 @@ public:
     {
       return theID;
     }
+  double getDisplacement()
+    {
+      if(!theMoleculeSize)
+        {
+          return 0;
+        }
+      double aDisplacement(0);
+      for(unsigned i(0); i < theMoleculeSize; ++i)
+        {
+          Point aCurrentPoint;
+          if(isOrigins)
+            {
+              aCurrentPoint = getPeriodicPoint(i);
+            }
+          else
+            {
+              aCurrentPoint = theStepper->getPeriodicPoint(getCoord(i),
+                                                           theDimension,
+                                                   &theMoleculeOrigins[i]);
+            }
+          double aDistance(getDistance(&theMoleculeOrigins[i].point,
+                                       &aCurrentPoint));
+          aDisplacement += aDistance;
+        }
+      return aDisplacement/theMoleculeSize*theStepper->getVoxelRadius()*2;
+    }
   double getMeanSquaredDisplacement()
     {
       if(!theMoleculeSize)
@@ -2051,10 +2077,8 @@ public:
     {
       isOrigins = false;
     }
-  void initMoleculeOrigins()
+  void resetMoleculeOrigins()
     {
-      isOrigins = true;
-      theMoleculeOrigins.resize(theMoleculeSize);
       for(unsigned i(0); i < theMoleculeSize; ++i)
         {
           Origin& anOrigin(theMoleculeOrigins[i]);
@@ -2063,6 +2087,12 @@ public:
           anOrigin.layer = 0;
           anOrigin.col = 0;
         }
+    }
+  void initMoleculeOrigins()
+    {
+      isOrigins = true;
+      theMoleculeOrigins.resize(theMoleculeSize);
+      resetMoleculeOrigins();
     }
   void removeBoundaryMolecules()
     {

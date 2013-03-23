@@ -46,6 +46,11 @@ void IteratingLogProcess::initializeFifth()
           theInterval = reactantPair->getDiffusionInterval();
         }
     }
+  thePrevValues.resize(theProcessSpecies.size()+theProcessVariables.size());
+  for(unsigned i(0); i != thePrevValues.size(); ++i)
+    {
+      thePrevValues[i] = 0;
+    }
   if(LogInterval > 0)
     {
       theInterval = LogInterval;
@@ -54,7 +59,7 @@ void IteratingLogProcess::initializeFifth()
     {
       LogInterval = theInterval;
     }
-  theTime = LogStart;
+  theTime = std::max(LogStart-theInterval, 0.0);
   thePriorityQueue->move(theQueueID);
 }
 
@@ -68,15 +73,13 @@ void IteratingLogProcess::initializeLastOnce()
     }
   else
     {
-      timePoints = (unsigned int)ceil((LogEnd-LogStart)/theInterval)+1;
+      timePoints = (unsigned)ceil((LogEnd-LogStart)/theInterval)+1;
     }
   theLogValues.resize(timePoints);
-  for(unsigned int i(0); i != timePoints; ++i)
+  for(unsigned i(0); i != timePoints; ++i)
     {
-      theLogValues[i].resize(theProcessSpecies.size()+
-                             theProcessVariables.size());
-      for(unsigned int j(0);
-          j != theProcessSpecies.size()+theProcessVariables.size(); ++j)
+      theLogValues[i].resize(thePrevValues.size());
+      for(unsigned j(0); j != thePrevValues.size(); ++j)
         {
           theLogValues[i][j] = 0;
         }
@@ -85,7 +88,11 @@ void IteratingLogProcess::initializeLastOnce()
 
 void IteratingLogProcess::fire()
 {
-  if(theTime >= LogStart && theTime <= LogEnd)
+  if(theTime < LogStart)
+    {
+      doPreLog();
+    }
+  else if(theTime >= LogStart && theTime <= LogEnd)
     {
       logValues();
       //If all survival species are dead, go on to the next iteration:
@@ -118,14 +125,26 @@ void IteratingLogProcess::fire()
 }
 
 
+void IteratingLogProcess::doPreLog()
+{
+  for(unsigned i(0); i != theProcessSpecies.size(); ++i)
+    {
+      Species* aSpecies(theProcessSpecies[i]);
+      if(FrameDisplacement)
+        {
+          aSpecies->resetMoleculeOrigins();
+        }
+    }
+}
+
 void IteratingLogProcess::saveFile()
 {
   std::cout << "Saving data in: " << FileName.c_str() << std::endl;
-  double aTime(LogInterval);
-  for(unsigned int i(0); i != timePoints; ++i)
+  double aTime(LogStart);
+  for(unsigned i(0); i < timePoints-1; ++i)
     {
       theLogFile << std::setprecision(15) << aTime;
-      for(unsigned int j(0);
+      for(unsigned j(0);
           j != theProcessSpecies.size()+theProcessVariables.size(); ++j)
         {
           theLogFile << "," << std::setprecision(15) <<
@@ -148,12 +167,12 @@ void IteratingLogProcess::saveBackup()
       std::cout << "Saving backup data in: " << aFileName << std::endl;
       std::ofstream aFile;
       aFile.open(aFileName.c_str(), std::ios::trunc);
-      double aTime(LogInterval);
+      double aTime(LogStart);
       int completedIterations(theTotalIterations-Iterations);
-      for(unsigned int i(0); i != timePoints; ++i)
+      for(unsigned i(0); i < timePoints-1; ++i)
         {
           aFile << std::setprecision(15) << aTime;
-          for(unsigned int j(0);
+          for(unsigned j(0);
               j != theProcessSpecies.size()+theProcessVariables.size(); ++j)
             {
               aFile << "," << std::setprecision(15) <<
@@ -170,7 +189,7 @@ void IteratingLogProcess::logValues()
 {
  //std::cout << "timePoint:" << timePointCnt <<  " curr:" << theSpatiocyteStepper->getCurrentTime() << std::endl;
   isSurviving = false;
-  for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
+  for(unsigned i(0); i != theProcessSpecies.size(); ++i)
     {
       Species* aSpecies(theProcessSpecies[i]);
       if(RebindTime)
@@ -196,10 +215,16 @@ void IteratingLogProcess::logValues()
           theLogValues[timePointCnt][i] += aSpecies->getVariable()->getValue()/
             aSpecies->getInitCoordSize();
         }
-      else if(Displacement)
+      else if(SquaredDisplacement)
         {
           theLogValues[timePointCnt][i] += 
             aSpecies->getMeanSquaredDisplacement();
+        }
+      else if(FrameDisplacement)
+        {
+          theLogValues[timePointCnt][i] += 
+            sqrt(aSpecies->getMeanSquaredDisplacement()); 
+          aSpecies->resetMoleculeOrigins();
         }
       else if(Diffusion)
         {
@@ -214,7 +239,7 @@ void IteratingLogProcess::logValues()
         }
     }
   unsigned size(theProcessSpecies.size());
-  for(unsigned int i(0); i != theProcessVariables.size(); ++i)
+  for(unsigned i(0); i != theProcessVariables.size(); ++i)
     {
       theLogValues[timePointCnt][i+size] += theProcessVariables[i]->getValue();
     }

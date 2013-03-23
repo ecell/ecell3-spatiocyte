@@ -54,7 +54,8 @@ public:
       PROPERTYSLOT_SET_GET(Integer, InContact);
       PROPERTYSLOT_SET_GET(Integer, Survival);
       PROPERTYSLOT_SET_GET(Integer, RebindTime);
-      PROPERTYSLOT_SET_GET(Integer, Displacement);
+      PROPERTYSLOT_SET_GET(Integer, FrameDisplacement);
+      PROPERTYSLOT_SET_GET(Integer, SquaredDisplacement);
       PROPERTYSLOT_SET_GET(Integer, Diffusion);
     }
   SIMPLE_SET_GET_METHOD(Real, LogEnd);
@@ -67,13 +68,15 @@ public:
   SIMPLE_SET_GET_METHOD(Integer, InContact);
   SIMPLE_SET_GET_METHOD(Integer, Survival);
   SIMPLE_SET_GET_METHOD(Integer, RebindTime);
-  SIMPLE_SET_GET_METHOD(Integer, Displacement);
+  SIMPLE_SET_GET_METHOD(Integer, FrameDisplacement);
+  SIMPLE_SET_GET_METHOD(Integer, SquaredDisplacement);
   SIMPLE_SET_GET_METHOD(Integer, Diffusion);
   IteratingLogProcess():
     SpatiocyteProcess(),
     Centered(0),
     Diffusion(0),
-    Displacement(0),
+    FrameDisplacement(0),
+    SquaredDisplacement(0),
     InContact(0),
     Iterations(1),
     RebindTime(0),
@@ -127,11 +130,13 @@ public:
     {
       return false;
     }
+  void doPreLog();
 protected:
   bool isSurviving;
   int Centered;
   int Diffusion;
-  int Displacement;
+  int FrameDisplacement;
+  int SquaredDisplacement;
   int InContact;
   int Iterations;
   int RebindTime;
@@ -146,6 +151,7 @@ protected:
   String FileName;
   std::ofstream theLogFile;
   Comp* theComp;
+  std::vector<double> thePrevValues;
   std::vector<std::vector<double> > theLogValues;
 };
 
