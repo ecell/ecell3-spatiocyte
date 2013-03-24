@@ -58,7 +58,6 @@ void IteratingLogProcess::initializeFifth()
   thePriorityQueue->move(theQueueID);
   if(theFileCnt)
     {
-      saveFile();
       initializeLastOnce();
     }
 }
@@ -67,6 +66,7 @@ void IteratingLogProcess::initializeLastOnce()
 {
   if(SeparateFiles)
     {
+      SaveCounts = 0;
       theLogFile.open(String(FileName + int2str(theFileCnt)).c_str(),
                       std::ios::trunc);
       ++theFileCnt;
@@ -75,7 +75,6 @@ void IteratingLogProcess::initializeLastOnce()
     {
       theLogFile.open(FileName.c_str(), std::ios::trunc);
     }
-  theTotalIterations = Iterations;
   if(RebindTime)
     {
       timePoints = Iterations;
@@ -114,22 +113,18 @@ void IteratingLogProcess::fire()
     }
   if(theTime >= LogEnd && Iterations > 0)
     {
-      theInterval = LogInterval;
       --Iterations;
-      std::cout << "Iterations left:" << Iterations << " of " <<
-        theTotalIterations << std::endl;
-      if(Iterations > 0)
+      saveFile();
+      if(Iterations)
         {
-          theSpatiocyteStepper->reset(Iterations);
           saveBackup();
+          theSpatiocyteStepper->reset(Iterations);
           return;
         }
-    }
-  if(Iterations == 0)
-    {
-      saveFile();
-      theInterval = libecs::INF;
-      std::cout << "Done saving." << std::endl;
+      else
+        {
+          theInterval = libecs::INF;
+        }
     }
   theTime += theInterval;
   thePriorityQueue->moveTop();
@@ -138,6 +133,8 @@ void IteratingLogProcess::fire()
 
 void IteratingLogProcess::doPreLog()
 {
+  std::cout << "Iterations left:" << Iterations << " of " << theTotalIterations
+    << std::endl;
   for(unsigned i(0); i != theProcessSpecies.size(); ++i)
     {
       Species* aSpecies(theProcessSpecies[i]);
@@ -150,24 +147,29 @@ void IteratingLogProcess::doPreLog()
 
 void IteratingLogProcess::saveFile()
 {
+  unsigned aCompletedIterations(1);
   if(SeparateFiles)
     {
       std::cout << "Saving data in: " << 
         String(FileName+int2str(theFileCnt-1)).c_str() << std::endl;
     }
-  else
+  else if(!Iterations)
     {
       std::cout << "Saving data in: " << FileName.c_str() << std::endl;
+      aCompletedIterations = theTotalIterations;
+    }
+  else
+    {
+      return;
     }
   double aTime(LogStart);
   for(unsigned i(0); i < timePoints-1; ++i)
     {
       theLogFile << std::setprecision(15) << aTime;
-      for(unsigned j(0);
-          j != theProcessSpecies.size()+theProcessVariables.size(); ++j)
+      for(unsigned j(0); j != theLogValues[i].size(); ++j)
         {
           theLogFile << "," << std::setprecision(15) <<
-            theLogValues[i][j]/theTotalIterations;
+            theLogValues[i][j]/aCompletedIterations;
         }
       theLogFile << std::endl;
       aTime += LogInterval;

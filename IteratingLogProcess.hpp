@@ -99,6 +99,7 @@ public:
         }
       SpatiocyteProcess::initialize();
       isPriorityQueued = true;
+      theTotalIterations = Iterations;
     }
   virtual void initializeSecond()
     {
