@@ -30,14 +30,14 @@ populator.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:propenMinD')
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
-diffuser.D = 8e-14
+diffuser.D = 7.2e-14
 diffuser.Origins = 1
 
 iterator = theSimulator.createEntity('IteratingLogProcess', 'Process:/:iterate')
 iterator.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
 iterator.Iterations = 1
 iterator.LogEnd = 7
-iterator.LogStart = 2
+iterator.LogStart = 2.033
 iterator.LogInterval = 33e-3
 iterator.FrameDisplacement = 1
 iterator.FileName = "2013.matsuoka.pcb.Fig1G.sim.csv"

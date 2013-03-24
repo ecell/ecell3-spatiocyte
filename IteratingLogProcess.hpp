@@ -44,44 +44,48 @@ public:
   LIBECS_DM_OBJECT(IteratingLogProcess, Process)
     {
       INHERIT_PROPERTIES(Process);
-      PROPERTYSLOT_SET_GET(Real, LogEnd);
-      PROPERTYSLOT_SET_GET(Real, LogStart);
-      PROPERTYSLOT_SET_GET(Real, LogInterval);
-      PROPERTYSLOT_SET_GET(Integer, Iterations);
-      PROPERTYSLOT_SET_GET(Integer, SaveCounts);
-      PROPERTYSLOT_SET_GET(String, FileName);
       PROPERTYSLOT_SET_GET(Integer, Centered);
-      PROPERTYSLOT_SET_GET(Integer, InContact);
-      PROPERTYSLOT_SET_GET(Integer, Survival);
-      PROPERTYSLOT_SET_GET(Integer, RebindTime);
-      PROPERTYSLOT_SET_GET(Integer, FrameDisplacement);
-      PROPERTYSLOT_SET_GET(Integer, SquaredDisplacement);
       PROPERTYSLOT_SET_GET(Integer, Diffusion);
+      PROPERTYSLOT_SET_GET(Integer, FrameDisplacement);
+      PROPERTYSLOT_SET_GET(Integer, InContact);
+      PROPERTYSLOT_SET_GET(Integer, Iterations);
+      PROPERTYSLOT_SET_GET(Integer, RebindTime);
+      PROPERTYSLOT_SET_GET(Integer, SaveCounts);
+      PROPERTYSLOT_SET_GET(Integer, SeparateFiles);
+      PROPERTYSLOT_SET_GET(Integer, SquaredDisplacement);
+      PROPERTYSLOT_SET_GET(Integer, Survival);
+      PROPERTYSLOT_SET_GET(Real, LogEnd);
+      PROPERTYSLOT_SET_GET(Real, LogInterval);
+      PROPERTYSLOT_SET_GET(Real, LogStart);
+      PROPERTYSLOT_SET_GET(String, FileName);
     }
+  SIMPLE_SET_GET_METHOD(Integer, Centered);
+  SIMPLE_SET_GET_METHOD(Integer, Diffusion);
+  SIMPLE_SET_GET_METHOD(Integer, FrameDisplacement);
+  SIMPLE_SET_GET_METHOD(Integer, InContact);
+  SIMPLE_SET_GET_METHOD(Integer, Iterations);
+  SIMPLE_SET_GET_METHOD(Integer, RebindTime);
+  SIMPLE_SET_GET_METHOD(Integer, SaveCounts);
+  SIMPLE_SET_GET_METHOD(Integer, SeparateFiles);
+  SIMPLE_SET_GET_METHOD(Integer, SquaredDisplacement);
+  SIMPLE_SET_GET_METHOD(Integer, Survival);
   SIMPLE_SET_GET_METHOD(Real, LogEnd);
   SIMPLE_SET_GET_METHOD(Real, LogStart);
   SIMPLE_SET_GET_METHOD(Real, LogInterval);
-  SIMPLE_SET_GET_METHOD(Integer, Iterations);
-  SIMPLE_SET_GET_METHOD(Integer, SaveCounts);
   SIMPLE_SET_GET_METHOD(String, FileName);
-  SIMPLE_SET_GET_METHOD(Integer, Centered);
-  SIMPLE_SET_GET_METHOD(Integer, InContact);
-  SIMPLE_SET_GET_METHOD(Integer, Survival);
-  SIMPLE_SET_GET_METHOD(Integer, RebindTime);
-  SIMPLE_SET_GET_METHOD(Integer, FrameDisplacement);
-  SIMPLE_SET_GET_METHOD(Integer, SquaredDisplacement);
-  SIMPLE_SET_GET_METHOD(Integer, Diffusion);
   IteratingLogProcess():
     SpatiocyteProcess(),
     Centered(0),
     Diffusion(0),
     FrameDisplacement(0),
-    SquaredDisplacement(0),
     InContact(0),
     Iterations(1),
     RebindTime(0),
     SaveCounts(0),
+    SeparateFiles(0),
+    SquaredDisplacement(0),
     Survival(0),
+    theFileCnt(0),
     LogEnd(libecs::INF),
     LogStart(0),
     LogInterval(0),
@@ -133,25 +137,26 @@ public:
   void doPreLog();
 protected:
   bool isSurviving;
-  int Centered;
-  int Diffusion;
-  int FrameDisplacement;
-  int SquaredDisplacement;
-  int InContact;
-  int Iterations;
-  int RebindTime;
-  int SaveCounts;
-  int Survival;
-  int timePointCnt;
-  int theTotalIterations;
-  unsigned int timePoints;
+  unsigned Centered;
+  unsigned Diffusion;
+  unsigned FrameDisplacement;
+  unsigned InContact;
+  unsigned Iterations;
+  unsigned RebindTime;
+  unsigned SaveCounts;
+  unsigned SeparateFiles;
+  unsigned SquaredDisplacement;
+  unsigned Survival;
+  unsigned theFileCnt;
+  unsigned theTotalIterations;
+  unsigned timePoints;
+  unsigned timePointCnt;
   double LogEnd;
   double LogStart;
   double LogInterval;
   String FileName;
   std::ofstream theLogFile;
   Comp* theComp;
-  std::vector<double> thePrevValues;
   std::vector<std::vector<double> > theLogValues;
 };
 

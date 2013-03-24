@@ -46,11 +46,6 @@ void IteratingLogProcess::initializeFifth()
           theInterval = reactantPair->getDiffusionInterval();
         }
     }
-  thePrevValues.resize(theProcessSpecies.size()+theProcessVariables.size());
-  for(unsigned i(0); i != thePrevValues.size(); ++i)
-    {
-      thePrevValues[i] = 0;
-    }
   if(LogInterval > 0)
     {
       theInterval = LogInterval;
@@ -59,13 +54,27 @@ void IteratingLogProcess::initializeFifth()
     {
       LogInterval = theInterval;
     }
-  theTime = std::max(LogStart-theInterval, 0.0);
+  theTime = std::max(LogStart-theInterval, getStepper()->getMinStepInterval());
   thePriorityQueue->move(theQueueID);
+  if(theFileCnt)
+    {
+      saveFile();
+      initializeLastOnce();
+    }
 }
 
 void IteratingLogProcess::initializeLastOnce()
 {
-  theLogFile.open(FileName.c_str(), std::ios::trunc);
+  if(SeparateFiles)
+    {
+      theLogFile.open(String(FileName + int2str(theFileCnt)).c_str(),
+                      std::ios::trunc);
+      ++theFileCnt;
+    }
+  else
+    {
+      theLogFile.open(FileName.c_str(), std::ios::trunc);
+    }
   theTotalIterations = Iterations;
   if(RebindTime)
     {
@@ -78,8 +87,9 @@ void IteratingLogProcess::initializeLastOnce()
   theLogValues.resize(timePoints);
   for(unsigned i(0); i != timePoints; ++i)
     {
-      theLogValues[i].resize(thePrevValues.size());
-      for(unsigned j(0); j != thePrevValues.size(); ++j)
+      theLogValues[i].resize(theProcessSpecies.size()+
+                             theProcessVariables.size(), 0);
+      for(unsigned j(0); j != theLogValues[i].size(); ++j)
         {
           theLogValues[i][j] = 0;
         }
@@ -118,6 +128,7 @@ void IteratingLogProcess::fire()
   if(Iterations == 0)
     {
       saveFile();
+      theInterval = libecs::INF;
       std::cout << "Done saving." << std::endl;
     }
   theTime += theInterval;
@@ -139,7 +150,15 @@ void IteratingLogProcess::doPreLog()
 
 void IteratingLogProcess::saveFile()
 {
-  std::cout << "Saving data in: " << FileName.c_str() << std::endl;
+  if(SeparateFiles)
+    {
+      std::cout << "Saving data in: " << 
+        String(FileName+int2str(theFileCnt-1)).c_str() << std::endl;
+    }
+  else
+    {
+      std::cout << "Saving data in: " << FileName.c_str() << std::endl;
+    }
   double aTime(LogStart);
   for(unsigned i(0); i < timePoints-1; ++i)
     {
@@ -154,13 +173,12 @@ void IteratingLogProcess::saveFile()
       aTime += LogInterval;
     }
   theLogFile.close();
-  theInterval = libecs::INF;
 }
 
 void IteratingLogProcess::saveBackup()
 {
   if(SaveCounts > 0 && 
-     Iterations%(int)rint(theTotalIterations/SaveCounts) == 0)
+     Iterations%(unsigned)rint(theTotalIterations/SaveCounts) == 0)
     {
       std::string aFileName(FileName.c_str());
       aFileName = aFileName + ".back";
@@ -168,7 +186,7 @@ void IteratingLogProcess::saveBackup()
       std::ofstream aFile;
       aFile.open(aFileName.c_str(), std::ios::trunc);
       double aTime(LogStart);
-      int completedIterations(theTotalIterations-Iterations);
+      unsigned completedIterations(theTotalIterations-Iterations);
       for(unsigned i(0); i < timePoints-1; ++i)
         {
           aFile << std::setprecision(15) << aTime;

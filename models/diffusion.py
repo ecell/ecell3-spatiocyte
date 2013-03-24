@@ -35,7 +35,7 @@ diffuser.Origins = 1
 
 iterator = theSimulator.createEntity('IteratingLogProcess', 'Process:/:iterate')
 iterator.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
-iterator.Iterations = 1000
+iterator.Iterations = 3000
 iterator.LogEnd = 99
 iterator.LogInterval = 1
 iterator.Diffusion = 1
