@@ -11,7 +11,7 @@ tickFontSize = 18
 legendFontSize = 18
 lineFontSize = 18
 
-fileNames = ['2013.matsuoka.pcb.Fig1G.exp.csv', '2013.matsuoka.pcb.Fig1G.sim.csv0']
+fileNames = ['2013.matsuoka.pcb.Fig1G.exp.csv', '2013.matsuoka.pcb.Fig1G.sim.csv']
 legendTitles = ['PTEN (Matsuoka et al. 2013)', r'PTEN (sim D=0.072 um$^2$s$^{-1}$)']
 speciesList = ['PTENep', 'PTENsim']
 lines = ['-', '--', '-', '-']

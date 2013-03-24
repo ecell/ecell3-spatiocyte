@@ -35,12 +35,13 @@ diffuser.Origins = 1
 
 iterator = theSimulator.createEntity('IteratingLogProcess', 'Process:/:iterate')
 iterator.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
-iterator.Iterations = 1
+iterator.Iterations = 967
+iterator.SeparateFiles = 1
 iterator.LogEnd = 7
 iterator.LogStart = 2.033
 iterator.LogInterval = 33e-3
 iterator.FrameDisplacement = 1
-iterator.FileName = "2013.matsuoka.pcb.Fig1G.sim.csv"
+iterator.FileName = "2013.matsuoka.pcb.Fig4B.sim.csva"
 
 fil = theSimulator.createEntity('CompartmentProcess', 'Process:/:filam')
 fil.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
