@@ -124,6 +124,7 @@ public:
     theVoxelRadius(voxelRadius),
     theWalkProbability(1),
     theRng(aRng),
+    theDeoligomerizedProduct(NULL),
     thePopulateProcess(NULL),
     theStepper(aStepper),
     theVariable(aVariable),
@@ -2219,13 +2220,17 @@ public:
   //clear the whole compartment using theComp->vacantSpecies->getVacantID():
   void removeMolecules()
     {
-      if(!isCompVacant)
+      if(!isCompVacant && !isInterface)
         {
-          for(unsigned i(0); i < theMoleculeSize; ++i)
+          while(theMoleculeSize)
             {
-              removeMolecule(i);
+              removeMolecule(theMoleculeSize-1);
             }
           theVariable->setValue(theMoleculeSize);
+          if(theDeoligomerizedProduct)
+            {
+              theDeoligomerizedProduct->removeMolecules();
+            }
         }
     }
   int getPopulateCoordSize()

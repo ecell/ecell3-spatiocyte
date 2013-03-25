@@ -73,6 +73,7 @@ public:
   SIMPLE_SET_GET_METHOD(Real, UniformRadiusZ);
   virtual void initialize();
   virtual void initializeSecond();
+  virtual void initializeThird();
   virtual void populateGaussian(Species*);
   virtual void populateUniformDense(Species*, unsigned int*, unsigned int*);
   virtual void populateUniformSparse(Species* aSpecies);

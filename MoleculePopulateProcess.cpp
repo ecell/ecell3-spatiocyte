@@ -69,7 +69,6 @@ void MoleculePopulateProcess::initialize()
 void MoleculePopulateProcess::initializeSecond()
 {
   SpatiocyteProcess::initializeSecond();
-  checkProcess();
   for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
       i != theProcessSpecies.end(); ++i)
     {
@@ -77,8 +76,9 @@ void MoleculePopulateProcess::initializeSecond()
     }
 }
 
-void MoleculePopulateProcess::checkProcess()
+void MoleculePopulateProcess::initializeThird()
 {
+  SpatiocyteProcess::initializeThird();
   std::vector<Variable*> aVariables;
   std::vector<Process*> aProcesses(theSpatiocyteStepper->getProcessVector());
   for(std::vector<Process*>::const_iterator j(aProcesses.begin());
