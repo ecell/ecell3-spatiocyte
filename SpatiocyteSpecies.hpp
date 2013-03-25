@@ -1055,13 +1055,10 @@ public:
           Voxel* target(&theLattice[tarCoord+vacStartCoord]);
           if(getID(target) == theVacantID)
             {
-              if(isNonIntersectMultiscaleWalkPropensityRegular(srcCoord, row,
+              if(isMoveMultiscaleWalkPropensityRegular(srcCoord, row,
                      theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
-                     theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex]))
+                     theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex], i))
                 {
-                  moveMultiscaleMoleculeRegular(srcCoord, row, 
-                     theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
-                     theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex], i);
                   source->idx = target->idx;
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
@@ -1088,13 +1085,10 @@ public:
           Voxel* target(&theLattice[tarCoord+vacStartCoord]);
           if(getID(target) == theVacantID)
             {
-              if(isNonIntersectMultiscaleWalkPropensityRegular(srcCoord, row,
+              if(isMoveMultiscaleWalkPropensityRegular(srcCoord, row,
                      theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
-                     theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex]))
+                     theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex], i))
                 {
-                  moveMultiscaleMoleculeRegular(srcCoord, row, 
-                     theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
-                     theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex], i);
                   source->idx = target->idx;
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
@@ -1512,6 +1506,98 @@ public:
             {
               theTags[theMoleculeSize-1] = aTag;
             }
+        }
+    }
+  bool isMoveMultiscaleWalkPropensityRegular(const unsigned coordA, 
+                                             const unsigned rowA,
+                                           const std::vector<int>& tarOffsets,
+                                           const std::vector<int>& srcOffsets,
+                                           const unsigned index)
+    {
+      theIdxList.resize(0);
+      theBindList.resize(0);
+      theVacantList.resize(0);
+      theUnbindList.resize(0);
+      int tarCnt(0);
+      int srcCnt(0);
+      //count tar
+      for(unsigned i(0); i != tarOffsets.size(); ++i)
+        {
+          const int offsetRow((tarOffsets[i]+theRegLatticeCoord)/lipCols-
+                              theRegLatticeCoord/lipCols+rowA);
+          int coordB(coordA+tarOffsets[i]);
+          if(isInLattice(coordB, offsetRow))
+            {
+              const unsigned coord(coordB+lipStartCoord);
+              const unsigned anID(getID(theLattice[coord]));
+              if(anID == theID || isMultiscaleBoundID[anID])
+                {
+                  return false;
+                }
+              if(isMultiscaleBinderID[anID])
+                {
+                  ++tarCnt;
+                }
+              if(getID(theLattice[coord]) ==
+                 theMultiscaleVacantSpecies->getID())
+                {
+                  theIdxList.push_back(coord);
+                }
+              else
+                {
+                  theBindList.push_back(coord);
+                }
+            }
+        }
+      //count src
+      for(unsigned i(0); i != srcOffsets.size(); ++i)
+        {
+          const int offsetRow((srcOffsets[i]+theRegLatticeCoord)/lipCols-
+                              theRegLatticeCoord/lipCols+rowA);
+          int coordB(coordA+srcOffsets[i]);
+          if(isInLattice(coordB, offsetRow))
+            {
+              const unsigned coord(coordB+lipStartCoord);
+              if(isMultiscaleBoundID[getID(theLattice[coord])])
+                {
+                  ++srcCnt;
+                }
+              if(getID(theLattice[coord]) == theID)
+                {
+                  theVacantList.push_back(coord);
+                }
+              else
+                {
+                  theUnbindList.push_back(coord);
+                }
+            }
+        }
+      if(theRng.Fixed() < exp((tarCnt-srcCnt)/theWalkPropensity))
+        {
+          updateMoveMultiscale(index);
+          return true;
+        }
+      return false;
+    }
+  void updateMoveMultiscale(const unsigned index)
+    {
+      const unsigned idx(index+theID*theStride);
+      for(unsigned i(0); i != theIdxList.size(); ++i)
+        {
+          theLattice[theIdxList[i]].idx = idx;
+        }
+      for(unsigned i(0); i != theBindList.size(); ++i)
+        {
+          bindMultiscale(&theLattice[theBindList[i]], idx);
+        }
+      for(unsigned i(0); i != theVacantList.size(); ++i)
+        {
+          theLattice[theVacantList[i]].idx = 
+            theMultiscaleVacantSpecies->getID()*theStride;
+        }
+      for(unsigned i(0); i != theUnbindList.size(); ++i)
+        {
+          unbindMultiscale(&theLattice[theUnbindList[i]]);
         }
     }
   bool isNonIntersectMultiscaleWalkPropensityRegular(const unsigned coordA, 
@@ -3160,6 +3246,10 @@ private:
   std::vector<std::vector<unsigned> > theIntersectLipids;
   std::vector<unsigned> theBoundCnts;
   std::vector<Species*>& theSpecies;
+  std::vector<unsigned> theIdxList;
+  std::vector<unsigned> theBindList;
+  std::vector<unsigned> theVacantList;
+  std::vector<unsigned> theUnbindList;
 };
 
 
