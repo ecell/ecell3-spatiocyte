@@ -284,6 +284,17 @@ void MultiscaleReactionProcess::reactMuAtoMuC_BeqD(Voxel* molA,
   A->softRemoveMolecule(indexA);
 }
 
+//MuA + B -> [MuC <- MuA] + [MuB == MuD]
+void MultiscaleReactionProcess::reactMuAtoMuC_MuBeqMuD(Voxel* molA,
+                                                       Voxel* molB,
+                                                       const unsigned indexA,
+                                                       const unsigned indexB)
+{
+  C->addMoleculeInMulti(molA, getIdx(A, molA, indexA));
+  A->softRemoveMolecule(indexA);
+}
+
+
 //A + MuB -> [C <- molA] + [MuB == MuD]
 void MultiscaleReactionProcess::reactAtoC_MuBeqMuD(Voxel* molA,
                                                         Voxel* molB,
@@ -581,7 +592,7 @@ void MultiscaleReactionProcess::setReactD()
           else
             {
               //A + B -> [MuC <- MuA] + [MuB == MuD] 
-              throwException("reactMuAtoMuC_MuBeqMuD");
+              reactM = &MultiscaleReactionProcess::reactMuAtoMuC_MuBeqMuD;
             }
         }
       else
