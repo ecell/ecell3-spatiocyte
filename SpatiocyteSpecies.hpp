@@ -146,12 +146,10 @@ public:
       theMultiscaleUnbindIDs.resize(speciesSize);
       isMultiscaleBinderID.resize(speciesSize);
       isMultiscaleBoundID.resize(speciesSize);
-      isDeoligomerizeID.resize(speciesSize);
       for(unsigned i(0); i != speciesSize; ++i)
         {
           isMultiscaleBinderID[i] = false;
           isMultiscaleBoundID[i] = false;
-          isDeoligomerizeID[i] = false;
           theDiffusionInfluencedReactions[i] = NULL;
           theReactionProbabilities[i] = 0;
           isFinalizeReactions[i] = false;
@@ -542,16 +540,6 @@ public:
               for(unsigned i(0); i != theMoleculeSize; ++i)
                 {
                   theTags[i].origin = getCoord(i);
-                }
-            }
-        }
-      if(isDeoligomerize)
-        {
-          for(unsigned i(0); i != theSpecies.size(); ++i)
-            {
-              if(theSpecies[i]->getIsDeoligomerize())
-                {
-                  isDeoligomerizeID[i] = true;
                 }
             }
         }
@@ -2135,7 +2123,7 @@ public:
         {
           unsigned aCoord(aVoxel->adjoiningCoords[i]);
           const unsigned anID(getID(theLattice[aCoord]));
-          if(isDeoligomerizeID[anID])
+          if(theSpecies[anID]->getIsDeoligomerize())
             {
               cnt++;
               theSpecies[anID]->addBound(theLattice[aCoord].idx%theStride);
@@ -2152,7 +2140,7 @@ public:
         {
           const unsigned aCoord(aVoxel->adjoiningCoords[i]);
           const unsigned anID(getID(theLattice[aCoord]));
-          if(isDeoligomerizeID[anID])
+          if(theSpecies[anID]->getIsDeoligomerize())
             {
               theSpecies[anID]->removeBound(theLattice[aCoord].idx%theStride);
             }
@@ -3227,7 +3215,6 @@ private:
   std::vector<std::vector<std::vector<std::vector<int> > > > theTarOffsets;
   std::vector<std::vector<std::vector<std::vector<int> > > > theSrcOffsets;
   std::vector<std::vector<std::vector<std::vector<int> > > > theRotOffsets;
-  std::vector<bool> isDeoligomerizeID;
   std::vector<bool> isFinalizeReactions;
   std::vector<bool> isMultiscaleBinderID;
   std::vector<bool> isMultiscaleBoundID;
