@@ -740,7 +740,6 @@ public:
             }
           Voxel* target(&theLattice[source->adjoiningCoords[
                         theRng.Integer(size)]]);
-          //Voxel* target(&theLattice[source->adjoiningCoords[1]]);
           if(getID(target) == theVacantID)
             {
               if(theWalkProbability == 1 || theRng.Fixed() < theWalkProbability)
@@ -1056,9 +1055,7 @@ public:
           Voxel* target(&theLattice[tarCoord+vacStartCoord]);
           if(getID(target) == theVacantID)
             {
-              if(!isIntersectMultiscaleRegular(srcCoord, row,
-                       theTarOffsets[row%2][theTags[i].rotIndex][tarIndex]) &&
-                 isMultiscaleWalkPropensityRegular(srcCoord, row,
+              if(isNonIntersectMultiscaleWalkPropensityRegular(srcCoord, row,
                      theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
                      theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex]))
                 {
@@ -1068,6 +1065,40 @@ public:
                   source->idx = target->idx;
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
+                }
+            }
+        }
+    }
+  void walkMultiscalePropensityRegularOrigins()
+    {
+      const unsigned beginMoleculeSize(theMoleculeSize);
+      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
+        {
+          Voxel* source(theMolecules[i]);
+          const unsigned srcCoord(source->coord-vacStartCoord);
+          const unsigned tarIndex(theRng.Integer(theDiffuseSize)); 
+          const unsigned row(srcCoord/lipCols);
+          int tarCoord(srcCoord+theAdjoinOffsets[row%2][tarIndex]);
+          Origin anOrigin(theMoleculeOrigins[i]);
+          if(!isInLatticeOrigins(tarCoord, theRowOffsets[tarIndex]+row,
+                                 anOrigin))
+            {
+              continue;
+            }
+          Voxel* target(&theLattice[tarCoord+vacStartCoord]);
+          if(getID(target) == theVacantID)
+            {
+              if(isNonIntersectMultiscaleWalkPropensityRegular(srcCoord, row,
+                     theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
+                     theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex]))
+                {
+                  moveMultiscaleMoleculeRegular(srcCoord, row, 
+                     theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
+                     theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex], i);
+                  source->idx = target->idx;
+                  target->idx = i+theStride*theID;
+                  theMolecules[i] = target;
+                  theMoleculeOrigins[i] = anOrigin;
                 }
             }
         }
@@ -1110,7 +1141,6 @@ public:
           Voxel* source(theMolecules[i]);
           const unsigned srcCoord(source->coord-vacStartCoord);
           const unsigned tarIndex(theRng.Integer(theDiffuseSize)); 
-          //const unsigned tarIndex(0);
           const unsigned row(srcCoord/lipCols);
           int tarCoord(srcCoord+theAdjoinOffsets[row%2][tarIndex]);
           Origin anOrigin(theMoleculeOrigins[i]);
@@ -1122,7 +1152,8 @@ public:
           Voxel* target(&theLattice[tarCoord+vacStartCoord]);
           if(getID(target) == theVacantID)
             {
-              if(!isIntersectMultiscaleRegular(srcCoord, row, theTarOffsets[row%2][theTags[i].rotIndex][tarIndex]))
+              if(!isIntersectMultiscaleRegular(srcCoord, row,
+                   theTarOffsets[row%2][theTags[i].rotIndex][tarIndex]))
                 {
                   moveMultiscaleMoleculeRegular(srcCoord, row, 
                      theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
@@ -1482,6 +1513,52 @@ public:
               theTags[theMoleculeSize-1] = aTag;
             }
         }
+    }
+  bool isNonIntersectMultiscaleWalkPropensityRegular(const unsigned coordA, 
+                                                     const unsigned rowA,
+                                           const std::vector<int>& tarOffsets,
+                                           const std::vector<int>& srcOffsets)
+    {
+      int tarCnt(0);
+      int srcCnt(0);
+      //count tar
+      for(unsigned i(0); i != tarOffsets.size(); ++i)
+        {
+          const int offsetRow((tarOffsets[i]+theRegLatticeCoord)/lipCols-
+                              theRegLatticeCoord/lipCols+rowA);
+          int coordB(coordA+tarOffsets[i]);
+          if(isInLattice(coordB, offsetRow))
+            {
+              const unsigned anID(getID(theLattice[coordB+lipStartCoord]));
+              if(isMultiscaleBinderID[anID])
+                {
+                  ++tarCnt;
+                }
+              else if(anID == theID || isMultiscaleBoundID[anID])
+                {
+                  return false;
+                }
+            }
+        }
+      //count src
+      for(unsigned i(0); i != srcOffsets.size(); ++i)
+        {
+          const int offsetRow((srcOffsets[i]+theRegLatticeCoord)/lipCols-
+                              theRegLatticeCoord/lipCols+rowA);
+          int coordB(coordA+srcOffsets[i]);
+          if(isInLattice(coordB, offsetRow))
+            {
+              if(isMultiscaleBoundID[getID(theLattice[coordB+lipStartCoord])])
+                {
+                  ++srcCnt;
+                }
+            }
+        }
+      if(theRng.Fixed() < exp((tarCnt-srcCnt)/theWalkPropensity))
+        {
+          return true;
+        }
+      return false;
     }
   bool isMultiscaleWalkPropensityRegular(const unsigned coordA, 
                                          const unsigned rowA,
