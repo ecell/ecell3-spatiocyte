@@ -131,7 +131,7 @@ protected:
   void reactBtoC(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactNtoC(Voxel*, Voxel*, const unsigned, const unsigned);
 protected:
-  unsigned int Collision;
+  unsigned Collision;
   double D_A;
   double D_B;
   double r_v;
