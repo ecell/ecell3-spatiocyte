@@ -78,25 +78,13 @@ react.VariableReferenceList = [['_', 'Variable:/:Lipid', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3', '1']]
 react.p = 0.3
 
+
+#PIP3x + PIP3x => 2 reactions
 react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:nucleatePIP3s')
 react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s', '1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s', '1']]
-react.p = 0.1
-
-react = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:nucleatePIP3s_PIP3s_PTEN')
-react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3', '-1']]
-react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3_PTEN', '-1']]
-react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s', '1']]
-react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s_PTEN', '1']]
-react.p = 0.1
-
-react = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:nucleatePIP3s_PTEN')
-react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3_PTEN', '-1']]
-react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3_PTEN', '-1']]
-react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s_PTEN', '1']]
-react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s_PTEN', '1']]
 react.p = 0.1
 
 react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:extendPIP3s')
@@ -106,8 +94,9 @@ react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s', '1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s', '1']]
 react.p = 0.1
 
-react = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:extendPIP3s_PTEN')
-react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s', '-1']]
+#PIP3x + PIP3x_PTEN => 3 reactions
+react = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:nucleatePIP3s_PIP3s_PTEN')
+react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3_PTEN', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s', '1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s_PTEN', '1']]
@@ -120,6 +109,21 @@ react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s', '1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s_PTEN', '1']]
 react.p = 0.1
 
+react = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:extendPIP3s_PTEN')
+react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s', '-1']]
+react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3_PTEN', '-1']]
+react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s', '1']]
+react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s_PTEN', '1']]
+react.p = 0.1
+
+#PIP3x_PTEN + PIP3x_PTEN => 2 reactions
+react = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:nucleatePIP3s_PTEN')
+react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3_PTEN', '-1']]
+react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3_PTEN', '-1']]
+react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s_PTEN', '1']]
+react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s_PTEN', '1']]
+react.p = 0.1
+
 react = theSimulator.createEntity('MultiscaleReactionProcess', 'Process:/:extendPIP3s_PIP3s_PTEN2')
 react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3_PTEN', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s_PTEN', '-1']]
@@ -127,20 +131,6 @@ react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s_PTEN', '1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s_PTEN', '1']]
 react.p = 0.1
 
-#react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:desorp')
-#react.VariableReferenceList = [['_', 'Variable:/Surface:PTEN', '-1']]
-#react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3_PTEN', '-1']]
-#react.VariableReferenceList = [['_', 'Variable:/:PTEN', '1']]
-#react.k = 20000
-
-#react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:dissocPIP3s')
-#react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3s', '-1']]
-#react.VariableReferenceList = [['_', 'Variable:/Surface:PTEN', '0']]
-#react.VariableReferenceList = [['_', 'Variable:/Surface:PIP3', '1']]
-#react.Deoligomerize = 0
-#react.ImplicitUnbind = 1
-#react.SearchVacant = 0
-#react.k = 1.5e+6
 
 #react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:dissocPIP3sLip')
 react = theSimulator.createEntity('SpatiocyteTauLeapProcess', 'Process:/:dissocPIP3sLip')

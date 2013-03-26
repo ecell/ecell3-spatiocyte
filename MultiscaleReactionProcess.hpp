@@ -78,6 +78,7 @@ protected:
   void reactMuBtoMuC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactAeqC_MuBtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactMuAeqMuC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactMuAeqMuC_MuBtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactBeqC_MuAtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactMuBeqMuC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactMuBtoMuC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
