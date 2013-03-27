@@ -28,20 +28,20 @@ theSimulator.createEntity('Variable', 'Variable:/Surface:MinD').Value = 1
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop')
 populator.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
 
-diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:propenMinD')
+diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuse')
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
-diffuser.D = 7.2e-14
+diffuser.D = 7.5757e-14
 diffuser.Origins = 1
 
 iterator = theSimulator.createEntity('IteratingLogProcess', 'Process:/:iterate')
 iterator.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
-iterator.Iterations = 967
+iterator.Iterations = 1967
 iterator.SeparateFiles = 1
-iterator.LogEnd = 7
-iterator.LogStart = 2.033
+iterator.LogEnd = 8
+iterator.LogStart = 1
 iterator.LogInterval = 33e-3
 iterator.FrameDisplacement = 1
-iterator.FileName = "2013.matsuoka.pcb.Fig4B.sim.csva"
+iterator.FileName = "2013.matsuoka.pcb.Fig4B.sim.csv"
 
 fil = theSimulator.createEntity('CompartmentProcess', 'Process:/:filam')
 fil.VariableReferenceList = [['_', 'Variable:/Surface:MinD']]
@@ -61,7 +61,7 @@ import time
 run(1e-6)
 print "Done stirring. Now running..."
 start = time.time()
-run(8)
+run(8.1)
 end = time.time()
 duration = end-start
 print duration
