@@ -46,6 +46,7 @@ public:
       INHERIT_PROPERTIES(Process);
       PROPERTYSLOT_SET_GET(Integer, Centered);
       PROPERTYSLOT_SET_GET(Integer, Diffusion);
+      PROPERTYSLOT_SET_GET(Integer, FileStartCount);
       PROPERTYSLOT_SET_GET(Integer, FrameDisplacement);
       PROPERTYSLOT_SET_GET(Integer, InContact);
       PROPERTYSLOT_SET_GET(Integer, Iterations);
@@ -61,6 +62,7 @@ public:
     }
   SIMPLE_SET_GET_METHOD(Integer, Centered);
   SIMPLE_SET_GET_METHOD(Integer, Diffusion);
+  SIMPLE_SET_GET_METHOD(Integer, FileStartCount);
   SIMPLE_SET_GET_METHOD(Integer, FrameDisplacement);
   SIMPLE_SET_GET_METHOD(Integer, InContact);
   SIMPLE_SET_GET_METHOD(Integer, Iterations);
@@ -77,6 +79,7 @@ public:
     SpatiocyteProcess(),
     Centered(0),
     Diffusion(0),
+    FileStartCount(0),
     FrameDisplacement(0),
     InContact(0),
     Iterations(1),
@@ -85,7 +88,7 @@ public:
     SeparateFiles(0),
     SquaredDisplacement(0),
     Survival(0),
-    theFileCnt(0),
+    theFileCnt(FileStartCount),
     LogEnd(libecs::INF),
     LogStart(0),
     LogInterval(0),
@@ -140,6 +143,7 @@ protected:
   bool isSurviving;
   unsigned Centered;
   unsigned Diffusion;
+  unsigned FileStartCount;
   unsigned FrameDisplacement;
   unsigned InContact;
   unsigned Iterations;

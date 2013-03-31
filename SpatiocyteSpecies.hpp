@@ -436,32 +436,36 @@ public:
         }
       return aDisplacement/theMoleculeSize*theStepper->getVoxelRadius()*2;
     }
+  double getSquaredDisplacement(const unsigned index)
+    {
+      Point aCurrentPoint;
+      if(isOrigins)
+        {
+          aCurrentPoint = getPeriodicPoint(index);
+        }
+      else
+        {
+          aCurrentPoint = theStepper->getPeriodicPoint(getCoord(index),
+                                                       theDimension,
+                                                   &theMoleculeOrigins[index]);
+        }
+      const double nDisplacement(getDistance(&theMoleculeOrigins[index].point,
+                                             &aCurrentPoint)*
+                                 theStepper->getVoxelRadius()*2);
+      return nDisplacement*nDisplacement;
+    }
   double getMeanSquaredDisplacement()
     {
       if(!theMoleculeSize)
         {
           return 0;
         }
-      double aDisplacement(0);
+      double aTotalSquaredDisplacement(0);
       for(unsigned i(0); i < theMoleculeSize; ++i)
         {
-          Point aCurrentPoint;
-          if(isOrigins)
-            {
-              aCurrentPoint = getPeriodicPoint(i);
-            }
-          else
-            {
-              aCurrentPoint = theStepper->getPeriodicPoint(getCoord(i),
-                                                           theDimension,
-                                                   &theMoleculeOrigins[i]);
-            }
-          double aDistance(getDistance(&theMoleculeOrigins[i].point,
-                                       &aCurrentPoint));
-          aDisplacement += aDistance*aDistance;
+          aTotalSquaredDisplacement += getSquaredDisplacement(i);
         }
-      return aDisplacement*pow(theStepper->getVoxelRadius()*2, 2)/
-        theMoleculeSize;
+      return aTotalSquaredDisplacement/theMoleculeSize;
     }
   Point getPeriodicPoint(const unsigned index)
     {

@@ -56,7 +56,7 @@ void IteratingLogProcess::initializeFifth()
     }
   theTime = std::max(LogStart-theInterval, getStepper()->getMinStepInterval());
   thePriorityQueue->move(theQueueID);
-  if(theFileCnt)
+  if(theFileCnt-FileStartCount)
     {
       initializeLastOnce();
     }
@@ -67,13 +67,7 @@ void IteratingLogProcess::initializeLastOnce()
   if(SeparateFiles)
     {
       SaveCounts = 0;
-      theLogFile.open(String(FileName + int2str(theFileCnt)).c_str(),
-                      std::ios::trunc);
       ++theFileCnt;
-    }
-  else
-    {
-      theLogFile.open(FileName.c_str(), std::ios::trunc);
     }
   if(RebindTime)
     {
@@ -84,11 +78,19 @@ void IteratingLogProcess::initializeLastOnce()
       timePoints = (unsigned)ceil((LogEnd-LogStart)/theInterval)+1;
     }
   theLogValues.resize(timePoints);
+  unsigned aDataSize(theProcessSpecies.size()+theProcessVariables.size());
+  if(FrameDisplacement)
+    {
+      aDataSize = 0;
+      for(unsigned i(0); i != theProcessSpecies.size(); ++i)
+        {
+          aDataSize += theProcessSpecies[i]->size();
+        }
+    }
   for(unsigned i(0); i != timePoints; ++i)
     {
-      theLogValues[i].resize(theProcessSpecies.size()+
-                             theProcessVariables.size(), 0);
-      for(unsigned j(0); j != theLogValues[i].size(); ++j)
+      theLogValues[i].resize(aDataSize, 0);
+      for(unsigned j(0); j != aDataSize; ++j)
         {
           theLogValues[i][j] = 0;
         }
@@ -150,12 +152,14 @@ void IteratingLogProcess::saveFile()
   unsigned aCompletedIterations(1);
   if(SeparateFiles)
     {
-      std::cout << "Saving data in: " << 
-        String(FileName+int2str(theFileCnt-1)).c_str() << std::endl;
+      String aFileName(FileName+int2str(theFileCnt-1));
+      std::cout << "Saving data in: " << aFileName.c_str() << std::endl;
+      theLogFile.open(aFileName.c_str(), std::ios::trunc);
     }
   else if(!Iterations)
     {
       std::cout << "Saving data in: " << FileName.c_str() << std::endl;
+      theLogFile.open(FileName.c_str(), std::ios::trunc);
       aCompletedIterations = theTotalIterations;
     }
   else
@@ -189,7 +193,7 @@ void IteratingLogProcess::saveBackup()
       aFile.open(aFileName.c_str(), std::ios::trunc);
       double aTime(LogStart);
       unsigned completedIterations(theTotalIterations-Iterations);
-      for(unsigned i(0); i < timePoints-1; ++i)
+      for(unsigned i(0); i < timePoints-2; ++i)
         {
           aFile << std::setprecision(15) << aTime;
           for(unsigned j(0);
@@ -242,8 +246,11 @@ void IteratingLogProcess::logValues()
         }
       else if(FrameDisplacement)
         {
-          theLogValues[timePointCnt][i] += 
-            sqrt(aSpecies->getMeanSquaredDisplacement()); 
+          for(unsigned j(0); j != aSpecies->size(); ++j)
+            {
+              theLogValues[timePointCnt][i*aSpecies->size()+j] += 
+                sqrt(aSpecies->getSquaredDisplacement(j)); 
+            }
           aSpecies->resetMoleculeOrigins();
         }
       else if(Diffusion)
