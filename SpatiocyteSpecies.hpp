@@ -1427,7 +1427,8 @@ public:
       if(theMoleculeSize > theMolecules.size())
         {
           theMolecules.resize(theMoleculeSize);
-          theTags.push_back({0, 0, 0, 0, 0});
+          Tag aTag{0, 0, 0, 0, 0};
+          theTags.push_back(aTag);
         }
       else
         {
@@ -1443,7 +1444,8 @@ public:
       if(theMoleculeSize > theMolecules.size())
         {
           theMolecules.resize(theMoleculeSize);
-          theTags.push_back({0, 0, 0, 0, 0});
+          Tag aTag{0, 0, 0, 0, 0};
+          theTags.push_back(aTag);
         }
       else
         {
