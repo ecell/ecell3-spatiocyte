@@ -88,7 +88,7 @@ public:
     SeparateFiles(0),
     SquaredDisplacement(0),
     Survival(0),
-    theFileCnt(FileStartCount),
+    theFileCnt(0),
     LogEnd(libecs::INF),
     LogStart(0),
     LogInterval(0),
@@ -103,6 +103,7 @@ public:
       SpatiocyteProcess::initialize();
       isPriorityQueued = true;
       theTotalIterations = Iterations;
+      theFileCnt = FileStartCount;
     }
   virtual void initializeSecond()
     {
