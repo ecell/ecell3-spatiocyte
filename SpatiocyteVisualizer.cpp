@@ -2499,10 +2499,24 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
       m_area.pause();
       break;
     case GDK_Page_Up:
-      m_area.zoomIn();
+      if(event->state&Gdk::SHIFT_MASK)
+        {
+          m_area.translate(0,0,-1);
+        }
+      else
+        {
+          m_area.zoomIn();
+        }
       break;
     case GDK_Page_Down:
-      m_area.zoomOut();
+      if(event->state&Gdk::SHIFT_MASK)
+        {
+          m_area.translate(0,0,1);
+        }
+      else
+        {
+          m_area.zoomOut();
+        }
       break;
     case GDK_0:
       if(event->state&Gdk::CONTROL_MASK)
