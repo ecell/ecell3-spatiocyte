@@ -5,8 +5,8 @@ sim.SearchVacant = 0
 theSimulator.rootSystem.StepperID = 'SS'
 theSimulator.createEntity('Variable', 'Variable:/:GEOMETRY').Value = 0
 theSimulator.createEntity('Variable', 'Variable:/:LENGTHX').Value = 1.0e-8
-theSimulator.createEntity('Variable', 'Variable:/:LENGTHY').Value = 0.3e-7
-theSimulator.createEntity('Variable', 'Variable:/:LENGTHZ').Value = 0.3e-7
+theSimulator.createEntity('Variable', 'Variable:/:LENGTHY').Value = 1e-7
+theSimulator.createEntity('Variable', 'Variable:/:LENGTHZ').Value = 1e-7
 theSimulator.createEntity('Variable', 'Variable:/:VACANT')
 theSimulator.createEntity('Variable', 'Variable:/:XYPLANE').Value = 5
 theSimulator.createEntity('Variable', 'Variable:/:XZPLANE').Value = 5
@@ -17,21 +17,21 @@ theSimulator.createEntity('System', 'System:/:Surface').StepperID = 'SS'
 theSimulator.createEntity('Variable', 'Variable:/Surface:DIMENSION').Value = 2
 theSimulator.createEntity('Variable', 'Variable:/Surface:VACANT')
 
-theSimulator.createEntity('Variable', 'Variable:/Surface:ANIO').Value = 146
+theSimulator.createEntity('Variable', 'Variable:/Surface:ANIO').Value = 3400
 theSimulator.createEntity('Variable', 'Variable:/Surface:ANIOs').Value = 0
 theSimulator.createEntity('Variable', 'Variable:/Surface:ANIO_PTEN').Value = 0
 theSimulator.createEntity('Variable', 'Variable:/Surface:ANIOs_PTEN').Value = 0
 theSimulator.createEntity('Variable', 'Variable:/:PTEN').Value = 0
-theSimulator.createEntity('Variable', 'Variable:/Surface:PTEN').Value = 1
+theSimulator.createEntity('Variable', 'Variable:/Surface:PTEN').Value = 80
 
-#logger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:logger')
-#logger.VariableReferenceList = [['_', 'Variable:/Surface:ANIO_PTEN']]
-#logger.VariableReferenceList = [['_', 'Variable:/Surface:ANIOs_PTEN']]
-#logger.VariableReferenceList = [['_', 'Variable:/Surface:PTEN']]
-#logger.VariableReferenceList = [['_', 'Variable:/Surface:ANIO']]
-#logger.VariableReferenceList = [['_', 'Variable:/Surface:ANIOs']]
-#logger.LogInterval = 1e+5
-#logger.MultiscaleStructure = 0
+logger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:logger')
+logger.VariableReferenceList = [['_', 'Variable:/Surface:ANIO_PTEN']]
+logger.VariableReferenceList = [['_', 'Variable:/Surface:ANIOs_PTEN']]
+logger.VariableReferenceList = [['_', 'Variable:/Surface:PTEN']]
+logger.VariableReferenceList = [['_', 'Variable:/Surface:ANIO']]
+logger.VariableReferenceList = [['_', 'Variable:/Surface:ANIOs']]
+logger.LogInterval = 1e-5
+logger.MultiscaleStructure = 0
 
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop')
 populator.VariableReferenceList = [['_', 'Variable:/Surface:ANIO']]
@@ -122,14 +122,14 @@ react.VariableReferenceList = [['_', 'Variable:/Surface:ANIOs', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:ANIO', '1']]
 react.Deoligomerize = 6
 react.SearchVacant = 1
-react.k = 5e+5
+react.k = 5.5e+5
 
 react = theSimulator.createEntity('SpatiocyteTauLeapProcess', 'Process:/:dissocPTENANIOs')
 react.VariableReferenceList = [['_', 'Variable:/Surface:ANIOs_PTEN', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:ANIO_PTEN', '1']]
 react.Deoligomerize = 6
 react.SearchVacant = 1
-react.k = 5e+5
+react.k = 5.5e+5
 
 #diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffusePTENv')
 #diffuser.VariableReferenceList = [['_', 'Variable:/:PTEN']]
@@ -150,8 +150,8 @@ react.k = 5e+5
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:propenPTEN')
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:PTEN']]
-diffuser.Interval = 5e-7
-diffuser.Propensity = 3.2
+diffuser.Interval = 9e-8
+diffuser.Propensity = 1.7
 #diffuser.Propensity = 1
 diffuser.Origins = 1
 
@@ -185,24 +185,15 @@ multi.VariableReferenceList = [['_', 'Variable:/Surface:ANIO', '-1']]
 multi.VariableReferenceList = [['_', 'Variable:/Surface:ANIO_PTEN', '1']]
 multi.VariableReferenceList = [['_', 'Variable:/Surface:PTEN', '1']]
 
-
-iterator = theSimulator.createEntity('IteratingLogProcess', 'Process:/:iterate')
-iterator.VariableReferenceList = [['_', 'Variable:/Surface:PTEN']]
-iterator.Iterations = 10000
-iterator.SeparateFiles = 1
-iterator.LogEnd = 5
-iterator.LogStart = 0.006
-iterator.LogInterval = 1e-3
-iterator.FrameDisplacement = 1
-iterator.FileStartCount = 300
-iterator.FileName = "2013.matsuoka.pcb.Fig4B.sim.anionic.d5e5.p3.2csv"
-
 fil = theSimulator.createEntity('CompartmentProcess', 'Process:/:filam')
 fil.VariableReferenceList = [['_', 'Variable:/Surface:PTEN']]
 fil.VariableReferenceList = [['_', 'Variable:/Surface:ANIO_PTEN', '1']]
 fil.VariableReferenceList = [['_', 'Variable:/Surface:ANIOs_PTEN', '1']]
 fil.VariableReferenceList = [['_', 'Variable:/Surface:ANIO', '1']]
 fil.VariableReferenceList = [['_', 'Variable:/Surface:ANIOs', '1']]
+fil.Length = 1e-7
+fil.Width = 1e-7
+#fil.Filaments = 4
 fil.SubunitRadius = 1.74e-9
 fil.SubunitAngle = 0
 fil.DiffuseRadius = 0.436e-9
@@ -214,7 +205,7 @@ import time
 run(1e-6)
 print "Done stirring. Now running..."
 start = time.time()
-run(5.1)
+run(0.01)
 end = time.time()
 duration = end-start
 print duration
