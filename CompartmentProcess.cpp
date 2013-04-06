@@ -219,7 +219,10 @@ void CompartmentProcess::initializeThird()
       isCompartmentalized = true;
     }
   theVacantSpecies->setIsPopulated();
-  theLipidSpecies->setIsPopulated();
+  if(theLipidSpecies)
+    {
+      theLipidSpecies->setIsPopulated();
+    }
   theInterfaceSpecies->setIsPopulated();
 }
 
@@ -248,19 +251,25 @@ void CompartmentProcess::setSpeciesIntersectLipids()
     }
   else
     {
-      for(unsigned i(0); i != theLipidSpecies->size(); ++i)
+      if(theLipidSpecies)
         {
-          Point& aPoint(*(*theLattice)[lipStartCoord+i].point);
-          unsigned row((unsigned)((aPoint.y-lipidStart.y)/nGridSize));
-          unsigned col((unsigned)((aPoint.z-lipidStart.z)/nGridSize));
-          theGrid[col+gridCols*row].push_back(lipStartCoord+i);
+          for(unsigned i(0); i != theLipidSpecies->size(); ++i)
+            {
+              Point& aPoint(*(*theLattice)[lipStartCoord+i].point);
+              unsigned row((unsigned)((aPoint.y-lipidStart.y)/nGridSize));
+              unsigned col((unsigned)((aPoint.z-lipidStart.z)/nGridSize));
+              theGrid[col+gridCols*row].push_back(lipStartCoord+i);
+            }
         }
       for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
         {
-          theVacantCompSpecies[i]->setIntersectLipids(theLipidSpecies,
+          if(theVacantCompSpecies[i]->getIsMultiscale())
+            {
+              theVacantCompSpecies[i]->setIntersectLipids(theLipidSpecies,
                                                 lipidStart, nGridSize, gridCols,
                                                 gridRows, theGrid, Filaments,
                                                 Subunits);
+            }
         }
     }
 }
@@ -383,8 +392,11 @@ void CompartmentProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,
                                              unsigned aStartCoord)
 {
   //The first comp voxel must have the aStartCoord:
-  addCompVoxel(0, 0, aStartPoint, aVacant, aStartCoord, aCols);
-  for(unsigned i(1); i != aRows; ++i)
+  if(aStartCoord != endCoord)
+    {
+      addCompVoxel(0, 0, aStartPoint, aVacant, aStartCoord, aCols);
+    }
+  for(unsigned i(1); i < aRows; ++i)
     {
       Point U(aStartPoint);
       disp_(U, widthVector, i*aRadius*sqrt(3)); 
@@ -403,7 +415,7 @@ void CompartmentProcess::addCompVoxel(unsigned rowIndex,
                                       unsigned aStartCoord,
                                       unsigned aCols)
 {
-  unsigned aCoord(aStartCoord+rowIndex*aCols+colIndex);
+  const unsigned aCoord(aStartCoord+rowIndex*aCols+colIndex);
   Voxel& aVoxel((*theLattice)[aCoord]);
   aVoxel.point = &thePoints[aStartCoord-subStartCoord+rowIndex*aCols+colIndex];
   *aVoxel.point = aPoint;

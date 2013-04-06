@@ -233,13 +233,18 @@ public:
     }
   Variable* createVariable(String anID)
     {
-      String anEntityType("Variable");
-      SystemPath aSystemPath(getSuperSystem()->getSystemPath());
-      aSystemPath.push_back(getSuperSystem()->getID());
-      FullID aFullID(anEntityType, aSystemPath, anID);
-      Variable* aVariable(reinterpret_cast<Variable*>(
-                              getModel()->createEntity("Variable", aFullID)));
-      aVariable->setValue(0);
+      Variable* aVariable(SpatiocyteStepper::getVariable(getSuperSystem(),
+                                                         anID));
+      if(!aVariable)
+        {
+          String anEntityType("Variable");
+          SystemPath aSystemPath(getSuperSystem()->getSystemPath());
+          aSystemPath.push_back(getSuperSystem()->getID());
+          FullID aFullID(anEntityType, aSystemPath, anID);
+          aVariable = reinterpret_cast<Variable*>(
+                                getModel()->createEntity("Variable", aFullID));
+          aVariable->setValue(0);
+        }
       return aVariable;
     }
   String getIDString()

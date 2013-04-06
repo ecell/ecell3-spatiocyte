@@ -23,9 +23,9 @@ HistogramLogProcess\
 MoleculePopulateProcess\
 MultiscaleReactionProcess\
 PeriodicBoundaryDiffusionProcess\
+MicrotubuleProcess\
 RotationProcess
 #OscillationAnalysisProcess\
-MicrotubuleProcess
 
 export CXXFLAGS = -Wall -O3 -g -std=c++0x
 ECELL3_DMC = ecell3-dmc --cxxflags="-I. -lpthread -lRandom"
@@ -62,7 +62,7 @@ DiffusionInfluencedReactionProcess.so: 	DiffusionInfluencedReactionProcess.cpp
 	$(ECELL3_DMC) -o DiffusionInfluencedReactionProcess.so --ldflags=ReactionProcess.so DiffusionInfluencedReactionProcess.cpp
 
 MicrotubuleProcess.so: 	MicrotubuleProcess.cpp
-	$(ECELL3_DMC) -o MicrotubuleProcess.so --ldflags="SpatiocyteProcess.so" MicrotubuleProcess.cpp
+	$(ECELL3_DMC) -o MicrotubuleProcess.so --ldflags="CompartmentProcess.so" MicrotubuleProcess.cpp
 
 CompartmentProcess.so: 	CompartmentProcess.cpp
 	$(ECELL3_DMC) -o CompartmentProcess.so --ldflags="SpatiocyteProcess.so" CompartmentProcess.cpp

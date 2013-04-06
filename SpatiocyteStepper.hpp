@@ -118,6 +118,7 @@ public:
   unsigned getID(const Voxel*) const;
   virtual GET_METHOD(Real, TimeScale) { return 0; }
   void addInterruptedProcess(SpatiocyteProcessInterface*);
+  static Variable* getVariable(System*, String const&);
 private:
   void interruptProcesses(const double);
   void setCompsCenterPoint();
@@ -188,7 +189,6 @@ private:
   unsigned coord2col(unsigned);
   unsigned coord2layer(unsigned);
   Comp* registerComp(System*, std::vector<Comp*>*);
-  Variable* getVariable(System*, String const&);
 private:
   bool isInitialized;
   bool isPeriodicEdge;

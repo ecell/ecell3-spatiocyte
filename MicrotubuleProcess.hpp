@@ -34,58 +34,41 @@
 
 #include <sstream>
 #include <MethodProxy.hpp>
-#include "SpatiocyteProcess.hpp"
+#include "CompartmentProcess.hpp"
 #include "SpatiocyteSpecies.hpp"
 
-LIBECS_DM_CLASS(MicrotubuleProcess, SpatiocyteProcess)
+LIBECS_DM_CLASS(MicrotubuleProcess, CompartmentProcess)
 { 
 public:
   LIBECS_DM_OBJECT(MicrotubuleProcess, Process)
     {
-      INHERIT_PROPERTIES(Process);
-      PROPERTYSLOT_SET_GET(Integer, Periodic);
+      INHERIT_PROPERTIES(CompartmentProcess);
       PROPERTYSLOT_SET_GET(Real, DimerPitch);
-      PROPERTYSLOT_SET_GET(Real, MonomerPitch);
-      PROPERTYSLOT_SET_GET(Real, Protofilaments);
-      PROPERTYSLOT_SET_GET(Real, Radius);
       PROPERTYSLOT_SET_GET(Real, Length);
-      PROPERTYSLOT_SET_GET(Real, OriginX);
-      PROPERTYSLOT_SET_GET(Real, OriginY);
-      PROPERTYSLOT_SET_GET(Real, OriginZ);
-      PROPERTYSLOT_SET_GET(Real, RotateX);
-      PROPERTYSLOT_SET_GET(Real, RotateY);
-      PROPERTYSLOT_SET_GET(Real, RotateZ);
+      PROPERTYSLOT_SET_GET(Real, MonomerPitch);
+      PROPERTYSLOT_SET_GET(Real, Radius);
     }
   MicrotubuleProcess():
-    isCompartmentalized(false),
     DimerPitch(8e-9),
     Length(100e-9),
     MonomerPitch(4e-9),
-    Protofilaments(13),
-    Radius(12.5e-9),
-    OriginX(0),
-    OriginY(0),
-    OriginZ(0),
-    RotateX(0),
-    RotateY(0),
-    RotateZ(0),
-    Periodic(0),
-    theVacantSpecies(NULL),
     theMinusSpecies(NULL),
-    thePlusSpecies(NULL) {}
+    thePlusSpecies(NULL)
+  {
+    Filaments = 13;
+    Autofit = 0;
+    RegularLattice = 0;
+  }
   virtual ~MicrotubuleProcess() {}
-  SIMPLE_SET_GET_METHOD(Integer, Periodic);
   SIMPLE_SET_GET_METHOD(Real, DimerPitch);
-  SIMPLE_SET_GET_METHOD(Real, MonomerPitch);
-  SIMPLE_SET_GET_METHOD(Real, Protofilaments);
-  SIMPLE_SET_GET_METHOD(Real, Radius);
   SIMPLE_SET_GET_METHOD(Real, Length);
-  SIMPLE_SET_GET_METHOD(Real, OriginX);
-  SIMPLE_SET_GET_METHOD(Real, OriginY);
-  SIMPLE_SET_GET_METHOD(Real, OriginZ);
-  SIMPLE_SET_GET_METHOD(Real, RotateX);
-  SIMPLE_SET_GET_METHOD(Real, RotateY);
-  SIMPLE_SET_GET_METHOD(Real, RotateZ);
+  SIMPLE_SET_GET_METHOD(Real, MonomerPitch);
+  SIMPLE_SET_GET_METHOD(Real, Radius);
+  virtual void prepreinitialize()
+    {
+      SpatiocyteProcess::prepreinitialize();
+      theInterfaceVariable = createVariable("Interface");
+    }
   virtual void initialize()
     {
       if(isInitialized)
@@ -93,6 +76,9 @@ public:
           return;
         }
       SpatiocyteProcess::initialize();
+      theInterfaceSpecies = theSpatiocyteStepper->addSpecies(
+                                                       theInterfaceVariable);
+      theInterfaceSpecies->setIsInterface();
       for(VariableReferenceVector::iterator
           i(theVariableReferenceVector.begin());
           i != theVariableReferenceVector.end(); ++i)
@@ -182,76 +168,63 @@ public:
         {
           thePlusSpecies = theVacantSpecies;
         }
-      VoxelDiameter = theSpatiocyteStepper->getVoxelRadius()*2;
-      DimerPitch /= VoxelDiameter;
-      Length /= VoxelDiameter;
-      MonomerPitch /= VoxelDiameter;
-      Radius /= VoxelDiameter;
-      theVacantSpecies->setIsOffLattice();
+      if(!DiffuseRadius)
+        {
+          DiffuseRadius = theSpatiocyteStepper->getVoxelRadius();
+        }
+      if(!SubunitRadius)
+        {
+          SubunitRadius = DiffuseRadius;
+        }
+      VoxelRadius = theSpatiocyteStepper->getVoxelRadius();
+      //Normalized off-lattice voxel radius:
+      nSubunitRadius = SubunitRadius/(VoxelRadius*2);
+      nDiffuseRadius = DiffuseRadius/(VoxelRadius*2);
+      nDimerPitch = DimerPitch/(VoxelRadius*2);
+      nLength = Length/(VoxelRadius*2);
+      nMonomerPitch = MonomerPitch/(VoxelRadius*2);
+    }
+  virtual void initializeFirst()
+    {
+      CompartmentProcess::initializeFirst();
       theMinusSpecies->setIsOffLattice();
+      theMinusSpecies->setComp(theComp);
+      theMinusSpecies->setIsCompVacant();
       thePlusSpecies->setIsOffLattice();
-      for(unsigned int i(0); i != theKinesinSpecies.size(); ++i)
+      thePlusSpecies->setComp(theComp);
+      thePlusSpecies->setIsCompVacant();
+      for(unsigned i(0); i != theKinesinSpecies.size(); ++i)
         {
           theKinesinSpecies[i]->setIsOffLattice();
+          theKinesinSpecies[i]->setDimension(1);
+          theKinesinSpecies[i]->setVacantSpecies(theVacantSpecies);
+          theKinesinSpecies[i]->setComp(theComp);
         }
     }
-  virtual void initializeSecond()
-    {
-      SpatiocyteProcess::initializeSecond();
-      theVacantSpecies->setIsCompVacant();
-      theMinusSpecies->setIsCompVacant();
-      thePlusSpecies->setIsCompVacant();
-    }
-  virtual unsigned int getLatticeResizeCoord(unsigned int);
+  virtual unsigned getLatticeResizeCoord(unsigned);
+  /*
   virtual void initializeThird();
-  void addCompVoxel(unsigned int, unsigned int, Point&);
-  void initializeDirectionVector();
-  void initializeProtofilaments();
-  void elongateProtofilaments();
-  void connectPeriodic(unsigned int);
-  void connectNorthSouth(unsigned int, unsigned int);
-  void connectEastWest(unsigned int, unsigned int);
-  void connectSeamEastWest(unsigned int);
-  void connectNwSw(unsigned int);
-  void enlistLatticeVoxels();
-  void addDirect(Voxel&, unsigned, Voxel&, unsigned);
-  void addIndirect(Voxel&, unsigned, Voxel&, unsigned);
-  bool initAdjoins(Voxel&);
-  void updateAdjoinSize(Voxel&);
-  bool inMTCylinder(Point&);
-  void connectProtofilaments();
+  void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
+                           unsigned);
+                           */
 protected:
-  bool isCompartmentalized;
   double DimerPitch;
   double Length;
-  double MonomerPitch;
-  double Protofilaments;
-  double Radius;
-  double VoxelDiameter;
-  double OriginX;
-  double OriginY;
-  double OriginZ;
-  double RotateX;
-  double RotateY;
-  double RotateZ;
-  double offLatticeRadius;
   double latticeRadius;
-  unsigned int endCoord;
-  unsigned int Periodic;
-  unsigned int startCoord;
-  unsigned int theDimerSize;
-  int tempID;
-  Comp* theComp;
+  double MonomerPitch;
+  double nDimerPitch;
+  double nLength;
+  double nMonomerPitch;
+  double offLatticeRadius;
+  double Radius;
+  unsigned theDimerSize;
   Point T; //Direction vector along the MT axis from Minus to Plus end
   Point M; //Minus end
   Point P; //Plus end
-  Point C; //Center point
-  Species* theVacantSpecies;
   Species* theMinusSpecies;
   Species* thePlusSpecies;
-  std::vector<Point> thePoints;
   std::vector<Species*> theKinesinSpecies;
-  std::vector<unsigned int> occCoords;
+  std::vector<unsigned> occCoords;
 };
 
 #endif /* __MicrotubuleProcess_hpp */

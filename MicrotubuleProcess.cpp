@@ -32,35 +32,21 @@
 
 LIBECS_DM_INIT(MicrotubuleProcess, Process); 
 
-unsigned int MicrotubuleProcess::getLatticeResizeCoord(unsigned int aStartCoord)
+unsigned MicrotubuleProcess::getLatticeResizeCoord(unsigned aStartCoord)
 {
-  theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
-  theVacantSpecies->resetFixedAdjoins();
-  theVacantSpecies->setMoleculeRadius(DimerPitch*VoxelDiameter/2);
+  const unsigned aSize(CompartmentProcess::getLatticeResizeCoord(aStartCoord));
   theMinusSpecies->resetFixedAdjoins();
-  theMinusSpecies->setMoleculeRadius(DimerPitch*VoxelDiameter/2);
+  theMinusSpecies->setMoleculeRadius(DiffuseRadius);
   thePlusSpecies->resetFixedAdjoins();
-  thePlusSpecies->setMoleculeRadius(DimerPitch*VoxelDiameter/2);
-  tempID = theSpecies.size();
-  C = theComp->centerPoint;
-  C.x += OriginX*theComp->lengthX/2;
-  C.y += OriginY*theComp->lengthY/2;
-  C.z += OriginZ*theComp->lengthZ/2;
-  for(unsigned int i(0); i != theKinesinSpecies.size(); ++i)
+  thePlusSpecies->setMoleculeRadius(DiffuseRadius);
+  for(unsigned i(0); i != theKinesinSpecies.size(); ++i)
     {
-      theKinesinSpecies[i]->setIsOffLattice();
-      theKinesinSpecies[i]->setDimension(1);
-      theKinesinSpecies[i]->setVacantSpecies(theVacantSpecies);
-      theKinesinSpecies[i]->setMoleculeRadius(DimerPitch*VoxelDiameter/2);
+      theKinesinSpecies[i]->setMoleculeRadius(DiffuseRadius);
     }
-  offLatticeRadius = DimerPitch/2;
-  latticeRadius = 0.5;
-  theDimerSize = (unsigned int)rint(Length/DimerPitch);
-  startCoord = aStartCoord;
-  endCoord = startCoord+Protofilaments*theDimerSize;
-  return endCoord-startCoord;
+  return aSize;
 }
 
+/*
 void MicrotubuleProcess::initializeThird()
 {
   if(!isCompartmentalized)
@@ -77,16 +63,16 @@ void MicrotubuleProcess::initializeThird()
   thePlusSpecies->setIsPopulated();
 }
 
-void MicrotubuleProcess::addCompVoxel(unsigned int protoIndex,
-                                      unsigned int dimerIndex, Point& aPoint)
+void MicrotubuleProcess::addCompVoxel(unsigned protoIndex,
+                                      unsigned dimerIndex, Point& aPoint)
 {
-  unsigned int aCoord(startCoord+protoIndex*theDimerSize+dimerIndex);
+  unsigned aCoord(startCoord+protoIndex*theDimerSize+dimerIndex);
   Voxel& aVoxel((*theLattice)[aCoord]);
   aVoxel.point = &thePoints[protoIndex*theDimerSize+dimerIndex];
   *aVoxel.point = aPoint;
-  aVoxel.adjoiningCoords = new unsigned int[theAdjoiningCoordSize];
+  aVoxel.adjoiningCoords = new unsigned[theAdjoiningCoordSize];
   aVoxel.diffuseSize = 2;
-  for(unsigned int i(0); i != theAdjoiningCoordSize; ++i)
+  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
     {
       aVoxel.adjoiningCoords[i] = theNullCoord;
     }
@@ -111,7 +97,7 @@ void MicrotubuleProcess::initializeDirectionVector()
    * PEnd = {Px, Py, Pz};(*plus end*)
    * MTAxis = (PEnd - MEnd)/Norm[PEnd - MEnd] (*direction vector along the MT
    * long axis*)
-   */
+   *
   //Minus end
   M.x = -Length/2;
   M.y = 0;
@@ -171,9 +157,9 @@ void MicrotubuleProcess::initializeProtofilaments()
   //std::cout << "D.x:" << D.x << " y:" << D.y << " z:" << D.z << std::endl;
   //std::cout << "T.x:" << T.x << " y:" << T.y << " z:" << T.z << std::endl;
   Point S; //The start point of the first protofilament
-  S.x = M.x+Radius*D.x;
-  S.y = M.y+Radius*D.y;
-  S.z = M.z+Radius*D.z;
+  S.x = M.x+nSubunitRadius*D.x;
+  S.y = M.y+nSubunitRadius*D.y;
+  S.z = M.z+nSubunitRadius*D.z;
   //std::cout << "S.x:" << S.x << " y:" << S.y << " z:" << S.z << std::endl;
   addCompVoxel(0, 0, S);
   for(int i(1); i != Protofilaments; ++i)
@@ -190,11 +176,11 @@ void MicrotubuleProcess::initializeProtofilaments()
 void MicrotubuleProcess::elongateProtofilaments()
 {
   //std::cout << "proto:" << Protofilaments << " dimer:" << theDimerSize << std::endl;
-  for(unsigned int i(0); i != Protofilaments; ++i)
+  for(unsigned i(0); i != Protofilaments; ++i)
     {
       Voxel* startVoxel(&(*theLattice)[startCoord+i*theDimerSize]);
       Point A(*startVoxel->point);
-      for(unsigned int j(1); j != theDimerSize; ++j)
+      for(unsigned j(1); j != theDimerSize; ++j)
         {
           A.x += DimerPitch*T.x;
           A.y += DimerPitch*T.y;
@@ -206,9 +192,9 @@ void MicrotubuleProcess::elongateProtofilaments()
 
 void MicrotubuleProcess::connectProtofilaments()
 {
-  for(unsigned int i(0); i != theDimerSize; ++i)
+  for(unsigned i(0); i != theDimerSize; ++i)
     {
-      for(unsigned int j(0); j != Protofilaments; ++j)
+      for(unsigned j(0); j != Protofilaments; ++j)
         { 
           if(i > 0)
             { 
@@ -223,7 +209,7 @@ void MicrotubuleProcess::connectProtofilaments()
             {
               connectEastWest(i, j);
             }
-            */
+            *
         }
       /*
       if(Protofilaments > 2)
@@ -234,15 +220,15 @@ void MicrotubuleProcess::connectProtofilaments()
         {
           connectNwSw(i);
         }
-        */
+        *
     }
 }
 
-void MicrotubuleProcess::connectPeriodic(unsigned int j)
+void MicrotubuleProcess::connectPeriodic(unsigned j)
 {
-  unsigned int a(startCoord+j*theDimerSize+theDimerSize-1);
+  unsigned a(startCoord+j*theDimerSize+theDimerSize-1);
   Voxel& aVoxel((*theLattice)[a]);
-  unsigned int b(startCoord+j*theDimerSize); 
+  unsigned b(startCoord+j*theDimerSize); 
   Voxel& adjoin((*theLattice)[b]);
   aVoxel.adjoiningCoords[NORTH] = b;
   adjoin.adjoiningCoords[SOUTH] = a;
@@ -250,11 +236,11 @@ void MicrotubuleProcess::connectPeriodic(unsigned int j)
   adjoin.adjoiningSize = 2;
 }
 
-void MicrotubuleProcess::connectNorthSouth(unsigned int i, unsigned int j)
+void MicrotubuleProcess::connectNorthSouth(unsigned i, unsigned j)
 {
-  unsigned int a(startCoord+j*theDimerSize+(i-1));
+  unsigned a(startCoord+j*theDimerSize+(i-1));
   Voxel& aVoxel((*theLattice)[a]);
-  unsigned int b(startCoord+j*theDimerSize+i);
+  unsigned b(startCoord+j*theDimerSize+i);
   Voxel& adjoin((*theLattice)[b]);
   aVoxel.adjoiningCoords[NORTH] = b;
   adjoin.adjoiningCoords[SOUTH] = a;
@@ -262,31 +248,31 @@ void MicrotubuleProcess::connectNorthSouth(unsigned int i, unsigned int j)
   adjoin.adjoiningSize = 2;
 }
 
-void MicrotubuleProcess::connectEastWest(unsigned int i, unsigned int j)
+void MicrotubuleProcess::connectEastWest(unsigned i, unsigned j)
 {
-  unsigned int a(startCoord+j*theDimerSize+i);
+  unsigned a(startCoord+j*theDimerSize+i);
   Voxel& aVoxel((*theLattice)[a]);
-  unsigned int b(startCoord+(j-1)*theDimerSize+i); 
+  unsigned b(startCoord+(j-1)*theDimerSize+i); 
   Voxel& adjoin((*theLattice)[b]);
   aVoxel.adjoiningCoords[aVoxel.adjoiningSize++] = b;
   adjoin.adjoiningCoords[adjoin.adjoiningSize++] = a;
 }
 
-void MicrotubuleProcess::connectSeamEastWest(unsigned int i)
+void MicrotubuleProcess::connectSeamEastWest(unsigned i)
 {
-  unsigned int a(startCoord+i);
+  unsigned a(startCoord+i);
   Voxel& aVoxel((*theLattice)[a]);
-  unsigned int b(startCoord+(Protofilaments-1)*theDimerSize+i); 
+  unsigned b(startCoord+(Protofilaments-1)*theDimerSize+i); 
   Voxel& adjoin((*theLattice)[b]);
   aVoxel.adjoiningCoords[aVoxel.adjoiningSize++] = b;
   adjoin.adjoiningCoords[adjoin.adjoiningSize++] = a;
 }
 
-void MicrotubuleProcess::connectNwSw(unsigned int i)
+void MicrotubuleProcess::connectNwSw(unsigned i)
 {
-  unsigned int a(startCoord+i);
+  unsigned a(startCoord+i);
   Voxel& aVoxel((*theLattice)[a]);
-  unsigned int b(startCoord+(Protofilaments-1)*theDimerSize+(i-1)); 
+  unsigned b(startCoord+(Protofilaments-1)*theDimerSize+(i-1)); 
   Voxel& adjoin((*theLattice)[b]);
   aVoxel.adjoiningCoords[aVoxel.adjoiningSize++] = b;
   adjoin.adjoiningCoords[adjoin.adjoiningSize++] = a;
@@ -294,7 +280,7 @@ void MicrotubuleProcess::connectNwSw(unsigned int i)
 
 void MicrotubuleProcess::enlistLatticeVoxels()
 {
-  for(unsigned int n(startCoord); n != endCoord; ++n)
+  for(unsigned n(startCoord); n != endCoord; ++n)
     {
       Voxel& offVoxel((*theLattice)[n]);
       offVoxel.diffuseSize = offVoxel.adjoiningSize;
@@ -304,7 +290,7 @@ void MicrotubuleProcess::enlistLatticeVoxels()
          rA = offLatticeRadius;
         } 
       Point center(*offVoxel.point);
-      unsigned int aCoord(theSpatiocyteStepper->point2coord(center));
+      unsigned aCoord(theSpatiocyteStepper->point2coord(center));
       Point cl(theSpatiocyteStepper->coord2point(aCoord));
       //theSpecies[3]->addMolecule(aVoxel.coord);
       Point bottomLeft(*offVoxel.point);
@@ -315,22 +301,22 @@ void MicrotubuleProcess::enlistLatticeVoxels()
       topRight.x += rA+cl.x-center.x+theSpatiocyteStepper->getColLength()*1.5;
       topRight.y += rA+cl.y-center.y+theSpatiocyteStepper->getLayerLength()*1.5;
       topRight.z += rA+cl.z-center.z+theSpatiocyteStepper->getRowLength()*1.5;
-      unsigned int blRow(0);
-      unsigned int blLayer(0);
-      unsigned int blCol(0);
+      unsigned blRow(0);
+      unsigned blLayer(0);
+      unsigned blCol(0);
       theSpatiocyteStepper->point2global(bottomLeft, blRow, blLayer, blCol);
-      unsigned int trRow(0);
-      unsigned int trLayer(0);
-      unsigned int trCol(0);
+      unsigned trRow(0);
+      unsigned trLayer(0);
+      unsigned trCol(0);
       theSpatiocyteStepper->point2global(topRight, trRow, trLayer, trCol);
-      std::vector<unsigned int> checkedAdjoins;
-      for(unsigned int i(blRow); i < trRow; ++i)
+      std::vector<unsigned> checkedAdjoins;
+      for(unsigned i(blRow); i < trRow; ++i)
         {
-          for(unsigned int j(blLayer); j < trLayer; ++j)
+          for(unsigned j(blLayer); j < trLayer; ++j)
             {
-              for(unsigned int k(blCol); k < trCol; ++k)
+              for(unsigned k(blCol); k < trCol; ++k)
                 {
-                  unsigned int lat(theSpatiocyteStepper->global2coord(i, j, k));
+                  unsigned lat(theSpatiocyteStepper->global2coord(i, j, k));
                   Voxel& latVoxel((*theLattice)[lat]);
                   if(latVoxel.id != theSpatiocyteStepper->getNullID())
                     {
@@ -338,7 +324,7 @@ void MicrotubuleProcess::enlistLatticeVoxels()
                       Point aPoint(theSpatiocyteStepper->coord2point(lat));
                       if(inMTCylinder(aPoint))
                         {
-                          for(unsigned int l(0); l != theAdjoiningCoordSize;
+                          for(unsigned l(0); l != theAdjoiningCoordSize;
                               ++l)
                             {
                               unsigned adj(latVoxel.adjoiningCoords[l]);
@@ -354,25 +340,25 @@ void MicrotubuleProcess::enlistLatticeVoxels()
                 }
             }
         }
-      for(unsigned int i(0); i != checkedAdjoins.size(); ++i)
+      for(unsigned i(0); i != checkedAdjoins.size(); ++i)
         {
           (*theLattice)[checkedAdjoins[i]].id = theComp->vacantSpecies->getID();
         }
     }
-  for(unsigned int i(0); i != occCoords.size(); ++i)
+  for(unsigned i(0); i != occCoords.size(); ++i)
     {
       Voxel& aVoxel((*theLattice)[occCoords[i]]);
-      unsigned int* temp = aVoxel.initAdjoins;
+      unsigned* temp = aVoxel.initAdjoins;
       aVoxel.initAdjoins = aVoxel.adjoiningCoords;
       aVoxel.adjoiningCoords = temp;
       aVoxel.diffuseSize = aVoxel.adjoiningSize;
     }
-  for(unsigned int i(0); i != occCoords.size(); ++i)
+  for(unsigned i(0); i != occCoords.size(); ++i)
     {
       Voxel& aVoxel((*theLattice)[occCoords[i]]);
-      for(unsigned int i(0); i != aVoxel.adjoiningSize; ++i)
+      for(unsigned i(0); i != aVoxel.adjoiningSize; ++i)
         {
-          unsigned int aCoord(aVoxel.adjoiningCoords[i]);
+          unsigned aCoord(aVoxel.adjoiningCoords[i]);
           Voxel& adjoin((*theLattice)[aCoord]);
           if(adjoin.id == theComp->vacantSpecies->getID())
             {
@@ -423,9 +409,9 @@ void MicrotubuleProcess::addIndirect(Voxel& offVoxel, unsigned a,
                                      Voxel& latVoxel, unsigned b)
 {
   Point aPoint(*offVoxel.point);
-  for(unsigned int i(0); i != theAdjoiningCoordSize; ++i)
+  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
     {
-      unsigned int aCoord(latVoxel.adjoiningCoords[i]);
+      unsigned aCoord(latVoxel.adjoiningCoords[i]);
       Voxel& adjoin((*theLattice)[aCoord]);
       if(adjoin.id == theComp->vacantSpecies->getID() || adjoin.id == tempID)
         {
@@ -447,10 +433,10 @@ bool MicrotubuleProcess::initAdjoins(Voxel& aVoxel)
   if(aVoxel.initAdjoins == NULL)
     {
       aVoxel.adjoiningSize = 0;
-      aVoxel.initAdjoins = new unsigned int[theAdjoiningCoordSize];
-      for(unsigned int i(0); i != theAdjoiningCoordSize; ++i)
+      aVoxel.initAdjoins = new unsigned[theAdjoiningCoordSize];
+      for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
         {
-          unsigned int aCoord(aVoxel.adjoiningCoords[i]);
+          unsigned aCoord(aVoxel.adjoiningCoords[i]);
           Point aPoint(theSpatiocyteStepper->coord2point(aCoord));
           if(!inMTCylinder(aPoint))
             {
@@ -466,8 +452,8 @@ void MicrotubuleProcess::updateAdjoinSize(Voxel& aVoxel)
 {
  if(aVoxel.adjoiningSize >= theAdjoiningCoordSize)
     {
-      unsigned int* temp(new unsigned int[aVoxel.adjoiningSize+1]);
-      for(unsigned int i(0); i != aVoxel.adjoiningSize; ++i)
+      unsigned* temp(new unsigned[aVoxel.adjoiningSize+1]);
+      for(unsigned i(0); i != aVoxel.adjoiningSize; ++i)
         {
           temp[i] = aVoxel.initAdjoins[i];
         }
@@ -484,12 +470,13 @@ bool MicrotubuleProcess::inMTCylinder(Point& N)
   Point S(M);
   double t((-E.x*N.x-E.y*N.y-E.z*N.z+E.x*S.x+E.y*S.y+E.z*S.z+N.x*W.x-S.x*W.x+N.y*W.y-S.y*W.y+N.z*W.z-S.z*W.z)/(E.x*E.x+E.y*E.y+E.z*E.z-2*E.x*W.x+W.x*W.x-2*E.y*W.y+W.y*W.y-2*E.z*W.z+W.z*W.z));
   double dist(sqrt(pow(-N.x+S.x+t*(-E.x+W.x),2)+pow(-N.y+S.y+t*(-E.y+W.y),2)+pow(-N.z+S.z+t*(-E.z+W.z),2)));
-  if(dist < Radius)
+  if(dist < nSubunitRadius)
     {
       return true;
     }
   return false;
 }
+*/
 
 
 
