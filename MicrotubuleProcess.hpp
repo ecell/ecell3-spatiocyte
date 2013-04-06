@@ -43,25 +43,27 @@ public:
   LIBECS_DM_OBJECT(MicrotubuleProcess, Process)
     {
       INHERIT_PROPERTIES(CompartmentProcess);
-      PROPERTYSLOT_SET_GET(Real, DimerPitch);
-      PROPERTYSLOT_SET_GET(Real, Length);
       PROPERTYSLOT_SET_GET(Real, MonomerPitch);
+      //Radius is the radius of the microtubule:
       PROPERTYSLOT_SET_GET(Real, Radius);
     }
   MicrotubuleProcess():
-    DimerPitch(8e-9),
-    Length(100e-9),
     MonomerPitch(4e-9),
     theMinusSpecies(NULL),
     thePlusSpecies(NULL)
   {
     Filaments = 13;
+    Subunits = 1;
     Autofit = 0;
     RegularLattice = 0;
+    DiffuseRadius = 8e-9/2; //default value of DimerPitch*2
+    //SubunitRadius is the actual radius of a molecule.
+    //For a normal molecule the SubunitRadius = DiffuseRadius.
+    //For a multiscale molecule, the SubunitRadius can be larger
+    //than the DiffuseRadius:
+    SubunitRadius = DiffuseRadius;
   }
   virtual ~MicrotubuleProcess() {}
-  SIMPLE_SET_GET_METHOD(Real, DimerPitch);
-  SIMPLE_SET_GET_METHOD(Real, Length);
   SIMPLE_SET_GET_METHOD(Real, MonomerPitch);
   SIMPLE_SET_GET_METHOD(Real, Radius);
   virtual void prepreinitialize()
@@ -170,7 +172,14 @@ public:
         }
       if(!DiffuseRadius)
         {
-          DiffuseRadius = theSpatiocyteStepper->getVoxelRadius();
+          if(SubunitRadius)
+            {
+              DiffuseRadius = SubunitRadius;
+            }
+          else
+            {
+              DiffuseRadius = theSpatiocyteStepper->getVoxelRadius();
+            }
         }
       if(!SubunitRadius)
         {
@@ -180,9 +189,8 @@ public:
       //Normalized off-lattice voxel radius:
       nSubunitRadius = SubunitRadius/(VoxelRadius*2);
       nDiffuseRadius = DiffuseRadius/(VoxelRadius*2);
-      nDimerPitch = DimerPitch/(VoxelRadius*2);
-      nLength = Length/(VoxelRadius*2);
       nMonomerPitch = MonomerPitch/(VoxelRadius*2);
+      nRadius = Radius/(VoxelRadius*2);
     }
   virtual void initializeFirst()
     {
@@ -202,29 +210,22 @@ public:
         }
     }
   virtual unsigned getLatticeResizeCoord(unsigned);
-  /*
+  virtual void setCompartmentDimension();
+  virtual void initializeVectors();
+  virtual void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
+                                   unsigned);
   virtual void initializeThird();
-  void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
-                           unsigned);
-                           */
+  virtual void setSubunitStart();
 protected:
-  double DimerPitch;
-  double Length;
-  double latticeRadius;
   double MonomerPitch;
-  double nDimerPitch;
-  double nLength;
   double nMonomerPitch;
-  double offLatticeRadius;
+  double nRadius;
   double Radius;
-  unsigned theDimerSize;
-  Point T; //Direction vector along the MT axis from Minus to Plus end
   Point M; //Minus end
   Point P; //Plus end
   Species* theMinusSpecies;
   Species* thePlusSpecies;
   std::vector<Species*> theKinesinSpecies;
-  std::vector<unsigned> occCoords;
 };
 
 #endif /* __MicrotubuleProcess_hpp */

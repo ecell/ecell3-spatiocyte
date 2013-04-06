@@ -48,9 +48,9 @@ public:
       PROPERTYSLOT_SET_GET(Integer, Periodic);
       PROPERTYSLOT_SET_GET(Integer, RegularLattice);
       PROPERTYSLOT_SET_GET(Integer, Subunits);
-      PROPERTYSLOT_SET_GET(Real, DiffuseRadius);
+      PROPERTYSLOT_SET_GET(Real, DiffuseRadius); //off-lattice voxel radius
       PROPERTYSLOT_SET_GET(Real, Length);
-      PROPERTYSLOT_SET_GET(Real, LipidRadius);
+      PROPERTYSLOT_SET_GET(Real, LipidRadius); //radius of lipid voxels
       PROPERTYSLOT_SET_GET(Real, OriginX);
       PROPERTYSLOT_SET_GET(Real, OriginY);
       PROPERTYSLOT_SET_GET(Real, OriginZ);
@@ -58,18 +58,22 @@ public:
       PROPERTYSLOT_SET_GET(Real, RotateY);
       PROPERTYSLOT_SET_GET(Real, RotateZ);
       PROPERTYSLOT_SET_GET(Real, SubunitAngle);
+      //SubunitRadius is the actual radius of a molecule.
+      //For a normal molecule the SubunitRadius = DiffuseRadius.
+      //For a multiscale molecule, the SubunitRadius can be larger
+      //than the DiffuseRadius:
       PROPERTYSLOT_SET_GET(Real, SubunitRadius);
       PROPERTYSLOT_SET_GET(Real, Width);
     }
   CompartmentProcess():
     isCompartmentalized(false),
     Autofit(1),
-    dimension(1),
     Filaments(1),
     Periodic(0),
     RegularLattice(1),
     Subunits(1),
     theDiffuseSize(6),
+    theDimension(1),
     DiffuseRadius(0),
     Length(0),
     LipidRadius(0),
@@ -161,7 +165,14 @@ public:
         }
       if(!DiffuseRadius)
         {
-          DiffuseRadius = theSpatiocyteStepper->getVoxelRadius();
+          if(SubunitRadius)
+            {
+              DiffuseRadius = SubunitRadius;
+            }
+          else
+            {
+              DiffuseRadius = theSpatiocyteStepper->getVoxelRadius();
+            }
         }
       if(!SubunitRadius)
         {
@@ -170,9 +181,13 @@ public:
       //Lattice voxel radius:
       VoxelRadius = theSpatiocyteStepper->getVoxelRadius();
       //Normalized off-lattice voxel radius:
+      nDiffuseRadius = DiffuseRadius/(VoxelRadius*2);
+      //SubunitRadius is the actual radius of a molecule.
+      //For a normal molecule the SubunitRadius = DiffuseRadius.
+      //For a multiscale molecule, the SubunitRadius can be larger
+      //than the DiffuseRadius:
       nSubunitRadius = SubunitRadius/(VoxelRadius*2);
       nGridSize = 1.5*nSubunitRadius;
-      nDiffuseRadius = DiffuseRadius/(VoxelRadius*2);
       //Normalized lipid voxel radius:
       nLipidRadius = LipidRadius/(VoxelRadius*2);
     }
@@ -213,15 +228,15 @@ public:
   virtual void initializeThird();
   virtual void printParameters();
   virtual void updateResizedLattice();
+  virtual void setCompartmentDimension();
+  virtual void initializeVectors();
   void addCompVoxel(unsigned, unsigned, Point&, Species*, unsigned, unsigned);
-  void initializeVectors();
-  void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
-                           unsigned);
+  virtual void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
+                                   unsigned);
   void elongateFilaments(Species*, unsigned, unsigned, unsigned, double);
   void connectSubunit(unsigned, unsigned, unsigned, unsigned);
   void connectFilaments(unsigned, unsigned, unsigned);
   void addInterfaceVoxel(unsigned, unsigned);
-  void setCompartmentDimension();
   void setVacantCompSpeciesProperties();
   void setLipidCompSpeciesProperties();
   void setDiffuseSize(unsigned, unsigned);
@@ -236,12 +251,12 @@ public:
   void setSpeciesIntersectLipids();
   void getStartVoxelPoint(Point&, Point&, Point&);
   void setAdjoinOffsets();
+  virtual void setSubunitStart();
   int getCoefficient(Species*);
   Species* coefficient2species(int);
 protected:
   bool isCompartmentalized;
   unsigned Autofit;
-  unsigned dimension;
   unsigned endCoord;
   unsigned Filaments;
   unsigned gridCols;
@@ -254,6 +269,7 @@ protected:
   unsigned RegularLattice;
   unsigned Subunits;
   unsigned theDiffuseSize;
+  unsigned theDimension;
   double DiffuseRadius;
   double nGridSize;
   double Height;

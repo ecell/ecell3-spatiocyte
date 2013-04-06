@@ -46,6 +46,118 @@ unsigned MicrotubuleProcess::getLatticeResizeCoord(unsigned aStartCoord)
   return aSize;
 }
 
+void MicrotubuleProcess::setCompartmentDimension()
+{
+  if(Length)
+    {
+      Subunits = (unsigned)rint(Length/(2*DiffuseRadius));
+    }
+  Length = Subunits*2*DiffuseRadius;
+  Width = Radius*2;
+  Height = Radius*2;
+  theDimension = 1;
+  nLength = Length/(VoxelRadius*2);
+  nWidth = Width/(VoxelRadius*2);
+  nHeight = Height/(VoxelRadius*2);
+  theComp->lengthX = nHeight;
+  theComp->lengthY = nWidth;
+  theComp->lengthZ = nLength;
+}
+
+
+void MicrotubuleProcess::initializeThird()
+{
+  if(!isCompartmentalized)
+    {
+      thePoints.resize(endCoord-subStartCoord);
+      initializeVectors();
+      initializeFilaments(subunitStart, Filaments, Subunits, nMonomerPitch,
+                          theVacantSpecies, subStartCoord);
+      elongateFilaments(theVacantSpecies, subStartCoord, Filaments, Subunits,
+                        nDiffuseRadius);
+      connectFilaments(subStartCoord, Filaments, Subunits);
+      interfaceSubunits();
+      isCompartmentalized = true;
+    }
+  theVacantSpecies->setIsPopulated();
+  theInterfaceSpecies->setIsPopulated();
+  theMinusSpecies->setIsPopulated();
+  thePlusSpecies->setIsPopulated();
+}
+
+
+void MicrotubuleProcess::initializeVectors()
+{ 
+  /*
+   * MEnd = {Mx, My, Mz};(*minus end*) 
+   * PEnd = {Px, Py, Pz};(*plus end*)
+   * MTAxis = (PEnd - MEnd)/Norm[PEnd - MEnd] (*direction vector along the MT
+   * long axis*)
+   */
+  //Minus end
+  M.x = -Length/2;
+  M.y = 0;
+  M.z = 0;
+  //Rotated Minus end
+  theSpatiocyteStepper->rotateX(RotateX, &M, -1);
+  theSpatiocyteStepper->rotateY(RotateY, &M, -1);
+  theSpatiocyteStepper->rotateZ(RotateZ, &M, -1);
+  add_(M, Origin);
+  //Direction vector from the Minus end to center
+  lengthVector = sub(Origin, M);
+  //Make direction vector a unit vector
+  norm_(lengthVector);
+  //Rotated Plus end
+  P = disp(M, lengthVector, Length);
+  setSubunitStart();
+}
+
+void MicrotubuleProcess::setSubunitStart()
+{
+  Point R; //Initialize a random point on the plane attached at the minus end
+  if(M.x != P.x)
+    {
+      R.y = 10;
+      R.z = 30; 
+      R.x = (M.x*lengthVector.x+M.y*lengthVector.y-R.y*lengthVector.y+
+             M.z*lengthVector.z-R.z*lengthVector.z)/lengthVector.x;
+    }
+  else if(M.y != P.y)
+    {
+      R.x = 10; 
+      R.z = 30;
+      R.y = (M.x*lengthVector.x-R.x*lengthVector.x+M.y*lengthVector.y+
+             M.z*lengthVector.z-R.z*lengthVector.z)/lengthVector.y;
+    }
+  else
+    {
+      R.x = 10; 
+      R.y = 30;
+      R.z = (M.x*lengthVector.x-R.x*lengthVector.x+M.y*lengthVector.y-
+             R.y*lengthVector.y+M.z*lengthVector.z)/lengthVector.z;
+    }
+  //The direction vector from the minus end to the random point, R
+  Point D(sub(R, M));
+  norm_(D);
+  subunitStart = disp(M, D, nRadius);
+}
+
+void MicrotubuleProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,
+                                             unsigned aCols, double aRadius,
+                                             Species* aVacant,
+                                             unsigned aStartCoord)
+{
+  addCompVoxel(0, 0, aStartPoint, aVacant, aStartCoord, aCols);
+  Point U(aStartPoint);
+  for(unsigned i(1); i < aRows; ++i)
+    {
+      double angle(2*M_PI/aRows);
+      rotatePointAlongVector(U, M, lengthVector, angle);
+      disp_(U, lengthVector, aRadius/(aRows-1));
+      addCompVoxel(i, 0, U, aVacant, aStartCoord, aCols);
+    }
+}
+
 /*
 void MicrotubuleProcess::initializeThird()
 {
@@ -90,88 +202,6 @@ void MicrotubuleProcess::addCompVoxel(unsigned protoIndex,
     }
 }
 
-void MicrotubuleProcess::initializeDirectionVector()
-{ 
-  /*
-   * MEnd = {Mx, My, Mz};(*minus end*) 
-   * PEnd = {Px, Py, Pz};(*plus end*)
-   * MTAxis = (PEnd - MEnd)/Norm[PEnd - MEnd] (*direction vector along the MT
-   * long axis*)
-   *
-  //Minus end
-  M.x = -Length/2;
-  M.y = 0;
-  M.z = 0;
-  //Rotated Minus end
-  theSpatiocyteStepper->rotateX(RotateX, &M, -1);
-  theSpatiocyteStepper->rotateY(RotateY, &M, -1);
-  theSpatiocyteStepper->rotateZ(RotateZ, &M, -1);
-  M.x += C.x;
-  M.y += C.y;
-  M.z += C.z;
-  //Direction vector from the Minus end to center
-  T.x = C.x-M.x;
-  T.y = C.y-M.y;
-  T.z = C.z-M.z;
-  //Make T a unit vector
-  double NormT(sqrt(T.x*T.x+T.y*T.y+T.z*T.z));
-  T.x /= NormT;
-  T.y /= NormT;
-  T.z /= NormT;
-  //Rotated Plus end
-  P.x = M.x+Length*T.x;
-  P.y = M.y+Length*T.y;
-  P.z = M.z+Length*T.z;
-}
-
-void MicrotubuleProcess::initializeProtofilaments()
-{
-  initializeDirectionVector();
-  Point R; //Initialize a random point on the plane attached at the minus end
-  if(M.x != P.x)
-    {
-      R.y = 10;
-      R.z = 30; 
-      R.x = (M.x*T.x+M.y*T.y-R.y*T.y+M.z*T.z-R.z*T.z)/T.x;
-    }
-  else if(M.y != P.y)
-    {
-      R.x = 10; 
-      R.z = 30;
-      R.y = (M.x*T.x-R.x*T.x+M.y*T.y+M.z*T.z-R.z*T.z)/T.y;
-    }
-  else
-    {
-      R.x = 10; 
-      R.y = 30;
-      R.z = (M.x*T.x-R.x*T.x+M.y*T.y-R.y*T.y+M.z*T.z)/T.z;
-    }
-  Point D; //The direction vector from the minus end to the random point, R
-  D.x = R.x-M.x;
-  D.y = R.y-M.y;
-  D.z = R.z-M.z;
-  double NormD(sqrt(D.x*D.x+D.y*D.y+D.z*D.z));
-  D.x /= NormD;
-  D.y /= NormD;
-  D.z /= NormD;
-  //std::cout << "D.x:" << D.x << " y:" << D.y << " z:" << D.z << std::endl;
-  //std::cout << "T.x:" << T.x << " y:" << T.y << " z:" << T.z << std::endl;
-  Point S; //The start point of the first protofilament
-  S.x = M.x+nSubunitRadius*D.x;
-  S.y = M.y+nSubunitRadius*D.y;
-  S.z = M.z+nSubunitRadius*D.z;
-  //std::cout << "S.x:" << S.x << " y:" << S.y << " z:" << S.z << std::endl;
-  addCompVoxel(0, 0, S);
-  for(int i(1); i != Protofilaments; ++i)
-    {
-      double angle(2*M_PI/Protofilaments);
-      rotatePointAlongVector(S, M, T, angle);
-      S.x += MonomerPitch/(Protofilaments-1)*T.x;
-      S.y += MonomerPitch/(Protofilaments-1)*T.y;
-      S.z += MonomerPitch/(Protofilaments-1)*T.z;
-      addCompVoxel(i, 0, S);
-    }
-}
 
 void MicrotubuleProcess::elongateProtofilaments()
 {

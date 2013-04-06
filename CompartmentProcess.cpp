@@ -51,7 +51,7 @@ unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
   Origin.y += OriginY*aComp->lengthY/2;
   Origin.z += OriginZ*aComp->lengthZ/2;
   setCompartmentDimension();
-  theComp->dimension = dimension;
+  theComp->dimension = theDimension;
   setLipidCompSpeciesProperties();
   setVacantCompSpeciesProperties();
   subStartCoord = aStartCoord;
@@ -64,7 +64,7 @@ void CompartmentProcess::setVacantCompSpeciesProperties()
 {
   for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
     {
-      theVacantCompSpecies[i]->setDimension(dimension);
+      theVacantCompSpecies[i]->setDimension(theDimension);
       theVacantCompSpecies[i]->setMoleculeRadius(SubunitRadius);
       theVacantCompSpecies[i]->setDiffuseRadius(DiffuseRadius);
       if(theLipidSpecies)
@@ -104,7 +104,7 @@ void CompartmentProcess::setLipidCompSpeciesProperties()
 {
   for(unsigned i(0); i != theLipidCompSpecies.size(); ++i)
     {
-      theLipidCompSpecies[i]->setDimension(dimension);
+      theLipidCompSpecies[i]->setDimension(theDimension);
       theLipidCompSpecies[i]->setMoleculeRadius(LipidRadius);
     }
 }
@@ -127,9 +127,7 @@ void CompartmentProcess::updateResizedLattice()
     }
 }
 
-// y:width:rows
-// z:length:cols
-void CompartmentProcess::setCompartmentDimension()
+void CompartmentProcess::setSubunitStart()
 {
   Point nearest;
   Point farthest;
@@ -148,6 +146,13 @@ void CompartmentProcess::setCompartmentDimension()
       Width = (farthest.y-subunitStart.y+nVoxelRadius)*VoxelRadius*2;
       Length = (farthest.z-subunitStart.z+nVoxelRadius)*VoxelRadius*2;
     }
+}
+
+// y:width:rows
+// z:length:cols
+void CompartmentProcess::setCompartmentDimension()
+{
+  setSubunitStart();
   if(Length)
     {
       Subunits = (unsigned)(Length/(DiffuseRadius*2));
@@ -167,12 +172,12 @@ void CompartmentProcess::setCompartmentDimension()
   Height = 2*DiffuseRadius;
   if(Filaments == 1)
     {
-      dimension = 1;
+      theDimension = 1;
       Length = Subunits*DiffuseRadius*2;
     }
   else
     {
-      dimension = 2;
+      theDimension = 2;
       //Add DiffuseRadius for the protrusion from hexagonal arrangement:
       Length = Subunits*DiffuseRadius*2+DiffuseRadius;
     }

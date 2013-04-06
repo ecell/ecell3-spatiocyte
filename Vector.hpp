@@ -88,6 +88,14 @@ Point norm(Point& P)
   return V;
 }
 
+void norm_(Point& P)
+{
+  double denom(sqrt(P.x*P.x+P.y*P.y+P.z*P.z));
+  P.x /= denom;
+  P.y /= denom;
+  P.z /= denom;
+}
+
 Point disp(Point& P, Point& V, double dist)
 {
   Point A;
