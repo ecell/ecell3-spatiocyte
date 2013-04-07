@@ -47,9 +47,6 @@ unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
     }
   //The compartment center point (origin):
   Origin = aComp->centerPoint;
-  Origin.x += OriginX*aComp->lengthX/2;
-  Origin.y += OriginY*aComp->lengthY/2;
-  Origin.z += OriginZ*aComp->lengthZ/2;
   setCompartmentDimension();
   theComp->dimension = theDimension;
   setLipidCompSpeciesProperties();
@@ -145,6 +142,14 @@ void CompartmentProcess::setSubunitStart()
     {
       Width = (farthest.y-subunitStart.y+nVoxelRadius)*VoxelRadius*2;
       Length = (farthest.z-subunitStart.z+nVoxelRadius)*VoxelRadius*2;
+    }
+  else
+    {
+      subunitStart.x += OriginX*theComp->lengthX/2;
+      subunitStart.y += OriginY*theComp->lengthY/2;
+      subunitStart.z += OriginZ*theComp->lengthZ/2;
+      subunitStart.y -= (Width/(VoxelRadius*2)-theComp->lengthY)/2;
+      subunitStart.z -= (Length/(VoxelRadius*2)-theComp->lengthZ)/2;
     }
 }
 
@@ -644,12 +649,12 @@ void CompartmentProcess::enlistInterfaceVoxels()
       Point center(*subunit.point);
       Point bottomLeft(*subunit.point);
       Point topRight(*subunit.point);
-      bottomLeft.x -= nSubunitRadius+theSpatiocyteStepper->getColLength();
-      bottomLeft.y -= nSubunitRadius+theSpatiocyteStepper->getLayerLength();
-      bottomLeft.z -= nSubunitRadius+theSpatiocyteStepper->getRowLength();
-      topRight.x += nSubunitRadius+theSpatiocyteStepper->getColLength();
-      topRight.y += nSubunitRadius+theSpatiocyteStepper->getLayerLength();
-      topRight.z += nSubunitRadius+theSpatiocyteStepper->getRowLength();
+      bottomLeft.x -= nDiffuseRadius+theSpatiocyteStepper->getColLength();
+      bottomLeft.y -= nDiffuseRadius+theSpatiocyteStepper->getLayerLength();
+      bottomLeft.z -= nDiffuseRadius+theSpatiocyteStepper->getRowLength();
+      topRight.x += nDiffuseRadius+theSpatiocyteStepper->getColLength();
+      topRight.y += nDiffuseRadius+theSpatiocyteStepper->getLayerLength();
+      topRight.z += nDiffuseRadius+theSpatiocyteStepper->getRowLength();
       unsigned blRow(0);
       unsigned blLayer(0);
       unsigned blCol(0);
@@ -680,8 +685,10 @@ void CompartmentProcess::addInterfaceVoxel(unsigned subunitCoord,
   Point voxelPoint(theSpatiocyteStepper->coord2point(voxelCoord));
   double dist(getDistance(&subunitPoint, &voxelPoint));
   //Should use SubunitRadius instead of DiffuseRadius since it is the
-  //actual size of the subunit:
-  if(dist <= (nSubunitRadius+nVoxelRadius)*1.0001) 
+  //actual size of the subunit. Nope, the distance is too far when using
+  //SubunitRadius:
+  if(dist < nDiffuseRadius+nVoxelRadius-
+     std::min(nDiffuseRadius, nVoxelRadius)/2) 
     {
       Voxel& voxel((*theLattice)[voxelCoord]);
       //theSpecies[6]->addMolecule(&voxel);
