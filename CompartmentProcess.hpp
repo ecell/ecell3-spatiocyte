@@ -230,12 +230,14 @@ public:
   virtual void updateResizedLattice();
   virtual void setCompartmentDimension();
   virtual void initializeVectors();
+  virtual void connectFilaments(unsigned, unsigned, unsigned);
+  virtual void setSubunitStart();
+  virtual void elongateFilaments(Species*, unsigned, unsigned, unsigned,
+                                 double);
   void addCompVoxel(unsigned, unsigned, Point&, Species*, unsigned, unsigned);
   virtual void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
                                    unsigned);
-  void elongateFilaments(Species*, unsigned, unsigned, unsigned, double);
   void connectSubunit(unsigned, unsigned, unsigned, unsigned);
-  void connectFilaments(unsigned, unsigned, unsigned);
   void addInterfaceVoxel(unsigned, unsigned);
   void setVacantCompSpeciesProperties();
   void setLipidCompSpeciesProperties();
@@ -251,7 +253,6 @@ public:
   void setSpeciesIntersectLipids();
   void getStartVoxelPoint(Point&, Point&, Point&);
   void setAdjoinOffsets();
-  virtual void setSubunitStart();
   int getCoefficient(Species*);
   Species* coefficient2species(int);
 protected:

@@ -216,13 +216,16 @@ public:
                                    unsigned);
   virtual void initializeThird();
   virtual void setSubunitStart();
+  virtual void connectFilaments(unsigned, unsigned, unsigned);
+  virtual void elongateFilaments(Species*, unsigned, unsigned, unsigned,
+                                 double);
 protected:
   double MonomerPitch;
   double nMonomerPitch;
   double nRadius;
   double Radius;
-  Point M; //Minus end
-  Point P; //Plus end
+  Point Minus; //Minus end
+  Point Plus; //Plus end
   Species* theMinusSpecies;
   Species* thePlusSpecies;
   std::vector<Species*> theKinesinSpecies;
