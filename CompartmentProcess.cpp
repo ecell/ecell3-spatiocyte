@@ -140,16 +140,20 @@ void CompartmentProcess::setSubunitStart()
     }
   if(Autofit)
     {
-      Width = (farthest.y-subunitStart.y+nVoxelRadius)*VoxelRadius*2;
-      Length = (farthest.z-subunitStart.z+nVoxelRadius)*VoxelRadius*2;
+      Width = (farthest.y-subunitStart.y+nVoxelRadius+nDiffuseRadius)*
+        VoxelRadius*2.00001;
+      Length = (farthest.z-subunitStart.z+nVoxelRadius+nDiffuseRadius)*
+        VoxelRadius*2.00001;
     }
   else
     {
       subunitStart.x += OriginX*theComp->lengthX/2;
       subunitStart.y += OriginY*theComp->lengthY/2;
       subunitStart.z += OriginZ*theComp->lengthZ/2;
+      /*
       subunitStart.y -= (Width/(VoxelRadius*2)-theComp->lengthY)/2;
       subunitStart.z -= (Length/(VoxelRadius*2)-theComp->lengthZ)/2;
+      */
     }
 }
 
@@ -171,9 +175,9 @@ void CompartmentProcess::setCompartmentDimension()
     {
       ++Filaments;
     }
-  //Need to use 2.5 here to avoid rounding off error when calculating
+  //Need to use 2.00001 here to avoid rounding off error when calculating
   //LipidRows below:
-  Width = 2.5*DiffuseRadius+(Filaments-1)*DiffuseRadius*sqrt(3); 
+  Width = 2.00001*DiffuseRadius+(Filaments-1)*DiffuseRadius*sqrt(3); 
   Height = 2*DiffuseRadius;
   if(Filaments == 1)
     {
@@ -390,8 +394,12 @@ void CompartmentProcess::initializeVectors()
   surfaceDisplace = dot(surfaceNormal, widthEnd);
   lengthDisplace = dot(lengthVector, lengthStart);
   lengthDisplaceOpp = dot(lengthVector, lengthEnd);
+  /*
   widthDisplace = dot(widthVector, widthEnd);
   widthDisplaceOpp = dot(widthVector, lengthEnd);
+  */
+  widthDisplace = dot(widthVector, lengthEnd);
+  widthDisplaceOpp = dot(widthVector, widthEnd);
 }
 
 void CompartmentProcess::rotate(Point& V)
@@ -702,7 +710,8 @@ void CompartmentProcess::addInterfaceVoxel(unsigned subunitCoord,
       //theSpecies[6]->addMolecule(&voxel);
       //Insert voxel in the list of interface voxels if was not already:
       //if(voxel.id == theComp->vacantSpecies->getID())
-      if(getID(voxel) != theInterfaceSpecies->getID())
+      //if(getID(voxel) != theInterfaceSpecies->getID())
+      if(theSpecies[getID(voxel)]->getIsCompVacant())
         {
           //theSpecies[5]->addMolecule(&voxel);
           theInterfaceSpecies->addMolecule(&voxel);
@@ -725,7 +734,8 @@ void CompartmentProcess::enlistSubunitInterfaceAdjoins()
             {
               unsigned coord(interface.adjoiningCoords[k]);
               Voxel& adjoin((*theLattice)[coord]);
-              if(getID(adjoin) != theInterfaceSpecies->getID())
+              //if(getID(adjoin) != theInterfaceSpecies->getID())
+              if(theSpecies[getID(adjoin)]->getIsCompVacant())
                 {
                   addAdjoin(subunit, coord);
                 }
@@ -743,7 +753,8 @@ void CompartmentProcess::enlistNonIntersectInterfaceVoxels()
       for(unsigned j(0); j != theAdjoiningCoordSize; ++j)
         {
           Voxel& adjoin((*theLattice)[anInterface.adjoiningCoords[j]]);
-          if(getID(adjoin) != theInterfaceSpecies->getID())
+          //if(getID(adjoin) != theInterfaceSpecies->getID())
+          if(theSpecies[getID(adjoin)]->getIsCompVacant())
             {
               Point aPoint(theSpatiocyteStepper->coord2point(adjoin.coord));
               if(isInside(aPoint))
@@ -764,7 +775,7 @@ bool CompartmentProcess::isInside(Point& aPoint)
       if(dist <= 0)
         {
           dist = point2planeDist(aPoint, widthVector, widthDisplaceOpp);
-          if(dist <=0)
+          if(dist <= 0)
             {
               dist = point2planeDist(aPoint, widthVector, widthDisplace);
               if(dist >= 0)
@@ -784,7 +795,8 @@ void CompartmentProcess::addNonIntersectInterfaceVoxel(Voxel& aVoxel,
   for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
     {
       Voxel& adjoin((*theLattice)[aVoxel.adjoiningCoords[i]]);
-      if(getID(adjoin) != theInterfaceSpecies->getID())
+      //if(getID(adjoin) != theInterfaceSpecies->getID())
+      if(theSpecies[getID(adjoin)]->getIsCompVacant())
         {
           Point pointB(theSpatiocyteStepper->coord2point(adjoin.coord));
           double distB(point2planeDist(pointB, surfaceNormal, surfaceDisplace));
@@ -795,7 +807,6 @@ void CompartmentProcess::addNonIntersectInterfaceVoxel(Voxel& aVoxel,
                 { 
                   //theSpecies[6]->addMolecule(&aVoxel);
                   theInterfaceSpecies->addMolecule(&aVoxel);
-                  return;
                 }
               else
                 {

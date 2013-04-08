@@ -746,8 +746,14 @@ public:
             {
               if(getID(target) == theComp->interfaceID)
                 {
+                  //Some interface voxels do not have pointers to the
+                  //off lattice subunits, so their adjoiningSize == diffuseSize:
+                  if(target->adjoiningSize == target->diffuseSize)
+                    {
+                      continue;
+                    }
                   unsigned coord(theRng.Integer(target->adjoiningSize-
-                                                 target->diffuseSize));
+                                                target->diffuseSize));
                   coord = target->adjoiningCoords[coord+target->diffuseSize];
                   target = &theLattice[coord];
                 }
