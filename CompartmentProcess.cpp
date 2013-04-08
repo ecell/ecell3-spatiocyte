@@ -351,20 +351,25 @@ void CompartmentProcess::initializeVectors()
   //For Lipid start:
   lengthStart.z -= nDiffuseRadius;
   lengthStart.y -= nDiffuseRadius;
+  rotate(subunitStart);
+  rotate(lengthStart);
 
   lengthVector.x = 0;
   lengthVector.y = 0;
   lengthVector.z = 1;
+  rotate(lengthVector);
   lengthEnd = disp(lengthStart, lengthVector, nLength);
 
   widthVector.x = 0;
   widthVector.y = 1;
   widthVector.x = 0;
+  rotate(widthVector);
   widthEnd = disp(lengthEnd, widthVector, nWidth);
 
   heightVector.x = 1;
   heightVector.y = 0;
   heightVector.z = 0;
+  rotate(heightVector);
   heightEnd = disp(widthEnd, heightVector, nHeight);
 
   if(theLipidSpecies)
@@ -391,9 +396,12 @@ void CompartmentProcess::initializeVectors()
 
 void CompartmentProcess::rotate(Point& V)
 {
-  theSpatiocyteStepper->rotateX(RotateX, &V, -1);
-  theSpatiocyteStepper->rotateY(RotateY, &V, -1);
-  theSpatiocyteStepper->rotateZ(RotateZ, &V, -1);
+  if(!Autofit)
+    {
+      theSpatiocyteStepper->rotateX(RotateX, &V, -1);
+      theSpatiocyteStepper->rotateY(RotateY, &V, -1);
+      theSpatiocyteStepper->rotateZ(RotateZ, &V, -1);
+    }
 }
 
 void CompartmentProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,
