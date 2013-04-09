@@ -1386,7 +1386,11 @@ public:
     }
   Tag& getTag(unsigned anIndex)
     {
-      return theTags[anIndex];
+      if(theTags.size())
+        {
+          return theTags[anIndex];
+        }
+      return theNullTag;
     }
   Tag& getTag(Voxel* aVoxel)
     {
