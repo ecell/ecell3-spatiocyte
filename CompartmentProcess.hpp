@@ -237,6 +237,8 @@ public:
   void addCompVoxel(unsigned, unsigned, Point&, Species*, unsigned, unsigned);
   virtual void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
                                    unsigned);
+  virtual void addNonIntersectInterfaceVoxel(Voxel&, Point&);
+  virtual bool isInside(Point&);
   void connectSubunit(unsigned, unsigned, unsigned, unsigned);
   void addInterfaceVoxel(unsigned, unsigned);
   void setVacantCompSpeciesProperties();
@@ -246,10 +248,8 @@ public:
   void enlistInterfaceVoxels();
   void enlistNonIntersectInterfaceVoxels();
   void enlistSubunitInterfaceAdjoins();
-  void addNonIntersectInterfaceVoxel(Voxel&, Point&);
   void rotate(Point&);
   void addAdjoin(Voxel&, unsigned);
-  bool isInside(Point&);
   void setSpeciesIntersectLipids();
   void getStartVoxelPoint(Point&, Point&, Point&);
   void setAdjoinOffsets();

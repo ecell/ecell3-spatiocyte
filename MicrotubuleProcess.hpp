@@ -219,6 +219,8 @@ public:
   virtual void connectFilaments(unsigned, unsigned, unsigned);
   virtual void elongateFilaments(Species*, unsigned, unsigned, unsigned,
                                  double);
+  virtual void addNonIntersectInterfaceVoxel(Voxel&, Point&);
+  virtual bool isInside(Point&);
 protected:
   double MonomerPitch;
   double nMonomerPitch;

@@ -1,5 +1,5 @@
 sim = theSimulator.createStepper('SpatiocyteStepper', 'SS')
-sim.VoxelRadius = 2.74e-9
+sim.VoxelRadius = 0.74e-9
 sim.SearchVacant = 0
 
 theSimulator.rootSystem.StepperID = 'SS'
@@ -49,8 +49,8 @@ populator.UniformRadiusZ = 0.99
 
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop3')
 populator.VariableReferenceList = [['_', 'Variable:/:PTEN']]
-populator.OriginX = -0.9
-populator.OriginY = 0.9
+populator.OriginX = -1.5
+populator.OriginY = 1.5
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffusePTENv')
 diffuser.VariableReferenceList = [['_', 'Variable:/:PTEN']]
@@ -59,10 +59,11 @@ diffuser.D = 5e-12
 
 fil = theSimulator.createEntity('CompartmentProcess', 'Process:/:filam')
 fil.VariableReferenceList = [['_', 'Variable:/Surface:PTEN']]
-fil.OriginX = 1
-fil.RotateZ = 0.45
-fil.Length = 1.4e-7
-fil.Width = 1.4e-7
+fil.OriginX = 0
+fil.OriginZ = -0.4
+fil.RotateZ = 0.78
+fil.Length = 1.8e-7
+fil.Width = 1.8e-7
 fil.Autofit = 0
 fil.DiffuseRadius = 0.8e-8
 fil.LipidRadius = 0.8e-8
@@ -73,7 +74,7 @@ import time
 run(1e-6)
 print "Done stirring. Now running..."
 start = time.time()
-run(0.002)
+run(0.01)
 end = time.time()
 duration = end-start
 print duration

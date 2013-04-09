@@ -89,7 +89,7 @@ void MicrotubuleProcess::initializeThird()
 void MicrotubuleProcess::initializeVectors()
 { 
   //Minus end
-  Minus.x = -Length/2;
+  Minus.x = -nLength/2;
   Minus.y = 0;
   Minus.z = 0;
   //Rotated Minus end
@@ -98,11 +98,12 @@ void MicrotubuleProcess::initializeVectors()
   theSpatiocyteStepper->rotateZ(RotateZ, &Minus, -1);
   add_(Minus, Origin);
   //Direction vector from the Minus end to center
+  //Direction vector from the Minus end to center
   lengthVector = sub(Origin, Minus);
   //Make direction vector a unit vector
   norm_(lengthVector);
   //Rotated Plus end
-  Plus = disp(Minus, lengthVector, Length);
+  Plus = disp(Minus, lengthVector, nLength);
   setSubunitStart();
 }
 
@@ -199,6 +200,54 @@ void MicrotubuleProcess::elongateFilaments(Species* aVacant,
           else
             {
               addCompVoxel(i, j, A, thePlusSpecies, aStartCoord, aCols);
+            }
+        }
+    }
+}
+
+//Is inside the parent compartment and confined by the length of the MT:
+bool MicrotubuleProcess::isInside(Point& aPoint)
+{
+  double dist(point2planeDist(aPoint, lengthVector, dot(lengthVector, Minus)));
+  if(dist > nDiffuseRadius)
+    { 
+      dist = point2planeDist(aPoint, lengthVector, dot(lengthVector, Plus));
+      if(dist < -nDiffuseRadius)
+        {
+          return true;
+        }
+    }
+  return false;
+}
+
+void MicrotubuleProcess::addNonIntersectInterfaceVoxel(Voxel& aVoxel,
+                                                       Point& aPoint)
+{
+  //Get the distance from the voxel to the center line of the MT:
+  double distA(point2lineDist(aPoint, lengthVector, Minus));
+  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
+    {
+      Voxel& adjoin((*theLattice)[aVoxel.adjoiningCoords[i]]);
+      //if(getID(adjoin) != theInterfaceSpecies->getID())
+      if(theSpecies[getID(adjoin)]->getIsCompVacant())
+        {
+          Point pointB(theSpatiocyteStepper->coord2point(adjoin.coord));
+          //Get the distance from the adjoin to the center line of the MT:
+          double distB(point2lineDist(pointB, lengthVector, Minus));
+          //If not on the same side of the MT surface:
+          if((distA < nRadius) != (distB < nRadius))
+            {
+              //If the voxel is nearer to the MT surface:
+              if(abs(distA-nRadius) < abs(distB-nRadius))
+                {
+                  theInterfaceSpecies->addMolecule(&aVoxel);
+                  return;
+                }
+              //If the adjoin is nearer to the MT surface:
+              else
+                {
+                  theInterfaceSpecies->addMolecule(&adjoin);
+                }
             }
         }
     }

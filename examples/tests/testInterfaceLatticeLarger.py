@@ -60,6 +60,7 @@ diffuser.D = 5e-12
 fil = theSimulator.createEntity('CompartmentProcess', 'Process:/:filam')
 fil.VariableReferenceList = [['_', 'Variable:/Surface:PTEN']]
 fil.OriginX = 0.5
+fil.OriginZ = -0.3
 fil.RotateZ = 0.45
 fil.Length = 1.2e-7
 fil.Width = 1.2e-7

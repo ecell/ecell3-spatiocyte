@@ -153,6 +153,7 @@ void CompartmentProcess::setSubunitStart()
       /*
       subunitStart.y -= (Width/(VoxelRadius*2)-theComp->lengthY)/2;
       subunitStart.z -= (Length/(VoxelRadius*2)-theComp->lengthZ)/2;
+      subunitStart.x -= (Height/(VoxelRadius*2)-theComp->lengthX)/2;
       */
     }
 }
@@ -394,10 +395,6 @@ void CompartmentProcess::initializeVectors()
   surfaceDisplace = dot(surfaceNormal, widthEnd);
   lengthDisplace = dot(lengthVector, lengthStart);
   lengthDisplaceOpp = dot(lengthVector, lengthEnd);
-  /*
-  widthDisplace = dot(widthVector, widthEnd);
-  widthDisplaceOpp = dot(widthVector, lengthEnd);
-  */
   widthDisplace = dot(widthVector, lengthEnd);
   widthDisplaceOpp = dot(widthVector, widthEnd);
 }
@@ -703,8 +700,7 @@ void CompartmentProcess::addInterfaceVoxel(unsigned subunitCoord,
   //Should use SubunitRadius instead of DiffuseRadius since it is the
   //actual size of the subunit. Nope, the distance is too far when using
   //SubunitRadius:
-  if(dist < nDiffuseRadius+nVoxelRadius-
-     std::min(nDiffuseRadius, nVoxelRadius)/2) 
+  if(dist < std::max(nDiffuseRadius, nVoxelRadius)) 
     {
       Voxel& voxel((*theLattice)[voxelCoord]);
       //theSpecies[6]->addMolecule(&voxel);
@@ -803,14 +799,15 @@ void CompartmentProcess::addNonIntersectInterfaceVoxel(Voxel& aVoxel,
           //if not on the same side of the plane:
           if((distA < 0) != (distB < 0))
             {
+              //If the voxel is nearer to the plane:
               if(abs(distA) < abs(distB))
                 { 
-                  //theSpecies[6]->addMolecule(&aVoxel);
                   theInterfaceSpecies->addMolecule(&aVoxel);
+                  return;
                 }
+              //If the adjoin is nearer to the plane:
               else
                 {
-                  //theSpecies[6]->addMolecule(&adjoin);
                   theInterfaceSpecies->addMolecule(&adjoin);
                 }
             }

@@ -112,9 +112,23 @@ void disp_(Point& P, Point& V, double dist)
   P.z += V.z*dist;
 }
 
+Point mult(Point& P, double dist)
+{
+  Point A;
+  A.x = P.x*dist;
+  A.y = P.y*dist;
+  A.z = P.z*dist;
+  return A;
+}
+
 double dot(Point& L, Point& R)
 {
   return L.x*R.x + L.y*R.y + L.z*R.z;
+}
+
+double distance(Point& L, Point& R)
+{
+  return sqrt((L.x-R.x)*(L.x-R.x) + (L.y-R.y)*(L.y-R.y) + (L.z-R.z)*(L.z-R.z));
 }
 
 //Get the shortest distance from a point, P to a plane given by normal N and
@@ -122,6 +136,16 @@ double dot(Point& L, Point& R)
 double point2planeDist(Point& P, Point& N, double m)
 {
   return dot(P, N) - m;
+}
+
+//Get the shortest distance from a point, P to a line defined by the direction
+//vector, N that passes through a point, Q:
+double point2lineDist(Point& P, Point& N, Point& Q)
+{
+  double t((dot(P, N) - dot(Q, N))/dot(N, N));
+  Point A(mult(N, t));
+  add_(A, Q);
+  return distance(P, A);
 }
 
 double abs(double a)
