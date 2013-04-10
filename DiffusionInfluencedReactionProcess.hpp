@@ -93,7 +93,7 @@ public:
   virtual void setReactMethod();
 protected:
   void calculateReactionProbability();
-  void addMoleculeE();
+  void throwException(String);
   void addMoleculeF();
   void removeMolecule(Species*, Voxel*, const unsigned) const;
   void removeMolecule(Species*, Voxel*, const unsigned, Species*) const;
@@ -124,6 +124,7 @@ protected:
   void reactBtoC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactNtoC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactVarC_VarD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactAtoC_compNtoE(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactVarC(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactAeqC(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactBeqC(Voxel*, Voxel*, const unsigned, const unsigned);

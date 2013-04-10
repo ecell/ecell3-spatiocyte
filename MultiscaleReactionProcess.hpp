@@ -90,7 +90,6 @@ protected:
   void reactBtoC_Multi(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactMuAtoMuC_MuBtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactMuBeqMuC_MuAtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void throwException(String);
   void setReactVarC_D();
   void setReactVarD_C();
   void setReactD();

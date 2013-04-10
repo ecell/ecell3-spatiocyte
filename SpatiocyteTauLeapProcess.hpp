@@ -440,15 +440,6 @@ public:
     {
       return SpatiocyteNextReactionProcess::isDependentOn(aProcess);
     }
-  double getPropensity() const
-    {
-      return thePropensity;
-    }
-  double getNewPropensity()
-    {
-      thePropensity = (this->*thePropensityMethod)();
-      return thePropensity;
-    }
   double getEpsilon()
     {
       return epsilon;

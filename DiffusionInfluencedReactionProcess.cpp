@@ -368,6 +368,26 @@ void DiffusionInfluencedReactionProcess::reactAtoC_BeqD(Voxel* molA,
   A->softRemoveMolecule(indexA);
 }
 
+//A + B -> [C <- molA] + [E <- compN]
+//zero-coefficient E
+//we create a molecule E at random location in the compartment to avoid
+//rebinding effect, useful to maintain the concentration of a substrate species
+//even after the reaction:
+void DiffusionInfluencedReactionProcess::reactAtoC_compNtoE(Voxel* molA,
+                                                            Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  Voxel* mol(E->getRandomCompVoxel(1));
+  if(mol)
+    { 
+      E->addMolecule(mol);
+      C->addMolecule(molA, A->getTag(indexA));
+      A->softRemoveMolecule(indexA);
+      removeMolecule(B, molB, indexB);
+    }
+}
+
 //A + B -> [C <- molN] + [B == D]
 void DiffusionInfluencedReactionProcess::reactNtoC_BeqD(Voxel* molA,
                                                         Voxel* molB,
@@ -683,6 +703,26 @@ void DiffusionInfluencedReactionProcess::setReactMethod()
             }
         }
     }
+  //A + B -> C + E(0 coefficient, random comp voxel)
+  else if(E)
+    {
+      if(A == C)
+        {
+          throwException("reactAeqC_E");
+        }
+      else if(B == C)
+        {
+          throwException("reactBeqC_E");
+        }
+      else if(A->isReplaceable(C))
+        {
+          reactM = &DiffusionInfluencedReactionProcess::reactAtoC_compNtoE;
+        }
+      else
+        {
+          throwException("reactBtoC_E");
+        }
+    }
   else
     {
       if(A == C)
@@ -713,6 +753,13 @@ void DiffusionInfluencedReactionProcess::setReactMethod()
     }
 }
 
+void DiffusionInfluencedReactionProcess::throwException(String aString)
+{
+  THROW_EXCEPTION(ValueError, String(getPropertyInterface().getClassName()) +
+                  "[" + getFullID().asString() + "]: " + aString + " is not " +
+                  "yet implemented.");
+}
+
 //positive-coefficient F
 void DiffusionInfluencedReactionProcess::addMoleculeF()
 {
@@ -730,26 +777,6 @@ void DiffusionInfluencedReactionProcess::addMoleculeF()
         }
     }
   F->addMolecule(moleculeF);
-}
-
-//zero-coefficient E
-//we create a molecule E at random location in the compartment to avoid
-//rebinding effect, useful to maintain the concentration of a substrate species
-//even after the reaction:
-void DiffusionInfluencedReactionProcess::addMoleculeE()
-{
-  if(!E)
-    {
-      return;
-    }
-  moleculeE = E->getRandomCompVoxel(1);
-  if(moleculeE == NULL)
-    {
-      std::cout << getFullID().asString() << " unable to add molecule E" <<
-        std::endl;
-      return;
-    }
-  E->addMolecule(moleculeE);
 }
 
 void DiffusionInfluencedReactionProcess::calculateReactionProbability()

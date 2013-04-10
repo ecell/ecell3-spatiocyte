@@ -121,7 +121,10 @@ public:
   virtual void printParameters();
   virtual bool isDependentOn(const Process*) const;
   virtual bool react();
+  virtual double getPropensity() const;
+  virtual double getNewPropensity();
 protected:
+  void updateSubstrates();
   void updateMoleculesA();
   double getIntervalUnbindAB();
   double getIntervalUnbindMultiAB();

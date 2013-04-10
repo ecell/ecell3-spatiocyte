@@ -369,13 +369,6 @@ void MultiscaleReactionProcess::reactMuBeqMuC_MuAtoMuD(Voxel* molA,
   A->softRemoveMolecule(indexA);
 }
 
-void MultiscaleReactionProcess::throwException(String aString)
-{
-  THROW_EXCEPTION(ValueError, String(getPropertyInterface().getClassName()) +
-                  "[" + getFullID().asString() + "]: " + aString + " is not " +
-                  "yet implemented.");
-}
-
 void MultiscaleReactionProcess::setReactVarC_D()
 {
   if(A == D)

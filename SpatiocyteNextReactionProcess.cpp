@@ -44,7 +44,8 @@ void SpatiocyteNextReactionProcess::fire()
   requeue();
 }
 
-bool SpatiocyteNextReactionProcess::react()
+
+void SpatiocyteNextReactionProcess::updateSubstrates()
 {
   if(A)
     {
@@ -54,6 +55,11 @@ bool SpatiocyteNextReactionProcess::react()
     {
       B->updateMolecules();
     }
+}
+
+bool SpatiocyteNextReactionProcess::react()
+{
+  updateSubstrates();
   if(theOrder == 0)
     {
       if(C)
@@ -563,6 +569,7 @@ bool SpatiocyteNextReactionProcess::reactDeoligomerize(Species* a, Species* c)
 bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
 {
   unsigned indexA(a->getRandomIndex());
+
   moleculeA = a->getMolecule(indexA);
   if(ImplicitUnbind && 
      E->getRandomAdjoiningVoxel(moleculeA, E, SearchVacant) == NULL)
@@ -1297,8 +1304,7 @@ double SpatiocyteNextReactionProcess::getNewInterval()
       return interval;
     }
     */
-  thePropensity = (this->*thePropensityMethod)();
-  if(thePropensity)
+  if(getNewPropensity())
     {
       return -log(theRng->FixedU())/thePropensity;
     }
@@ -1312,12 +1318,23 @@ double SpatiocyteNextReactionProcess::getInterval(double aCurrentTime)
       return getNewInterval();
     }
   const double oldPropensity(thePropensity);
-  thePropensity = (this->*thePropensityMethod)();
-  if(thePropensity)
+  if(getNewPropensity())
     {
       return oldPropensity/thePropensity*(theTime-aCurrentTime);
     }
   return libecs::INF;
+}
+
+double SpatiocyteNextReactionProcess::getNewPropensity()
+{
+  updateSubstrates();
+  thePropensity = (this->*thePropensityMethod)();
+  return thePropensity;
+}
+
+double SpatiocyteNextReactionProcess::getPropensity() const
+{
+  return thePropensity;
 }
 
 //Find out if this process is interrupted by the aProcess

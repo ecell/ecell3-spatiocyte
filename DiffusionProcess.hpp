@@ -151,7 +151,8 @@ public:
       if(D > 0)
         {
           double r_v(theDiffusionSpecies->getDiffuseRadius());
-          double alpha(2); //default for 1D diffusion
+          //From 4rv^2 = 2lDt, alpha = 4/(2l), where l is the dimension:
+          double alpha(2); //default value for 1D diffusion
           if(theDiffusionSpecies->getDimension() == 2)
             {
               if(RegularLattice || theDiffusionSpecies->getIsRegularLattice())
