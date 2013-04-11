@@ -51,6 +51,10 @@ public:
       PROPERTYSLOT_SET_GET(Integer, ImplicitUnbind);
     }
   SpatiocyteNextReactionProcess():
+    Deoligomerize(0),
+    theDeoligomerIndex(0),
+    BindingSite(-1),
+    ImplicitUnbind(0),
     initSizeA(0),
     initSizeB(0),
     initSizeC(0),
@@ -58,9 +62,6 @@ public:
     SpaceA(0),
     SpaceB(0),
     SpaceC(0),
-    Deoligomerize(0),
-    BindingSite(-1),
-    ImplicitUnbind(0),
     thePropensityMethod(&SpatiocyteNextReactionProcess::
                                getPropensityZerothOrder) {}
   virtual ~SpatiocyteNextReactionProcess() {}
@@ -150,6 +151,11 @@ protected:
   void setVariableReferences(const VariableReferenceVector&);
   void setDeoligomerIndex(const unsigned);
 protected:
+  unsigned Deoligomerize;
+  unsigned nextIndexA;
+  unsigned theDeoligomerIndex;
+  int BindingSite;
+  int ImplicitUnbind;
   double initSizeA;
   double initSizeB;
   double initSizeC;
@@ -158,11 +164,6 @@ protected:
   double SpaceB;
   double SpaceC;
   double thePropensity;
-  unsigned Deoligomerize;
-  int BindingSite;
-  int ImplicitUnbind;
-  unsigned nextIndexA;
-  unsigned theDeoligomerIndex;
   std::stringstream pFormula;
   PropensityMethod thePropensityMethod;  
   std::vector<Voxel*> moleculesA;

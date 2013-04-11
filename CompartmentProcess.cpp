@@ -246,23 +246,18 @@ void CompartmentProcess::initializeThird()
   if(!isCompartmentalized)
     {
       thePoints.resize(endCoord-subStartCoord);
+      vacStartIndex = theVacantSpecies->size();
+      intStartIndex = theInterfaceSpecies->size();
       initializeVectors();
-      std::cout << "3" << std::endl;
       initializeFilaments(subunitStart, Filaments, Subunits, nDiffuseRadius,
                           theVacantSpecies, subStartCoord);
-      std::cout << "4" << std::endl;
       elongateFilaments(theVacantSpecies, subStartCoord, Filaments, Subunits,
                         nDiffuseRadius);
-      std::cout << "5" << std::endl;
       connectFilaments(subStartCoord, Filaments, Subunits);
-      std::cout << "6" << std::endl;
       setGrid(theVacantSpecies, theVacGrid, subStartCoord);
-      std::cout << "7" << std::endl;
       interfaceSubunits();
-      std::cout << "8" << std::endl;
       initializeFilaments(lipidStart, LipidRows, LipidCols, nLipidRadius,
                           theLipidSpecies, lipStartCoord);
-      std::cout << "9" << std::endl;
       elongateFilaments(theLipidSpecies, lipStartCoord, LipidRows,
                         LipidCols, nLipidRadius);
       connectFilaments(lipStartCoord, LipidRows, LipidCols);
@@ -285,9 +280,9 @@ void CompartmentProcess::setGrid(Species* aSpecies,
 { 
   if(aSpecies)
     {
-      for(unsigned i(0); i != aSpecies->size(); ++i)
+      for(unsigned i(vacStartIndex); i != aSpecies->size(); ++i)
         {
-          Point& aPoint(*(*theLattice)[aStartCoord+i].point);
+          Point& aPoint(*(*theLattice)[aStartCoord+i-vacStartIndex].point);
           const int row((int)((aPoint.y-parentOrigin.y)/nGridSize));
           const int col((int)((aPoint.z-parentOrigin.z)/nGridSize));
           const int layer((int)((aPoint.x-parentOrigin.x)/nGridSize));
@@ -296,7 +291,7 @@ void CompartmentProcess::setGrid(Species* aSpecies,
             {
               aGrid[row+
                 gridRows*layer+
-                gridRows*gridLayers*col].push_back(aStartCoord+i);
+                gridRows*gridLayers*col].push_back(aStartCoord+i-vacStartIndex);
             }
         }
     }
@@ -739,7 +734,7 @@ void CompartmentProcess::enlistSubunitIntersectInterfaceVoxels()
                   //voxels:
                   addInterfaceVoxel(i, m);
                   if(nDiffuseRadius <= nVoxelRadius && 
-                     theInterfaceSpecies->size())
+                     theInterfaceSpecies->size() > intStartIndex)
                     {
                       return;
                     }
@@ -836,7 +831,7 @@ void CompartmentProcess::enlistSubunitInterfaceAdjoins()
 
 void CompartmentProcess::enlistPlaneIntersectInterfaceVoxels()
 {
-  for(unsigned i(0); i != theInterfaceSpecies->size(); ++i)
+  for(unsigned i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
     {
       unsigned voxelCoord(theInterfaceSpecies->getCoord(i));
       Voxel& anInterface((*theLattice)[voxelCoord]);

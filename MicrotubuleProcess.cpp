@@ -56,6 +56,9 @@ void MicrotubuleProcess::setCompartmentDimension()
   Width = Radius*2;
   Height = Radius*2;
   theDimension = 1;
+  Origin.x += OriginX*theComp->lengthX/2;
+  Origin.y += OriginY*theComp->lengthY/2;
+  Origin.z += OriginZ*theComp->lengthZ/2;
   allocateGrid();
 }
 
@@ -65,6 +68,8 @@ void MicrotubuleProcess::initializeThird()
   if(!isCompartmentalized)
     {
       thePoints.resize(endCoord-subStartCoord);
+      vacStartIndex = theVacantSpecies->size();
+      intStartIndex = theInterfaceSpecies->size();
       initializeVectors();
       initializeFilaments(subunitStart, Filaments, Subunits, nMonomerPitch,
                           theMinusSpecies, subStartCoord);

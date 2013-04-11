@@ -69,6 +69,8 @@ public:
     isCompartmentalized(false),
     Autofit(1),
     Filaments(1),
+    LipidCols(0),
+    LipidRows(0),
     Periodic(0),
     RegularLattice(1),
     Subunits(1),
@@ -263,15 +265,17 @@ protected:
   unsigned Autofit;
   unsigned endCoord;
   unsigned Filaments;
-  unsigned Periodic;
-  unsigned LipidRows;
+  unsigned intStartIndex;
   unsigned LipidCols;
+  unsigned LipidRows;
   unsigned lipStartCoord;
+  unsigned Periodic;
   unsigned subStartCoord;
   unsigned RegularLattice;
   unsigned Subunits;
   unsigned theDiffuseSize;
   unsigned theDimension;
+  unsigned vacStartIndex;
   int gridCols;
   int gridLayers;
   int gridRows;
