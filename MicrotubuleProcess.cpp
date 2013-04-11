@@ -56,12 +56,7 @@ void MicrotubuleProcess::setCompartmentDimension()
   Width = Radius*2;
   Height = Radius*2;
   theDimension = 1;
-  nLength = Length/(VoxelRadius*2);
-  nWidth = Width/(VoxelRadius*2);
-  nHeight = Height/(VoxelRadius*2);
-  theComp->lengthX = nHeight;
-  theComp->lengthY = nWidth;
-  theComp->lengthZ = nLength;
+  allocateGrid();
 }
 
 
@@ -76,6 +71,7 @@ void MicrotubuleProcess::initializeThird()
       elongateFilaments(theVacantSpecies, subStartCoord, Filaments, Subunits,
                         nDiffuseRadius);
       connectFilaments(subStartCoord, Filaments, Subunits);
+      setGrid(theVacantSpecies, theVacGrid, subStartCoord);
       interfaceSubunits();
       isCompartmentalized = true;
     }
@@ -220,7 +216,7 @@ bool MicrotubuleProcess::isInside(Point& aPoint)
   return false;
 }
 
-void MicrotubuleProcess::addNonIntersectInterfaceVoxel(Voxel& aVoxel,
+void MicrotubuleProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
                                                        Point& aPoint)
 {
   //Get the distance from the voxel to the center line of the MT:
@@ -240,13 +236,13 @@ void MicrotubuleProcess::addNonIntersectInterfaceVoxel(Voxel& aVoxel,
               //If the voxel is nearer to the MT surface:
               if(abs(distA-nRadius) < abs(distB-nRadius))
                 {
-                  theInterfaceSpecies->addMolecule(&aVoxel);
+                  addInterfaceVoxel(aVoxel, aPoint);
                   return;
                 }
               //If the adjoin is nearer to the MT surface:
               else
                 {
-                  theInterfaceSpecies->addMolecule(&adjoin);
+                  addInterfaceVoxel(adjoin, pointB);
                 }
             }
         }

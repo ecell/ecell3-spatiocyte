@@ -187,9 +187,9 @@ public:
       //For a multiscale molecule, the SubunitRadius can be larger
       //than the DiffuseRadius:
       nSubunitRadius = SubunitRadius/(VoxelRadius*2);
-      nGridSize = 1.5*nSubunitRadius;
       //Normalized lipid voxel radius:
       nLipidRadius = LipidRadius/(VoxelRadius*2);
+      nGridSize = 10*nDiffuseRadius;
     }
   virtual void initializeFirst()
     {
@@ -237,16 +237,17 @@ public:
   void addCompVoxel(unsigned, unsigned, Point&, Species*, unsigned, unsigned);
   virtual void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
                                    unsigned);
-  virtual void addNonIntersectInterfaceVoxel(Voxel&, Point&);
+  virtual void addPlaneIntersectInterfaceVoxel(Voxel&, Point&);
   virtual bool isInside(Point&);
   void connectSubunit(unsigned, unsigned, unsigned, unsigned);
   void addInterfaceVoxel(unsigned, unsigned);
+  void addInterfaceVoxel(Voxel&, Point&);
   void setVacantCompSpeciesProperties();
   void setLipidCompSpeciesProperties();
   void setDiffuseSize(unsigned, unsigned);
   void interfaceSubunits();
-  void enlistInterfaceVoxels();
-  void enlistNonIntersectInterfaceVoxels();
+  void enlistSubunitIntersectInterfaceVoxels();
+  void enlistPlaneIntersectInterfaceVoxels();
   void enlistSubunitInterfaceAdjoins();
   void rotate(Point&);
   void addAdjoin(Voxel&, unsigned);
@@ -255,13 +256,13 @@ public:
   void setAdjoinOffsets();
   int getCoefficient(Species*);
   Species* coefficient2species(int);
+  void allocateGrid();
+  void setGrid(Species*, std::vector<std::vector<unsigned> >&, unsigned);
 protected:
   bool isCompartmentalized;
   unsigned Autofit;
   unsigned endCoord;
   unsigned Filaments;
-  unsigned gridCols;
-  unsigned gridRows;
   unsigned Periodic;
   unsigned LipidRows;
   unsigned LipidCols;
@@ -271,6 +272,9 @@ protected:
   unsigned Subunits;
   unsigned theDiffuseSize;
   unsigned theDimension;
+  int gridCols;
+  int gridLayers;
+  int gridRows;
   double DiffuseRadius;
   double nGridSize;
   double Height;
@@ -282,6 +286,9 @@ protected:
   double nDiffuseRadius;
   double nLength;
   double nLipidRadius;
+  double nParentHeight;
+  double nParentLength;
+  double nParentWidth;
   double nSubunitRadius;
   double nVoxelRadius;
   double nWidth;
@@ -308,6 +315,7 @@ protected:
   Point Origin;
   Point subunitStart;
   Point surfaceNormal;
+  Point parentOrigin;
   Point widthEnd;
   Point widthVector;
   Species* theLipidSpecies;
@@ -316,7 +324,8 @@ protected:
   Variable* theInterfaceVariable;
   Variable* theLipidVariable;
   Variable* theVacantVariable;
-  std::vector<std::vector<unsigned> > theGrid;
+  std::vector<std::vector<unsigned> > theVacGrid;
+  std::vector<std::vector<unsigned> > theLipGrid;
   std::vector<Point> thePoints;
   std::vector<Species*> theLipidCompSpecies;
   std::vector<Species*> theVacantCompSpecies;

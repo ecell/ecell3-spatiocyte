@@ -34,7 +34,7 @@
 
 #include "SpatiocyteCommon.hpp"
 
-Point cross(Point& L, Point& R)
+Point cross(const Point& L, const Point& R)
 {
   Point V;
   V.x  = L.y * R.z;
@@ -46,7 +46,7 @@ Point cross(Point& L, Point& R)
   return V;
 }
 
-Point sub(Point& L, Point& R)
+Point sub(const Point& L, const Point& R)
 {
   Point V;
   V.x = L.x - R.x;
@@ -55,14 +55,14 @@ Point sub(Point& L, Point& R)
   return V;
 }
 
-void sub_(Point& L, Point& R)
+void sub_(Point& L, const Point& R)
 {
   L.x -= R.x;
   L.y -= R.y;
   L.z -= R.z;
 }
 
-Point add(Point& L, Point& R)
+Point add(const Point& L, const Point& R)
 {
   Point V;
   V.x = L.x + R.x;
@@ -71,14 +71,14 @@ Point add(Point& L, Point& R)
   return V;
 }
 
-void add_(Point& L, Point& R)
+void add_(Point& L, const Point& R)
 {
   L.x += R.x;
   L.y += R.y;
   L.z += R.z;
 }
 
-Point norm(Point& P)
+Point norm(const Point& P)
 {
   double denom(sqrt(P.x*P.x+P.y*P.y+P.z*P.z));
   Point V;
@@ -96,7 +96,7 @@ void norm_(Point& P)
   P.z /= denom;
 }
 
-Point disp(Point& P, Point& V, double dist)
+Point disp(const Point& P, const Point& V, const double dist)
 {
   Point A;
   A.x = P.x + V.x*dist;
@@ -105,14 +105,14 @@ Point disp(Point& P, Point& V, double dist)
   return A;
 }
 
-void disp_(Point& P, Point& V, double dist)
+void disp_(Point& P, const Point& V, const double dist)
 {
   P.x += V.x*dist;
   P.y += V.y*dist;
   P.z += V.z*dist;
 }
 
-Point mult(Point& P, double dist)
+Point mult(const Point& P, const double dist)
 {
   Point A;
   A.x = P.x*dist;
@@ -121,26 +121,26 @@ Point mult(Point& P, double dist)
   return A;
 }
 
-double dot(Point& L, Point& R)
+double dot(const Point& L, const Point& R)
 {
   return L.x*R.x + L.y*R.y + L.z*R.z;
 }
 
-double distance(Point& L, Point& R)
+double distance(const Point& L, const Point& R)
 {
   return sqrt((L.x-R.x)*(L.x-R.x) + (L.y-R.y)*(L.y-R.y) + (L.z-R.z)*(L.z-R.z));
 }
 
 //Get the shortest distance from a point, P to a plane given by normal N and
 //displacement, m:
-double point2planeDist(Point& P, Point& N, double m)
+double point2planeDist(const Point& P, const Point& N, const double m)
 {
   return dot(P, N) - m;
 }
 
 //Get the shortest distance from a point, P to a line defined by the direction
 //vector, N that passes through a point, Q:
-double point2lineDist(Point& P, Point& N, Point& Q)
+double point2lineDist(const Point& P, const Point& N, const Point& Q)
 {
   double t((dot(P, N) - dot(Q, N))/dot(N, N));
   Point A(mult(N, t));
@@ -148,14 +148,15 @@ double point2lineDist(Point& P, Point& N, Point& Q)
   return distance(P, A);
 }
 
-double abs(double a)
+double abs(const double a)
 {
   return sqrt(a*a);
 }
 
 //Return the result when the point P(x,y,z) is rotated about the line through
 //C(a,b,c) with unit direction vector N⟨u,v,w⟩ by the angle θ.
-void rotatePointAlongVector(Point& P, Point& C, Point& N, double angle)
+void rotatePointAlongVector(Point& P, const Point& C, const Point& N,
+                            const double angle)
 {
   double x(P.x);
   double y(P.y);

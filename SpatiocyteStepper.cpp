@@ -435,7 +435,7 @@ void SpatiocyteStepper::checkModel()
 
 void SpatiocyteStepper::checkLattice()
 {
-  std::vector<int> list;
+  std::vector<unsigned> list;
   for(unsigned i(0); i!=theSpecies.size(); ++i)
     {
       list.push_back(0);
@@ -444,28 +444,19 @@ void SpatiocyteStepper::checkLattice()
     {
       ++list[getID(theLattice[i])];
     }
-  int volumeCnt(0);
-  int surfaceCnt(0);
   for(unsigned i(0); i!=list.size(); ++i)
     {
-      std::cout << "i:" << i << " ";
-      if(theSpecies[i]->getVariable() != NULL)
+      if(!theSpecies[i]->getIsCompVacant() && 
+         theSpecies[i]->getVariable() != NULL)
         {
-          std::cout << theSpecies[i]->getVariable()->getFullID().asString();
-          if(theSpecies[i]->getDimension() == 3)
+          if(theSpecies[i]->size() != list[i])
             {
-              volumeCnt += list[i];
-            }
-          else
-            {
-              surfaceCnt += list[i];
+              std::cout << theSpecies[i]->getIDString() << " in lattice:" <<
+                list[i] << ", but actual size:" << theSpecies[i]->size() <<
+                std::endl;
             }
         }
-      std::cout << " cnt:" << list[i] << std::endl;
     }
-  std::cout << "total volume:" << volumeCnt << std::endl;
-  std::cout << "total surface:" << surfaceCnt << std::endl;
-  std::cout << "total volume+surface:" << surfaceCnt+volumeCnt << std::endl;
 }
 
 void SpatiocyteStepper::initSpecies()
@@ -681,6 +672,7 @@ inline void SpatiocyteStepper::step()
       //std::cout << "before:" << thePriorityQueue.getTop()->getIDString() << " " << getCurrentTime() << std::endl;
       thePriorityQueue.getTop()->fire();
       //checkSpecies();
+      //checkLattice();
       if(thePriorityQueue.getTop()->getTime() != getCurrentTime())
         {
           interruptProcesses(getCurrentTime());

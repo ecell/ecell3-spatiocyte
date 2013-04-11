@@ -21,7 +21,7 @@ theSimulator.createEntity('Variable', 'Variable:/Surface:ANIO').Value = 0
 theSimulator.createEntity('Variable', 'Variable:/Surface:ANIOs').Value = 0
 theSimulator.createEntity('Variable', 'Variable:/Surface:ANIO_PTEN').Value = 0
 theSimulator.createEntity('Variable', 'Variable:/Surface:ANIOs_PTEN').Value = 0
-theSimulator.createEntity('Variable', 'Variable:/:PTEN').Value = 100
+theSimulator.createEntity('Variable', 'Variable:/:PTEN').Value = 10000
 theSimulator.createEntity('Variable', 'Variable:/Surface:PTEN').Value = 3
 
 logger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:logger')
@@ -74,7 +74,7 @@ import time
 run(1e-6)
 print "Done stirring. Now running..."
 start = time.time()
-run(0.01)
+run(0.001)
 end = time.time()
 duration = end-start
 print duration

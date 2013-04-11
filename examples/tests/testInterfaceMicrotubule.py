@@ -5,7 +5,7 @@ VoxelRadius = 0.4e-8
 KinesinRadius = 0.4e-8
 dendriteRadius = 0.15e-6
 dendriteLength = 0.7e-6
-totalMTLength = 8e-6/2
+totalMTLength = 8e-6
 
 theSimulator.createStepper('SpatiocyteStepper', 'SS').VoxelRadius = VoxelRadius
 theSimulator.rootSystem.StepperID = 'SS'
@@ -62,7 +62,7 @@ Microtubule.RotateY = 0
 Microtubule.RotateZ = RotateAngle
 Microtubule.Radius = MTRadius
 Microtubule.SubunitRadius = KinesinRadius
-Microtubule.Subunits = 50
+Microtubule.Subunits = 100
 Microtubule.Filaments = 13
 Microtubule.Periodic = 1
 Microtubule.VariableReferenceList = [['_', 'Variable:/:MTKinesin' ]]
@@ -71,5 +71,5 @@ Microtubule.VariableReferenceList = [['_', 'Variable:/:Tubulin' , '-1']]
 Microtubule.VariableReferenceList = [['_', 'Variable:/:TubulinM' , '-2']]
 Microtubule.VariableReferenceList = [['_', 'Variable:/:TubulinP' , '-3']]
 
-run(0.5)
+run(0.05)
 

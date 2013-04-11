@@ -147,9 +147,17 @@ void CompartmentProcess::setSubunitStart()
     }
   else
     {
-      subunitStart.x += OriginX*theComp->lengthX/2;
-      subunitStart.y += OriginY*theComp->lengthY/2;
-      subunitStart.z += OriginZ*theComp->lengthZ/2;
+      const double multX(OriginX*theComp->lengthX/2);
+      const double multY(OriginY*theComp->lengthY/2);
+      const double multZ(OriginZ*theComp->lengthZ/2);
+      subunitStart.x += multX;
+      subunitStart.y += multY;
+      subunitStart.z += multZ;
+      Point& center(theComp->centerPoint);
+      center.x += multX;
+      center.y += multY;
+      center.z += multZ;
+      rotate(center);
       /*
       subunitStart.y -= (Width/(VoxelRadius*2)-theComp->lengthY)/2;
       subunitStart.z -= (Length/(VoxelRadius*2)-theComp->lengthZ)/2;
@@ -196,19 +204,40 @@ void CompartmentProcess::setCompartmentDimension()
       LipidCols = (unsigned)(Length/(LipidRadius*2));
       LipidRows = (unsigned)((Width-2*LipidRadius)/(LipidRadius*sqrt(3)))+1;
     }
+  //TODO: make length, width, height consistent with the definitions
+  allocateGrid();
+}
+
+void CompartmentProcess::allocateGrid()
+{
+  //in SpatiocyteStepper:
   //Normalized compartment lengths in terms of lattice voxel radius:
+  nParentHeight = theComp->lengthX+nVoxelRadius*2;
+  nParentWidth = theComp->lengthY+nVoxelRadius*2;
+  nParentLength = theComp->lengthZ+nVoxelRadius*2;
   nLength = Length/(VoxelRadius*2);
   nWidth = Width/(VoxelRadius*2);
   nHeight = Height/(VoxelRadius*2);
   theComp->lengthX = nHeight;
   theComp->lengthY = nWidth;
   theComp->lengthZ = nLength;
-  if(!RegularLattice)
+
+  parentOrigin = theComp->centerPoint;
+  Point s(parentOrigin);
+  parentOrigin.x -= nParentHeight/2;
+  parentOrigin.y -= nParentWidth/2;
+  parentOrigin.z -= nParentLength/2;
+  s = parentOrigin;
+  gridCols = (unsigned)ceil(nParentLength/nGridSize);
+  gridRows = (unsigned)ceil(nParentWidth/nGridSize);
+  gridLayers = (unsigned)ceil(nParentHeight/nGridSize);
+  theVacGrid.resize(gridCols*gridRows*gridLayers);
+  /*
+  if(theLipidSpecies)
     {
-      gridCols = (unsigned)rint(nLength/nGridSize);
-      gridRows = (unsigned)rint(nWidth/nGridSize);
-      theGrid.resize(gridCols*gridRows);
+      theLipGrid.resize(gridCols*gridRows*gridLayers);
     }
+    */
   //Actual surface area = Width*Length
 }
 
@@ -218,18 +247,27 @@ void CompartmentProcess::initializeThird()
     {
       thePoints.resize(endCoord-subStartCoord);
       initializeVectors();
+      std::cout << "3" << std::endl;
       initializeFilaments(subunitStart, Filaments, Subunits, nDiffuseRadius,
                           theVacantSpecies, subStartCoord);
+      std::cout << "4" << std::endl;
       elongateFilaments(theVacantSpecies, subStartCoord, Filaments, Subunits,
                         nDiffuseRadius);
+      std::cout << "5" << std::endl;
       connectFilaments(subStartCoord, Filaments, Subunits);
+      std::cout << "6" << std::endl;
+      setGrid(theVacantSpecies, theVacGrid, subStartCoord);
+      std::cout << "7" << std::endl;
       interfaceSubunits();
+      std::cout << "8" << std::endl;
       initializeFilaments(lipidStart, LipidRows, LipidCols, nLipidRadius,
                           theLipidSpecies, lipStartCoord);
+      std::cout << "9" << std::endl;
       elongateFilaments(theLipidSpecies, lipStartCoord, LipidRows,
                         LipidCols, nLipidRadius);
       connectFilaments(lipStartCoord, LipidRows, LipidCols);
       setDiffuseSize(lipStartCoord, endCoord);
+      //setGrid(theLipidSpecies, theLipGrid, lipStartCoord);
       setSpeciesIntersectLipids();
       isCompartmentalized = true;
     }
@@ -239,6 +277,29 @@ void CompartmentProcess::initializeThird()
       theLipidSpecies->setIsPopulated();
     }
   theInterfaceSpecies->setIsPopulated();
+}
+
+void CompartmentProcess::setGrid(Species* aSpecies,
+                                 std::vector<std::vector<unsigned> >& aGrid,
+                                 unsigned aStartCoord)
+{ 
+  if(aSpecies)
+    {
+      for(unsigned i(0); i != aSpecies->size(); ++i)
+        {
+          Point& aPoint(*(*theLattice)[aStartCoord+i].point);
+          const int row((int)((aPoint.y-parentOrigin.y)/nGridSize));
+          const int col((int)((aPoint.z-parentOrigin.z)/nGridSize));
+          const int layer((int)((aPoint.x-parentOrigin.x)/nGridSize));
+          if(row >= 0 && row < gridRows && layer >= 0 && layer < gridLayers &&
+             col >= 0 && col < gridCols)
+            {
+              aGrid[row+
+                gridRows*layer+
+                gridRows*gridLayers*col].push_back(aStartCoord+i);
+            }
+        }
+    }
 }
 
 // y:width:rows:filaments
@@ -266,23 +327,13 @@ void CompartmentProcess::setSpeciesIntersectLipids()
     }
   else
     {
-      if(theLipidSpecies)
-        {
-          for(unsigned i(0); i != theLipidSpecies->size(); ++i)
-            {
-              Point& aPoint(*(*theLattice)[lipStartCoord+i].point);
-              unsigned row((unsigned)((aPoint.y-lipidStart.y)/nGridSize));
-              unsigned col((unsigned)((aPoint.z-lipidStart.z)/nGridSize));
-              theGrid[col+gridCols*row].push_back(lipStartCoord+i);
-            }
-        }
       for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
         {
           if(theVacantCompSpecies[i]->getIsMultiscale())
             {
               theVacantCompSpecies[i]->setIntersectLipids(theLipidSpecies,
                                                 lipidStart, nGridSize, gridCols,
-                                                gridRows, theGrid, Filaments,
+                                                gridRows, theVacGrid, Filaments,
                                                 Subunits);
             }
         }
@@ -647,13 +698,13 @@ void CompartmentProcess::addAdjoin(Voxel& aVoxel, unsigned coord)
 
 void CompartmentProcess::interfaceSubunits()
 {
-  enlistInterfaceVoxels();
-  enlistNonIntersectInterfaceVoxels();
+  enlistSubunitIntersectInterfaceVoxels();
+  enlistPlaneIntersectInterfaceVoxels();
   setDiffuseSize(subStartCoord, lipStartCoord);
   enlistSubunitInterfaceAdjoins();
 }
 
-void CompartmentProcess::enlistInterfaceVoxels()
+void CompartmentProcess::enlistSubunitIntersectInterfaceVoxels()
 {
   subunitInterfaces.resize(Filaments*Subunits);
   for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
@@ -683,7 +734,15 @@ void CompartmentProcess::enlistInterfaceVoxels()
               for(unsigned l(blCol); l <= trCol; ++l)
                 {
                   unsigned m(theSpatiocyteStepper->global2coord(j, k, l));
+                  //Return if we have enlisted at least on interface voxel
+                  //in the case of subunits are equal or smaller than
+                  //voxels:
                   addInterfaceVoxel(i, m);
+                  if(nDiffuseRadius <= nVoxelRadius && 
+                     theInterfaceSpecies->size())
+                    {
+                      return;
+                    }
                 }
             }
         }
@@ -717,6 +776,41 @@ void CompartmentProcess::addInterfaceVoxel(unsigned subunitCoord,
     }
 }
 
+void CompartmentProcess::addInterfaceVoxel(Voxel& aVoxel, Point& aPoint)
+{ 
+  theInterfaceSpecies->addMolecule(&aVoxel);
+  const int row((int)((aPoint.y-parentOrigin.y)/nGridSize));
+  const int col((int)((aPoint.z-parentOrigin.z)/nGridSize));
+  const int layer((int)((aPoint.x-parentOrigin.x)/nGridSize));
+  if(row >= 0 && row < gridRows && layer >= 0 && layer < gridLayers &&
+     col >= 0 && col < gridCols)
+    {
+      for(int i(std::max(0, layer-1)); i != std::min(layer+1, gridLayers); ++i)
+        {
+          for(int j(std::max(0, col-1)); j != std::min(col+1, gridCols); ++j)
+            {
+              for(int k(std::max(0, row-1)); k != std::min(row+1, gridRows);
+                  ++k)
+                {
+                  const std::vector<unsigned>& coords(theVacGrid[k+gridRows*i+
+                                                      gridRows*gridLayers*j]);
+                  for(unsigned l(0); l != coords.size(); ++l)
+                    {
+                      const unsigned subCoord(coords[l]);
+                      const Point& subPoint(*(*theLattice)[subCoord].point);
+                      const double dist(distance(subPoint, aPoint));
+                      if(dist < nDiffuseRadius+nVoxelRadius)
+                        {
+                          subunitInterfaces[subCoord-subStartCoord].push_back(
+                                                              aVoxel.coord);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 void CompartmentProcess::enlistSubunitInterfaceAdjoins()
 {
   for(unsigned i(0); i != subunitInterfaces.size(); ++i)
@@ -740,7 +834,7 @@ void CompartmentProcess::enlistSubunitInterfaceAdjoins()
     }
 }
 
-void CompartmentProcess::enlistNonIntersectInterfaceVoxels()
+void CompartmentProcess::enlistPlaneIntersectInterfaceVoxels()
 {
   for(unsigned i(0); i != theInterfaceSpecies->size(); ++i)
     {
@@ -755,7 +849,7 @@ void CompartmentProcess::enlistNonIntersectInterfaceVoxels()
               Point aPoint(theSpatiocyteStepper->coord2point(adjoin.coord));
               if(isInside(aPoint))
                 {
-                  addNonIntersectInterfaceVoxel(adjoin, aPoint);
+                  addPlaneIntersectInterfaceVoxel(adjoin, aPoint);
                 }
             }
         }
@@ -784,8 +878,8 @@ bool CompartmentProcess::isInside(Point& aPoint)
   return false;
 }
 
-void CompartmentProcess::addNonIntersectInterfaceVoxel(Voxel& aVoxel,
-                                                       Point& aPoint)
+void CompartmentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
+                                                         Point& aPoint)
 {
   double distA(point2planeDist(aPoint, surfaceNormal, surfaceDisplace));
   for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
@@ -802,13 +896,13 @@ void CompartmentProcess::addNonIntersectInterfaceVoxel(Voxel& aVoxel,
               //If the voxel is nearer to the plane:
               if(abs(distA) < abs(distB))
                 { 
-                  theInterfaceSpecies->addMolecule(&aVoxel);
+                  addInterfaceVoxel(aVoxel, aPoint);
                   return;
                 }
               //If the adjoin is nearer to the plane:
               else
                 {
-                  theInterfaceSpecies->addMolecule(&adjoin);
+                  addInterfaceVoxel(adjoin, pointB);
                 }
             }
         }

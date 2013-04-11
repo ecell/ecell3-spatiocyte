@@ -191,6 +191,7 @@ public:
       nDiffuseRadius = DiffuseRadius/(VoxelRadius*2);
       nMonomerPitch = MonomerPitch/(VoxelRadius*2);
       nRadius = Radius/(VoxelRadius*2);
+      nGridSize = 10*nDiffuseRadius;
     }
   virtual void initializeFirst()
     {
@@ -219,7 +220,7 @@ public:
   virtual void connectFilaments(unsigned, unsigned, unsigned);
   virtual void elongateFilaments(Species*, unsigned, unsigned, unsigned,
                                  double);
-  virtual void addNonIntersectInterfaceVoxel(Voxel&, Point&);
+  virtual void addPlaneIntersectInterfaceVoxel(Voxel&, Point&);
   virtual bool isInside(Point&);
 protected:
   double MonomerPitch;
