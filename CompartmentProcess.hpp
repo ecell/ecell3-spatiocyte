@@ -242,7 +242,7 @@ public:
   virtual void addPlaneIntersectInterfaceVoxel(Voxel&, Point&);
   virtual bool isInside(Point&);
   void connectSubunit(unsigned, unsigned, unsigned, unsigned);
-  void addInterfaceVoxel(unsigned, unsigned);
+  void addInterfaceVoxel(unsigned, unsigned, const double);
   void addInterfaceVoxel(Voxel&, Point&);
   void setVacantCompSpeciesProperties();
   void setLipidCompSpeciesProperties();
@@ -261,7 +261,8 @@ public:
   Species* coefficient2species(int);
   void allocateGrid();
   void setGrid(Species*, std::vector<std::vector<unsigned> >&, unsigned);
-  bool setSubunitInterfaceVoxels(const unsigned, const bool isSingle=false);
+  bool setSubunitInterfaceVoxels(const unsigned, const double, 
+                                 const bool isSingle=false);
 protected:
   bool isCompartmentalized;
   unsigned Autofit;

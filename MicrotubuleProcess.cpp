@@ -210,10 +210,15 @@ void MicrotubuleProcess::elongateFilaments(Species* aVacant,
 bool MicrotubuleProcess::isInside(Point& aPoint)
 {
   double dist(point2planeDist(aPoint, lengthVector, dot(lengthVector, Minus)));
-  if(dist > nDiffuseRadius)
+  //Use nDifffuseRadius/2 instead of 0 because we don't want additional
+  //interface voxels at the edge of the plus or minus end. So only molecules
+  //hitting along the normal of the surface of the MT at the ends can bind.
+  //This would avoid bias of molecule directly hitting the MT ends from the
+  //sides and binding:
+  if(dist > nDiffuseRadius/2)
     { 
       dist = point2planeDist(aPoint, lengthVector, dot(lengthVector, Plus));
-      if(dist < -nDiffuseRadius)
+      if(dist < -nDiffuseRadius/2)
         {
           return true;
         }
@@ -238,6 +243,7 @@ void MicrotubuleProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
           //If not on the same side of the MT surface:
           if((distA < nRadius) != (distB < nRadius))
             {
+              //if(abs(distA) >= nRadius)
               //If the voxel is nearer to the MT surface:
               if(abs(distA-nRadius) < abs(distB-nRadius))
                 {

@@ -714,12 +714,23 @@ void CompartmentProcess::enlistOrphanSubunitInterfaceVoxels()
     {
       if(!subunitInterfaces[i-subStartCoord].size())
         {
-          setSubunitInterfaceVoxels(i);
+          setSubunitInterfaceVoxels(i, 0.75*(nDiffuseRadius+nVoxelRadius)); 
+          if(!subunitInterfaces[i-subStartCoord].size())
+            {
+              setSubunitInterfaceVoxels(i, nDiffuseRadius+nVoxelRadius); 
+              if(!subunitInterfaces[i-subStartCoord].size())
+                {
+                  std::cout << getPropertyInterface().getClassName() << ":"
+                    << getFullID().asString() << 
+                    ": subunit is still orphaned" << std::endl;
+                }
+            }
         }
     }
 }
 
 bool CompartmentProcess::setSubunitInterfaceVoxels(const unsigned i,
+                                                   const double aDist,
                                                    const bool isSingle)
 {
   Voxel& subunit((*theLattice)[i]);
@@ -750,7 +761,7 @@ bool CompartmentProcess::setSubunitInterfaceVoxels(const unsigned i,
               //Return if we have enlisted at least on interface voxel
               //in the case of subunits are equal or smaller than
               //voxels:
-              addInterfaceVoxel(i, m);
+              addInterfaceVoxel(i, m, aDist);
               if(isSingle && theInterfaceSpecies->size() > intStartIndex)
                 {
                   return true;
@@ -767,7 +778,8 @@ void CompartmentProcess::enlistSubunitIntersectInterfaceVoxels()
   for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
     {
       //If nDiffuseRadius <= nVoxelRadius, just enlist one interface voxel:
-      if(setSubunitInterfaceVoxels(i, nDiffuseRadius <= nVoxelRadius))
+      if(setSubunitInterfaceVoxels(i, std::max(nDiffuseRadius, nVoxelRadius),
+                                   nDiffuseRadius <= nVoxelRadius))
         {
           return;
         }
@@ -775,7 +787,8 @@ void CompartmentProcess::enlistSubunitIntersectInterfaceVoxels()
 }
 
 void CompartmentProcess::addInterfaceVoxel(unsigned subunitCoord,
-                                           unsigned voxelCoord)
+                                           unsigned voxelCoord,
+                                           const double aDist)
 { 
   Voxel& subunit((*theLattice)[subunitCoord]);
   Point subunitPoint(*subunit.point);
@@ -784,7 +797,7 @@ void CompartmentProcess::addInterfaceVoxel(unsigned subunitCoord,
   //Should use SubunitRadius instead of DiffuseRadius since it is the
   //actual size of the subunit. Nope, the distance is too far when using
   //SubunitRadius:
-  if(dist < std::max(nDiffuseRadius, nVoxelRadius)) 
+  if(dist < aDist)
     {
       Voxel& voxel((*theLattice)[voxelCoord]);
       //theSpecies[6]->addMolecule(&voxel);
