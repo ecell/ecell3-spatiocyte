@@ -236,19 +236,21 @@ public:
   virtual void setSubunitStart();
   virtual void elongateFilaments(Species*, unsigned, unsigned, unsigned,
                                  double);
-  void addCompVoxel(unsigned, unsigned, Point&, Species*, unsigned, unsigned);
+  Voxel* addCompVoxel(unsigned, unsigned, Point&, Species*, unsigned, unsigned);
   virtual void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
                                    unsigned);
   virtual void addPlaneIntersectInterfaceVoxel(Voxel&, Point&);
   virtual bool isInside(Point&);
   void connectSubunit(unsigned, unsigned, unsigned, unsigned);
   void addInterfaceVoxel(unsigned, unsigned);
+  void addInterfaceVoxel2(unsigned, unsigned);
   void addInterfaceVoxel(Voxel&, Point&);
   void setVacantCompSpeciesProperties();
   void setLipidCompSpeciesProperties();
   void setDiffuseSize(unsigned, unsigned);
   void interfaceSubunits();
   void enlistSubunitIntersectInterfaceVoxels();
+  void enlistOrphanSubunitInterfaceVoxels();
   void enlistPlaneIntersectInterfaceVoxels();
   void enlistSubunitInterfaceAdjoins();
   void rotate(Point&);
@@ -260,6 +262,8 @@ public:
   Species* coefficient2species(int);
   void allocateGrid();
   void setGrid(Species*, std::vector<std::vector<unsigned> >&, unsigned);
+  bool setSubunitInterfaceVoxels(const unsigned, const bool isSingle=false);
+  bool setSubunitInterfaceVoxels2(const unsigned, const bool isSingle=false);
 protected:
   bool isCompartmentalized;
   unsigned Autofit;

@@ -72,7 +72,7 @@ void MicrotubuleProcess::initializeThird()
       intStartIndex = theInterfaceSpecies->size();
       initializeVectors();
       initializeFilaments(subunitStart, Filaments, Subunits, nMonomerPitch,
-                          theMinusSpecies, subStartCoord);
+                          theVacantSpecies, subStartCoord);
       elongateFilaments(theVacantSpecies, subStartCoord, Filaments, Subunits,
                         nDiffuseRadius);
       connectFilaments(subStartCoord, Filaments, Subunits);
@@ -84,6 +84,7 @@ void MicrotubuleProcess::initializeThird()
   theInterfaceSpecies->setIsPopulated();
   theMinusSpecies->setIsPopulated();
   thePlusSpecies->setIsPopulated();
+  theSpecies[7]->setIsPopulated();
 }
 
 
@@ -143,14 +144,16 @@ void MicrotubuleProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,
                                              Species* aVacant,
                                              unsigned aStartCoord)
 {
-  addCompVoxel(0, 0, aStartPoint, aVacant, aStartCoord, aCols);
+  Voxel* aVoxel(addCompVoxel(0, 0, aStartPoint, aVacant, aStartCoord, aCols));
+  theMinusSpecies->addMolecule(aVoxel);
   Point U(aStartPoint);
   for(unsigned i(1); i < aRows; ++i)
     {
       double angle(2*M_PI/aRows);
       rotatePointAlongVector(U, Minus, lengthVector, angle);
       disp_(U, lengthVector, aRadius/(aRows-1));
-      addCompVoxel(i, 0, U, aVacant, aStartCoord, aCols);
+      aVoxel = addCompVoxel(i, 0, U, aVacant, aStartCoord, aCols);
+      theMinusSpecies->addMolecule(aVoxel);
     }
 }
 
@@ -194,13 +197,10 @@ void MicrotubuleProcess::elongateFilaments(Species* aVacant,
       for(unsigned j(1); j != aCols; ++j)
         {
           disp_(A, lengthVector, aRadius*2);
-          if(j != aCols-1)
+          Voxel* aVoxel(addCompVoxel(i, j, A, aVacant, aStartCoord, aCols));
+          if(j == aCols-1)
             {
-              addCompVoxel(i, j, A, aVacant, aStartCoord, aCols);
-            }
-          else
-            {
-              addCompVoxel(i, j, A, thePlusSpecies, aStartCoord, aCols);
+              thePlusSpecies->addMolecule(aVoxel);
             }
         }
     }
