@@ -293,25 +293,6 @@ void CompartmentProcess::setGrid(Species* aSpecies,
                 gridRows*layer+
                 gridRows*gridLayers*col].push_back(aStartCoord+i-vacStartIndex);
             }
-          else
-            {
-              std::cout << "r:" << row << " c:" << col << " l:" << layer << " gr:" << gridRows << " gc:" << gridCols << " gl:" << gridLayers << std::endl;
-            }
-        }
-      for(unsigned i(vacStartIndex); i != theVacantSpecies->size(); ++i)
-        {
-          const unsigned subCoord(theVacantSpecies->getCoord(i));
-          const Point& aPoint(*(*theLattice)[subCoord].point);
-          const int row2((int)((aPoint.y-parentOrigin.y)/nGridSize));
-          const int col2((int)((aPoint.z-parentOrigin.z)/nGridSize));
-          const int layer2((int)((aPoint.x-parentOrigin.x)/nGridSize)); 
-          const std::vector<unsigned>& coords(theVacGrid[row2+gridRows*layer2+gridRows*gridLayers*col2]);
-          if(std::find(coords.begin(), coords.end(), subCoord) ==
-             coords.end())
-            { 
-              std::cout << "rr2:" << row2 << " c:" << col2 << " l:" << layer2 << " gr:" << gridRows << " gc:" << gridCols << " gl:" << gridLayers << std::endl;
-
-            }
         }
     }
 }
@@ -733,53 +714,10 @@ void CompartmentProcess::enlistOrphanSubunitInterfaceVoxels()
     {
       if(!subunitInterfaces[i-subStartCoord].size())
         {
-          setSubunitInterfaceVoxels2(i);
+          setSubunitInterfaceVoxels(i);
         }
     }
 }
-
-bool CompartmentProcess::setSubunitInterfaceVoxels2(const unsigned i,
-                                                    const bool isSingle)
-{
-  Voxel& subunit((*theLattice)[i]);
-  Point center(*subunit.point);
-  Point bottomLeft(*subunit.point);
-  Point topRight(*subunit.point);
-  bottomLeft.x -= nDiffuseRadius+theSpatiocyteStepper->getColLength();
-  bottomLeft.y -= nDiffuseRadius+theSpatiocyteStepper->getLayerLength();
-  bottomLeft.z -= nDiffuseRadius+theSpatiocyteStepper->getRowLength();
-  topRight.x += nDiffuseRadius+theSpatiocyteStepper->getColLength();
-  topRight.y += nDiffuseRadius+theSpatiocyteStepper->getLayerLength();
-  topRight.z += nDiffuseRadius+theSpatiocyteStepper->getRowLength();
-  unsigned blRow(0);
-  unsigned blLayer(0);
-  unsigned blCol(0);
-  theSpatiocyteStepper->point2global(bottomLeft, blRow, blLayer, blCol);
-  unsigned trRow(0);
-  unsigned trLayer(0);
-  unsigned trCol(0);
-  theSpatiocyteStepper->point2global(topRight, trRow, trLayer, trCol);
-  for(unsigned j(blRow); j <= trRow; ++j)
-    {
-      for(unsigned k(blLayer); k <= trLayer; ++k)
-        {
-          for(unsigned l(blCol); l <= trCol; ++l)
-            {
-              unsigned m(theSpatiocyteStepper->global2coord(j, k, l));
-              //Return if we have enlisted at least on interface voxel
-              //in the case of subunits are equal or smaller than
-              //voxels:
-              addInterfaceVoxel2(i, m);
-              if(isSingle && theInterfaceSpecies->size() > intStartIndex)
-                {
-                  return true;
-                }
-            }
-        }
-    }
-  return false;
-}
-
 
 bool CompartmentProcess::setSubunitInterfaceVoxels(const unsigned i,
                                                    const bool isSingle)
@@ -836,40 +774,6 @@ void CompartmentProcess::enlistSubunitIntersectInterfaceVoxels()
     }
 }
 
-void CompartmentProcess::addInterfaceVoxel2(unsigned subunitCoord,
-                                           unsigned voxelCoord)
-{ 
-  Voxel& subunit((*theLattice)[subunitCoord]);
-  Point subunitPoint(*subunit.point);
-  Point voxelPoint(theSpatiocyteStepper->coord2point(voxelCoord));
-  double dist(getDistance(&subunitPoint, &voxelPoint));
-  //Should use SubunitRadius instead of DiffuseRadius since it is the
-  //actual size of the subunit. Nope, the distance is too far when using
-  //SubunitRadius:
-  if(dist < std::max(nDiffuseRadius, nVoxelRadius)) 
-    {
-      Voxel& voxel((*theLattice)[voxelCoord]);
-      //theSpecies[6]->addMolecule(&voxel);
-      //Insert voxel in the list of interface voxels if was not already:
-      //if(voxel.id == theComp->vacantSpecies->getID())
-      //if(getID(voxel) != theInterfaceSpecies->getID())
-      if(theSpecies[getID(voxel)]->getIsCompVacant())
-        {
-          //std::cout << "adding new interface" << std::endl;
-          //theSpecies[5]->addMolecule(&voxel);
-          //theInterfaceSpecies->addMolecule(&voxel);
-        }
-      else
-        {
-          std::cout << "in:" << getIDString(&voxel) << std::endl;
-          std::cout << "x:" << voxelPoint.x << " y:" << voxelPoint.y << " z:" << voxelPoint.z << " coord:" << voxelCoord << std::endl;
-          theSpecies[7]->addMolecule(&voxel);
-        }
-      //each subunit list has unique (no duplicates) interface voxels:
-      subunitInterfaces[subunitCoord-subStartCoord].push_back(voxelCoord);
-    }
-}
-
 void CompartmentProcess::addInterfaceVoxel(unsigned subunitCoord,
                                            unsigned voxelCoord)
 { 
@@ -900,21 +804,12 @@ void CompartmentProcess::addInterfaceVoxel(unsigned subunitCoord,
 void CompartmentProcess::addInterfaceVoxel(Voxel& aVoxel, Point& aPoint)
 { 
   theInterfaceSpecies->addMolecule(&aVoxel);
-  /*
-  for(unsigned i(vacStartIndex); i != theVacantSpecies->size(); ++i)
-    {
-      const unsigned subCoord(theVacantSpecies->getCoord(i));
-      const Point& subPoint(*(*theLattice)[subCoord].point);
-      const double dist(distance(subPoint, aPoint));
-      if(dist < nDiffuseRadius+nVoxelRadius)
-        {
-          subunitInterfaces[subCoord-subStartCoord].push_back(aVoxel.coord);
-        }
-    }
-    */
   const int row((int)((aPoint.y-parentOrigin.y)/nGridSize));
   const int col((int)((aPoint.z-parentOrigin.z)/nGridSize));
   const int layer((int)((aPoint.x-parentOrigin.x)/nGridSize));
+  if(row >= 0 && row < gridRows && layer >= 0 && layer < gridLayers &&
+     col >= 0 && col < gridCols)
+    {
       for(int i(std::max(0, layer-1)); i != std::min(layer+2, gridLayers); ++i)
         {
           for(int j(std::max(0, col-1)); j != std::min(col+2, gridCols); ++j)
@@ -938,6 +833,7 @@ void CompartmentProcess::addInterfaceVoxel(Voxel& aVoxel, Point& aPoint)
                 }
             }
         }
+    }
 }
 
 void CompartmentProcess::enlistSubunitInterfaceAdjoins()
