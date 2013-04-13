@@ -364,6 +364,17 @@ void DiffusionInfluencedReactionProcess::reactAtoC_BeqD(Voxel* molA,
                                                         const unsigned indexA,
                                                         const unsigned indexB)
 {
+  C->addMolecule(molA);
+  A->softRemoveMolecule(indexA);
+}
+
+
+//A + B -> [C <- molA] + [tagC <- tagA] + [B == D]
+void DiffusionInfluencedReactionProcess::reactAtoC_BeqD_tagAtoC(Voxel* molA,
+                                                                Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
   C->addMolecule(molA, A->getTag(indexA));
   A->softRemoveMolecule(indexA);
 }
@@ -505,6 +516,28 @@ void DiffusionInfluencedReactionProcess::reactAtoC(Voxel* molA, Voxel* molB,
 
 //A + B -> [C <- molB]
 void DiffusionInfluencedReactionProcess::reactBtoC(Voxel* molA, Voxel* molB,
+                                                   const unsigned indexA,
+                                                   const unsigned indexB)
+{
+  C->addMolecule(molB);
+  B->softRemoveMolecule(indexB);
+  removeMolecule(A, molA, indexA);
+}
+
+//A + B -> [C <- molB] + [tagC <- tagA]
+void DiffusionInfluencedReactionProcess::reactBtoC_tagAtoC(Voxel* molA,
+                                                           Voxel* molB,
+                                                   const unsigned indexA,
+                                                   const unsigned indexB)
+{
+  C->addMolecule(molB, A->getTag(indexA));
+  B->softRemoveMolecule(indexB);
+  removeMolecule(A, molA, indexA);
+}
+
+//A + B -> [C <- molB] + [tagC <- tagB]
+void DiffusionInfluencedReactionProcess::reactBtoC_tagBtoC(Voxel* molA,
+                                                           Voxel* molB,
                                                    const unsigned indexA,
                                                    const unsigned indexB)
 {
@@ -659,8 +692,17 @@ void DiffusionInfluencedReactionProcess::setReactMethod()
         {
           if(A->isReplaceable(C))
             {
-              //A + B -> [C <- molA] + [B == D]
-              reactM = &DiffusionInfluencedReactionProcess::reactAtoC_BeqD;
+              if(C->getIsTagged() && A->getIsTagged())
+                {
+                  //A + B -> [C <- molA] + [tagC <- tagA] + [B == D]
+                  reactM = 
+                    &DiffusionInfluencedReactionProcess::reactAtoC_BeqD_tagAtoC;
+                }
+              else
+                {
+                  //A + B -> [C <- molA] + [B == D]
+                  reactM = &DiffusionInfluencedReactionProcess::reactAtoC_BeqD;
+                }
             }
           else
             {
@@ -742,8 +784,26 @@ void DiffusionInfluencedReactionProcess::setReactMethod()
         }
       else if(B->isReplaceable(C))
         {
-          //A + B -> [C <- molB]
-          reactM = &DiffusionInfluencedReactionProcess::reactBtoC;
+          if(C->getIsTagged())
+            {
+              if(B->getIsTagged())
+                {
+                  //A + B -> [C <- molB] + [tagC <- tagB]
+                  reactM = 
+                    &DiffusionInfluencedReactionProcess::reactBtoC_tagBtoC;
+                }
+              else
+                {
+                  //A + B -> [C <- molB] + [tagC <- tagA]
+                  reactM =
+                    &DiffusionInfluencedReactionProcess::reactBtoC_tagAtoC;
+                }
+            }
+          else
+            {
+              //A + B -> [C <- molB]
+              reactM = &DiffusionInfluencedReactionProcess::reactBtoC;
+            }
         }
       else
         {

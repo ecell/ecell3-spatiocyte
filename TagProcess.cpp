@@ -170,6 +170,8 @@ void TagProcess::initializeFourth()
           aSpecies->setTagID(anIndex, theTagSpecies->getID());
         }
     }
+  theTagSpecies->updateMolecules();
+  theTagSpecies->setIsPopulated();
 }
 
 

@@ -84,7 +84,6 @@ void MicrotubuleProcess::initializeThird()
   theInterfaceSpecies->setIsPopulated();
   theMinusSpecies->setIsPopulated();
   thePlusSpecies->setIsPopulated();
-  theSpecies[7]->setIsPopulated();
 }
 
 
@@ -243,7 +242,6 @@ void MicrotubuleProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
           //If not on the same side of the MT surface:
           if((distA < nRadius) != (distB < nRadius))
             {
-              //if(abs(distA) >= nRadius)
               //If the voxel is nearer to the MT surface:
               if(abs(distA-nRadius) < abs(distB-nRadius))
                 {

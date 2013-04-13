@@ -117,6 +117,7 @@ protected:
   void reactBtoC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactNtoC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactAtoC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactAtoC_BeqD_tagAtoC(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactNtoC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactAtoC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactAtoC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
@@ -131,6 +132,8 @@ protected:
   void reactAtoC(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactBtoC(Voxel*, Voxel*, const unsigned, const unsigned);
   void reactNtoC(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactBtoC_tagBtoC(Voxel*, Voxel*, const unsigned, const unsigned);
+  void reactBtoC_tagAtoC(Voxel*, Voxel*, const unsigned, const unsigned);
 protected:
   unsigned Collision;
   double D_A;

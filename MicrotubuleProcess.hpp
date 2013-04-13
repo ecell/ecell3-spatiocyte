@@ -198,10 +198,8 @@ public:
       CompartmentProcess::initializeFirst();
       theMinusSpecies->setIsOffLattice();
       theMinusSpecies->setComp(theComp);
-      theMinusSpecies->setIsCompVacant();
       thePlusSpecies->setIsOffLattice();
       thePlusSpecies->setComp(theComp);
-      thePlusSpecies->setIsCompVacant();
       for(unsigned i(0); i != theKinesinSpecies.size(); ++i)
         {
           theKinesinSpecies[i]->setIsOffLattice();

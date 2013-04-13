@@ -550,8 +550,11 @@ public:
       if(!isVacant && !getIsPopulated())
         {
           THROW_EXCEPTION(ValueError, getIDString() +
-             ": has a non-zero value:" + int2str(getVariable()->getValue()) +
-            " but is not populated.");
+             ": has a non-zero value, theMoleculeSize:" + 
+             int2str(theMoleculeSize) + ", variable value:" + 
+             int2str(getVariable()->getValue()) +
+             ", init size:" + int2str(theInitCoordSize) + 
+             ", but is not populated.");
         }
     }
   unsigned getCollisionCnt(unsigned anIndex)
