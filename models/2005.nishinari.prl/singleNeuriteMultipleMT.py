@@ -154,11 +154,11 @@ theSimulator.createEntity('Variable', 'Variable:/Membrane:VACANT')
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:populate')
 populator.VariableReferenceList = [['_', 'Variable:/:Kinesin']]
 
-#tagger = theSimulator.createEntity('TagProcess', 'Process:/:tagger')
-#tagger.VariableReferenceList = [['_', 'Variable:/:GFP', '-1' ]]
-#tagger.VariableReferenceList = [['_', 'Variable:/:Kinesin', '20' ]]
-#tagger.VariableReferenceList = [['_', 'Variable:/:MTKinesin']]
-#tagger.VariableReferenceList = [['_', 'Variable:/:MTKinesinATP']]
+tagger = theSimulator.createEntity('TagProcess', 'Process:/:tagger')
+tagger.VariableReferenceList = [['_', 'Variable:/:GFP', '-1' ]]
+tagger.VariableReferenceList = [['_', 'Variable:/:Kinesin', '20' ]]
+tagger.VariableReferenceList = [['_', 'Variable:/:MTKinesin']]
+tagger.VariableReferenceList = [['_', 'Variable:/:MTKinesinATP']]
 
 visualLogger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:visualLogger')
 visualLogger.VariableReferenceList = [['_', 'Variable:/:GFP' ]]
