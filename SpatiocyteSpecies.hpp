@@ -384,11 +384,11 @@ public:
     {
       return theMoleculeSize;
     }
-  Voxel* getMolecule(int anIndex)
+  Voxel* getMolecule(const unsigned anIndex)
     {
       return theMolecules[anIndex];
     }
-  Point getPoint(int anIndex)
+  Point getPoint(const unsigned anIndex) const
     {
       if(isOffLattice)
         {
@@ -405,6 +405,14 @@ public:
         }
         */
       return theStepper->coord2point(getCoord(anIndex));
+    }
+  Point coord2point(const unsigned aCoord) const
+    {
+      if(theLattice[aCoord].point)
+        {
+          return *theLattice[aCoord].point;
+        }
+      return theStepper->coord2point(aCoord);
     }
   unsigned short getID() const
     {
@@ -1218,7 +1226,7 @@ public:
     {
       theVariable = aVariable;
     }
-  unsigned getCoord(unsigned anIndex)
+  unsigned getCoord(const unsigned anIndex) const
     {
       return theMolecules[anIndex]->coord;
     }
@@ -1387,7 +1395,7 @@ public:
     {
       return theTags[anIndex].id;
     }
-  Tag& getTag(unsigned anIndex)
+  Tag& getTag(const unsigned anIndex)
     {
       if(theTags.size())
         {
@@ -1498,6 +1506,10 @@ public:
         {
           aVoxel->idx = theID*theStride;
         }
+    }
+  void setIsTagged()
+    {
+      isTagged = true;
     }
   void addMoleculeTagged(Voxel* aVoxel, Tag& aTag)
     {
@@ -3075,14 +3087,6 @@ public:
           return thePopulatableCoords[index];
         }
       return getCoord(index);
-    }
-  Point coord2point(unsigned aCoord)
-    {
-      if(theLattice[aCoord].point)
-        {
-          return *theLattice[aCoord].point;
-        }
-      return theStepper->coord2point(aCoord);
     }
   void setMultiscaleVacantSpecies(Species* aSpecies)
     {

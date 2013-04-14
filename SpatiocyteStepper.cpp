@@ -110,6 +110,13 @@ void SpatiocyteStepper::initialize()
   std::cout << "19. simulation is started..." << std::endl;
 }
 
+
+unsigned SpatiocyteStepper::getNewMoleculeID()
+{
+  ++theMoleculeID;
+  return theMoleculeID-1;
+}
+
 void SpatiocyteStepper::interrupt(double aTime)
 {
   if(theExternInterruptedProcesses.size())

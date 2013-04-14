@@ -24,7 +24,8 @@ MoleculePopulateProcess\
 MultiscaleReactionProcess\
 PeriodicBoundaryDiffusionProcess\
 MicrotubuleProcess\
-RotationProcess
+RotationProcess\
+LifetimeLogProcess
 #OscillationAnalysisProcess\
 
 export CXXFLAGS = -Wall -O3 -g -std=c++0x
@@ -71,7 +72,10 @@ ErythrocyteProcess.so: 	ErythrocyteProcess.cpp
 	$(ECELL3_DMC) -o ErythrocyteProcess.so --ldflags="SpatiocyteProcess.so" ErythrocyteProcess.cpp
 
 HistogramLogProcess.so: 	HistogramLogProcess.cpp
-	$(ECELL3_DMC) -o HistogramLogProcess.so --ldflags="SpatiocyteProcess.so IteratingLogProcess.so" HistogramLogProcess.cpp
+	$(ECELL3_DMC) -o HistogramLogProcess.so --ldflags="IteratingLogProcess.so" HistogramLogProcess.cpp
+
+LifetimeLogProcess.so: 	LifetimeLogProcess.cpp
+	$(ECELL3_DMC) -o LifetimeLogProcess.so --ldflags="IteratingLogProcess.so" LifetimeLogProcess.cpp
 
 OscillationAnalysisProcess.so: 	OscillationAnalysisProcess.cpp
 	$(ECELL3_DMC) -o OscillationAnalysisProcess.so --ldflags="SpatiocyteProcess.so" OscillationAnalysisProcess.cpp

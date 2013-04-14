@@ -74,7 +74,11 @@ public:
   virtual void react(Voxel* molA, Voxel* molB, const unsigned indexA,
                      const unsigned indexB)
     {
+      moleculeA = molA;
+      moleculeB = molB;
+      interruptProcessesPre();
       (this->*reactM)(molA, molB, indexA, indexB);
+      interruptProcessesPost();
     }
   virtual void bind(Voxel*, const unsigned) {}
   virtual void unbind(Voxel*) {}

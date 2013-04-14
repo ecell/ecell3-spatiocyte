@@ -38,6 +38,7 @@ void SpatiocyteNextReactionProcess::fire()
 {
   if(react())
     {
+      interruptProcessesPost();
       ReactionProcess::fire();
       return;
     }
@@ -660,11 +661,13 @@ bool SpatiocyteNextReactionProcess::reactACDbind(Species* a, Species* c,
         {
           return false;
         }
+      interruptProcessesPre();
       Tag tagA(a->getTag(indexA));
       a->removeMolecule(indexA);
       d->addMolecule(moleculeD, tagA);
       return true;
     }
+  interruptProcessesPre();
   Tag tagA(a->getTag(indexA));
   a->removeMolecule(indexA);
   c->addMolecule(moleculeC, tagA);

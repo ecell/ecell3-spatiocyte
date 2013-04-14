@@ -93,6 +93,20 @@ public:
                                                 theInterruptedProcesses[i]);
         }
     }
+  virtual void interruptProcessesPre()
+    {
+      for(unsigned i(0); i != theInterruptedProcessesPre.size(); ++i)
+        {
+          theInterruptedProcessesPre[i]->interruptedPre(this);
+        }
+    }
+  virtual void interruptProcessesPost()
+    {
+      for(unsigned i(0); i != theInterruptedProcessesPost.size(); ++i)
+        {
+          theInterruptedProcessesPost[i]->interruptedPost(this);
+        }
+    }
   GET_METHOD(Integer, Order)
     {
       return theOrder;
@@ -118,6 +132,8 @@ public:
     {
       SpatiocyteProcess::initializeSecond();
       theInterruptedProcesses.resize(0);
+      theInterruptedProcessesPre.resize(0);
+      theInterruptedProcessesPost.resize(0);
     }
   virtual void initializeFourth()
     {
@@ -142,6 +158,16 @@ public:
           if(this != aReactionProcess && aSpatiocyteProcess->isDependentOn(me))
             {
               theInterruptedProcesses.push_back(aSpatiocyteProcess);
+            }
+          if(this != aReactionProcess &&
+             aSpatiocyteProcess->isDependentOnPre(me))
+            {
+              theInterruptedProcessesPre.push_back(aSpatiocyteProcess);
+            }
+          if(this != aReactionProcess &&
+             aSpatiocyteProcess->isDependentOnPost(me))
+            {
+              theInterruptedProcessesPost.push_back(aSpatiocyteProcess);
             }
         }
     }
@@ -231,6 +257,8 @@ protected:
   Voxel* moleculeP;
   Voxel* moleculeS;
   std::vector<SpatiocyteProcessInterface*> theInterruptedProcesses;
+  std::vector<SpatiocyteProcessInterface*> theInterruptedProcessesPre;
+  std::vector<SpatiocyteProcessInterface*> theInterruptedProcessesPost;
 };
 
 #endif /* __ReactionProcess_hpp */

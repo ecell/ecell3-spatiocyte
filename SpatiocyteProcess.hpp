@@ -157,6 +157,14 @@ public:
     {
       return false;
     }
+  virtual bool isDependentOnPre(const Process* aProcess) const
+    {
+      return false;
+    }
+  virtual bool isDependentOnPost(const Process* aProcess) const
+    {
+      return false;
+    }
   virtual double getInterval(double aCurrentTime)
     {
       return theInterval;
@@ -208,6 +216,8 @@ public:
     {
       return 0;
     }
+  virtual void interruptedPre(ReactionProcess*) {}
+  virtual void interruptedPost(ReactionProcess*) {}
   virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
   virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
   virtual void substrateValueChanged(double aCurrentTime)

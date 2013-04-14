@@ -54,8 +54,9 @@ public:
     isPeriodicEdge(false),
     SearchVacant(false),
     LatticeType(HCP_LATTICE),
-    VoxelRadius(10e-9),
-    theNormalizedVoxelRadius(0.5) {}
+    theMoleculeID(0),
+    theNormalizedVoxelRadius(0.5),
+    VoxelRadius(10e-9) {}
   virtual ~SpatiocyteStepper() {}
   virtual void initialize();
   /*
@@ -92,6 +93,7 @@ public:
   void checkSpecies();
   void setPeriodicEdge();
   void reset(int);
+  unsigned getNewMoleculeID();
   unsigned getRowSize();
   unsigned getLayerSize();
   unsigned getColSize();
@@ -196,18 +198,19 @@ private:
   unsigned short theNullID;
   unsigned LatticeType; 
   unsigned theAdjoiningCoordSize;
+  unsigned theBioSpeciesSize;
   unsigned theCellShape;
-  unsigned theRowSize;
   unsigned theColSize;
   unsigned theLayerSize;
-  unsigned theBioSpeciesSize;
+  unsigned theNullCoord;
+  unsigned theRowSize;
   unsigned theStride;
-  double VoxelRadius; //r_v
+  unsigned theMoleculeID;
   double theNormalizedVoxelRadius;
   double theHCPl;
   double theHCPx;
   double theHCPy;
-  unsigned theNullCoord;
+  double VoxelRadius; //r_v
   Point theCenterPoint;
   ProcessPriorityQueue thePriorityQueue; 
   std::vector<Species*>::iterator variable2ispecies(Variable*);
