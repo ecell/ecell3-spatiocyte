@@ -191,6 +191,7 @@ private:
   unsigned coord2col(unsigned);
   unsigned coord2layer(unsigned);
   Comp* registerComp(System*, std::vector<Comp*>*);
+  void rotateCompartment(Comp*);
 private:
   bool isInitialized;
   bool isPeriodicEdge;

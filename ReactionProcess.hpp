@@ -160,12 +160,12 @@ public:
               theInterruptedProcesses.push_back(aSpatiocyteProcess);
             }
           if(this != aReactionProcess &&
-             aSpatiocyteProcess->isDependentOnPre(me))
+             aSpatiocyteProcess->isDependentOnPre(this))
             {
               theInterruptedProcessesPre.push_back(aSpatiocyteProcess);
             }
           if(this != aReactionProcess &&
-             aSpatiocyteProcess->isDependentOnPost(me))
+             aSpatiocyteProcess->isDependentOnPost(this))
             {
               theInterruptedProcessesPost.push_back(aSpatiocyteProcess);
             }

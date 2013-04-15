@@ -70,8 +70,8 @@ public:
   virtual void interruptedPre(ReactionProcess*) = 0;
   virtual void interruptedPost(ReactionProcess*) = 0;
   virtual bool isDependentOn(const Process*) const = 0;
-  virtual bool isDependentOnPre(const Process*) const = 0;
-  virtual bool isDependentOnPost(const Process*) const = 0;
+  virtual bool isDependentOnPre(const ReactionProcess*) = 0;
+  virtual bool isDependentOnPost(const ReactionProcess*) = 0;
 };
 
 #endif /* __SPATIOCYTEPROCESSINTERFACE_HPP */

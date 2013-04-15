@@ -1049,6 +1049,7 @@ void SpatiocyteStepper::setLatticeProperties()
 {
   theStride = UINT_MAX/theSpecies.size();
   Comp* aRootComp(theComps[0]);
+  rotateCompartment(aRootComp);
   switch(LatticeType)
     {
     case HCP_LATTICE: 
@@ -1128,6 +1129,23 @@ void SpatiocyteStepper::setLatticeProperties()
   //Initialize the null coord:
   theNullCoord = theRowSize*theLayerSize*theColSize;
   theLattice[theNullCoord].idx = theNullID*theStride;
+}
+
+void SpatiocyteStepper::rotateCompartment(Comp* aComp)
+{
+  Point min({-aComp->lengthX/2, -aComp->lengthY/2, -aComp->lengthZ/2});
+  Point max({aComp->lengthX/2, aComp->lengthY/2, aComp->lengthZ/2});
+  rotateX(aComp->rotateX, &min);
+  rotateY(aComp->rotateY, &min);
+  rotateZ(aComp->rotateZ, &min);
+  rotateX(aComp->rotateX, &max);
+  rotateY(aComp->rotateY, &max);
+  rotateZ(aComp->rotateZ, &max);
+  aComp->lengthX = std::max(min.x, max.x)-std::min(min.x, max.x);
+  aComp->lengthY = std::max(min.y, max.y)-std::min(min.y, max.y);
+  aComp->lengthZ = std::max(min.z, max.z)-std::min(min.z, max.z);
+  //for cylinder and rod compartment need to create lengthVector and
+  //rotate it, only then it would work.
 }
 
 void SpatiocyteStepper::storeSimulationParameters()

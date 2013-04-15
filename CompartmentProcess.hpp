@@ -195,6 +195,7 @@ public:
     }
   virtual void initializeFirst()
     {
+      SpatiocyteProcess::initializeFirst();
       theComp = new Comp;
       theVacantSpecies->setIsCompVacant();
       theVacantSpecies->setIsOffLattice();

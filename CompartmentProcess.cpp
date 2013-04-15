@@ -350,7 +350,7 @@ void CompartmentProcess::getStartVoxelPoint(Point& start, Point& nearest,
       nearest = theSpatiocyteStepper->coord2point(surface->getCoord(0));
       farthest = nearest; 
       origin.x = nearest.x;
-      dist = getDistance(&nearest, &origin);
+      dist = distance(nearest, origin);
       start = nearest;
     }
   for(unsigned i(1); i < surface->size(); ++i)
@@ -360,13 +360,13 @@ void CompartmentProcess::getStartVoxelPoint(Point& start, Point& nearest,
         {
           nearest.x = aPoint.x;
           origin.x = aPoint.x;
-          dist = getDistance(&aPoint, &origin);
+          dist = distance(aPoint, origin);
           start = nearest;
         }
       else if(aPoint.x == nearest.x)
         {
           origin.x = aPoint.x;
-          double aDist(getDistance(&aPoint, &origin));
+          double aDist(distance(aPoint, origin));
           if(aDist < dist)
             {
               dist = aDist;
@@ -793,7 +793,7 @@ void CompartmentProcess::addInterfaceVoxel(unsigned subunitCoord,
   Voxel& subunit((*theLattice)[subunitCoord]);
   Point subunitPoint(*subunit.point);
   Point voxelPoint(theSpatiocyteStepper->coord2point(voxelCoord));
-  double dist(getDistance(&subunitPoint, &voxelPoint));
+  double dist(distance(subunitPoint, voxelPoint));
   //Should use SubunitRadius instead of DiffuseRadius since it is the
   //actual size of the subunit. Nope, the distance is too far when using
   //SubunitRadius:
@@ -896,17 +896,17 @@ void CompartmentProcess::enlistPlaneIntersectInterfaceVoxels()
 
 bool CompartmentProcess::isInside(Point& aPoint)
 {
-  double dist(point2planeDist(aPoint, lengthVector, lengthDisplace));
-  if(dist >= 0)
+  double disp(point2planeDisp(aPoint, lengthVector, lengthDisplace));
+  if(disp >= 0)
     {
-      dist = point2planeDist(aPoint, lengthVector, lengthDisplaceOpp);
-      if(dist <= 0)
+      disp = point2planeDisp(aPoint, lengthVector, lengthDisplaceOpp);
+      if(disp <= 0)
         {
-          dist = point2planeDist(aPoint, widthVector, widthDisplaceOpp);
-          if(dist <= 0)
+          disp = point2planeDisp(aPoint, widthVector, widthDisplaceOpp);
+          if(disp <= 0)
             {
-              dist = point2planeDist(aPoint, widthVector, widthDisplace);
-              if(dist >= 0)
+              disp = point2planeDisp(aPoint, widthVector, widthDisplace);
+              if(disp >= 0)
                 {
                   return true;
                 }
@@ -919,7 +919,7 @@ bool CompartmentProcess::isInside(Point& aPoint)
 void CompartmentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
                                                          Point& aPoint)
 {
-  double distA(point2planeDist(aPoint, surfaceNormal, surfaceDisplace));
+  double dispA(point2planeDisp(aPoint, surfaceNormal, surfaceDisplace));
   for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
     {
       Voxel& adjoin((*theLattice)[aVoxel.adjoiningCoords[i]]);
@@ -927,12 +927,12 @@ void CompartmentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
       if(theSpecies[getID(adjoin)]->getIsCompVacant())
         {
           Point pointB(theSpatiocyteStepper->coord2point(adjoin.coord));
-          double distB(point2planeDist(pointB, surfaceNormal, surfaceDisplace));
+          double dispB(point2planeDisp(pointB, surfaceNormal, surfaceDisplace));
           //if not on the same side of the plane:
-          if((distA < 0) != (distB < 0))
+          if(dispA*dispB < 0)
             {
               //If the voxel is nearer to the plane:
-              if(abs(distA) < abs(distB))
+              if(abs(dispA) < abs(dispB))
                 { 
                   addInterfaceVoxel(aVoxel, aPoint);
                   return;

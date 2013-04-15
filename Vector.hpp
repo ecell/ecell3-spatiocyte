@@ -133,14 +133,14 @@ double distance(const Point& L, const Point& R)
 
 //Get the shortest distance from a point, P to a plane given by normal N and
 //displacement, m:
-double point2planeDist(const Point& P, const Point& N, const double m)
+double point2planeDisp(const Point& P, const Point& N, const double m)
 {
   return dot(P, N) - m;
 }
 
 //Get the shortest distance from a point, P to a line defined by the direction
 //vector, N that passes through a point, Q:
-double point2lineDist(const Point& P, const Point& N, const Point& Q)
+double point2lineDisp(const Point& P, const Point& N, const Point& Q)
 {
   double t((dot(P, N) - dot(Q, N))/dot(N, N));
   Point A(mult(N, t));

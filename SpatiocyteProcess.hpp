@@ -55,7 +55,18 @@ public:
     theTime(libecs::INF) {}
   virtual ~SpatiocyteProcess() {}
   virtual void fire() {}
-  virtual void initializeFirst() {}
+  virtual void initializeFirst()
+    {
+      const std::vector<Process*>& aProcesses(getStepper()->getProcessVector());
+      for(unsigned i(0); i != aProcesses.size(); ++i)
+        {
+          if(dynamic_cast<Process*>(this) == aProcesses[i])
+            {
+              theID = i;
+              return;
+            }
+        }
+    }
   virtual void initializeSecond()
     {
       theSpecies = theSpatiocyteStepper->getSpecies();
@@ -157,11 +168,11 @@ public:
     {
       return false;
     }
-  virtual bool isDependentOnPre(const Process* aProcess) const
+  virtual bool isDependentOnPre(const ReactionProcess* aProcess)
     {
       return false;
     }
-  virtual bool isDependentOnPost(const Process* aProcess) const
+  virtual bool isDependentOnPost(const ReactionProcess* aProcess)
     {
       return false;
     }
@@ -269,6 +280,10 @@ public:
     {
       return aVoxel.idx/theStride;
     }
+  unsigned getID() const
+    {
+      return theID;
+    }
 protected:
   String getIDString(Voxel*) const;
   String getIDString(Species*) const;
@@ -280,6 +295,7 @@ protected:
   bool isInitialized;
   bool isPriorityQueued;
   unsigned theAdjoiningCoordSize;
+  unsigned theID;
   unsigned theNullCoord;
   unsigned theNullID;
   unsigned theStride;

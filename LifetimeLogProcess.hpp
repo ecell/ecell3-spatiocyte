@@ -45,19 +45,20 @@ public:
   LifetimeLogProcess() {}
   virtual ~LifetimeLogProcess() {}
   virtual void initialize();
-  virtual void initializeSecond();
-  virtual void initializeFifth();
-  virtual void initializeLastOnce();
-  virtual void fire() {};
+  virtual void initializeFirst();
+  virtual void fire() {}
   virtual void interruptedPre(ReactionProcess*);
   virtual void interruptedPost(ReactionProcess*);
-  virtual bool isDependentOnPre(const Process*) const;
-  virtual bool isDependentOnPost(const Process*) const;
+  virtual bool isDependentOnPre(const ReactionProcess*);
+  virtual bool isDependentOnPost(const ReactionProcess*);
 private:
-  bool logTrackedMolecule(Species*, const Voxel*);
+  bool isInVariableReferences(const VariableReferenceVector&, const int,
+                              const Variable*) const;
+  bool logTrackedMolecule(const unsigned, Species*, const Voxel*);
   bool initTrackedMolecule(Species*);
   std::vector<Species*> theTrackedSpeciesList;
   std::vector<Species*> theUntrackedSpeciesList;
+  std::vector<bool> isBindingSite;
 };
 
 #endif /* __LifetimeLogProcess_hpp */

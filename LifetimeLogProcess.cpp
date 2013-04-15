@@ -80,34 +80,27 @@ void LifetimeLogProcess::initialize()
   LogInterval = libecs::INF;
 }
 
-void LifetimeLogProcess::initializeSecond()
+void LifetimeLogProcess::initializeFirst()
 {
-
-}
-
-void LifetimeLogProcess::initializeFifth()
-{
-
-}
-
-void LifetimeLogProcess::initializeLastOnce()
-{
-
+  IteratingLogProcess::initializeFirst();
+  isBindingSite.resize(getStepper()->getProcessVector().size(), false);
 }
 
 void LifetimeLogProcess::interruptedPre(ReactionProcess* aProcess)
 {
-  std::cout << "Pre aProcess:" << aProcess->getFullID().asString() << std::endl;
+  //std::cout << "Pre aProcess:" << aProcess->getFullID().asString() << std::endl;
   if(aProcess->getA())
     {
-      if(logTrackedMolecule(aProcess->getA(), aProcess->getMoleculeA()))
+      if(logTrackedMolecule(aProcess->getID(), aProcess->getA(),
+                            aProcess->getMoleculeA()))
         {
           return;
         }
     }
   if(aProcess->getB())
     {
-      if(logTrackedMolecule(aProcess->getB(), aProcess->getMoleculeB()))
+      if(logTrackedMolecule(aProcess->getID(), aProcess->getB(),
+                            aProcess->getMoleculeB()))
         {
           return;
         }
@@ -116,7 +109,7 @@ void LifetimeLogProcess::interruptedPre(ReactionProcess* aProcess)
 
 void LifetimeLogProcess::interruptedPost(ReactionProcess* aProcess)
 {
-  std::cout << "Post aProcess:" << aProcess->getFullID().asString() << std::endl;
+  //std::cout << "Post aProcess:" << aProcess->getFullID().asString() << std::endl;
   if(aProcess->getC())
     {
       if(initTrackedMolecule(aProcess->getC()))
@@ -133,18 +126,23 @@ void LifetimeLogProcess::interruptedPost(ReactionProcess* aProcess)
     }
 }
 
-bool LifetimeLogProcess::logTrackedMolecule(Species* aSpecies,
+bool LifetimeLogProcess::logTrackedMolecule(const unsigned anID,
+                                            Species* aSpecies,
                                             const Voxel* aMolecule)
 {
   for(unsigned i(0); i != theTrackedSpeciesList.size(); ++i)
     {
       if(aSpecies == theTrackedSpeciesList[i])
         {
+          if(isBindingSite[anID])
+            {
+              //std::cout << "is binding site" << std::endl;
+            }
           const unsigned anIndex(aSpecies->getIndex(aMolecule));
           const Point aPoint(aSpecies->getPoint(anIndex));
           const Point anOrigin(aSpecies->coord2point(
                                          aSpecies->getTag(anIndex).origin));
-          std::cout << "dist:" << distance(aPoint, anOrigin) << std::endl;
+          //std::cout << "dist:" << distance(aPoint, anOrigin) << std::endl;
           return true;
         }
     }
@@ -160,44 +158,37 @@ bool LifetimeLogProcess::initTrackedMolecule(Species* aSpecies)
           const unsigned anIndex(aSpecies->size()-1);
           Tag& aTag(aSpecies->getTag(anIndex));
           aTag.origin = aSpecies->getCoord(anIndex);
-          std::cout << "origin:" << aTag.origin << std::endl;
+          //std::cout << "origin:" << aTag.origin << std::endl;
           return true;
         }
     }
   return false;
 }
 
-bool LifetimeLogProcess::isDependentOnPre(const Process* aProcess) const
+bool LifetimeLogProcess::isDependentOnPre(const ReactionProcess* aProcess)
 {
-  const VariableReferenceVector&
-    aVariableReferences(aProcess->getVariableReferenceVector()); 
-  for(VariableReferenceVector::const_iterator
-      i(aVariableReferences.begin()); i != aVariableReferences.end();
-      ++i)
+  const VariableReferenceVector& aVariableReferences(
+                                       aProcess->getVariableReferenceVector()); 
+  for(unsigned i(0); i != theTrackedSpeciesList.size(); ++i)
     {
-      for(unsigned k(0); k != theTrackedSpeciesList.size(); ++k)
+      if(isInVariableReferences(aVariableReferences, -1,
+                                theTrackedSpeciesList[i]->getVariable()))
         {
-          Species* aSpecies(theTrackedSpeciesList[k]);
-          if(aSpecies->getVariable() == (*i).getVariable())
+          for(unsigned j(0); j != theUntrackedSpeciesList.size(); ++j)
             {
-              //If a theTrackedSpecies molecule is destroyed by
-              //aProcess and a theUntrackedSpecies molecule is created:
-              if((*i).getCoefficient() < 0)
-                { 
-                  for(unsigned l(0); 
-                      l != theUntrackedSpeciesList.size(); ++l)
-                    { 
-                      for(VariableReferenceVector::const_iterator
-                          j(aVariableReferences.begin());
-                          j != aVariableReferences.end(); ++j)
+              if(isInVariableReferences(aVariableReferences, 1,
+                                    theUntrackedSpeciesList[j]->getVariable()))
+                {
+                  for(unsigned k(0); k != theTrackedSpeciesList.size(); ++k)
+                    {
+                      if(isInVariableReferences(aVariableReferences, 1,
+                                    theTrackedSpeciesList[k]->getVariable())) 
                         {
-                          if(theUntrackedSpeciesList[l]->getVariable() == 
-                             (*j).getVariable() && (*j).getCoefficient() > 0)
-                            {
-                              return true;
-                            }
+                          isBindingSite[aProcess->getID()] = true;
+                          return true;
                         }
                     }
+                  return true;
                 }
             }
         }
@@ -205,41 +196,42 @@ bool LifetimeLogProcess::isDependentOnPre(const Process* aProcess) const
   return false;
 }
 
-bool LifetimeLogProcess::isDependentOnPost(const Process* aProcess) const
+bool LifetimeLogProcess::isInVariableReferences(const VariableReferenceVector&
+                                                aVariableReferences,
+                                                const int aCoefficient,
+                                                const Variable* aVariable) const
 {
-  const VariableReferenceVector&
-    aVariableReferences(aProcess->getVariableReferenceVector()); 
   for(VariableReferenceVector::const_iterator
-      i(aVariableReferences.begin()); i != aVariableReferences.end();
-      ++i)
+      i(aVariableReferences.begin()); i != aVariableReferences.end(); ++i)
     {
-      for(unsigned k(0); k != theTrackedSpeciesList.size(); ++k)
+      //If the both coefficients have the same sign:
+      if((*i).getCoefficient()*aCoefficient > 0 &&
+         (*i).getVariable() == aVariable)
         {
-          Species* aSpecies(theTrackedSpeciesList[k]);
-          if(aSpecies->getVariable() == (*i).getVariable())
+          return true;
+        }
+    }
+  return false;
+}
+
+bool LifetimeLogProcess::isDependentOnPost(const ReactionProcess* aProcess)
+{
+  const VariableReferenceVector& aVariableReferences(
+                                       aProcess->getVariableReferenceVector()); 
+  for(unsigned i(0); i != theTrackedSpeciesList.size(); ++i)
+    {
+      if(isInVariableReferences(aVariableReferences, 1,
+                                theTrackedSpeciesList[i]->getVariable()))
+        {
+          for(unsigned j(0); j != theTrackedSpeciesList.size(); ++j)
             {
-              //If a theTrackedSpecies molecule is created by aProcess:
-              if((*i).getCoefficient() > 0)
+              if(isInVariableReferences(aVariableReferences, -1,
+                                    theTrackedSpeciesList[j]->getVariable()))
                 {
-                  for(unsigned l(0); l != theTrackedSpeciesList.size(); ++l)
-                    {
-                      for(VariableReferenceVector::const_iterator
-                          j(aVariableReferences.begin());
-                          j != aVariableReferences.end(); ++j)
-                        {
-                          //If a another theTrackedSpecies molecule is 
-                          //destroyed by aProcess:
-                          if(l != k && (*j).getCoefficient() < 0 &&
-                             theTrackedSpeciesList[l]->getVariable() == 
-                             (*j).getVariable())
-                            {
-                              return false;
-                            }
-                        }
-                    }
-                  return true;
+                  return false;
                 }
             }
+          return true;
         }
     }
   return false;
