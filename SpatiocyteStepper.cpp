@@ -74,40 +74,41 @@ void SpatiocyteStepper::initialize()
   //All species have been created at this point, we initialize them now:
   std::cout << "4. initializing species..." << std::endl;
   initSpecies();
+  std::cout << "5. initializing processes the first time..." << std::endl;
   initializeFirst();
-  std::cout << "5. initializing processes the second time..." << std::endl;
+  std::cout << "6. initializing processes the second time..." << std::endl;
   initializeSecond();
-  std::cout << "6. constructing lattice..." << std::endl;
+  std::cout << "7. constructing lattice..." << std::endl;
   constructLattice();
-  std::cout << "7. setting intersecting compartment list..." << std::endl;
+  std::cout << "8. setting intersecting compartment list..." << std::endl;
   setIntersectingCompartmentList();
-  std::cout << "8. compartmentalizing lattice..." << std::endl;
+  std::cout << "9. compartmentalizing lattice..." << std::endl;
   compartmentalizeLattice();
-  std::cout << "9. setting up compartment voxels properties..." << std::endl;
+  std::cout << "10. setting up compartment voxels properties..." << std::endl;
   setCompVoxelProperties();
   resizeProcessLattice();
-  std::cout << "10. initializing processes the third time..." << std::endl;
+  std::cout << "11. initializing processes the third time..." << std::endl;
   initializeThird();
-  std::cout << "11. printing simulation parameters..." << std::endl;
+  std::cout << "12. printing simulation parameters..." << std::endl;
   updateSpecies();
   storeSimulationParameters();
   printSimulationParameters();
-  std::cout << "12. populating compartments with molecules..." << std::endl;
+  std::cout << "13. populating compartments with molecules..." << std::endl;
   populateComps();
-  std::cout << "13. initializing processes the fourth time..." << std::endl;
+  std::cout << "14. initializing processes the fourth time..." << std::endl;
   initializeFourth();
-  std::cout << "14. initializing the priority queue..." << std::endl;
+  std::cout << "15. initializing the priority queue..." << std::endl;
   initPriorityQueue();
-  std::cout << "15. initializing processes the fifth time..." << std::endl;
+  std::cout << "16. initializing processes the fifth time..." << std::endl;
   initializeFifth();
-  std::cout << "16. initializing processes the last time..." << std::endl;
+  std::cout << "17. initializing processes the last time..." << std::endl;
   initializeLastOnce();
-  std::cout << "17. finalizing species..." << std::endl;
+  std::cout << "18. finalizing species..." << std::endl;
   finalizeSpecies();
-  std::cout << "18. printing final process parameters..." << std::endl <<
+  std::cout << "19. printing final process parameters..." << std::endl <<
     std::endl;
   printProcessParameters();
-  std::cout << "19. simulation is started..." << std::endl;
+  std::cout << "20. simulation is started..." << std::endl;
 }
 
 

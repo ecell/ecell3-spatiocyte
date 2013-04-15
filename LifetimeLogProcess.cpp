@@ -37,7 +37,17 @@ void LifetimeLogProcess::initialize()
       return;
     }
   SpatiocyteProcess::initialize();
-  isPriorityQueued = true;
+  isPriorityQueued = false;
+}
+
+void LifetimeLogProcess::initializeFirst()
+{
+  SpatiocyteProcess::initializeFirst();
+  isBindingSite.resize(getStepper()->getProcessVector().size(), false);
+  isTrackedSpecies.resize(theSpecies.size(), false);
+  isUntrackedSpecies.resize(theSpecies.size(), false);
+  unsigned cntTracked(0);
+  unsigned cntUntracked(0);
   for(VariableReferenceVector::iterator
       i(theVariableReferenceVector.begin());
       i != theVariableReferenceVector.end(); ++i)
@@ -46,14 +56,17 @@ void LifetimeLogProcess::initialize()
                                      (*i).getVariable())); 
       if((*i).getCoefficient() == -1)
         {
-          theTrackedSpeciesList.push_back(aSpecies);
+          isTrackedSpecies[aSpecies->getID()] = true;
+          aSpecies->setIsTagged();
+          ++cntTracked;
         }
       else if((*i).getCoefficient() == 1)
         {
-          theUntrackedSpeciesList.push_back(aSpecies);
+          isUntrackedSpecies[aSpecies->getID()] = true;
+          ++cntUntracked;
         }
     }
-  if(!theTrackedSpeciesList.size())
+  if(!cntTracked)
     {
       THROW_EXCEPTION(ValueError, String(
                       getPropertyInterface().getClassName()) +
@@ -63,7 +76,7 @@ void LifetimeLogProcess::initialize()
                       "coefficient as the tracked species, " +
                       "but none is given."); 
     }
-  if(!theUntrackedSpeciesList.size())
+  if(!cntUntracked)
     {
       THROW_EXCEPTION(ValueError, String(
                       getPropertyInterface().getClassName()) +
@@ -73,116 +86,82 @@ void LifetimeLogProcess::initialize()
                       "coefficient as the untracked species, " +
                       "but none is given."); 
     }
-  for(unsigned i(0); i != theTrackedSpeciesList.size(); ++i)
-    {
-      theTrackedSpeciesList[i]->setIsTagged();
-    }
-  LogInterval = libecs::INF;
-}
-
-void LifetimeLogProcess::initializeFirst()
-{
-  IteratingLogProcess::initializeFirst();
-  isBindingSite.resize(getStepper()->getProcessVector().size(), false);
 }
 
 void LifetimeLogProcess::interruptedPre(ReactionProcess* aProcess)
 {
-  //std::cout << "Pre aProcess:" << aProcess->getFullID().asString() << std::endl;
-  if(aProcess->getA())
+  if(aProcess->getA() && isTrackedSpecies[aProcess->getA()->getID()])
     {
-      if(logTrackedMolecule(aProcess->getID(), aProcess->getA(),
-                            aProcess->getMoleculeA()))
-        {
-          return;
-        }
+      logTrackedMolecule(aProcess, aProcess->getA(), aProcess->getMoleculeA());
     }
-  if(aProcess->getB())
+  else if(aProcess->getB() && isTrackedSpecies[aProcess->getB()->getID()])
     {
-      if(logTrackedMolecule(aProcess->getID(), aProcess->getB(),
-                            aProcess->getMoleculeB()))
-        {
-          return;
-        }
+      logTrackedMolecule(aProcess, aProcess->getB(), aProcess->getMoleculeB());
     }
 }
 
 void LifetimeLogProcess::interruptedPost(ReactionProcess* aProcess)
 {
-  //std::cout << "Post aProcess:" << aProcess->getFullID().asString() << std::endl;
-  if(aProcess->getC())
+  if(aProcess->getC() && isTrackedSpecies[aProcess->getC()->getID()])
     {
-      if(initTrackedMolecule(aProcess->getC()))
-        {
-          return;
-        }
+      initTrackedMolecule(aProcess->getC());
     }
- if(aProcess->getD())
+  else if(aProcess->getD() && isTrackedSpecies[aProcess->getD()->getID()])
     {
-      if(initTrackedMolecule(aProcess->getD()))
-        {
-          return;
-        }
+      initTrackedMolecule(aProcess->getD());
     }
 }
 
-bool LifetimeLogProcess::logTrackedMolecule(const unsigned anID,
+void LifetimeLogProcess::logTrackedMolecule(ReactionProcess* aProcess,
                                             Species* aSpecies,
                                             const Voxel* aMolecule)
 {
-  for(unsigned i(0); i != theTrackedSpeciesList.size(); ++i)
+  if(isBindingSite[aProcess->getID()])
     {
-      if(aSpecies == theTrackedSpeciesList[i])
+      if(aProcess->getMoleculeC() &&
+         isTrackedSpecies[aProcess->getC()->getID()])
         {
-          if(isBindingSite[anID])
-            {
-              //std::cout << "is binding site" << std::endl;
-            }
-          const unsigned anIndex(aSpecies->getIndex(aMolecule));
-          const Point aPoint(aSpecies->getPoint(anIndex));
-          const Point anOrigin(aSpecies->coord2point(
-                                         aSpecies->getTag(anIndex).origin));
-          //std::cout << "dist:" << distance(aPoint, anOrigin) << std::endl;
-          return true;
+          return;
+        }
+      else if(aProcess->getMoleculeD() &&
+              isTrackedSpecies[aProcess->getD()->getID()])
+        {
+          return;
         }
     }
-  return false;
+  const unsigned anIndex(aSpecies->getIndex(aMolecule));
+  const Point aPoint(aSpecies->getPoint(anIndex));
+  const Point anOrigin(aSpecies->coord2point(
+                                     aSpecies->getTag(anIndex).origin));
+  std::cout << getStepper()->getCurrentTime() << " dist:" << distance(aPoint, anOrigin) << std::endl;
 }
 
-bool LifetimeLogProcess::initTrackedMolecule(Species* aSpecies)
+void LifetimeLogProcess::initTrackedMolecule(Species* aSpecies)
 {
-  for(unsigned i(0); i != theTrackedSpeciesList.size(); ++i)
-    {
-      if(aSpecies == theTrackedSpeciesList[i])
-        {
-          const unsigned anIndex(aSpecies->size()-1);
-          Tag& aTag(aSpecies->getTag(anIndex));
-          aTag.origin = aSpecies->getCoord(anIndex);
-          //std::cout << "origin:" << aTag.origin << std::endl;
-          return true;
-        }
-    }
-  return false;
+  const unsigned anIndex(aSpecies->size()-1);
+  Tag& aTag(aSpecies->getTag(anIndex));
+  aTag.origin = aSpecies->getCoord(anIndex);
+  std::cout << getStepper()->getCurrentTime() << " attach" << std::endl;
 }
 
 bool LifetimeLogProcess::isDependentOnPre(const ReactionProcess* aProcess)
 {
   const VariableReferenceVector& aVariableReferences(
                                        aProcess->getVariableReferenceVector()); 
-  for(unsigned i(0); i != theTrackedSpeciesList.size(); ++i)
+  for(unsigned i(0); i != isTrackedSpecies.size(); ++i)
     {
-      if(isInVariableReferences(aVariableReferences, -1,
-                                theTrackedSpeciesList[i]->getVariable()))
+      if(isTrackedSpecies[i] && isInVariableReferences(
+           aVariableReferences, -1, theSpecies[i]->getVariable()))
         {
-          for(unsigned j(0); j != theUntrackedSpeciesList.size(); ++j)
+          for(unsigned j(0); j != isUntrackedSpecies.size(); ++j)
             {
-              if(isInVariableReferences(aVariableReferences, 1,
-                                    theUntrackedSpeciesList[j]->getVariable()))
+              if(isUntrackedSpecies[j] && isInVariableReferences(
+                 aVariableReferences, 1, theSpecies[j]->getVariable()))
                 {
-                  for(unsigned k(0); k != theTrackedSpeciesList.size(); ++k)
+                  for(unsigned k(0); k != isTrackedSpecies.size(); ++k)
                     {
-                      if(isInVariableReferences(aVariableReferences, 1,
-                                    theTrackedSpeciesList[k]->getVariable())) 
+                      if(isTrackedSpecies[k] && isInVariableReferences(
+                         aVariableReferences, 1, theSpecies[k]->getVariable())) 
                         {
                           isBindingSite[aProcess->getID()] = true;
                           return true;
@@ -218,15 +197,15 @@ bool LifetimeLogProcess::isDependentOnPost(const ReactionProcess* aProcess)
 {
   const VariableReferenceVector& aVariableReferences(
                                        aProcess->getVariableReferenceVector()); 
-  for(unsigned i(0); i != theTrackedSpeciesList.size(); ++i)
+  for(unsigned i(0); i != isTrackedSpecies.size(); ++i)
     {
-      if(isInVariableReferences(aVariableReferences, 1,
-                                theTrackedSpeciesList[i]->getVariable()))
+      if(isTrackedSpecies[i] && isInVariableReferences(
+           aVariableReferences, 1, theSpecies[i]->getVariable()))
         {
-          for(unsigned j(0); j != theTrackedSpeciesList.size(); ++j)
+          for(unsigned j(0); j != isTrackedSpecies.size(); ++j)
             {
-              if(isInVariableReferences(aVariableReferences, -1,
-                                    theTrackedSpeciesList[j]->getVariable()))
+              if(isTrackedSpecies[j] && isInVariableReferences(
+                   aVariableReferences, -1, theSpecies[j]->getVariable()))
                 {
                   return false;
                 }

@@ -54,10 +54,10 @@ public:
 private:
   bool isInVariableReferences(const VariableReferenceVector&, const int,
                               const Variable*) const;
-  bool logTrackedMolecule(const unsigned, Species*, const Voxel*);
-  bool initTrackedMolecule(Species*);
-  std::vector<Species*> theTrackedSpeciesList;
-  std::vector<Species*> theUntrackedSpeciesList;
+  void logTrackedMolecule(ReactionProcess*, Species*, const Voxel*);
+  void initTrackedMolecule(Species*);
+  std::vector<bool> isTrackedSpecies;
+  std::vector<bool> isUntrackedSpecies;
   std::vector<bool> isBindingSite;
 };
 

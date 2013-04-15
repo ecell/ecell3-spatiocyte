@@ -165,11 +165,16 @@ visualLogger.VariableReferenceList = [['_', 'Variable:/:GFP' ]]
 visualLogger.VariableReferenceList = [['_', 'Variable:/:Kinesin']]
 visualLogger.VariableReferenceList = [['_', 'Variable:/:MTKinesin' ]]
 visualLogger.VariableReferenceList = [['_', 'Variable:/:MTKinesinATP' ]]
-visualLogger.LogInterval = 0.1
+visualLogger.LogInterval = 0.03
 
-#microLogger = theSimulator.createEntity('MicroscopyTrackingProcess', 'Process:/:track')
-#microLogger.VariableReferenceList = [['_', 'Variable:/:GFP', '1']]
-#microLogger.VariableReferenceList = [['_', 'Variable:/:GFP', '-1']]
+hvisualLogger = theSimulator.createEntity('H5VisualizationLogProcess', 'Process:/:hvisualLogger')
+hvisualLogger.VariableReferenceList = [['_', 'Variable:/:GFP' ]]
+hvisualLogger.LogInterval = 0.03
+
+microLogger = theSimulator.createEntity('MicroscopyTrackingProcess', 'Process:/:track')
+microLogger.VariableReferenceList = [['_', 'Variable:/:GFP', '1']]
+microLogger.VariableReferenceList = [['_', 'Variable:/:GFP', '-1']]
+microLogger.ExposureTime = 0.03
 
 react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:explicitAttach')
 react.VariableReferenceList = [['_', 'Variable:/:Kinesin','-1']]
@@ -243,7 +248,7 @@ for i in range(len(completedLengths)):
   Microtubule.VariableReferenceList = [['_', 'Variable:/:Tubulin' , '-1']]
   Microtubule.VariableReferenceList = [['_', 'Variable:/:TubulinM' , '-2']]
   Microtubule.VariableReferenceList = [['_', 'Variable:/:TubulinP' , '-3']]
-run(1000)
+run(15)
 
 
 

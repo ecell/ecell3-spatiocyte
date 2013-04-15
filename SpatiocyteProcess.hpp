@@ -63,15 +63,13 @@ public:
           if(dynamic_cast<Process*>(this) == aProcesses[i])
             {
               theID = i;
-              return;
+              break;
             }
         }
-    }
-  virtual void initializeSecond()
-    {
       theSpecies = theSpatiocyteStepper->getSpecies();
       theStride = UINT_MAX/theSpecies.size();
     }
+  virtual void initializeSecond() {}
   virtual void initializeThird() {}
   virtual void initializeFourth() {}
   virtual void initializeFifth() {}
