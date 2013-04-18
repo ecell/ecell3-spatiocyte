@@ -183,7 +183,8 @@ void LifetimeLogProcess::logTrackedMolecule(ReactionProcess* aProcess,
   availableTagIDs.push_back(aTag.id);
   double aTime(getStepper()->getCurrentTime());
   theLogFile << std::setprecision(15) << aTime-theTagTimes[aTag.id] << "," <<
-    distance(aPoint, anOrigin)*2*theSpatiocyteStepper->getVoxelRadius() << "," << anIndex << "," << aSpecies->size() << "," << theTagTimes[aTag.id] << "," << aTime << std::endl;
+    distance(aPoint, anOrigin)*2*theSpatiocyteStepper->getVoxelRadius() << ","
+    << theTagTimes[aTag.id] << "," << aTime << std::endl;
 }
 
 void LifetimeLogProcess::initTrackedMolecule(Species* aSpecies)

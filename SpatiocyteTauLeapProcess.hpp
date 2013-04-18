@@ -76,6 +76,7 @@ public:
             }
         }
       isParent = true;
+      checkExternStepperInterrupted();
       initPoisson();
     }
   virtual void initializeFirst()

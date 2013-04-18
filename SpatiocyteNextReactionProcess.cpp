@@ -737,7 +737,12 @@ double SpatiocyteNextReactionProcess::getPropensityZerothOrder()
 
 double SpatiocyteNextReactionProcess::getPropensityFirstOrder() 
 {
-  return p*theVariableReferenceVector[0].getVariable()->getValue();
+  double sizeA(theVariableReferenceVector[0].getVariable()->getValue());
+  if(sizeA < -coefficientA)
+    {
+      sizeA = 0;
+    }
+  return p*sizeA;
 }
 
 double SpatiocyteNextReactionProcess::getPropensityFirstOrderDeoligomerize() 
@@ -761,11 +766,25 @@ double SpatiocyteNextReactionProcess::getPropensitySecondOrderHetero()
   //Required for HD species when substrate coefficient is < -1
   if(variableA)
     {
-      sizeA = pow(sizeA, -coefficientA);
+      if(sizeA < -coefficientA)
+        {
+          sizeA = 0;
+        }
+      else
+        {
+          sizeA = pow(sizeA, -coefficientA);
+        }
     }
   if(variableB)
     {
-      sizeB = pow(sizeB, -coefficientB);
+      if(sizeB < -coefficientB)
+        {
+          sizeB = 0;
+        }
+      else
+        {
+          sizeB = pow(sizeB, -coefficientB);
+        }
     }
   return p*sizeA*sizeB;
 }
@@ -776,9 +795,13 @@ double SpatiocyteNextReactionProcess::getPropensitySecondOrderHomo()
     {
       A->updateMoleculeSize();
     }
-  double aValue(theVariableReferenceVector[0].getVariable()->getValue());
+  double sizeA(theVariableReferenceVector[0].getVariable()->getValue());
+  if(sizeA < -coefficientA)
+    {
+      sizeA = 1;
+    }
   //There must be two or more molecules:
-  return p*aValue*(aValue-1);
+  return p*sizeA*(sizeA-1);
 }
 
 
