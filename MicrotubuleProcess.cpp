@@ -225,6 +225,16 @@ bool MicrotubuleProcess::isInside(Point& aPoint)
   return false;
 }
 
+bool MicrotubuleProcess::isOnAboveSurface(Point& aPoint)
+{
+  double disp(point2lineDisp(aPoint, lengthVector, Minus));
+  if(disp >= nRadius)
+    {
+      return true;
+    }
+  return false;
+}
+
 void MicrotubuleProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
                                                        Point& aPoint)
 {
@@ -239,8 +249,9 @@ void MicrotubuleProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
           Point pointB(theSpatiocyteStepper->coord2point(adjoin.coord));
           //Get the displacement from the adjoin to the center line of the MT:
           double dispB(point2lineDisp(pointB, lengthVector, Minus));
-          //If not on the same side of the MT surface:
-          if(dispA*dispB < 0)
+          //If not on the same side of the MT surface, or one of it is on
+          //the MT surface while the other is not:
+          if((dispA < nRadius) != (dispB < nRadius))
             {
               //If the voxel is nearer to the MT surface:
               if(abs(dispA-nRadius) < abs(dispB-nRadius))

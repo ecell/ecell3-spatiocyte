@@ -48,6 +48,7 @@ public:
       PROPERTYSLOT_SET_GET(Integer, Periodic);
       PROPERTYSLOT_SET_GET(Integer, RegularLattice);
       PROPERTYSLOT_SET_GET(Integer, Subunits);
+      PROPERTYSLOT_SET_GET(Integer, SurfaceDirection);
       PROPERTYSLOT_SET_GET(Real, DiffuseRadius); //off-lattice voxel radius
       PROPERTYSLOT_SET_GET(Real, Length);
       PROPERTYSLOT_SET_GET(Real, LipidRadius); //radius of lipid voxels
@@ -74,6 +75,7 @@ public:
     Periodic(0),
     RegularLattice(1),
     Subunits(1),
+    SurfaceDirection(2),
     theDiffuseSize(6),
     theDimension(1),
     DiffuseRadius(0),
@@ -97,6 +99,7 @@ public:
   SIMPLE_SET_GET_METHOD(Integer, Periodic);
   SIMPLE_SET_GET_METHOD(Integer, RegularLattice);
   SIMPLE_SET_GET_METHOD(Integer, Subunits);
+  SIMPLE_SET_GET_METHOD(Integer, SurfaceDirection);
   SIMPLE_SET_GET_METHOD(Real, DiffuseRadius);
   SIMPLE_SET_GET_METHOD(Real, Length);
   SIMPLE_SET_GET_METHOD(Real, LipidRadius);
@@ -264,6 +267,8 @@ public:
   void setGrid(Species*, std::vector<std::vector<unsigned> >&, unsigned);
   bool setSubunitInterfaceVoxels(const unsigned, const double, 
                                  const bool isSingle=false);
+  bool isCorrectSide(const unsigned);
+  virtual bool isOnAboveSurface(Point&);
 protected:
   bool isCompartmentalized;
   unsigned Autofit;
@@ -277,6 +282,7 @@ protected:
   unsigned subStartCoord;
   unsigned RegularLattice;
   unsigned Subunits;
+  unsigned SurfaceDirection;
   unsigned theDiffuseSize;
   unsigned theDimension;
   unsigned vacStartIndex;

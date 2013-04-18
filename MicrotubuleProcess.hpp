@@ -52,6 +52,7 @@ public:
     theMinusSpecies(NULL),
     thePlusSpecies(NULL)
   {
+    SurfaceDirection = 0;
     Filaments = 13;
     Subunits = 1;
     Autofit = 0;
@@ -220,6 +221,7 @@ public:
                                  double);
   virtual void addPlaneIntersectInterfaceVoxel(Voxel&, Point&);
   virtual bool isInside(Point&);
+  virtual bool isOnAboveSurface(Point&);
 protected:
   double MonomerPitch;
   double nMonomerPitch;

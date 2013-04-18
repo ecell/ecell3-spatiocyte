@@ -22,6 +22,7 @@ theSimulator.createEntity('Variable', 'Variable:/Surface:ANIOs').Value = 0
 theSimulator.createEntity('Variable', 'Variable:/Surface:ANIO_PTEN').Value = 0
 theSimulator.createEntity('Variable', 'Variable:/Surface:ANIOs_PTEN').Value = 0
 theSimulator.createEntity('Variable', 'Variable:/:PTEN').Value = 100
+theSimulator.createEntity('Variable', 'Variable:/:PTEN2').Value = 0
 theSimulator.createEntity('Variable', 'Variable:/Surface:PTEN').Value = 80
 
 logger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:logger')
@@ -33,6 +34,7 @@ logger.VariableReferenceList = [['_', 'Variable:/:Vacant']]
 logger.VariableReferenceList = [['_', 'Variable:/Surface:VACANT']]
 logger.VariableReferenceList = [['_', 'Variable:/:Interface']]
 logger.VariableReferenceList = [['_', 'Variable:/Surface:ANIO']]
+logger.VariableReferenceList = [['_', 'Variable:/:PTEN2']]
 logger.VariableReferenceList = [['_', 'Variable:/Surface:ANIOs']]
 logger.LogInterval = 1e-5
 logger.MultiscaleStructure = 0
@@ -47,6 +49,12 @@ populator.VariableReferenceList = [['_', 'Variable:/Surface:PTEN']]
 populator.UniformRadiusY = 0.99
 populator.UniformRadiusZ = 0.99
 
+react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:desorp')
+react.VariableReferenceList = [['_', 'Variable:/Surface:PTEN','-1']]
+react.VariableReferenceList = [['_', 'Variable:/:PTEN2','1']]
+react.SearchVacant = 1
+react.k = 1e+5
+
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop3')
 populator.VariableReferenceList = [['_', 'Variable:/:PTEN']]
 populator.OriginX = -0.9
@@ -56,6 +64,9 @@ diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffusePTENv
 diffuser.VariableReferenceList = [['_', 'Variable:/:PTEN']]
 diffuser.D = 5e-12
 
+diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffusePTEN2v')
+diffuser.VariableReferenceList = [['_', 'Variable:/:PTEN2']]
+diffuser.D = 5e-12
 
 fil = theSimulator.createEntity('CompartmentProcess', 'Process:/:filam')
 fil.VariableReferenceList = [['_', 'Variable:/Surface:PTEN']]
@@ -69,6 +80,7 @@ fil.DiffuseRadius = 0.436e-9
 fil.LipidRadius = 0.436e-9
 fil.Periodic = 1
 fil.RegularLattice = 1
+fil.SurfaceDirection = 0
 
 import time
 run(1e-6)

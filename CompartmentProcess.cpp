@@ -863,13 +863,40 @@ void CompartmentProcess::enlistSubunitInterfaceAdjoins()
               unsigned coord(interface.adjoiningCoords[k]);
               Voxel& adjoin((*theLattice)[coord]);
               //if(getID(adjoin) != theInterfaceSpecies->getID())
-              if(theSpecies[getID(adjoin)]->getIsCompVacant())
+              if(theSpecies[getID(adjoin)]->getIsCompVacant() &&
+                 isCorrectSide(adjoin.coord))
                 {
                   addAdjoin(subunit, coord);
                 }
             }
         }
     }
+}
+
+bool CompartmentProcess::isCorrectSide(const unsigned aCoord)
+{
+  Point aPoint(theSpatiocyteStepper->coord2point(aCoord));
+  switch(SurfaceDirection)
+    {
+      //Is inside
+    case 0:
+      if(isOnAboveSurface(aPoint))
+        {
+          return true;
+        }
+      return false;
+      //Is outside
+    case 1:
+      if(!isOnAboveSurface(aPoint))
+        {
+          return true;
+        }
+      return false;
+      //Is bidirectional
+    default:
+      return true;
+    }
+  return true;
 }
 
 void CompartmentProcess::enlistPlaneIntersectInterfaceVoxels()
@@ -916,6 +943,16 @@ bool CompartmentProcess::isInside(Point& aPoint)
   return false;
 }
 
+bool CompartmentProcess::isOnAboveSurface(Point& aPoint)
+{
+  double disp(point2planeDisp(aPoint, surfaceNormal, surfaceDisplace));
+  if(disp >= 0)
+    {
+      return true;
+    }
+  return false;
+}
+
 void CompartmentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
                                                          Point& aPoint)
 {
@@ -928,8 +965,9 @@ void CompartmentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
         {
           Point pointB(theSpatiocyteStepper->coord2point(adjoin.coord));
           double dispB(point2planeDisp(pointB, surfaceNormal, surfaceDisplace));
-          //if not on the same side of the plane:
-          if(dispA*dispB < 0)
+          //if not on the same side of the plane, or one of it is on the plane
+          //and the other is not:
+          if((dispA < 0) != (dispB < 0))
             {
               //If the voxel is nearer to the plane:
               if(abs(dispA) < abs(dispB))

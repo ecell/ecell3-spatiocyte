@@ -15,7 +15,8 @@ theSimulator.createEntity('Variable', 'Variable:/:LENGTHX').Value = dendriteLeng
 theSimulator.createEntity('Variable', 'Variable:/:LENGTHY').Value = dendriteRadius*2
 theSimulator.createEntity('Variable', 'Variable:/:VACANT')
 theSimulator.createEntity('Variable', 'Variable:/:Kinesin').Value = 2400
-theSimulator.createEntity('Variable', 'Variable:/:MTKinesin' ).Value = 10
+theSimulator.createEntity('Variable', 'Variable:/:Kinesin2').Value = 0
+theSimulator.createEntity('Variable', 'Variable:/:MTKinesin' ).Value = 30
 theSimulator.createEntity('Variable', 'Variable:/:MTKinesinATP' ).Value = 0
 theSimulator.createEntity('Variable', 'Variable:/:Tubulin' ).Value = 0
 theSimulator.createEntity('Variable', 'Variable:/:TubulinM' ).Value = 0
@@ -34,6 +35,12 @@ populator.VariableReferenceList = [['_', 'Variable:/:Kinesin']]
 populator.OriginZ = -1.5
 populator.OriginY = 1.5
 
+react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:desorp')
+react.VariableReferenceList = [['_', 'Variable:/:MTKinesin','-1']]
+react.VariableReferenceList = [['_', 'Variable:/:Kinesin2','1']]
+react.SearchVacant = 1
+react.k = 1e+4
+
 diffuse = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseKinesin')
 diffuse.VariableReferenceList = [['_', 'Variable:/:Kinesin']]
 diffuse.D = 1e-12
@@ -41,6 +48,10 @@ diffuse.D = 1e-12
 diffuse = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffusePlus')
 diffuse.VariableReferenceList = [['_', 'Variable:/:MTKinesin']]
 diffuse.D = 1e-12
+
+diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseKinesin2')
+diffuser.VariableReferenceList = [['_', 'Variable:/:Kinesin2']]
+diffuser.D = 1e-12
 
 visualLogger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:visualLogger')
 visualLogger.VariableReferenceList = [['_', 'Variable:/:GFP' ]]
@@ -51,6 +62,7 @@ visualLogger.VariableReferenceList = [['_', 'Variable:/:TubulinM']]
 visualLogger.VariableReferenceList = [['_', 'Variable:/:TubulinP']]
 visualLogger.VariableReferenceList = [['_', 'Variable:/:MTKinesin' ]]
 visualLogger.VariableReferenceList = [['_', 'Variable:/:MTKinesinATP' ]]
+visualLogger.VariableReferenceList = [['_', 'Variable:/:Kinesin2']]
 visualLogger.LogInterval = 1e-4
 
 Microtubule = theSimulator.createEntity('MicrotubuleProcess', 'Process:/:Microtubule')
@@ -65,6 +77,7 @@ Microtubule.SubunitRadius = KinesinRadius
 Microtubule.Subunits = 100
 Microtubule.Filaments = 13
 Microtubule.Periodic = 1
+Microtubule.SurfaceDirection = 2
 Microtubule.VariableReferenceList = [['_', 'Variable:/:MTKinesin' ]]
 Microtubule.VariableReferenceList = [['_', 'Variable:/:MTKinesinATP' ]]
 Microtubule.VariableReferenceList = [['_', 'Variable:/:Tubulin' , '-1']]
