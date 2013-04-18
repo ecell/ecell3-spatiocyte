@@ -42,11 +42,17 @@ public:
     {
       INHERIT_PROPERTIES(IteratingLogProcess);
     }
-  LifetimeLogProcess() {}
+  LifetimeLogProcess()
+    {
+      FileName = "LifetimeLog.csv";
+    }
   virtual ~LifetimeLogProcess() {}
   virtual void initialize();
   virtual void initializeFirst();
-  virtual void fire() {}
+  virtual void initializeSecond();
+  virtual void initializeFifth();
+  virtual void initializeLastOnce();
+  virtual void fire();
   virtual void interruptedPre(ReactionProcess*);
   virtual void interruptedPost(ReactionProcess*);
   virtual bool isDependentOnPre(const ReactionProcess*);
@@ -56,9 +62,12 @@ private:
                               const Variable*) const;
   void logTrackedMolecule(ReactionProcess*, Species*, const Voxel*);
   void initTrackedMolecule(Species*);
+private:
   std::vector<bool> isTrackedSpecies;
   std::vector<bool> isUntrackedSpecies;
   std::vector<bool> isBindingSite;
+  std::vector<unsigned> availableTagIDs;
+  std::vector<double> theTagTimes;
 };
 
 #endif /* __LifetimeLogProcess_hpp */

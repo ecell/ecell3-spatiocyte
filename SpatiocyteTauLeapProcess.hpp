@@ -48,7 +48,7 @@ public:
     isParent(false),
     currSSA(0),
     n(1),
-    n_c(1),
+    n_c(2),
     nSSA(1),
     epsilon(0.03) {}
   virtual ~SpatiocyteTauLeapProcess() {}
@@ -241,6 +241,7 @@ public:
           update_a0();
           return -log(theRng->FixedU())/a0;
         }
+      a0 = 0;
       tau1 = getTau(epsilon);
       if(a0)
         {
@@ -287,7 +288,10 @@ public:
           aSum += R[j]->getPropensity();
           if(aSum > a0r)
             {
-              R[j]->react();
+              if(R[j]->react())
+                {
+                  interruptProcessesPost();
+                }
               return;
             }
         }
@@ -301,7 +305,10 @@ public:
               const unsigned K(poisson(R[j]->getPropensity()*aTau));
               for(unsigned i(0); i != K; ++i)
                 {
-                  R[j]->react();
+                  if(R[j]->react())
+                    {
+                      interruptProcessesPost();
+                    }
                 }
             }
         }
@@ -313,7 +320,10 @@ public:
         {
           if(R[j]->getIsCritical())
             {
-              R[j]->react();
+              if(R[j]->react())
+                {
+                  interruptProcessesPost();
+                }
               return;
             }
         }
@@ -321,7 +331,10 @@ public:
         {
           if(R[i]->getIsCritical())
             {
-              R[i]->react();
+              if(R[j]->react())
+                {
+                  interruptProcessesPost();
+                }
               return;
             }
         }

@@ -37,7 +37,8 @@ void LifetimeLogProcess::initialize()
       return;
     }
   SpatiocyteProcess::initialize();
-  isPriorityQueued = false;
+  isPriorityQueued = true;
+  theTotalIterations = Iterations;
 }
 
 void LifetimeLogProcess::initializeFirst()
@@ -88,6 +89,52 @@ void LifetimeLogProcess::initializeFirst()
     }
 }
 
+void LifetimeLogProcess::initializeSecond()
+{
+  availableTagIDs.resize(0);
+  theTagTimes.resize(0);
+}
+
+void LifetimeLogProcess::initializeLastOnce()
+{
+  theLogFile.open(FileName.c_str(), std::ios::trunc);
+}
+
+void LifetimeLogProcess::initializeFifth()
+{
+  theInterval = LogEnd;
+  if(!LogStart)
+    {
+      LogStart = theInterval;
+    }
+  theTime = std::max(LogStart-theInterval, getStepper()->getMinStepInterval());
+  thePriorityQueue->move(theQueueID);
+}
+
+void LifetimeLogProcess::fire()
+{
+  if(theTime < LogStart)
+    {
+      std::cout << "Iterations left:" << Iterations << " of " <<
+        theTotalIterations << std::endl;    
+    }
+  if(theTime >= LogEnd && Iterations > 0)
+    {
+      --Iterations;
+      if(Iterations)
+        {
+          theSpatiocyteStepper->reset(Iterations);
+          return;
+        }
+      else
+        {
+          theInterval = libecs::INF;
+        }
+    }
+  theTime += theInterval;
+  thePriorityQueue->moveTop();
+}
+
 void LifetimeLogProcess::interruptedPre(ReactionProcess* aProcess)
 {
   if(aProcess->getA() && isTrackedSpecies[aProcess->getA()->getID()])
@@ -131,9 +178,12 @@ void LifetimeLogProcess::logTrackedMolecule(ReactionProcess* aProcess,
     }
   const unsigned anIndex(aSpecies->getIndex(aMolecule));
   const Point aPoint(aSpecies->getPoint(anIndex));
-  const Point anOrigin(aSpecies->coord2point(
-                                     aSpecies->getTag(anIndex).origin));
-  std::cout << getStepper()->getCurrentTime() << " dist:" << distance(aPoint, anOrigin) << std::endl;
+  Tag& aTag(aSpecies->getTag(anIndex));
+  const Point anOrigin(aSpecies->coord2point(aTag.origin));
+  availableTagIDs.push_back(aTag.id);
+  double aTime(getStepper()->getCurrentTime());
+  theLogFile << std::setprecision(15) << aTime-theTagTimes[aTag.id] << "," <<
+    distance(aPoint, anOrigin)*2*theSpatiocyteStepper->getVoxelRadius() << "," << anIndex << "," << aSpecies->size() << std::endl;
 }
 
 void LifetimeLogProcess::initTrackedMolecule(Species* aSpecies)
@@ -141,7 +191,17 @@ void LifetimeLogProcess::initTrackedMolecule(Species* aSpecies)
   const unsigned anIndex(aSpecies->size()-1);
   Tag& aTag(aSpecies->getTag(anIndex));
   aTag.origin = aSpecies->getCoord(anIndex);
-  std::cout << getStepper()->getCurrentTime() << " attach" << std::endl;
+  if(availableTagIDs.size())
+    {
+      aTag.id = availableTagIDs.back();
+      theTagTimes[availableTagIDs.back()] = getStepper()->getCurrentTime();
+      availableTagIDs.pop_back();
+    }
+  else
+    {
+      aTag.id = theTagTimes.size();
+      theTagTimes.push_back(getStepper()->getCurrentTime());
+    }
 }
 
 bool LifetimeLogProcess::isDependentOnPre(const ReactionProcess* aProcess)

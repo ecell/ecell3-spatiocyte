@@ -570,7 +570,6 @@ bool SpatiocyteNextReactionProcess::reactDeoligomerize(Species* a, Species* c)
 bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
 {
   unsigned indexA(a->getRandomIndex());
-
   moleculeA = a->getMolecule(indexA);
   if(ImplicitUnbind && 
      E->getRandomAdjoiningVoxel(moleculeA, E, SearchVacant) == NULL)
@@ -991,11 +990,13 @@ void SpatiocyteNextReactionProcess::initializeFourth()
   if(A)
     {
       compA = A->getComp();
+      compB = compA;
     }
   else if(variableA)
     {
       compA = theSpatiocyteStepper->system2Comp(
                          variableA->getSuperSystem());
+      compB = compA;
     }
   if(B)
     {

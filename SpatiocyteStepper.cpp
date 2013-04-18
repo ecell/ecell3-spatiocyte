@@ -3062,7 +3062,7 @@ bool SpatiocyteStepper::isInsideCoord(unsigned aCoord,
       //If the distance between the voxel and the center point is less than 
       //or equal to the radius, then the voxel must be inside the Comp:
       if((aPoint.x >= aWestPoint.x && aPoint.x <= anEastPoint.x &&
-          getDistance(&aPoint, &aCenterPoint) <= aRadius+delta))
+          distance(aPoint, aCenterPoint) <= aRadius+delta))
         { 
           return true;
         }
@@ -3076,11 +3076,11 @@ bool SpatiocyteStepper::isInsideCoord(unsigned aCoord,
       //If the distance between the voxel and the center point is less than 
       //or equal to the radius, then the voxel must be inside the Comp:
       if((aPoint.x >= aWestPoint.x && aPoint.x <= anEastPoint.x &&
-          getDistance(&aPoint, &aCenterPoint) <= aRadius+delta) ||
+          distance(aPoint, aCenterPoint) <= aRadius+delta) ||
          (aPoint.x < aWestPoint.x &&
-          getDistance(&aPoint, &aWestPoint) <= aRadius+delta) ||
+          distance(aPoint, aWestPoint) <= aRadius+delta) ||
          (aPoint.x > anEastPoint.x &&
-          getDistance(&aPoint, &anEastPoint) <= aRadius+delta))
+          distance(aPoint, anEastPoint) <= aRadius+delta))
         { 
           return true;
         }

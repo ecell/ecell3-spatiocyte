@@ -54,6 +54,10 @@ void IteratingLogProcess::initializeFifth()
     {
       LogInterval = theInterval;
     }
+  if(!LogStart)
+    {
+      LogStart = theInterval;
+    }
   theTime = std::max(LogStart-theInterval, getStepper()->getMinStepInterval());
   thePriorityQueue->move(theQueueID);
   if(theFileCnt-FileStartCount)
@@ -102,6 +106,9 @@ void IteratingLogProcess::fire()
   if(theTime < LogStart)
     {
       doPreLog();
+      theTime = LogStart;
+      thePriorityQueue->moveTop();
+      return;
     }
   else if(theTime >= LogStart && theTime <= LogEnd)
     {

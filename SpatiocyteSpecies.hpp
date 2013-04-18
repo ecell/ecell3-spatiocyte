@@ -36,12 +36,7 @@
 
 // The size of Coord must be 128 bytes to avoid cacheline splits
 // The Core 2 has 64-byte cacheline
-static double getDistance(Point* aSourcePoint, Point* aDestPoint)
-{
-  return sqrt(pow(aDestPoint->x-aSourcePoint->x, 2)+
-              pow(aDestPoint->y-aSourcePoint->y, 2)+
-              pow(aDestPoint->z-aSourcePoint->z, 2));
-}
+
 
 String int2str(int anInt)
 {
@@ -438,8 +433,8 @@ public:
                                                            theDimension,
                                                    &theMoleculeOrigins[i]);
             }
-          double aDistance(getDistance(&theMoleculeOrigins[i].point,
-                                       &aCurrentPoint));
+          double aDistance(distance(theMoleculeOrigins[i].point,
+                                    aCurrentPoint));
           aDisplacement += aDistance;
         }
       return aDisplacement/theMoleculeSize*theStepper->getVoxelRadius()*2;
@@ -457,8 +452,8 @@ public:
                                                        theDimension,
                                                    &theMoleculeOrigins[index]);
         }
-      const double nDisplacement(getDistance(&theMoleculeOrigins[index].point,
-                                             &aCurrentPoint)*
+      const double nDisplacement(distance(theMoleculeOrigins[index].point,
+                                          aCurrentPoint)*
                                  theStepper->getVoxelRadius()*2);
       return nDisplacement*nDisplacement;
     }
@@ -2753,7 +2748,7 @@ public:
                 {
                   unsigned m(coords[l]);
                   Point& pointB(*theLattice[m].point);
-                  if(getDistance(&pointA, &pointB) < nDist)
+                  if(distance(pointA, pointB) < nDist)
                     {
                       anIntersectLipids.push_back(m-lipStartCoord);
                     }
@@ -2928,7 +2923,7 @@ public:
                       anIntersectLipids.push_back(coord);
                     }
                 }
-              else if(getDistance(&pointA, &pointB) < nDist)
+              else if(distance(pointA, pointB) < nDist)
                 {
                   anIntersectLipids.push_back(coord);
                 }

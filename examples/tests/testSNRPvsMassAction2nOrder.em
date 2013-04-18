@@ -6,7 +6,7 @@ System System(/)
   StepperID       SS;
   Variable Variable(GEOMETRY)
     {
-      Value 5;
+      Value 0;
     }
   Variable Variable(LENGTHX)
     {

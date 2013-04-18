@@ -35,7 +35,29 @@ LIBECS_DM_INIT(MassActionProcess, Process);
 
 void MassActionProcess::fire()
 { 
+  for(VariableReferenceVector::iterator
+      s(theVariableReferenceVector.begin());
+      s != theVariableReferenceVector.end(); ++s)
+    {
+      VariableReference aVariableReference(*s);
+      if(aVariableReference.getVariable()->getValue() < 0 || 
+         aVariableReference.getVariable()->getValue() < 1e-14)
+        {
+          aVariableReference.getVariable()->setValue(0);
+        }
+    }
   setFlux((this->*thePropensityMethod)());
+  for(VariableReferenceVector::iterator
+      s(theVariableReferenceVector.begin());
+      s != theVariableReferenceVector.end(); ++s)
+    {
+      VariableReference aVariableReference(*s);
+      if(aVariableReference.getVariable()->getValue() < 0 || 
+         aVariableReference.getVariable()->getValue() < 1e-14)
+        {
+          aVariableReference.getVariable()->setValue(0);
+        }
+    }
 }
 
 void MassActionProcess::finalizeFire()
