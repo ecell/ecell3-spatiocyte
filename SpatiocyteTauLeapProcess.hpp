@@ -50,7 +50,8 @@ public:
     n(1),
     n_c(2),
     nSSA(1),
-    epsilon(0.03) {}
+    epsilon(0.03),
+    minStepInterval(0) {}
   virtual ~SpatiocyteTauLeapProcess() {}
   virtual void initialize()
     {
@@ -77,6 +78,13 @@ public:
         }
       isParent = true;
       checkExternStepperInterrupted();
+      //SpatiocyteStepper accepts 0 step interval but the main scheduler
+      //does not, so we need to set a small interval value when this
+      //process is external interrupted by a non-Spatiocyte stepper:
+      if(isExternInterrupted)
+        {
+          minStepInterval = 1e-10;
+        }
       initPoisson();
     }
   virtual void initializeFirst()
@@ -231,7 +239,7 @@ public:
           tau2 = aCurrentTime-lastTime;
           break;
         }
-      return 0;
+      return minStepInterval;
     }
   virtual double getNewInterval()
     {
@@ -301,7 +309,7 @@ public:
     {
       for(unsigned j(0); j != R.size(); ++j)
         {
-          if(!R[j]->getIsCritical())
+          if(R[j]->getPropensity() && !R[j]->getIsCritical())
             {
               const unsigned K(poisson(R[j]->getPropensity()*aTau));
               for(unsigned i(0); i != K; ++i)
@@ -319,7 +327,7 @@ public:
       unsigned j(theRng->Integer(R.size()));
       for(; j != R.size(); ++j)
         {
-          if(R[j]->getIsCritical())
+          if(R[j]->getPropensity() && R[j]->getIsCritical())
             {
               if(R[j]->react())
                 {
@@ -330,9 +338,9 @@ public:
         }
       for(unsigned i(0); i != j; ++i)
         {
-          if(R[i]->getIsCritical())
+          if(R[i]->getPropensity() && R[i]->getIsCritical())
             {
-              if(R[j]->react())
+              if(R[i]->react())
                 {
                   interruptProcessesPost();
                 }
@@ -583,6 +591,7 @@ private:
   double a0;
   double a0_c;
   double epsilon;
+  double minStepInterval;
   double tau1;
   double tau2;
   double lastTime;
