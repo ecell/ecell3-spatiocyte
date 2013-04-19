@@ -94,6 +94,7 @@ public:
         {
           for(unsigned j(0); j != R.size(); ++j)
             {
+              n_c = getN_c();
               if(R[j] != this)
                 {
                   if(R[j]->getIsExternInterrupted())
@@ -101,7 +102,7 @@ public:
                       isExternInterrupted = true;
                       R[j]->setExternInterrupted(false);
                     }
-                  if(R[j]->getN_c() != 10)
+                  if(R[j]->getN_c() > n_c)
                     {
                       n_c = R[j]->getN_c();
                     }
@@ -168,7 +169,7 @@ public:
             {
               a0 += a;
               //If the reaction is non-critical:
-              if(R[j]->getL() >= n_c)
+              if(R[j]->getL() > n_c)
                 {
                   R[j]->addMuSigma(mu, sigma, a);
                 }
@@ -483,7 +484,14 @@ public:
     }
   unsigned getN_c()
     {
-      return n_c;
+      if(coefficientA < coefficientB)
+        {
+          return -coefficientA*2;
+        }
+      else
+        {
+          return -coefficientB*2;
+        }
     }
   void setExternInterrupted(bool value)
     {
