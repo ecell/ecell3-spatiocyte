@@ -156,6 +156,8 @@ public:
     }
   double getTau(const double anEpsilon)
     {
+      a0 = 0;
+      a0_c = 0;
       double tau(libecs::INF);
       std::vector<double> mu(S_rs.size(), 0);
       std::vector<double> sigma(S_rs.size(), 0);
@@ -227,19 +229,33 @@ public:
           return getNewInterval();
         }
       const double a0_old(a0); 
-      switch(theState)
+      double interval(0);
+      tau1 = getTau(epsilon);
+      if(a0)
         {
-        case 0:
-          update_a0();
-          return a0_old/a0*(theTime-aCurrentTime);
-        case 1:
-          tau1 = aCurrentTime-lastTime;
-          break;
-        case 2:
-          tau2 = aCurrentTime-lastTime;
-          break;
+          if(!theState)
+            {
+              return a0_old/a0*(theTime-aCurrentTime);
+            }
+          else
+            {
+              tau2 = (a0_c == 0)? libecs::INF : -log(theRng->FixedU())/a0_c;
+              if(tau1 < tau2)
+                {
+                  theState = 1;
+                  interval = std::max(minStepInterval,
+                                      tau1-(aCurrentTime-lastTime));
+                  tau1 = aCurrentTime-lastTime+interval;
+                  return interval;
+                }
+              theState = 2;
+              interval = std::max(minStepInterval,
+                                  tau2-(aCurrentTime-lastTime));
+              tau2 = aCurrentTime-lastTime+interval;
+              return interval;
+            }
         }
-      return minStepInterval;
+      return libecs::INF;
     }
   virtual double getNewInterval()
     {
@@ -250,7 +266,6 @@ public:
           update_a0();
           return -log(theRng->FixedU())/a0;
         }
-      a0 = 0;
       tau1 = getTau(epsilon);
       if(a0)
         {
