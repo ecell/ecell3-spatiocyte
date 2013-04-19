@@ -2145,7 +2145,7 @@ public:
     {
       unsigned& cnt(theTags[theMoleculeSize-1].boundCnt);
       cnt = 0;
-      for(unsigned i(0); i != theDiffuseSize; ++i)
+      for(unsigned i(0); i != aVoxel->diffuseSize; ++i)
         {
           unsigned aCoord(aVoxel->adjoiningCoords[i]);
           const unsigned anID(getID(theLattice[aCoord]));
@@ -2162,7 +2162,7 @@ public:
       Voxel* aVoxel(theMolecules[anIndex]);
       theBoundCnts[theTags[anIndex].boundCnt]--;
       removeMoleculeDirect(anIndex);
-      for(unsigned i(0); i != theDiffuseSize; ++i)
+      for(unsigned i(0); i != aVoxel->diffuseSize; ++i)
         {
           const unsigned aCoord(aVoxel->adjoiningCoords[i]);
           const unsigned anID(getID(theLattice[aCoord]));
