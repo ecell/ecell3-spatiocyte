@@ -763,29 +763,25 @@ double SpatiocyteNextReactionProcess::getPropensitySecondOrderHetero()
     }
   double sizeA(theVariableReferenceVector[0].getVariable()->getValue());
   double sizeB(theVariableReferenceVector[1].getVariable()->getValue());
+  std::cout << getIDString() << " " << getIDString(theVariableReferenceVector[0].getVariable()) << " size:" << sizeA << " " << getIDString(theVariableReferenceVector[1].getVariable()) << " size:" << sizeB;
   //Required for HD species when substrate coefficient is < -1
-  if(variableA)
+  if(sizeA < -coefficientA)
     {
-      if(sizeA < -coefficientA)
-        {
-          sizeA = 0;
-        }
-      else
-        {
-          sizeA = pow(sizeA, -coefficientA);
-        }
+      sizeA = 0;
     }
-  if(variableB)
+  else
     {
-      if(sizeB < -coefficientB)
-        {
-          sizeB = 0;
-        }
-      else
-        {
-          sizeB = pow(sizeB, -coefficientB);
-        }
+      sizeA = pow(sizeA, -coefficientA);
     }
+  if(sizeB < -coefficientB)
+    {
+      sizeB = 0;
+    }
+  else
+    {
+      sizeB = pow(sizeB, -coefficientB);
+    }
+  std::cout << " prop:" << p*sizeA*sizeB << std::endl;
   return p*sizeA*sizeB;
 }
 

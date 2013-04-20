@@ -92,9 +92,9 @@ public:
       SpatiocyteNextReactionProcess::initializeFirst();
       if(isParent)
         {
+          n_c = getN_c();
           for(unsigned j(0); j != R.size(); ++j)
             {
-              n_c = getN_c();
               if(R[j] != this)
                 {
                   if(R[j]->getIsExternInterrupted())
@@ -123,9 +123,9 @@ public:
     {
       return isParent;
     }
-  unsigned getL()
+  unsigned getNewL()
     {
-      unsigned L(UINT_MAX);
+      L = UINT_MAX;
       for(unsigned i(0); i != S_netNeg.size(); ++i)
         {
           const unsigned val(S_netNeg[i]->getValue()/(-v_netNeg[i]));
@@ -134,6 +134,10 @@ public:
               L = val;
             }
         }
+      return L;
+    }
+  unsigned getL()
+    {
       return L;
     }
   virtual double getInitInterval()
@@ -169,7 +173,8 @@ public:
             {
               a0 += a;
               //If the reaction is non-critical:
-              if(R[j]->getL() > n_c)
+              std::cout << R[j]->getIDString() << " L:" << R[j]->getNewL() << " n_c:" << n_c << std::endl;
+              if(R[j]->getNewL() > n_c)
                 {
                   R[j]->addMuSigma(mu, sigma, a);
                 }
@@ -205,6 +210,7 @@ public:
           a0 += R[j]->getNewPropensity();
         }
     }
+  /*
   void update_a0_a0_c()
     {
       a0 = 0;
@@ -216,18 +222,21 @@ public:
             {
               a0 += a;
               //If the reaction is non-critical:
-              if(R[j]->getL() < n_c)
+              if(R[j]->getNewL() < n_c)
                 {
                   a0_c += a;
                 }
             }
         }
     }
+    */
   virtual double getInterval(double aCurrentTime)
     {
       if(theTime == libecs::INF)
         {
-          return getNewInterval();
+          double newInterval(getNewInterval());
+          std::cout << "getInterval newInterval:" << newInterval << std::endl;
+          return newInterval;
         }
       const double a0_old(a0); 
       double interval(0);
@@ -236,7 +245,9 @@ public:
         {
           if(!theState)
             {
-              return a0_old/a0*(theTime-aCurrentTime);
+              double ssaInterval(a0_old/a0*(theTime-aCurrentTime));
+              std::cout << "getInterval ssa interval:" << ssaInterval << std::endl;
+              return ssaInterval;
             }
           else
             {
@@ -247,15 +258,18 @@ public:
                   interval = std::max(minStepInterval,
                                       tau1-(aCurrentTime-lastTime));
                   tau1 = aCurrentTime-lastTime+interval;
+                  std::cout << "getInterval tau1:" << tau1 << " interval:" << interval << std::endl;
                   return interval;
                 }
               theState = 2;
               interval = std::max(minStepInterval,
                                   tau2-(aCurrentTime-lastTime));
               tau2 = aCurrentTime-lastTime+interval;
+              std::cout << "getInterval tau2:" << tau2 << " interval:" << interval << std::endl;
               return interval;
             }
         }
+      std::cout << "getInterval inf" << std::endl;
       return libecs::INF;
     }
   virtual double getNewInterval()
@@ -265,7 +279,9 @@ public:
         {
           --currSSA;
           update_a0();
-          return -log(theRng->FixedU())/a0;
+          double interval(-log(theRng->FixedU())/a0);
+          std::cout << "getNewInterval curssaInterval:" << interval << std::endl;
+          return interval;
         }
       tau1 = getTau(epsilon);
       if(a0)
@@ -274,30 +290,39 @@ public:
             {
               theState = 0;
               currSSA = nSSA;
-              return -log(theRng->FixedU())/a0;
+              double interval(-log(theRng->FixedU())/a0);
+              std::cout << "getNewInterval ssaInterval:" << interval << std::endl;
+              return interval;
             }
           tau2 = (a0_c == 0)? libecs::INF : -log(theRng->FixedU())/a0_c;
           if(tau1 < tau2)
             {
               theState = 1;
+              std::cout << "getNew tau1:" << tau1 << std::endl;
               return tau1;
             }
           theState = 2;
+          std::cout << "getNew tau2:" << tau2 << std::endl;
           return tau2;
         }
+      std::cout << "getNewInterval inf" << std::endl;
       return libecs::INF;
     }
   virtual void fire()
     {
+      std::cout << "firing a0:" << a0 << " a0_c:" << a0_c << " tau1:" << tau1 << " tau2:" << tau2 << std::endl;
       switch(theState)
         {
         case 0:
+          std::cout << "ssa" << std::endl;
           fireSSA();
           break;
         case 1:
+          std::cout << "non crit" << std::endl;
           fireNonCritical(tau1);
           break;
         case 2:
+          std::cout << "crit and non crit" << std::endl;
           fireCritical();
           fireNonCritical(tau2);
           break;
@@ -327,7 +352,9 @@ public:
         {
           if(R[j]->getPropensity() && !R[j]->getIsCritical())
             {
-              const unsigned K(poisson(R[j]->getPropensity()*aTau));
+              const unsigned K(std::min(poisson(R[j]->getPropensity()*aTau),
+                                        R[j]->getL()));
+              std::cout << R[j]->getIDString() << " K:" << K << " prop:" << R[j]->getPropensity() << " tau:" << aTau << " total:" << R[j]->getPropensity()*aTau << std::endl;
               for(unsigned i(0); i != K; ++i)
                 {
                   if(R[j]->react())
@@ -486,11 +513,11 @@ public:
     {
       if(coefficientA < coefficientB)
         {
-          return -coefficientA*2;
+          return -coefficientA*5;
         }
       else
         {
-          return -coefficientB*2;
+          return -coefficientB*5;
         }
     }
   void setExternInterrupted(bool value)
@@ -607,6 +634,7 @@ private:
   bool isCritical;
   bool isParent;
   unsigned currSSA;
+  unsigned L;
   unsigned n;
   unsigned n_c;
   unsigned theState;
