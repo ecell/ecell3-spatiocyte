@@ -885,18 +885,28 @@ void SpatiocyteNextReactionProcess::preinitialize()
           aProcess->setPriority(getPriority());
           SpatiocyteNextReactionProcess* aSNRP(
                      dynamic_cast<SpatiocyteNextReactionProcess*>(aProcess));
-          aSNRP->setk(k/aDeoligomerIndex);
-          //aSNRP->setp(p/aDeoligomerIndex);
-          std::cout << aSNRP->getIDString() << " k:" << aSNRP->getk() << " p:" << p << std::endl;
+          if(theRates.size())
+            {
+              aSNRP->setk(theRates[i]);
+            }
+          else
+            {
+              aSNRP->setk(k/aDeoligomerIndex);
+            }
           aSNRP->setSearchVacant(SearchVacant);
           aSNRP->setDeoligomerIndex(aDeoligomerIndex);
           aSNRP->setImplicitUnbind(ImplicitUnbind);
           aSNRP->setVariableReferences(theVariableReferenceVector);
           aProcess->preinitialize();
         }
-      setk(k/Deoligomerize);
-      std::cout << getIDString() << " k:" << k << " p:" << p << std::endl;
-      //setp(p/Deoligomerize);
+      if(theRates.size())
+        {
+          setk(theRates[Deoligomerize-1]);
+        }
+      else
+        {
+          setk(k/Deoligomerize);
+        }
     }
 }
 
@@ -1314,7 +1324,12 @@ void SpatiocyteNextReactionProcess::printParameters()
       getInitInterval();
     }
   std::cout << " k:" << k << " p = " << pFormula.str() << " = " << p
-    << " nextTime:" << interval << " propensity:" << propensity << std::endl;
+    << " nextTime:" << interval << " propensity:" << propensity;
+  if(theDeoligomerIndex)
+    {
+      std::cout << " DeoligomerIndex:" << theDeoligomerIndex;
+    }
+  std::cout << std::endl;
 }
 
 double SpatiocyteNextReactionProcess::getNewInterval()

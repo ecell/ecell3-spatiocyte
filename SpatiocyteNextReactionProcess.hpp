@@ -49,6 +49,7 @@ public:
       PROPERTYSLOT_SET_GET(Integer, Deoligomerize);
       PROPERTYSLOT_SET_GET(Integer, BindingSite);
       PROPERTYSLOT_SET_GET(Integer, ImplicitUnbind);
+      PROPERTYSLOT_SET_GET(Polymorph, Rates);
     }
   SpatiocyteNextReactionProcess():
     Deoligomerize(0),
@@ -71,6 +72,16 @@ public:
   SIMPLE_SET_GET_METHOD(Integer, Deoligomerize);
   SIMPLE_SET_GET_METHOD(Integer, BindingSite);
   SIMPLE_SET_GET_METHOD(Integer, ImplicitUnbind);
+  SIMPLE_GET_METHOD(Polymorph, Rates);
+  void setRates(const Polymorph& aValue)
+    {
+      Rates = aValue;
+      PolymorphVector aValueVector(aValue.as<PolymorphVector>());
+      for(unsigned i(0); i != aValueVector.size(); ++i)
+        {
+          theRates.push_back(aValueVector[i].as<double>());
+        }
+    }
   virtual void initialize()
     {
       if(isInitialized)
@@ -106,6 +117,15 @@ public:
       if(variableD)
         {
           initSizeD = variableD->getValue();
+        }
+      if(Deoligomerize && theRates.size() && theRates.size() != Deoligomerize)
+        {
+          THROW_EXCEPTION(ValueError, 
+                          String(getPropertyInterface().getClassName()) + 
+                          "[" + getFullID().asString() + 
+                          "]: For deoligomerize reactions, the number of " +
+                          "rates given in Rates must match the number of " +
+                          "binding sites specified by Deoligomerize.");
         }
     }
   virtual void preinitialize();
@@ -164,6 +184,8 @@ protected:
   double SpaceB;
   double SpaceC;
   double thePropensity;
+  std::vector<double> theRates;
+  Polymorph Rates;
   std::stringstream pFormula;
   PropensityMethod thePropensityMethod;  
   std::vector<Voxel*> moleculesA;

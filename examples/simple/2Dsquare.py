@@ -46,7 +46,8 @@ react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:di
 react.VariableReferenceList = [['_', 'Variable:/Surface:As', '-1']]
 react.VariableReferenceList = [['_', 'Variable:/Surface:A', '1']]
 react.Deoligomerize = 6
-react.k = 100
+react.Rates = [243, 81, 27, 9, 3, 1]
+#react.k = 100
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseA')
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:A']]
