@@ -241,8 +241,6 @@ public:
                       const double interval(std::max(minStepInterval,
                                                tau2-(aCurrentTime-lastTime)));
                       tau2 = aCurrentTime-lastTime+interval;
-                      printSubstrates();
-                      std::cout << "getInterval tau2:" << tau2 << " interval:" << interval << " a0:" << a0 << " a0_c:" << a0_c << " lastTime:" << lastTime << std::endl;
                       return interval;
                     }
                 }
@@ -262,51 +260,39 @@ public:
         {
           --currSSA;
           update_a0();
-          double interval(-log(theRng->FixedU())/a0);
-          std::cout << "getNewInterval curssaInterval:" << interval << std::endl;
-          return interval;
+          return -log(theRng->FixedU())/a0;
         }
       tau1 = getTau(epsilon);
       if(a0)
         {
-          printSubstrates();
-          std::cout << "n/a0 tau1:" << tau1 << " a0:" << a0 << " a0_c:" << a0_c << " n/a0:" << n/a0 << " a0*tau1:" << a0*tau1 << std::endl;
           if(tau1 < n/a0)
             {
               theState = 0;
               currSSA = nSSA;
-              double interval(-log(theRng->FixedU())/a0);
-              std::cout << "getNewInterval ssaInterval:" << interval << std::endl;
-              return interval;
+              return -log(theRng->FixedU())/a0;
             }
           tau2 = (a0_c == 0)? libecs::INF : -log(theRng->FixedU())/a0_c;
           if(tau1 < tau2)
             {
               theState = 1;
-              std::cout << "getNew tau1:" << tau1 << std::endl;
               return tau1;
             }
           theState = 2;
-          std::cout << "getNew tau2:" << tau2 << std::endl;
           return tau2;
         }
       return libecs::INF;
     }
   virtual void fire()
     {
-      std::cout << "firing a0:" << a0 << " a0_c:" << a0_c << " tau1:" << tau1 << " tau2:" << tau2 << std::endl;
       switch(theState)
         {
         case 0:
-          std::cout << "ssa" << std::endl;
           fireSSA();
           break;
         case 1:
-          std::cout << "non crit" << std::endl;
           fireNonCritical(tau1);
           break;
         case 2:
-          std::cout << "crit and non crit" << std::endl;
           fireCritical();
           fireNonCritical(tau2);
           break;
@@ -328,7 +314,8 @@ public:
       std::cout << getIDString();
       for(unsigned i(0); i != S_netNeg.size(); ++i)
         {
-          std::cout << " " << getIDString(S_netNeg[i]) << " size:" << S_netNeg[i]->getValue();
+          std::cout << " " << getIDString(S_netNeg[i]) << " size:" <<
+            S_netNeg[i]->getValue();
         }
       std::cout << std::endl;
     }
@@ -357,7 +344,6 @@ public:
             {
               const unsigned K(std::min(poisson(R[j]->getPropensity()*aTau),
                                         R[j]->getL()));
-              std::cout << R[j]->getIDString() << " K:" << K << " prop:" << R[j]->getPropensity() << " tau:" << aTau << " total:" << R[j]->getPropensity()*aTau << std::endl;
               for(unsigned i(0); i != K; ++i)
                 {
                   if(R[j]->react())
