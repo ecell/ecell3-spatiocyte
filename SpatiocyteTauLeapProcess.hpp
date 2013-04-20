@@ -47,7 +47,7 @@ public:
   SpatiocyteTauLeapProcess():
     isParent(false),
     currSSA(0),
-    n(1),
+    n(1), //increase this to 2 or 3 to use SSA more than non-crit
     n_c(2),
     nSSA(1),
     epsilon(0.03),
@@ -173,7 +173,6 @@ public:
             {
               a0 += a;
               //If the reaction is non-critical:
-              std::cout << R[j]->getIDString() << " L:" << R[j]->getNewL() << " n_c:" << n_c << std::endl;
               if(R[j]->getNewL() > n_c)
                 {
                   R[j]->addMuSigma(mu, sigma, a);
@@ -210,66 +209,50 @@ public:
           a0 += R[j]->getNewPropensity();
         }
     }
-  /*
-  void update_a0_a0_c()
-    {
-      a0 = 0;
-      a0_c = 0;
-      for(unsigned j(0); j != R.size(); ++j)
-        {
-          const double a(R[j]->getNewPropensity());
-          if(a)
-            {
-              a0 += a;
-              //If the reaction is non-critical:
-              if(R[j]->getNewL() < n_c)
-                {
-                  a0_c += a;
-                }
-            }
-        }
-    }
-    */
   virtual double getInterval(double aCurrentTime)
     {
       if(theTime == libecs::INF)
         {
           double newInterval(getNewInterval());
-          std::cout << "getInterval newInterval:" << newInterval << std::endl;
           return newInterval;
         }
       const double a0_old(a0); 
-      double interval(0);
+      const double a0_c_old(a0_c); 
       tau1 = getTau(epsilon);
       if(a0)
         {
-          if(!theState)
+          if(tau1 < n/a0)
             {
-              double ssaInterval(a0_old/a0*(theTime-aCurrentTime));
-              std::cout << "getInterval ssa interval:" << ssaInterval << std::endl;
-              return ssaInterval;
+              if(!theState)
+                {
+                  return a0_old/a0*(theTime-aCurrentTime);;
+                }
+              theState = 0;
+              return -log(theRng->FixedU())/a0;
             }
           else
             {
-              tau2 = (a0_c == 0)? libecs::INF : -log(theRng->FixedU())/a0_c;
-              if(tau1 < tau2)
+              if(a0_c)
                 {
-                  theState = 1;
-                  interval = std::max(minStepInterval,
-                                      tau1-(aCurrentTime-lastTime));
-                  tau1 = aCurrentTime-lastTime+interval;
-                  std::cout << "getInterval tau1:" << tau1 << " interval:" << interval << std::endl;
-                  return interval;
+                  tau2 = a0_c_old/a0_c*tau2;
+                  if(tau1 >= tau2)
+                    {
+                      theState = 2;
+                      const double interval(std::max(minStepInterval,
+                                               tau2-(aCurrentTime-lastTime)));
+                      tau2 = aCurrentTime-lastTime+interval;
+                      printSubstrates();
+                      std::cout << "getInterval tau2:" << tau2 << " interval:" << interval << " a0:" << a0 << " a0_c:" << a0_c << " lastTime:" << lastTime << std::endl;
+                      return interval;
+                    }
                 }
-              theState = 2;
-              interval = std::max(minStepInterval,
-                                  tau2-(aCurrentTime-lastTime));
-              tau2 = aCurrentTime-lastTime+interval;
-              std::cout << "getInterval tau2:" << tau2 << " interval:" << interval << std::endl;
+              theState = 1;
+              const double interval(std::max(minStepInterval,
+                                             tau1-(aCurrentTime-lastTime)));
+              tau1 = aCurrentTime-lastTime+interval;
               return interval;
             }
         }
-      std::cout << "getInterval inf" << std::endl;
       return libecs::INF;
     }
   virtual double getNewInterval()
@@ -286,6 +269,8 @@ public:
       tau1 = getTau(epsilon);
       if(a0)
         {
+          printSubstrates();
+          std::cout << "n/a0 tau1:" << tau1 << " a0:" << a0 << " a0_c:" << a0_c << " n/a0:" << n/a0 << " a0*tau1:" << a0*tau1 << std::endl;
           if(tau1 < n/a0)
             {
               theState = 0;
@@ -305,7 +290,6 @@ public:
           std::cout << "getNew tau2:" << tau2 << std::endl;
           return tau2;
         }
-      std::cout << "getNewInterval inf" << std::endl;
       return libecs::INF;
     }
   virtual void fire()
@@ -328,6 +312,25 @@ public:
           break;
         }
       ReactionProcess::fire();
+    }
+  void printSubstrates()
+    {
+      if(isParent)
+        {
+          for(unsigned j(0); j != R.size(); ++j)
+            {
+              if(R[j] != this)
+                {
+                  R[j]->printSubstrates();
+                }
+            }
+        }
+      std::cout << getIDString();
+      for(unsigned i(0); i != S_netNeg.size(); ++i)
+        {
+          std::cout << " " << getIDString(S_netNeg[i]) << " size:" << S_netNeg[i]->getValue();
+        }
+      std::cout << std::endl;
     }
   void fireSSA()
     {
