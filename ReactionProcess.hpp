@@ -32,8 +32,8 @@
 #ifndef __ReactionProcess_hpp
 #define __ReactionProcess_hpp
 
-#include "SpatiocyteProcess.hpp"
-#include "ReactionProcessInterface.hpp"
+#include <SpatiocyteProcess.hpp>
+#include <ReactionProcessInterface.hpp>
 
 LIBECS_DM_CLASS_EXTRA_1(ReactionProcess, SpatiocyteProcess, ReactionProcessInterface)
 { 

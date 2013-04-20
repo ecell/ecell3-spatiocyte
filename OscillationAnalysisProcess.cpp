@@ -28,7 +28,7 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
-#include "OscillationAnalysisProcess.hpp"
+#include <OscillationAnalysisProcess.hpp>
 
 LIBECS_DM_INIT(OscillationAnalysisProcess, Process); 
 

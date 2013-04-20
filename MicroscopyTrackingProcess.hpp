@@ -32,8 +32,8 @@
 #ifndef __MicroscopyTrackingProcess_hpp
 #define __MicroscopyTrackingProcess_hpp
 
-#include "VisualizationLogProcess.hpp"
-#include "SpatiocyteSpecies.hpp"
+#include <VisualizationLogProcess.hpp>
+#include <SpatiocyteSpecies.hpp>
 
 LIBECS_DM_CLASS(MicroscopyTrackingProcess, VisualizationLogProcess)
 { 

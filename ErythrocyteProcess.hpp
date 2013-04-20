@@ -32,8 +32,8 @@
 #ifndef __ErythrocyteProcess_hpp
 #define __ErythrocyteProcess_hpp
 
-#include "SpatiocyteProcess.hpp"
-#include "SpatiocyteSpecies.hpp"
+#include <SpatiocyteProcess.hpp>
+#include <SpatiocyteSpecies.hpp>
 
 LIBECS_DM_CLASS(ErythrocyteProcess, SpatiocyteProcess)
 {

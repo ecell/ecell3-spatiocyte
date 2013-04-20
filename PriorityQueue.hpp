@@ -33,7 +33,7 @@
 #ifndef __PriorityQueue_hpp
 #define __PriorityQueue_hpp
 
-#include <DynamicPriorityQueue.hpp>
+#include <libecs/DynamicPriorityQueue.hpp>
 
 USE_LIBECS;
 

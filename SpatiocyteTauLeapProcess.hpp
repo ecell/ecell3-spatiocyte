@@ -340,7 +340,7 @@ public:
     {
       for(unsigned j(0); j != R.size(); ++j)
         {
-          if(R[j]->getPropensity() && !R[j]->getIsCritical())
+          if(!R[j]->getIsCritical() && R[j]->getPropensity())
             {
               const unsigned K(std::min(poisson(R[j]->getPropensity()*aTau),
                                         R[j]->getL()));
@@ -359,7 +359,7 @@ public:
       unsigned j(theRng->Integer(R.size()));
       for(; j != R.size(); ++j)
         {
-          if(R[j]->getPropensity() && R[j]->getIsCritical())
+          if(R[j]->getIsCritical() && R[j]->getPropensity())
             {
               if(R[j]->react())
                 {
@@ -370,7 +370,7 @@ public:
         }
       for(unsigned i(0); i != j; ++i)
         {
-          if(R[i]->getPropensity() && R[i]->getIsCritical())
+          if(R[i]->getIsCritical() && R[i]->getPropensity())
             {
               if(R[i]->react())
                 {

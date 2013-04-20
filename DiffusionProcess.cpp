@@ -28,6 +28,6 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
-#include "DiffusionProcess.hpp"
+#include <DiffusionProcess.hpp>
 
 LIBECS_DM_INIT(DiffusionProcess, Process); 

@@ -28,8 +28,8 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
-#include "DiffusionInfluencedReactionProcess.hpp"
-#include "SpatiocyteSpecies.hpp"
+#include <DiffusionInfluencedReactionProcess.hpp>
+#include <SpatiocyteSpecies.hpp>
 
 LIBECS_DM_INIT(DiffusionInfluencedReactionProcess, Process);
 

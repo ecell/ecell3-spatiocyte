@@ -33,7 +33,7 @@
 #define __CompartmentGrowthProcess_hpp
 
 #include <sstream>
-#include "SpatiocyteProcess.hpp"
+#include <SpatiocyteProcess.hpp>
 
 LIBECS_DM_CLASS(CompartmentGrowthProcess, SpatiocyteProcess)
 { 

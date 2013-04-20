@@ -32,10 +32,9 @@
 #ifndef __VisualizationLogProcess_hpp
 #define __VisualizationLogProcess_hpp
 
-#include <fstream> //provides ofstream
-#include <MethodProxy.hpp>
-#include "SpatiocyteProcess.hpp"
-#include "SpatiocyteSpecies.hpp"
+#include <fstream>
+#include <SpatiocyteProcess.hpp>
+#include <SpatiocyteSpecies.hpp>
 
 LIBECS_DM_CLASS(VisualizationLogProcess, SpatiocyteProcess)
 { 

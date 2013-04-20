@@ -28,6 +28,6 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
-#include "CompartmentGrowthProcess.hpp"
+#include <CompartmentGrowthProcess.hpp>
 
 LIBECS_DM_INIT(CompartmentGrowthProcess, Process); 

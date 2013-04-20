@@ -28,6 +28,6 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
-#include "PeriodicBoundaryDiffusionProcess.hpp"
+#include <PeriodicBoundaryDiffusionProcess.hpp>
 
 LIBECS_DM_INIT(PeriodicBoundaryDiffusionProcess, Process); 

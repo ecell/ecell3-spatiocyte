@@ -28,9 +28,9 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
-#include "SpatiocyteNextReactionProcess.hpp"
-#include "SpatiocyteSpecies.hpp"
-#include "ReactionProcess.hpp"
+#include <SpatiocyteNextReactionProcess.hpp>
+#include <SpatiocyteSpecies.hpp>
+#include <ReactionProcess.hpp>
 
 LIBECS_DM_INIT(SpatiocyteNextReactionProcess, Process);
 
@@ -737,7 +737,7 @@ double SpatiocyteNextReactionProcess::getPropensityZerothOrder()
 
 double SpatiocyteNextReactionProcess::getPropensityFirstOrder() 
 {
-  double sizeA(theVariableReferenceVector[0].getVariable()->getValue());
+  int sizeA(theVariableReferenceVector[0].getVariable()->getValue());
   if(sizeA < -coefficientA)
     {
       sizeA = 0;
@@ -761,8 +761,8 @@ double SpatiocyteNextReactionProcess::getPropensitySecondOrderHetero()
     {
       B->updateMoleculeSize();
     }
-  double sizeA(theVariableReferenceVector[0].getVariable()->getValue());
-  double sizeB(theVariableReferenceVector[1].getVariable()->getValue());
+  int sizeA(theVariableReferenceVector[0].getVariable()->getValue());
+  int sizeB(theVariableReferenceVector[1].getVariable()->getValue());
   //Required for HD species when substrate coefficient is < -1
   if(sizeA < -coefficientA)
     {
@@ -789,7 +789,7 @@ double SpatiocyteNextReactionProcess::getPropensitySecondOrderHomo()
     {
       A->updateMoleculeSize();
     }
-  double sizeA(theVariableReferenceVector[0].getVariable()->getValue());
+  int sizeA(theVariableReferenceVector[0].getVariable()->getValue());
   if(sizeA < -coefficientA)
     {
       sizeA = 1;

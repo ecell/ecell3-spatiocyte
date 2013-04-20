@@ -29,8 +29,7 @@
 //
 
 #include <H5Cpp.h>
-#include "H5Support.hpp"
-#include <MethodProxy.hpp>
+#include <H5Support.hpp>
 #include <boost/foreach.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/mpl/and.hpp>
@@ -39,8 +38,8 @@
 #include <boost/type_traits/is_signed.hpp>
 #include <boost/type_traits/is_unsigned.hpp>
 #include <boost/type_traits/make_unsigned.hpp>
-#include "SpatiocyteProcess.hpp"
-#include "SpatiocyteSpecies.hpp"
+#include <SpatiocyteProcess.hpp>
+#include <SpatiocyteSpecies.hpp>
 
 class ParticleData
 {

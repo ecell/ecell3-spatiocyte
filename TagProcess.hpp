@@ -32,7 +32,7 @@
 #ifndef __TagProcess_hpp
 #define __TagProcess_hpp
 
-#include "SpatiocyteProcess.hpp"
+#include <SpatiocyteProcess.hpp>
 
 LIBECS_DM_CLASS(TagProcess, SpatiocyteProcess)
 { 

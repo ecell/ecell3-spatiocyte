@@ -32,7 +32,7 @@
 #ifndef __SpatiocytePolymer_hpp
 #define __SpatiocytePolymer_hpp
 
-#include "SpatiocyteCommon.hpp"
+#include <SpatiocyteCommon.hpp>
 
 void reverseDcm( double *dcm1, double *dcm2 )
 {

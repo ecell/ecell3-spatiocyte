@@ -32,8 +32,8 @@
 #ifndef __DiffusionInfluencedReactionProcess_hpp
 #define __DiffusionInfluencedReactionProcess_hpp
 
-#include "ReactionProcess.hpp"
-#include "DiffusionInfluencedReactionProcessInterface.hpp"
+#include <ReactionProcess.hpp>
+#include <DiffusionInfluencedReactionProcessInterface.hpp>
 
 LIBECS_DM_CLASS_EXTRA_1(DiffusionInfluencedReactionProcess, ReactionProcess, virtual DiffusionInfluencedReactionProcessInterface)
 { 

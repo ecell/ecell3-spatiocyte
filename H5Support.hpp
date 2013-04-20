@@ -2,7 +2,7 @@
 #define H5SUPPORT_HPP
 
 #include <H5Cpp.h>
-#include "Packer.hpp"
+#include <Packer.hpp>
 #include <utility>
 #include <string>
 #include <cstring>
@@ -65,6 +65,7 @@ MAP_H5_SCALAR_TYPE_LE(int32_t, H5::PredType::STD_I32LE);
 MAP_H5_SCALAR_TYPE_LE(int64_t, H5::PredType::STD_I64LE);
 MAP_H5_SCALAR_TYPE_LE(float, H5::PredType::IEEE_F32LE);
 MAP_H5_SCALAR_TYPE_LE(double, H5::PredType::IEEE_F64LE);
+MAP_H5_SCALAR_TYPE_LE(long double, H5::PredType::NATIVE_LDOUBLE);
 
 #undef MAP_H5_SCALAR_TYPE_LE
 
@@ -120,6 +121,7 @@ MAP_H5_SCALAR_TYPE_BE(int32_t, H5::PredType::STD_I32BE);
 MAP_H5_SCALAR_TYPE_BE(int64_t, H5::PredType::STD_I64BE);
 MAP_H5_SCALAR_TYPE_BE(float, H5::PredType::IEEE_F32BE);
 MAP_H5_SCALAR_TYPE_BE(double, H5::PredType::IEEE_F64BE);
+MAP_H5_SCALAR_TYPE_BE(long double, H5::PredType::NATIVE_LDOUBLE);
 
 #undef MAP_H5_SCALAR_TYPE_BE
 

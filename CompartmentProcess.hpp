@@ -33,9 +33,8 @@
 #define __CompartmentProcess_hpp
 
 #include <sstream>
-#include <MethodProxy.hpp>
-#include "SpatiocyteProcess.hpp"
-#include "SpatiocyteSpecies.hpp"
+#include <SpatiocyteProcess.hpp>
+#include <SpatiocyteSpecies.hpp>
 
 LIBECS_DM_CLASS(CompartmentProcess, SpatiocyteProcess)
 { 

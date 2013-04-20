@@ -32,8 +32,8 @@
 #ifndef __LifetimeLogProcess_hpp
 #define __LifetimeLogProcess_hpp
 
-#include "IteratingLogProcess.hpp"
-#include "ReactionProcess.hpp"
+#include <IteratingLogProcess.hpp>
+#include <ReactionProcess.hpp>
 
 LIBECS_DM_CLASS(LifetimeLogProcess, IteratingLogProcess)
 { 

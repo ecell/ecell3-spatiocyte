@@ -28,7 +28,7 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
-#include "HistogramLogProcess.hpp"
+#include <HistogramLogProcess.hpp>
 
 void HistogramLogProcess::initializeFifth()
 {

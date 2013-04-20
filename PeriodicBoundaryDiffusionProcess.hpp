@@ -32,7 +32,7 @@
 #ifndef __PeriodicBoundaryDiffusionProcess_hpp
 #define __PeriodicBoundaryDiffusionProcess_hpp
 
-#include "DiffusionProcess.hpp"
+#include <DiffusionProcess.hpp>
 
 LIBECS_DM_CLASS(PeriodicBoundaryDiffusionProcess, DiffusionProcess)
 { 

@@ -28,7 +28,7 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
-#include "ErythrocyteProcess.hpp"
+#include <ErythrocyteProcess.hpp>
 
 LIBECS_DM_INIT(ErythrocyteProcess, Process); 
 

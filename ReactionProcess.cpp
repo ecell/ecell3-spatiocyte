@@ -28,7 +28,7 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
-#include "ReactionProcess.hpp"
+#include <ReactionProcess.hpp>
 
 LIBECS_DM_INIT(ReactionProcess, Process);
 

@@ -1,10 +1,7 @@
-#include "libecs.hpp"
-
+#include <libecs/libecs.hpp>
 #include <fstream>
-#include <MethodProxy.hpp>
-
-#include "IteratingLogProcess.hpp"
-#include "SpatiocyteSpecies.hpp"
+#include <IteratingLogProcess.hpp>
+#include <SpatiocyteSpecies.hpp>
 
 USE_LIBECS;
 

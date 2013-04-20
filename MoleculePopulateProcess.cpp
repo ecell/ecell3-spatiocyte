@@ -36,9 +36,9 @@
 #include <libecs/Stepper.hpp>
 #include <libecs/Process.hpp>
 #include <libecs/VariableReference.hpp>
-#include "MoleculePopulateProcess.hpp"
-#include "SpatiocyteSpecies.hpp"
-#include "SpatiocyteProcess.hpp"
+#include <MoleculePopulateProcess.hpp>
+#include <SpatiocyteSpecies.hpp>
+#include <SpatiocyteProcess.hpp>
 
 LIBECS_DM_INIT(MoleculePopulateProcess, Process); 
 

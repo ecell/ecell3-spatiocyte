@@ -28,7 +28,7 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
-#include "IteratingLogProcess.hpp"
+#include <IteratingLogProcess.hpp>
 
 void IteratingLogProcess::initializeFifth()
 {

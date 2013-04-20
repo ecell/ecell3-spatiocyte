@@ -32,11 +32,11 @@
 #ifndef __SpatiocyteProcess_hpp
 #define __SpatiocyteProcess_hpp
 
-#include <Process.hpp>
-#include <Model.hpp>
-#include "SpatiocyteCommon.hpp"
-#include "SpatiocyteStepper.hpp"
-#include "SpatiocyteProcessInterface.hpp"
+#include <libecs/Process.hpp>
+#include <libecs/Model.hpp>
+#include <SpatiocyteCommon.hpp>
+#include <SpatiocyteStepper.hpp>
+#include <SpatiocyteProcessInterface.hpp>
 
 class ReactionProcess;
 

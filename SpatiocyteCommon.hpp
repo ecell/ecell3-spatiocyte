@@ -35,9 +35,9 @@
 #include <iostream>
 #include <iomanip>
 #include <math.h>
-#include <libecs.hpp>
-#include <FullID.hpp>
-#include "PriorityQueue.hpp"
+#include <libecs/libecs.hpp>
+#include <libecs/FullID.hpp>
+#include <PriorityQueue.hpp>
 
 class SpatiocyteProcessInterface;
 class Species;

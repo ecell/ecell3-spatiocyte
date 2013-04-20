@@ -29,10 +29,10 @@
 //
 
 
-#ifndef __Vector_hpp
-#define __Vector_hpp
+#ifndef __SpatiocyteVector_hpp
+#define __SpatiocyteVector_hpp
 
-#include "SpatiocyteCommon.hpp"
+#include <SpatiocyteCommon.hpp>
 
 Point cross(const Point& L, const Point& R)
 {
@@ -184,4 +184,4 @@ void rotatePointAlongVector(Point& P, const Point& C, const Point& N,
   P.z = zz;
 }
 
-#endif /* __Vector_hpp */
+#endif /* __SpatiocyteVector_hpp */

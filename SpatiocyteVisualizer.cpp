@@ -54,7 +54,7 @@
 #include <gtkmm/ruler.h>
 #include <gtkmm/drawingarea.h>
 #include <netinet/in.h>
-#include "SpatiocyteVisualizer.hpp"
+#include <SpatiocyteVisualizer.hpp>
 
 #define PI 3.1415926535897932384626433832795028841971693993751
 #define MAX_COLORS 20

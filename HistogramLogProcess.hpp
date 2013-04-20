@@ -32,10 +32,10 @@
 #ifndef __HistogramLogProcess_hpp
 #define __HistogramLogProcess_hpp
 
-#include <fstream> //provides ofstream
+#include <fstream>
 #include <math.h>
-#include "IteratingLogProcess.hpp"
-#include "SpatiocyteSpecies.hpp"
+#include <IteratingLogProcess.hpp>
+#include <SpatiocyteSpecies.hpp>
 
 LIBECS_DM_CLASS(HistogramLogProcess, IteratingLogProcess)
 { 

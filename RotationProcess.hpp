@@ -33,10 +33,10 @@
 #define __RotationProcess_hpp
 
 #include <sstream>
-#include <MethodProxy.hpp>
-#include "DiffusionProcess.hpp"
-#include "SpatiocyteProcess.hpp"
-#include "SpatiocyteSpecies.hpp"
+#include <libecs/MethodProxy.hpp>
+#include <DiffusionProcess.hpp>
+#include <SpatiocyteProcess.hpp>
+#include <SpatiocyteSpecies.hpp>
 
 LIBECS_DM_CLASS(RotationProcess, DiffusionProcess)
 { 

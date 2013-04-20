@@ -32,8 +32,8 @@
 #ifndef __MoleculePopulateProcess_hpp
 #define __MoleculePopulateProcess_hpp
 
-#include "SpatiocyteProcess.hpp"
-#include "MoleculePopulateProcessInterface.hpp"
+#include <SpatiocyteProcess.hpp>
+#include <MoleculePopulateProcessInterface.hpp>
 
 LIBECS_DM_CLASS_EXTRA_1(MoleculePopulateProcess, SpatiocyteProcess, MoleculePopulateProcessInterface)
 { 

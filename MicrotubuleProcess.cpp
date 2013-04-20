@@ -28,7 +28,7 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
-#include "MicrotubuleProcess.hpp"
+#include <MicrotubuleProcess.hpp>
 
 LIBECS_DM_INIT(MicrotubuleProcess, Process); 
 

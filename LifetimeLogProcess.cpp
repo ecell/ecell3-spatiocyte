@@ -28,7 +28,7 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
-#include "LifetimeLogProcess.hpp"
+#include <LifetimeLogProcess.hpp>
 
 void LifetimeLogProcess::initialize()
 {

@@ -32,7 +32,7 @@
 #ifndef __MOLECULEPOPULATEPROCESSINTERFACE_HPP
 #define __MOLECULEPOPULATEPROCESSINTERFACE_HPP
 
-#include "SpatiocyteCommon.hpp"
+#include <SpatiocyteCommon.hpp>
 
 class MoleculePopulateProcessInterface
 { 

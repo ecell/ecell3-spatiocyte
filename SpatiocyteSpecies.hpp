@@ -25,14 +25,14 @@
 #define __SpatiocyteSpecies_hpp
 
 #include <sstream>
-#include <Variable.hpp>
+#include <libecs/Variable.hpp>
 #include <SpatiocyteCommon.hpp>
 #include <SpatiocyteStepper.hpp>
 #include <SpatiocyteProcessInterface.hpp>
 #include <SpatiocyteNextReactionProcess.hpp>
 #include <DiffusionInfluencedReactionProcess.hpp>
 #include <MoleculePopulateProcessInterface.hpp>
-#include <Vector.hpp>
+#include <SpatiocyteVector.hpp>
 
 // The size of Coord must be 128 bytes to avoid cacheline splits
 // The Core 2 has 64-byte cacheline

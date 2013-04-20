@@ -32,10 +32,9 @@
 #ifndef __CoordinateLogProcess_hpp
 #define __CoordinateLogProcess_hpp
 
-#include <fstream> //provides ofstream
-#include <MethodProxy.hpp>
-#include "IteratingLogProcess.hpp"
-#include "SpatiocyteSpecies.hpp"
+#include <fstream>
+#include <IteratingLogProcess.hpp>
+#include <SpatiocyteSpecies.hpp>
 
 LIBECS_DM_CLASS(CoordinateLogProcess, IteratingLogProcess)
 { 

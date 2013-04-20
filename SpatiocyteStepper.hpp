@@ -32,7 +32,7 @@
 #ifndef __SpatiocyteStepper_hpp
 #define __SpatiocyteStepper_hpp
 
-#include <Stepper.hpp>
+#include <libecs/Stepper.hpp>
 #include <RandomLib/Random.hpp>
 #include <SpatiocyteCommon.hpp>
 

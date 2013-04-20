@@ -33,9 +33,8 @@
 #define __MicrotubuleProcess_hpp
 
 #include <sstream>
-#include <MethodProxy.hpp>
-#include "CompartmentProcess.hpp"
-#include "SpatiocyteSpecies.hpp"
+#include <CompartmentProcess.hpp>
+#include <SpatiocyteSpecies.hpp>
 
 LIBECS_DM_CLASS(MicrotubuleProcess, CompartmentProcess)
 { 

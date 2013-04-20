@@ -32,11 +32,11 @@
 #ifndef __IteratingLogProcess_hpp
 #define __IteratingLogProcess_hpp
 
-#include <fstream> //provides ofstream
+#include <fstream>
 #include <math.h>
-#include "SpatiocyteProcess.hpp"
-#include "ReactionProcess.hpp"
-#include "SpatiocyteSpecies.hpp"
+#include <SpatiocyteProcess.hpp>
+#include <ReactionProcess.hpp>
+#include <SpatiocyteSpecies.hpp>
 
 LIBECS_DM_CLASS(IteratingLogProcess, SpatiocyteProcess)
 { 
