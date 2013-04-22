@@ -115,7 +115,7 @@ void LifetimeLogProcess::fire()
 {
   if(theTime < LogStart)
     {
-      std::cout << "Iterations left:" << Iterations << " of " <<
+      cout << "Iterations left:" << Iterations << " of " <<
         theTotalIterations << std::endl;    
     }
   if(theTime >= LogEnd && Iterations > 0)

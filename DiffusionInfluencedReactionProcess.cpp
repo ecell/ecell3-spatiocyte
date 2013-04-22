@@ -960,25 +960,25 @@ void DiffusionInfluencedReactionProcess::printParameters()
 {
   String aProcess(String(getPropertyInterface().getClassName()) + 
                                       "[" + getFullID().asString() + "]");
-  std::cout << aProcess << std::endl;
-  std::cout << "  " << getIDString(A) << " + " <<  getIDString(B) << " -> ";
+  cout << aProcess << std::endl;
+  cout << "  " << getIDString(A) << " + " <<  getIDString(B) << " -> ";
   if(C)
     {
-      std::cout << getIDString(C);
+      cout << getIDString(C);
     }
   else
     {
-      std::cout << getIDString(variableC);
+      cout << getIDString(variableC);
     }
   if(D)
     {
-      std::cout << " + " << getIDString(D);
+      cout << " + " << getIDString(D);
     }
   else if(variableD)
     {
-      std::cout << " + " << getIDString(variableD);
+      cout << " + " << getIDString(variableD);
     }
-  std::cout << ": k=" << k << ", p=" << p << 
+  cout << ": k=" << k << ", p=" << p << 
     ", p_A=" << A->getReactionProbability(B->getID()) <<
     ", p_B=" << B->getReactionProbability(A->getID()) << std::endl; 
 }

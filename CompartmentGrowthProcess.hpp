@@ -66,8 +66,8 @@ public:
     }
   virtual void printParameters()
     {
-      std::cout << "k:" << k << std::endl;
-      std::cout << "Axis:" << Axis << std::endl;
+      cout << "k:" << k << std::endl;
+      cout << "Axis:" << Axis << std::endl;
     }
   virtual void fire()
     {

@@ -720,7 +720,7 @@ void CompartmentProcess::enlistOrphanSubunitInterfaceVoxels()
               setSubunitInterfaceVoxels(i, nDiffuseRadius+nVoxelRadius); 
               if(!subunitInterfaces[i-subStartCoord].size())
                 {
-                  std::cout << getPropertyInterface().getClassName() << ":"
+                  cout << getPropertyInterface().getClassName() << ":"
                     << getFullID().asString() << 
                     ": subunit is still orphaned" << std::endl;
                 }
@@ -987,27 +987,27 @@ void CompartmentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
 
 void CompartmentProcess::printParameters()
 {
-  std::cout << getPropertyInterface().getClassName() << "[" <<
+  cout << getPropertyInterface().getClassName() << "[" <<
     getFullID().asString() << "]" << std::endl;
-  std::cout << "  width:" << Width << " length:" << Length <<
+  cout << "  width:" << Width << " length:" << Length <<
     " area:" << Width*Length << " LipidRows:" << LipidRows << " LipidCols:" <<
     LipidCols << " Filaments:" << Filaments << " Subunits:" << Subunits <<
     std::endl;
   if(theLipidSpecies)
     {
-      std::cout << "  " << getIDString(theLipidSpecies) << 
+      cout << "  " << getIDString(theLipidSpecies) << 
         " number:" << theLipidSpecies->size() << std::endl;
       for(unsigned i(0); i != theLipidCompSpecies.size(); ++i)
         {
-          std::cout << "    " << getIDString(theLipidCompSpecies[i]) <<
+          cout << "    " << getIDString(theLipidCompSpecies[i]) <<
             " number:" << theLipidCompSpecies[i]->size() << std::endl;
         }
     } 
-  std::cout << "  " << getIDString(theVacantSpecies) << 
+  cout << "  " << getIDString(theVacantSpecies) << 
     " number:" << theVacantSpecies->size() << std::endl;
       for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
         {
-          std::cout << "    " << getIDString(theVacantCompSpecies[i]) <<
+          cout << "    " << getIDString(theVacantCompSpecies[i]) <<
             " number:" << theVacantCompSpecies[i]->size() << std::endl;
         }
 }

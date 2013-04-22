@@ -58,57 +58,58 @@ void SpatiocyteStepper::initialize()
                       ": at least one Process must be defined in this" +
                       " Stepper.");
     } 
-  std::cout << "1. checking model..." << std::endl;
+  cout.setLevel(DebugLevel);
+  cout << "1. checking model...";
   checkModel();
   //We need a Comp tree to assign the voxels to each Comp
   //and get the available number of vacant voxels. The compartmentalized
   //vacant voxels are needed to randomly place molecules according to the
   //Comp:
-  std::cout << "2. creating compartments..." << std::endl;
+  cout << "2. creating compartments..." << std::endl;
   registerComps();
   setCompsProperties();
-  std::cout << "3. setting up lattice properties..." << std::endl;
+  cout << "3. setting up lattice properties..." << std::endl;
   setLatticeProperties(); 
   broadcastLatticeProperties();
   setCompsCenterPoint();
   //All species have been created at this point, we initialize them now:
-  std::cout << "4. initializing species..." << std::endl;
+  cout << "4. initializing species..." << std::endl;
   initSpecies();
-  std::cout << "5. initializing processes the first time..." << std::endl;
+  cout << "5. initializing processes the first time..." << std::endl;
   initializeFirst();
-  std::cout << "6. initializing processes the second time..." << std::endl;
+  cout << "6. initializing processes the second time..." << std::endl;
   initializeSecond();
-  std::cout << "7. constructing lattice..." << std::endl;
+  cout << "7. constructing lattice..." << std::endl;
   constructLattice();
-  std::cout << "8. setting intersecting compartment list..." << std::endl;
+  cout << "8. setting intersecting compartment list..." << std::endl;
   setIntersectingCompartmentList();
-  std::cout << "9. compartmentalizing lattice..." << std::endl;
+  cout << "9. compartmentalizing lattice..." << std::endl;
   compartmentalizeLattice();
-  std::cout << "10. setting up compartment voxels properties..." << std::endl;
+  cout << "10. setting up compartment voxels properties..." << std::endl;
   setCompVoxelProperties();
   resizeProcessLattice();
-  std::cout << "11. initializing processes the third time..." << std::endl;
+  cout << "11. initializing processes the third time..." << std::endl;
   initializeThird();
-  std::cout << "12. printing simulation parameters..." << std::endl;
+  cout << "12. printing simulation parameters..." << std::endl;
   updateSpecies();
   storeSimulationParameters();
   printSimulationParameters();
-  std::cout << "13. populating compartments with molecules..." << std::endl;
+  cout << "13. populating compartments with molecules..." << std::endl;
   populateComps();
-  std::cout << "14. initializing processes the fourth time..." << std::endl;
+  cout << "14. initializing processes the fourth time..." << std::endl;
   initializeFourth();
-  std::cout << "15. initializing the priority queue..." << std::endl;
+  cout << "15. initializing the priority queue..." << std::endl;
   initPriorityQueue();
-  std::cout << "16. initializing processes the fifth time..." << std::endl;
+  cout << "16. initializing processes the fifth time..." << std::endl;
   initializeFifth();
-  std::cout << "17. initializing processes the last time..." << std::endl;
+  cout << "17. initializing processes the last time..." << std::endl;
   initializeLastOnce();
-  std::cout << "18. finalizing species..." << std::endl;
+  cout << "18. finalizing species..." << std::endl;
   finalizeSpecies();
-  std::cout << "19. printing final process parameters..." << std::endl <<
+  cout << "19. printing final process parameters..." << std::endl <<
     std::endl;
   printProcessParameters();
-  std::cout << "20. simulation is started..." << std::endl;
+  cout << "20. simulation is started..." << std::endl;
 }
 
 
@@ -459,7 +460,7 @@ void SpatiocyteStepper::checkLattice()
         {
           if(theSpecies[i]->size() != list[i])
             {
-              std::cout << theSpecies[i]->getIDString() << " in lattice:" <<
+              cout << theSpecies[i]->getIDString() << " in lattice:" <<
                 list[i] << ", but actual size:" << theSpecies[i]->size() <<
                 std::endl;
             }
@@ -524,7 +525,7 @@ void SpatiocyteStepper::printProcessParameters()
         aProcess(dynamic_cast<SpatiocyteProcessInterface*>(*i));
       aProcess->printParameters();
     }
-  std::cout << std::endl;
+  cout << std::endl;
 }
 
 void SpatiocyteStepper::resizeProcessLattice()
@@ -677,7 +678,7 @@ inline void SpatiocyteStepper::step()
 {
   do
     {
-      //std::cout << "before:" << thePriorityQueue.getTop()->getIDString() << " " << getCurrentTime() << std::endl;
+      //cout << "before:" << thePriorityQueue.getTop()->getIDString() << " " << getCurrentTime() << std::endl;
       thePriorityQueue.getTop()->fire();
       //checkSpecies();
       //checkLattice();
@@ -726,18 +727,18 @@ void SpatiocyteStepper::checkSpecies()
               Voxel* aVoxel(aSpecies->getMolecule(j));
               if(aVoxel->idx/theStride != aSpecies->getID())
                 {
-                  std::cout << aSpecies->getIDString() << " size:" << 
+                  cout << aSpecies->getIDString() << " size:" << 
                     aSpecies->size() << std::endl;
-                  std::cout << "wrong id, mine:" << aSpecies->getID() <<
+                  cout << "wrong id, mine:" << aSpecies->getID() <<
                     " but in the list (idx/stride):" << 
                     aSpecies->getIDString(aVoxel->idx/theStride) << " idx:" <<
                     aVoxel->idx  << " stride:" << theStride << std::endl;
                 }
               if(aVoxel->idx-aSpecies->getID()*theStride != j)
                 {
-                  std::cout << aSpecies->getIDString() << " size:" << 
+                  cout << aSpecies->getIDString() << " size:" << 
                     aSpecies->size() << std::endl;
-                  std::cout << "wrong index, mine:" << j <<
+                  cout << "wrong index, mine:" << j <<
                     " but in the list (idx-id*stride):" << aVoxel->idx-
                     aSpecies->getID()*theStride << " idx:" << aVoxel->idx
                     << " stride:" << theStride << std::endl;
@@ -746,7 +747,7 @@ void SpatiocyteStepper::checkSpecies()
                 {
                   if(!aSpecies->getTag(j).vacantIdx)
                     {
-                      std::cout << aSpecies->getIDString() << " size:" << 
+                      cout << aSpecies->getIDString() << " size:" << 
                         aSpecies->size() << " vacidx wrong:" << j << std::endl;
                     }
                 }
@@ -766,7 +767,7 @@ void SpatiocyteStepper::checkSpecies()
                     }
                   if(cnt != aSpecies->getTag(j).boundCnt)
                     {
-                      std::cout << aSpecies->getIDString() << " j:" << j <<
+                      cout << aSpecies->getIDString() << " j:" << j <<
                         "error in deoligomerize cnt:" << cnt <<
                         " expected:" << aSpecies->getTag(j).boundCnt <<
                         std::endl;
@@ -777,7 +778,7 @@ void SpatiocyteStepper::checkSpecies()
             {
               if(boundCnts[j] != aSpecies->getBoundCnts()[j])
                 {
-                  std::cout << aSpecies->getIDString() << " j:" << j <<
+                  cout << aSpecies->getIDString() << " j:" << j <<
                     "error in deoligomerize total boundCnts:" << 
                     aSpecies->getBoundCnts()[j] <<
                     " expected:" << boundCnts[j] << std::endl;
@@ -796,7 +797,7 @@ void SpatiocyteStepper::checkSpecies()
                   unsigned anIndex(aVoxel->idx%theStride);
                   if(theSpecies[anID]->getMolecule(anIndex) != aVoxel)
                     {
-                      std::cout << "error in index j:" << j << " " <<
+                      cout << "error in index j:" << j << " " <<
                         theSpecies[anID]->getIDString() << " size:"
                         << theSpecies[anID]->size() << " index:" << anIndex
                         << " idx:" << aVoxel->idx << std::endl;
@@ -1223,18 +1224,18 @@ Species* SpatiocyteStepper::createSpecies(System* aSystem, String anID)
 
 void SpatiocyteStepper::printSimulationParameters()
 {
-  std::cout << std::endl;
-  std::cout << "   Voxel radius, r_v:" << VoxelRadius << " m" << std::endl;
-  std::cout << "   Simulation height:" << theCenterPoint.y*2*VoxelRadius*2 <<
+  cout << std::endl;
+  cout << "   Voxel radius, r_v:" << VoxelRadius << " m" << std::endl;
+  cout << "   Simulation height:" << theCenterPoint.y*2*VoxelRadius*2 <<
     " m" << std::endl;
-  std::cout << "   Simulation width:" << theCenterPoint.z*2*VoxelRadius*2 << 
+  cout << "   Simulation width:" << theCenterPoint.z*2*VoxelRadius*2 << 
     " m" << std::endl;
-  std::cout << "   Simulation length:" << theCenterPoint.x*2*VoxelRadius*2 <<
+  cout << "   Simulation length:" << theCenterPoint.x*2*VoxelRadius*2 <<
     " m" << std::endl;
-  std::cout << "   Layer size:" << theLayerSize << std::endl;
-  std::cout << "   Row size:" << theRowSize << std::endl;
-  std::cout << "   Column size:" << theColSize << std::endl;
-  std::cout << "   Total allocated voxels:" << 
+  cout << "   Layer size:" << theLayerSize << std::endl;
+  cout << "   Row size:" << theRowSize << std::endl;
+  cout << "   Column size:" << theColSize << std::endl;
+  cout << "   Total allocated voxels:" << 
     theRowSize*theLayerSize*theColSize << std::endl;
   for(unsigned i(0); i != theComps.size(); ++i)
     {
@@ -1246,43 +1247,43 @@ void SpatiocyteStepper::printSimulationParameters()
       switch(aComp->geometry)
         {
         case CUBOID:
-          std::cout << "   Cuboid ";
+          cout << "   Cuboid ";
           break;
         case ELLIPSOID:
-          std::cout << "   Ellipsoid ";
+          cout << "   Ellipsoid ";
           break;
         case CYLINDER:
-          std::cout << "   Cylinder (radius=" << aComp->lengthY*VoxelRadius
+          cout << "   Cylinder (radius=" << aComp->lengthY*VoxelRadius
             << "m, length=" << (aComp->lengthX)*VoxelRadius*2 << "m) ";
           break;
         case ROD:
-          std::cout << "   Rod (radius=" << aComp->lengthY*VoxelRadius << 
+          cout << "   Rod (radius=" << aComp->lengthY*VoxelRadius << 
             "m, cylinder length=" <<
             (aComp->lengthX-aComp->lengthY*2)*VoxelRadius*2 << "m) ";
           break;
         }
-      std::cout << aComp->system->getFullID().asString();
+      cout << aComp->system->getFullID().asString();
       switch (aComp->dimension)
       { 
       case 1:
-          std::cout << " Line compartment:" << std::endl;
+          cout << " Line compartment:" << std::endl;
           break;
       case 2:
-          std::cout << " Surface compartment:" << std::endl;
-          std::cout << "     [" << int(aSpecArea*(6*sqrt(2)+4*sqrt(3)+3*sqrt(6))/
+          cout << " Surface compartment:" << std::endl;
+          cout << "     [" << int(aSpecArea*(6*sqrt(2)+4*sqrt(3)+3*sqrt(6))/
                               (72*VoxelRadius*VoxelRadius)) << 
             "] Specified surface voxels {n_s = S_specified*"
             << "(6*2^0.5+4*3^0.5+3*6^0.5)/(72*r_v^2}" << std::endl;
-          std::cout << "     [" << aComp->vacantSpecies->size() <<
+          cout << "     [" << aComp->vacantSpecies->size() <<
             "] Actual surface voxels {n_s}" << std::endl;
-          std::cout << "     [" << aSpecArea << " m^2] Specified surface area " <<
+          cout << "     [" << aSpecArea << " m^2] Specified surface area " <<
             "{S_specified}" << std::endl;
-          std::cout << "     [" << anActualArea << " m^2] Actual surface area " <<
+          cout << "     [" << anActualArea << " m^2] Actual surface area " <<
             "{S = (72*r_v^2)*n_s/(6*2^0.5+4*3^0.5+3*6^0.5)}" << std::endl;
           break;
       case 3:
       default:
-          std::cout << " Volume compartment:" << std::endl;
+          cout << " Volume compartment:" << std::endl;
           int voxelCnt(aComp->vacantSpecies->size());
           for(unsigned j(0); j != aComp->allSubs.size(); ++j)
             {
@@ -1293,17 +1294,17 @@ void SpatiocyteStepper::printSimulationParameters()
                   voxelCnt += aComp->allSubs[j]->vacantSpecies->size();
                 }
             }
-          std::cout << "     [" << int(aSpecVolume/(4*sqrt(2)*pow(VoxelRadius, 3))) << 
+          cout << "     [" << int(aSpecVolume/(4*sqrt(2)*pow(VoxelRadius, 3))) << 
             "] Specified volume voxels {n_v = V_specified/(4*2^0.5*r_v^3)}" <<
           std::endl;  
-          std::cout << "     [" << voxelCnt << "] Actual volume voxels {n_v}"  << std::endl;
-          std::cout << "     [" << aSpecVolume << " m^3] Specified volume {V_specified}"
+          cout << "     [" << voxelCnt << "] Actual volume voxels {n_v}"  << std::endl;
+          cout << "     [" << aSpecVolume << " m^3] Specified volume {V_specified}"
             << std::endl; 
-          std::cout << "     [" << anActualVolume << " m^3] Actual volume " <<
+          cout << "     [" << anActualVolume << " m^3] Actual volume " <<
             "{V = (4*2^0.5*r_v^3)*n_v}" << std::endl; 
       }
     }
-  std::cout << std::endl;
+  cout << std::endl;
 }
 
 void SpatiocyteStepper::readjustSurfaceBoundarySizes()
@@ -3251,7 +3252,7 @@ void SpatiocyteStepper::populateSpeciesDense(std::vector<Species*>&
                                              unsigned aSize,
                                              unsigned availableVoxelSize)
 {
-  std::cout << "    Populating densely on " << aVacantSpecies->getIDString() <<
+  cout << "    Populating densely on " << aVacantSpecies->getIDString() <<
     ", available size:" << availableVoxelSize << std::endl;
   unsigned count(0);
   unsigned* populateVoxels(new unsigned[aSize]);
@@ -3296,7 +3297,7 @@ void SpatiocyteStepper::populateSpeciesSparse(std::vector<Species*>&
                                               Species* aVacantSpecies,
                                               unsigned availableVoxelSize)
 {
-  std::cout << "    Populating sparsely on " << aVacantSpecies->getIDString() <<
+  cout << "    Populating sparsely on " << aVacantSpecies->getIDString() <<
     ", available size:" << availableVoxelSize << std::endl;
   for(std::vector<Species*>::const_iterator i(aSpeciesList.begin());
       i != aSpeciesList.end(); ++i)

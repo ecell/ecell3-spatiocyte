@@ -142,7 +142,7 @@ void IteratingLogProcess::fire()
 
 void IteratingLogProcess::doPreLog()
 {
-  std::cout << "Iterations left:" << Iterations << " of " << theTotalIterations
+  cout << "Iterations left:" << Iterations << " of " << theTotalIterations
     << std::endl;
   for(unsigned i(0); i != theProcessSpecies.size(); ++i)
     {
@@ -160,12 +160,12 @@ void IteratingLogProcess::saveFile()
   if(SeparateFiles)
     {
       String aFileName(FileName+int2str(theFileCnt-1));
-      std::cout << "Saving data in: " << aFileName.c_str() << std::endl;
+      cout << "Saving data in: " << aFileName.c_str() << std::endl;
       theLogFile.open(aFileName.c_str(), std::ios::trunc);
     }
   else if(!Iterations)
     {
-      std::cout << "Saving data in: " << FileName.c_str() << std::endl;
+      cout << "Saving data in: " << FileName.c_str() << std::endl;
       theLogFile.open(FileName.c_str(), std::ios::trunc);
       aCompletedIterations = theTotalIterations;
     }
@@ -195,7 +195,7 @@ void IteratingLogProcess::saveBackup()
     {
       std::string aFileName(FileName.c_str());
       aFileName = aFileName + ".back";
-      std::cout << "Saving backup data in: " << aFileName << std::endl;
+      cout << "Saving backup data in: " << aFileName << std::endl;
       std::ofstream aFile;
       aFile.open(aFileName.c_str(), std::ios::trunc);
       double aTime(LogStart);
@@ -218,7 +218,7 @@ void IteratingLogProcess::saveBackup()
 
 void IteratingLogProcess::logValues()
 {
- //std::cout << "timePoint:" << timePointCnt <<  " curr:" << theSpatiocyteStepper->getCurrentTime() << std::endl;
+ //cout << "timePoint:" << timePointCnt <<  " curr:" << theSpatiocyteStepper->getCurrentTime() << std::endl;
   isSurviving = false;
   for(unsigned i(0); i != theProcessSpecies.size(); ++i)
     {

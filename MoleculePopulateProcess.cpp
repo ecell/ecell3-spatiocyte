@@ -132,7 +132,7 @@ void MoleculePopulateProcess::populateGaussian(Species* aSpecies)
 
 void MoleculePopulateProcess::populateUniformOnMultiscale(Species* aSpecies)
 {
-  std::cout << "    Populating uniformly on multiscale vacant:" <<
+  cout << "    Populating uniformly on multiscale vacant:" <<
     getIDString(aSpecies) << " current size:" << aSpecies->size() <<
     ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
   if(!aSpecies->getIsPopulated())
@@ -178,7 +178,7 @@ void MoleculePopulateProcess::populateUniformOnMultiscale(Species* aSpecies)
 void MoleculePopulateProcess::populateUniformOnDiffusiveVacant(Species*
                                                                aSpecies)
 {
-  std::cout << "    Populating uniformly on diffusive vacant:" <<
+  cout << "    Populating uniformly on diffusive vacant:" <<
     getIDString(aSpecies) << " current size:" << aSpecies->size() <<
     ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
   if(!aSpecies->getIsPopulated())
@@ -225,7 +225,7 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
                                               unsigned int* aList, 
                                               unsigned int* aCount)
 {
-  std::cout << "      Populating densely:" <<
+  cout << "      Populating densely:" <<
     getIDString(aSpecies) << " current size:" << aSpecies->size() <<
     ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
   Species* aVacantSpecies(aSpecies->getVacantSpecies());
@@ -256,7 +256,7 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
 
 void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
 {
-  std::cout << "      Populating sparsely:" <<
+  cout << "      Populating sparsely:" <<
     getIDString(aSpecies) << " current size:" << aSpecies->size() <<
     ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
   Species* aVacantSpecies(aSpecies->getVacantSpecies());
@@ -290,7 +290,7 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
 
 void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
 {
-  std::cout << "        Populating uniformly ranged:" <<
+  cout << "        Populating uniformly ranged:" <<
     getIDString(aSpecies) << " current size:" << aSpecies->size() <<
     ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
   Comp* aComp(aSpecies->getComp());

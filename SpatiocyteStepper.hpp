@@ -35,6 +35,7 @@
 #include <libecs/Stepper.hpp>
 #include <RandomLib/Random.hpp>
 #include <SpatiocyteCommon.hpp>
+#include <SpatiocyteDebug.hpp>
 
 LIBECS_DM_CLASS(SpatiocyteStepper, Stepper)
 { 
@@ -45,18 +46,22 @@ public:
       PROPERTYSLOT_SET_GET(Real, VoxelRadius);
       PROPERTYSLOT_SET_GET(Integer, LatticeType);
       PROPERTYSLOT_SET_GET(Integer, SearchVacant);
+      PROPERTYSLOT_SET_GET(Integer, DebugLevel);
     }
   SIMPLE_SET_GET_METHOD(Real, VoxelRadius); 
   SIMPLE_SET_GET_METHOD(Integer, LatticeType); 
   SIMPLE_SET_GET_METHOD(Integer, SearchVacant); 
+  SIMPLE_SET_GET_METHOD(Integer, DebugLevel); 
   SpatiocyteStepper():
     isInitialized(false),
     isPeriodicEdge(false),
     SearchVacant(false),
+    DebugLevel(1),
     LatticeType(HCP_LATTICE),
     theMoleculeID(0),
     theNormalizedVoxelRadius(0.5),
-    VoxelRadius(10e-9) {}
+    VoxelRadius(10e-9),
+    cout(std::cout) {}
   virtual ~SpatiocyteStepper() {}
   virtual void initialize();
   /*
@@ -197,6 +202,7 @@ private:
   bool isPeriodicEdge;
   bool SearchVacant;
   unsigned short theNullID;
+  unsigned DebugLevel;
   unsigned LatticeType; 
   unsigned theAdjoiningCoordSize;
   unsigned theBioSpeciesSize;
@@ -214,6 +220,7 @@ private:
   double VoxelRadius; //r_v
   Point theCenterPoint;
   ProcessPriorityQueue thePriorityQueue; 
+  SpatiocyteDebug cout;
   std::vector<Species*>::iterator variable2ispecies(Variable*);
   std::vector<Species*> theSpecies;
   std::vector<Comp*> theComps;

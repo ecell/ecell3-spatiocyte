@@ -38,7 +38,7 @@ void OscillationAnalysisProcess::testMembraneBinding()
     {
       Status = 1;
     }
-  std::cout << "theTime:" << theTime << " Status:" << Status << std::endl;
+  cout << "theTime:" << theTime << " Status:" << Status << std::endl;
 }  
 
 void OscillationAnalysisProcess::testLocalization(int aStatus)
@@ -69,13 +69,13 @@ void OscillationAnalysisProcess::testLocalization(int aStatus)
         }
     }
   double threshold(0.5*aSize/4);
-  std::cout << "thresh:" << threshold << " size:" << aSize << std::endl;
+  cout << "thresh:" << threshold << " size:" << aSize << std::endl;
   if(quad1 < threshold || quad2 < threshold || quad3 < threshold ||
      quad4 < threshold)
     {
       Status = aStatus;
     }
-  std::cout << "theTime:" << theTime << " quad1:" << quad1 << " quad2:" << quad2
+  cout << "theTime:" << theTime << " quad1:" << quad1 << " quad2:" << quad2
     << " quad3:" << quad3 << " quad4:" << quad4 <<  " status:" <<
     Status << std::endl;
 } 
@@ -117,7 +117,7 @@ void OscillationAnalysisProcess::testOscillation()
               ++moleculeCnt;
             }
         }
-      std::cout << "moleculeCnt:" << moleculeCnt << std::endl;
+      cout << "moleculeCnt:" << moleculeCnt << std::endl;
       int currStatus(4);
       if(moleculeCnt < 0.5*leftPositions.size())
         {
@@ -154,7 +154,7 @@ void OscillationAnalysisProcess::testOscillation()
               ++moleculeCnt;
             }
         }
-      std::cout << "moleculeCnt:" << moleculeCnt << std::endl;
+      cout << "moleculeCnt:" << moleculeCnt << std::endl;
       int currStatus(4);
       if(moleculeCnt < 0.5*rightPositions.size())
         {
@@ -178,5 +178,5 @@ void OscillationAnalysisProcess::testOscillation()
     }
   prevLeftSize = leftPositions.size();
   prevRightSize = rightPositions.size();
-  std::cout << "theTime:" << theTime << " left:" << leftPositions.size() << " right:" << rightPositions.size() << " current period:" << Period << " avg period:" << theTotalPeriod/theCycleCount << std::endl;
+  cout << "theTime:" << theTime << " left:" << leftPositions.size() << " right:" << rightPositions.size() << " current period:" << Period << " avg period:" << theTotalPeriod/theCycleCount << std::endl;
 }  

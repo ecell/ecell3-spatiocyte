@@ -86,7 +86,7 @@ void HistogramLogProcess::fire()
     {
       theInterval = LogInterval;
       --Iterations;
-      std::cout << "Iterations left:" << Iterations << " of " <<
+      cout << "Iterations left:" << Iterations << " of " <<
         theTotalIterations << std::endl;
       if(Iterations > 0)
         {
@@ -98,7 +98,7 @@ void HistogramLogProcess::fire()
   if(Iterations == 0)
     {
       saveFile();
-      std::cout << "Done saving." << std::endl;
+      cout << "Done saving." << std::endl;
     }
   theTime += theInterval;
   thePriorityQueue->moveTop();
@@ -107,7 +107,7 @@ void HistogramLogProcess::fire()
 
 void HistogramLogProcess::saveFile()
 {
-  std::cout << "Saving data in: " << FileName.c_str() << std::endl;
+  cout << "Saving data in: " << FileName.c_str() << std::endl;
   double aTime(LogInterval);
   for(unsigned int i(0); i != theLogValues.size(); ++i)
     {
@@ -150,7 +150,7 @@ void HistogramLogProcess::saveBackup()
     {
       std::string aFileName(FileName.c_str());
       aFileName = aFileName + ".back";
-      std::cout << "Saving backup data in: " << aFileName << std::endl;
+      cout << "Saving backup data in: " << aFileName << std::endl;
       std::ofstream aFile;
       aFile.open(aFileName.c_str(), std::ios::trunc);
       saveFileHeader(aFile);

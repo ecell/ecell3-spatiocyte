@@ -53,7 +53,7 @@ void ErythrocyteProcess::populateMolecules()
       theSpectrinSpecies->addMolecule(&(*theLattice)[filamentCoords[i]]);
     }
   theSpectrinSpecies->setIsPopulated();
-  std::cout << "size of spectrin:" << theSpectrinSpecies->size() << std::endl;
+  cout << "size of spectrin:" << theSpectrinSpecies->size() << std::endl;
 }
 
 void ErythrocyteProcess::initializeDirectionVectors()

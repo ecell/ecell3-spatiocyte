@@ -620,7 +620,7 @@ void SpatiocyteNextReactionProcess::removeMoleculeE()
   moleculeE = E->getRandomMolecule();
   if(moleculeE == NULL)
     {
-      std::cout << getFullID().asString() << " unable to remove molecule E" <<
+      cout << getFullID().asString() << " unable to remove molecule E" <<
         std::endl;
     }
   E->removeMolecule(moleculeE);
@@ -1228,52 +1228,52 @@ void SpatiocyteNextReactionProcess::printParameters()
 {
   String aProcess(String(getPropertyInterface().getClassName()) + 
                                       "[" + getFullID().asString() + "]");
-  std::cout << aProcess << " SearchVacant:" << SearchVacant << std::endl;
+  cout << aProcess << " SearchVacant:" << SearchVacant << std::endl;
   if(A)
     {
-      std::cout << "  " << getIDString(A);
+      cout << "  " << getIDString(A);
     }
   else if(variableA)
     {
-      std::cout << "  " << getIDString(variableA);
+      cout << "  " << getIDString(variableA);
     }
   if(B)
     {
-      std::cout << " + " << getIDString(B);
+      cout << " + " << getIDString(B);
     }
   else if(variableB)
     {
-      std::cout << " + " << getIDString(variableB);
+      cout << " + " << getIDString(variableB);
     }
   if(!A && !variableA)
     {
       if(C)
         {
-          std::cout << "0 -> " << getIDString(C);
+          cout << "0 -> " << getIDString(C);
         }
       else if(variableC)
         {
-          std::cout << "0 -> " << getIDString(variableC);
+          cout << "0 -> " << getIDString(variableC);
         }
     }
   else
     {
       if(C)
         {
-          std::cout << " -> " << getIDString(C);
+          cout << " -> " << getIDString(C);
         }
       else if(variableC)
         {
-          std::cout << " -> " << getIDString(variableC);
+          cout << " -> " << getIDString(variableC);
         }
     }
   if(D)
     {
-      std::cout << " + " << getIDString(D);
+      cout << " + " << getIDString(D);
     }
   else if(variableD)
     {
-      std::cout << " + " << getIDString(variableD);
+      cout << " + " << getIDString(variableD);
     }
   double interval(theTime-getStepper()->getCurrentTime());
   double propensity(thePropensity);
@@ -1323,13 +1323,13 @@ void SpatiocyteNextReactionProcess::printParameters()
         }
       getInitInterval();
     }
-  std::cout << " k:" << k << " p = " << pFormula.str() << " = " << p
+  cout << " k:" << k << " p = " << pFormula.str() << " = " << p
     << " nextTime:" << interval << " propensity:" << propensity;
   if(theDeoligomerIndex)
     {
-      std::cout << " DeoligomerIndex:" << theDeoligomerIndex;
+      cout << " DeoligomerIndex:" << theDeoligomerIndex;
     }
-  std::cout << std::endl;
+  cout << std::endl;
 }
 
 double SpatiocyteNextReactionProcess::getNewInterval()

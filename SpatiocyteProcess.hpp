@@ -52,7 +52,8 @@ public:
     isInitialized(false),
     isPriorityQueued(false),
     theInterval(libecs::INF),
-    theTime(libecs::INF) {}
+    theTime(libecs::INF),
+    cout(std::cout) {}
   virtual ~SpatiocyteProcess() {}
   virtual void fire() {}
   virtual void initializeFirst()
@@ -86,6 +87,7 @@ public:
       isInitialized = true;
       Process::initialize();
       setSpatiocyteStepper();
+      cout.setLevel(theSpatiocyteStepper->getDebugLevel());
       theSortedVariableReferences.resize(theVariableReferenceVector.size());
       for(VariableReferenceVector::iterator
           i(theVariableReferenceVector.begin());
@@ -299,6 +301,7 @@ protected:
   unsigned theStride;
   double theInterval;
   double theTime;
+  SpatiocyteDebug cout;
   ProcessID theQueueID;
   ProcessPriorityQueue* thePriorityQueue; 
   SpatiocyteStepper* theSpatiocyteStepper;

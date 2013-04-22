@@ -311,13 +311,13 @@ public:
                 }
             }
         }
-      std::cout << getIDString();
+      cout << getIDString();
       for(unsigned i(0); i != S_netNeg.size(); ++i)
         {
-          std::cout << " " << getIDString(S_netNeg[i]) << " size:" <<
+          cout << " " << getIDString(S_netNeg[i]) << " size:" <<
             S_netNeg[i]->getValue();
         }
-      std::cout << std::endl;
+      cout << std::endl;
     }
   void fireSSA()
     {

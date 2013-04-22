@@ -123,6 +123,7 @@ public:
     thePopulateProcess(NULL),
     theStepper(aStepper),
     theVariable(aVariable),
+    cout(std::cout),
     theCompVoxels(&theMolecules),
     theLattice(aLattice),
     theSpecies(aSpeciesList) {}
@@ -156,6 +157,7 @@ public:
       theVacantIdx = theStride*theVacantID;
       theNullTag.origin = theNullCoord;
       theNullTag.id = theNullID;
+      cout.setLevel(theStepper->getDebugLevel());
     }
   void setDiffusionInfluencedReaction(DiffusionInfluencedReactionProcess*
                                       aReaction, int anID, double aProbability)
@@ -204,7 +206,7 @@ public:
         }
       else if(theMoleculeSize)
         {
-          std::cout << "Warning: Species " << getIDString() <<
+          cout << "Warning: Species " << getIDString() <<
             " not populated." << std::endl;
         }
     }
@@ -274,7 +276,7 @@ public:
         }
       else if(theMoleculeSize)
         {
-          std::cout << "Species:" << theVariable->getFullID().asString() <<
+          cout << "Species:" << theVariable->getFullID().asString() <<
             " not CoordPopulated." << std::endl;
         }
     }
@@ -286,7 +288,7 @@ public:
         }
       else if(theMoleculeSize)
         {
-          std::cout << "Species:" << theVariable->getFullID().asString() <<
+          cout << "Species:" << theVariable->getFullID().asString() <<
             " not CoordPopulated." << std::endl;
         }
     }
@@ -298,7 +300,7 @@ public:
         }
       else if(theMoleculeSize)
         {
-          std::cout << "Species:" << theVariable->getFullID().asString() <<
+          cout << "Species:" << theVariable->getFullID().asString() <<
             " not CoordPopulated." << std::endl;
         }
     }
@@ -310,7 +312,7 @@ public:
         }
       else if(theMoleculeSize)
         {
-          std::cout << "Species:" << theVariable->getFullID().asString() <<
+          cout << "Species:" << theVariable->getFullID().asString() <<
             " not CoordPopulated." << std::endl;
         }
     }
@@ -716,7 +718,7 @@ public:
               return;
             }
         }
-      std::cout << "error in species add collision" << std::endl;
+      cout << "error in species add collision" << std::endl;
     }
   unsigned getID(const Voxel* aVoxel) const
     {
@@ -2282,7 +2284,7 @@ public:
         {
           if(theStepper->isBoundaryCoord(getCoord(i), theDimension))
             {
-              std::cout << "is still there" << std::endl;
+              cout << "is still there" << std::endl;
             }
         }
       theVariable->setValue(theMoleculeSize);
@@ -2432,7 +2434,7 @@ public:
               return i;
             }
         }
-      std::cout << "shouldn't get here deoligomerize:" << getIDString() <<
+      cout << "shouldn't get here deoligomerize:" << getIDString() <<
         std::endl;
       return 0;
     }
@@ -2992,7 +2994,7 @@ public:
         {
           if(!getIsPopulated())
             {
-              std::cout << "The multiscale species:" << 
+              cout << "The multiscale species:" << 
                 getVariable()->getFullID().asString() << " has not yet " <<
                 "been populated, but it being populated on." << std::endl;
             }
@@ -3227,6 +3229,7 @@ private:
   SpatiocyteStepper* theStepper;
   Variable* theVariable;
   Tag theNullTag;
+  SpatiocyteDebug cout;
   std::vector<int> theRowOffsets;
   std::vector<std::vector<int> > theAdjoinOffsets;
   std::vector<std::vector<std::vector<int> > > theOffsets;

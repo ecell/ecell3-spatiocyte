@@ -114,9 +114,9 @@ public:
     {
       String aProcess(String(getPropertyInterface().getClassName()) + 
                       "[" + getFullID().asString() + "]");
-      std::cout << aProcess << std::endl;
-      std::cout << "  " << getIDString(theDiffusionSpecies) << " ";
-      std::cout << ":" << std::endl << "  Diffusion interval=" <<
+      cout << aProcess << std::endl;
+      cout << "  " << getIDString(theDiffusionSpecies) << " ";
+      cout << ":" << std::endl << "  Diffusion interval=" <<
         theInterval << ", D=" << D << ", Walk probability (P/rho)=" <<
         WalkProbability << std::endl;
     }
