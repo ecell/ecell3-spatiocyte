@@ -2272,6 +2272,10 @@ public:
           anOrigin.col = 0;
         }
     }
+  void setInitCoordSize(const unsigned& val)
+    {
+      theInitCoordSize = val;
+    }
   void initMoleculeOrigins()
     {
       isOrigins = true;

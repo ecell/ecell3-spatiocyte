@@ -124,6 +124,7 @@ public:
   unsigned getID(const Voxel&) const;
   unsigned getID(const Voxel*) const;
   virtual GET_METHOD(Real, TimeScale) { return 0; }
+  Voxel* getVoxel(const unsigned int& aCoord) { return &theLattice[aCoord]; }
   void addInterruptedProcess(SpatiocyteProcessInterface*);
   static Variable* getVariable(System*, String const&);
 private:
