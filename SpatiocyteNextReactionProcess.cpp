@@ -737,7 +737,7 @@ double SpatiocyteNextReactionProcess::getPropensityZerothOrder()
 
 double SpatiocyteNextReactionProcess::getPropensityFirstOrder() 
 {
-  int sizeA(theVariableReferenceVector[0].getVariable()->getValue());
+  double sizeA(theVariableReferenceVector[0].getVariable()->getValue());
   if(sizeA < -coefficientA)
     {
       sizeA = 0;
@@ -761,8 +761,8 @@ double SpatiocyteNextReactionProcess::getPropensitySecondOrderHetero()
     {
       B->updateMoleculeSize();
     }
-  int sizeA(theVariableReferenceVector[0].getVariable()->getValue());
-  int sizeB(theVariableReferenceVector[1].getVariable()->getValue());
+  double sizeA(theVariableReferenceVector[0].getVariable()->getValue());
+  double sizeB(theVariableReferenceVector[1].getVariable()->getValue());
   //Required for HD species when substrate coefficient is < -1
   if(sizeA < -coefficientA)
     {
@@ -789,7 +789,7 @@ double SpatiocyteNextReactionProcess::getPropensitySecondOrderHomo()
     {
       A->updateMoleculeSize();
     }
-  int sizeA(theVariableReferenceVector[0].getVariable()->getValue());
+  double sizeA(theVariableReferenceVector[0].getVariable()->getValue());
   if(sizeA < -coefficientA)
     {
       sizeA = 1;
