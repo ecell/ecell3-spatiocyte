@@ -233,11 +233,10 @@ public:
     {
       if(theTime == libecs::INF)
         {
-          double newInterval(getNewInterval());
-          return newInterval;
+          return getNewInterval();
         }
       const double a0_old(a0); 
-      interval1 = getTau(epsilon);
+      const double interval1(getTau(epsilon));
       if(a0)
         {
           if(interval1 < n/a0)
@@ -266,13 +265,12 @@ public:
                   if(interval1 >= interval2)
                     {
                       theState = 2;
-                      return std::max(minStepInterval,
-                                      interval2-(aCurrentTime-lastTime));
+                      return std::max(minStepInterval, interval2+lastTime-
+                                      aCurrentTime);
                     }
                 }
               theState = 1;
-              return std::max(minStepInterval,
-                              interval1-(aCurrentTime-lastTime));
+              return std::max(minStepInterval, interval1+lastTime-aCurrentTime);
             }
         }
       return libecs::INF;
@@ -287,7 +285,7 @@ public:
           update_a0();
           return -log(theRng->FixedU())/a0;
         }
-      interval1 = getTau(epsilon);
+      const double interval1(getTau(epsilon));
       if(a0)
         {
           if(interval1 < n/a0)
@@ -384,7 +382,7 @@ public:
     }
   void fireCritical()
     {
-      //Based on 2011.yates.j.chem.phys:
+      //Based on 2011.yates&burrage.j.chem.phys:
       const double a0r(a0_c*theRng->Fixed());
       double aSum(0);
       for(unsigned j(0); j != R.size(); ++j)
@@ -655,7 +653,6 @@ private:
   double a0_c;
   double a0_c_old;
   double epsilon;
-  double interval1;
   double interval2;
   double minStepInterval;
   double lastTime;
