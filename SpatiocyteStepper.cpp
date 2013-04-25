@@ -59,7 +59,7 @@ void SpatiocyteStepper::initialize()
                       " Stepper.");
     } 
   cout.setLevel(DebugLevel);
-  cout << "1. checking model...";
+  cout << "1. checking model..." << std::endl;
   checkModel();
   //We need a Comp tree to assign the voxels to each Comp
   //and get the available number of vacant voxels. The compartmentalized

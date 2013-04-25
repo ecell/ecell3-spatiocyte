@@ -184,7 +184,7 @@ void LifetimeLogProcess::logTrackedMolecule(ReactionProcess* aProcess,
   double aTime(getStepper()->getCurrentTime());
   theLogFile << std::setprecision(15) << aTime-theTagTimes[aTag.id] << "," <<
     distance(aPoint, anOrigin)*2*theSpatiocyteStepper->getVoxelRadius() << ","
-    << theTagTimes[aTag.id] << "," << aTime << std::endl;
+    << theTagTimes[aTag.id] << "," << aTime << "," << konCnt << std::endl;
 }
 
 void LifetimeLogProcess::initTrackedMolecule(Species* aSpecies)
@@ -203,6 +203,7 @@ void LifetimeLogProcess::initTrackedMolecule(Species* aSpecies)
       aTag.id = theTagTimes.size();
       theTagTimes.push_back(getStepper()->getCurrentTime());
     }
+  ++konCnt;
 }
 
 bool LifetimeLogProcess::isDependentOnPre(const ReactionProcess* aProcess)

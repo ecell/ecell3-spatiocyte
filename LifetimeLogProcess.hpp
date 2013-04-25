@@ -42,10 +42,11 @@ public:
     {
       INHERIT_PROPERTIES(IteratingLogProcess);
     }
-  LifetimeLogProcess()
-    {
-      FileName = "LifetimeLog.csv";
-    }
+  LifetimeLogProcess():
+    konCnt(0)
+  {
+    FileName = "LifetimeLog.csv";
+  }
   virtual ~LifetimeLogProcess() {}
   virtual void initialize();
   virtual void initializeFirst();
@@ -63,6 +64,7 @@ private:
   void logTrackedMolecule(ReactionProcess*, Species*, const Voxel*);
   void initTrackedMolecule(Species*);
 private:
+  unsigned konCnt;
   std::vector<bool> isTrackedSpecies;
   std::vector<bool> isUntrackedSpecies;
   std::vector<bool> isBindingSite;

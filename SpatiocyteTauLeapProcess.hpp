@@ -209,6 +209,26 @@ public:
           a0 += R[j]->getNewPropensity();
         }
     }
+  void update_a0_a0_c()
+    {
+      a0 = 0;
+      a0_c = 0;
+      for(unsigned j(0); j != R.size(); ++j)
+        {
+          const double a(R[j]->getNewPropensity());
+          if(a)
+            {
+              a0 += a;
+              //If the reaction is non-critical:
+              if(R[j]->getNewL() <= n_c)
+                {
+                  a0_c += a;
+                }
+            }
+        }
+    }
+  //interval1 and interval2 are the intervals from lastTime (the last time
+  //a reaction was executed):
   virtual double getInterval(double aCurrentTime)
     {
       if(theTime == libecs::INF)
@@ -217,15 +237,14 @@ public:
           return newInterval;
         }
       const double a0_old(a0); 
-      const double a0_c_old(a0_c); 
-      tau1 = getTau(epsilon);
+      interval1 = getTau(epsilon);
       if(a0)
         {
-          if(tau1 < n/a0)
+          if(interval1 < n/a0)
             {
               if(!theState)
                 {
-                  return a0_old/a0*(theTime-aCurrentTime);;
+                  return a0_old/a0*(theTime-aCurrentTime);
                 }
               theState = 0;
               return -log(theRng->FixedU())/a0;
@@ -234,27 +253,33 @@ public:
             {
               if(a0_c)
                 {
-                  tau2 = a0_c_old/a0_c*tau2;
-                  if(tau1 >= tau2)
+                  if(interval2)
+                    {
+                      interval2 = a0_c_old/a0_c*interval2;
+                    }
+                  else
+                    {
+                      interval2 = (a0_c == 0)? libecs::INF : 
+                        -log(theRng->FixedU())/a0_c;
+                    }
+                  a0_c_old = a0_c;
+                  if(interval1 >= interval2)
                     {
                       theState = 2;
-                      const double interval(std::max(minStepInterval,
-                                               tau2-(aCurrentTime-lastTime)));
-                      tau2 = aCurrentTime-lastTime+interval;
-                      return interval;
+                      return std::max(minStepInterval,
+                                      interval2-(aCurrentTime-lastTime));
                     }
                 }
               theState = 1;
-              const double interval(std::max(minStepInterval,
-                                             tau1-(aCurrentTime-lastTime)));
-              tau1 = aCurrentTime-lastTime+interval;
-              return interval;
+              return std::max(minStepInterval,
+                              interval1-(aCurrentTime-lastTime));
             }
         }
       return libecs::INF;
     }
   virtual double getNewInterval()
     {
+      interval2 = 0;
       lastTime = getStepper()->getCurrentTime();
       if(!theState && currSSA)
         {
@@ -262,23 +287,24 @@ public:
           update_a0();
           return -log(theRng->FixedU())/a0;
         }
-      tau1 = getTau(epsilon);
+      interval1 = getTau(epsilon);
       if(a0)
         {
-          if(tau1 < n/a0)
+          if(interval1 < n/a0)
             {
               theState = 0;
               currSSA = nSSA;
               return -log(theRng->FixedU())/a0;
             }
-          tau2 = (a0_c == 0)? libecs::INF : -log(theRng->FixedU())/a0_c;
-          if(tau1 < tau2)
+          interval2 = (a0_c == 0)? libecs::INF : -log(theRng->FixedU())/a0_c;
+          a0_c_old = a0_c;
+          if(interval1 < interval2)
             {
               theState = 1;
-              return tau1;
+              return interval1;
             }
           theState = 2;
-          return tau2;
+          return interval2;
         }
       return libecs::INF;
     }
@@ -290,11 +316,13 @@ public:
           fireSSA();
           break;
         case 1:
-          fireNonCritical(tau1);
+          //tau1 = theTime-lastTime
+          fireNonCritical(theTime-lastTime);
           break;
         case 2:
           fireCritical();
-          fireNonCritical(tau2);
+          //tau2 = theTime-lastTime
+          fireNonCritical(theTime-lastTime);
           break;
         }
       ReactionProcess::fire();
@@ -343,7 +371,7 @@ public:
           if(!R[j]->getIsCritical() && R[j]->getPropensity())
             {
               const unsigned K(std::min(poisson(R[j]->getPropensity()*aTau),
-                                        R[j]->getL()));
+                                        R[j]->getNewL()));
               for(unsigned i(0); i != K; ++i)
                 {
                   if(R[j]->react())
@@ -356,27 +384,22 @@ public:
     }
   void fireCritical()
     {
-      unsigned j(theRng->Integer(R.size()));
-      for(; j != R.size(); ++j)
+      //Based on 2011.yates.j.chem.phys:
+      const double a0r(a0_c*theRng->Fixed());
+      double aSum(0);
+      for(unsigned j(0); j != R.size(); ++j)
         {
           if(R[j]->getIsCritical() && R[j]->getPropensity())
             {
-              if(R[j]->react())
+              aSum += R[j]->getPropensity();
+              if(aSum > a0r)
                 {
-                  interruptProcessesPost();
+                  if(R[j]->react())
+                    {
+                      interruptProcessesPost();
+                    }
+                  return;
                 }
-              return;
-            }
-        }
-      for(unsigned i(0); i != j; ++i)
-        {
-          if(R[i]->getIsCritical() && R[i]->getPropensity())
-            {
-              if(R[i]->react())
-                {
-                  interruptProcessesPost();
-                }
-              return;
             }
         }
     }
@@ -630,10 +653,11 @@ private:
   unsigned nSSA;
   double a0;
   double a0_c;
+  double a0_c_old;
   double epsilon;
+  double interval1;
+  double interval2;
   double minStepInterval;
-  double tau1;
-  double tau2;
   double lastTime;
   std::vector<unsigned> S_index;
   std::vector<unsigned> HOR;
