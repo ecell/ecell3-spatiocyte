@@ -389,7 +389,7 @@ public:
       double aSum(0);
       for(unsigned j(0); j != R.size(); ++j)
         {
-          if(R[j]->getIsCritical() && R[j]->getPropensity())
+          if(R[j]->getIsCritical())
             {
               aSum += R[j]->getPropensity();
               if(aSum > a0r)
