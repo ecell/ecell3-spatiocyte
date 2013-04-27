@@ -2362,10 +2362,10 @@ ControlBox::~ControlBox()
 
 Rulers::Rulers(const Glib::RefPtr<const Gdk::GL::Config>& config,
                const char* aFileName) :
-  m_control(&m_area, &m_table),
   m_area(config, aFileName),
   m_hbox(),
   m_table(3, 2, false),
+  m_control(&m_area, &m_table),
   isRecord(false)
 {
   m_area.setControlBox(&m_control);

@@ -387,12 +387,12 @@ public:
 protected:
   //signal handlers:
   //Gtk::DrawingArea m_area;
-  ControlBox m_control;
   GLScene m_area;
   Gtk::HPaned m_hbox;
   Gtk::HRuler m_hrule;
   Gtk::Table m_table;
   Gtk::VRuler m_vrule;
+  ControlBox m_control;
   bool isRecord;
   static const int XSIZE = 250, YSIZE = 250;
   virtual bool on_area_motion_notify_event(GdkEventMotion* event); //override
