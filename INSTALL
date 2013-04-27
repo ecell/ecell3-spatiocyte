@@ -1,6 +1,6 @@
 On a freshly installed Ubuntu Linux, E-Cell System version 3 and Spatiocyte
 require several additional packages: 
-$ sudo apt-get install automake libtool g++ libgsl0-dev python-numpy python-ply libboost-python-dev libgtkmm-2.4-dev libgtkglextmm-x11-1.2-dev libhdf5-serial-dev git valgrind
+$ sudo apt-get install automake libtool g++ libgsl0-dev python-numpy python-ply libboost-python-dev libgtkmm-2.4-dev libgtkglextmm-x11-1.2-dev libhdf5-serial-dev git valgrind cmake
 
 The general installation procedure of the E-Cell System version 3 is as follows:
 $ cd
@@ -35,7 +35,7 @@ Extensible Markup Language (XML) format. The simple.eml file can now be loaded
 from the File menu of the E-Cell Session Monitor or the File open button. Try
 running the simulation by clicking on the Start button.
 
-Installing RandomLib:
+Installing RandomLib (from http://sourceforge.net/projects/randomlib/files/distrib/):
 $ tar xzvf RandomLib-1.6.tar.gz 
 $ cd RandomLib-1.6
 $ mkdir BUILD

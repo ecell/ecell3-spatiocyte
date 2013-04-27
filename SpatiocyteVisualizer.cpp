@@ -121,23 +121,23 @@ void hsl2rgb(double h, double l, float* r, float* g, float* b)
 GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
                  const char* aBaseName)
 : Gtk::GL::DrawingArea(config),
+  theRotateAngle(5.0),
   m_Run(false),
   m_RunReverse(false),
   show3DMolecule(true),
-  showTime(true),
   showSurface(false),
+  showTime(true),
   startRecord(false),
-  m_stepCnt(-1),
-  theMeanPointSize(0),
-  thePngNumber(1),
   theResetTime(0),
-  theScreenWidth(SCREEN_WIDTH),
-  theScreenHeight(SCREEN_HEIGHT),
   xAngle(0),
   yAngle(0),
   zAngle(0),
-  theRotateAngle(5.0),
-  font_size(24)
+  m_stepCnt(-1),
+  font_size(24),
+  theMeanPointSize(0),
+  thePngNumber(1),
+  theScreenHeight(SCREEN_HEIGHT),
+  theScreenWidth(SCREEN_WIDTH)
 {
   add_events(Gdk::VISIBILITY_NOTIFY_MASK); 
   std::ostringstream aFileName;
@@ -642,7 +642,10 @@ void GLScene::on_realize()
         }
       glEndList();
     }
-  ft2_context = Glib::wrap(pango_ft2_get_context( 72, 72));
+  PangoFontMap *fontmap;
+  fontmap = pango_ft2_font_map_new();
+  pango_ft2_font_map_set_resolution (PANGO_FT2_FONT_MAP(fontmap), 72, 72);
+  ft2_context = Glib::wrap(pango_font_map_create_context(fontmap));
   /*
   glNewList(BOX, GL_COMPILE);
   //drawBox(0,theRealColSize,0,theRealLayerSize,0,theRealRowSize);
@@ -759,10 +762,9 @@ void GLScene::drawTime()
   Pango::Rectangle pango_extents = layout->get_pixel_logical_extents();
   pixel_extent_width = pango_extents.get_width();
   pixel_extent_height = pango_extents.get_height(); 
-  GLfloat text_w, text_h, tangent_h;
+  GLfloat text_h;
 
   /* Text position */
-  text_w = pixel_extent_width;
   text_h = pixel_extent_height;
 
   GLfloat w(get_width());
@@ -1012,7 +1014,7 @@ bool GLScene::loadCoords(std::streampos& aStreamPos)
         }
     }
   ++m_stepCnt;
-  if(m_stepCnt > theStreamPosList.size())
+  if(unsigned(m_stepCnt) > theStreamPosList.size())
     {
       theStreamPosList.push_back(aStreamPos);
     }
@@ -1063,7 +1065,7 @@ bool GLScene::loadMeanCoords(std::streampos& aStreamPos)
         }
     }
   ++m_stepCnt;
-  if(m_stepCnt > theStreamPosList.size())
+  if(unsigned(m_stepCnt) > theStreamPosList.size())
     {
       theStreamPosList.push_back(aStreamPos);
     }
@@ -1739,71 +1741,71 @@ void GLScene::play()
 }
 
 ControlBox::ControlBox(GLScene *anArea, Gtk::Table *aTable) :
-  m_table(10, 10),
-  theFrameRotAdj( "Rotation" ),
-  theResetRotButton( "Reset" ),
-  theCheckFix( "Fix rotation" ),
-  theXLabel( "x" ),
-  theXAdj( 0, -180, 180, 5, 20, 0 ),
-  theXScale( theXAdj ),
-  theXSpin( theXAdj, 0, 0  ),
-  theYLabel( "y" ),
-  theYAdj( 0, -180, 180, 5, 20, 0 ),
-  theYScale( theYAdj ),
-  theYSpin( theYAdj, 0, 0  ),
-  theZLabel( "z" ),
-  theZAdj( 0, -180, 180, 5, 20, 0 ),
-  theZScale( theZAdj ),
-  theZSpin( theZAdj, 0, 0  ),
-  theFrameBoundAdj("Bounding"),
-  theFrameScreen("Screen"),
-  theCheckFixBound( "Fix bounding" ),
-  theResetBoundButton( "Reset" ),
-  theHeightLabel( "H" ),
-  theHeightAdj( SCREEN_HEIGHT, 0, 1080, 1, 0, 0 ),
-  theHeightScale( theHeightAdj ),
-  theHeightSpin( theHeightAdj, 0, 0  ),
-  theWidthLabel( "W" ),
-  theWidthAdj( SCREEN_WIDTH, 0, 1920, 1, 0, 0 ),
-  theWidthScale( theWidthAdj ),
-  theWidthSpin( theWidthAdj, 0, 0  ),
-  theXUpBoundLabel( "+x" ),
-  theXUpBoundAdj( 100, 0, 0, 1, 0, 0 ),
-  theXUpBoundScale( theXUpBoundAdj ),
-  theXUpBoundSpin( theXUpBoundAdj, 0, 0  ),
-  theXLowBoundLabel( "-x" ),
-  theXLowBoundAdj( 0, 0, 100, 1, 0, 0 ),
-  theXLowBoundScale( theXLowBoundAdj ),
-  theXLowBoundSpin( theXLowBoundAdj, 0, 0  ),
-  theYUpBoundLabel( "+y" ),
-  theYUpBoundAdj( 100, 0, 100, 1, 0, 0 ),
-  theYUpBoundScale( theYUpBoundAdj ),
-  theYUpBoundSpin( theYUpBoundAdj, 0, 0  ),
-  theYLowBoundLabel( "-y" ),
-  theYLowBoundAdj( 0, 0, 100, 1, 0, 0 ),
-  theYLowBoundScale( theYLowBoundAdj ),
-  theYLowBoundSpin( theYLowBoundAdj, 0, 0  ),
-  theZUpBoundLabel( "+z" ),
-  theZUpBoundAdj( 100, 0, 100, 1, 0, 0 ),
-  theZUpBoundScale( theZUpBoundAdj ),
-  theZUpBoundSpin( theZUpBoundAdj, 0, 0  ),
-  theZLowBoundLabel( "-z" ),
-  theZLowBoundAdj( 0, 0, 100, 1, 0, 0 ),
-  theZLowBoundScale( theZLowBoundAdj ),
-  theZLowBoundSpin( theZLowBoundAdj, 0, 0  ),
-  theFrameLatticeAdj("Zoom"),
-  theResetDepthButton( "Reset" ),
-  theCheck3DMolecule( "Show 3D Molecules" ),
-  theCheckShowTime( "Show Time" ),
-  theCheckShowSurface( "Show Surface" ),
-  theButtonResetTime( "Reset Time" ),
-  theDepthLabel( "Depth" ),
-  theDepthAdj( 0, -200, 130, 5, 0, 0 ),
-  theDepthScale( theDepthAdj ),
-  theDepthSpin( theDepthAdj, 0, 0  ),
-  theButtonRecord( "Record Frames" ),
   m_area(anArea),
-  m_areaTable(aTable)
+  m_table(10, 10),
+  m_areaTable(aTable),
+  theDepthAdj( 0, -200, 130, 5, 0, 0 ),
+  theHeightAdj( SCREEN_HEIGHT, 0, 1080, 1, 0, 0 ),
+  theWidthAdj( SCREEN_WIDTH, 0, 1920, 1, 0, 0 ),
+  theXAdj( 0, -180, 180, 5, 20, 0 ),
+  theXLowBoundAdj( 0, 0, 100, 1, 0, 0 ),
+  theXUpBoundAdj( 100, 0, 0, 1, 0, 0 ),
+  theYAdj( 0, -180, 180, 5, 20, 0 ),
+  theYLowBoundAdj( 0, 0, 100, 1, 0, 0 ),
+  theYUpBoundAdj( 100, 0, 100, 1, 0, 0 ),
+  theZAdj( 0, -180, 180, 5, 20, 0 ),
+  theZLowBoundAdj( 0, 0, 100, 1, 0, 0 ),
+  theZUpBoundAdj( 100, 0, 100, 1, 0, 0 ),
+  theButtonResetTime( "Reset Time" ),
+  theResetBoundButton( "Reset" ),
+  theResetDepthButton( "Reset" ),
+  theResetRotButton( "Reset" ),
+  theCheck3DMolecule( "Show 3D Molecules" ),
+  theCheckFix( "Fix rotation" ),
+  theCheckFixBound( "Fix bounding" ),
+  theCheckShowSurface( "Show Surface" ),
+  theCheckShowTime( "Show Time" ),
+  theFrameBoundAdj("Bounding"),
+  theFrameLatticeAdj("Zoom"),
+  theFrameRotAdj( "Rotation" ),
+  theFrameScreen("Screen"),
+  theDepthScale( theDepthAdj ),
+  theHeightScale( theHeightAdj ),
+  theWidthScale( theWidthAdj ),
+  theXLowBoundScale( theXLowBoundAdj ),
+  theXScale( theXAdj ),
+  theXUpBoundScale( theXUpBoundAdj ),
+  theYLowBoundScale( theYLowBoundAdj ),
+  theYScale( theYAdj ),
+  theYUpBoundScale( theYUpBoundAdj ),
+  theZLowBoundScale( theZLowBoundAdj ),
+  theZScale( theZAdj ),
+  theZUpBoundScale( theZUpBoundAdj ),
+  theDepthLabel( "Depth" ),
+  theHeightLabel( "H" ),
+  theWidthLabel( "W" ),
+  theXLabel( "x" ),
+  theXLowBoundLabel( "-x" ),
+  theXUpBoundLabel( "+x" ),
+  theYLabel( "y" ),
+  theYLowBoundLabel( "-y" ),
+  theYUpBoundLabel( "+y" ),
+  theZLabel( "z" ),
+  theZLowBoundLabel( "-z" ),
+  theZUpBoundLabel( "+z" ),
+  theDepthSpin( theDepthAdj, 0, 0  ),
+  theHeightSpin( theHeightAdj, 0, 0  ),
+  theWidthSpin( theWidthAdj, 0, 0  ),
+  theXLowBoundSpin( theXLowBoundAdj, 0, 0  ),
+  theXSpin( theXAdj, 0, 0  ),
+  theXUpBoundSpin( theXUpBoundAdj, 0, 0  ),
+  theYLowBoundSpin( theYLowBoundAdj, 0, 0  ),
+  theYSpin( theYAdj, 0, 0  ),
+  theYUpBoundSpin( theYUpBoundAdj, 0, 0  ),
+  theZLowBoundSpin( theZLowBoundAdj, 0, 0  ),
+  theZSpin( theZAdj, 0, 0  ),
+  theZUpBoundSpin( theZUpBoundAdj, 0, 0  ),
+  theButtonRecord( "Record Frames" )
 {
   set_border_width(2);
   set_size_request(470, SCREEN_HEIGHT);
@@ -2360,10 +2362,10 @@ ControlBox::~ControlBox()
 
 Rulers::Rulers(const Glib::RefPtr<const Gdk::GL::Config>& config,
                const char* aFileName) :
-  m_area(config, aFileName),
-  m_table(3, 2, false),
-  m_hbox(),
   m_control(&m_area, &m_table),
+  m_area(config, aFileName),
+  m_hbox(),
+  m_table(3, 2, false),
   isRecord(false)
 {
   m_area.setControlBox(&m_control);
