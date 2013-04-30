@@ -1486,13 +1486,17 @@ public:
         {
           if(isMultiscale)
             {
+              addMultiscaleMolecule(aVoxel, theMoleculeSize);
+              addMoleculeTagged(aVoxel, aTag);
+              /*
               //TODO: don't know what is this for
               Species* aSpecies(theSpecies[getID(aVoxel)]);
               if(aSpecies->getVacantSpecies() != theMultiscaleVacantSpecies)
                 {
-                  addMultiscaleMolecule(aVoxel, theMoleculeSize);
-                  addMoleculeTagged(aVoxel, aTag);
+                addMultiscaleMolecule(aVoxel, theMoleculeSize);
+                addMoleculeTagged(aVoxel, aTag);
                 }
+                */
             }
           else
             {
@@ -2639,22 +2643,21 @@ public:
     }
   Voxel* getRandomCompVoxel(int searchVacant)
     {
-      Species* aVacantSpecies(theComp->vacantSpecies);
-      int aSize(aVacantSpecies->compVoxelSize());
-      const int r(theRng.Integer(aSize)); 
+      const unsigned aSize(theVacantSpecies->compVoxelSize());
+      const unsigned r(theRng.Integer(aSize)); 
       if(searchVacant)
         {
-          for(int i(r); i != aSize; ++i)
+          for(unsigned i(r); i != aSize; ++i)
             {
-              Voxel* aVoxel(aVacantSpecies->getCompVoxel(i));
+              Voxel* aVoxel(theVacantSpecies->getCompVoxel(i));
               if(isPopulatable(aVoxel))
                 {
                   return aVoxel;
                 }
             }
-          for(int i(0); i != r; ++i)
+          for(unsigned i(0); i != r; ++i)
             {
-              Voxel* aVoxel(aVacantSpecies->getCompVoxel(i));
+              Voxel* aVoxel(theVacantSpecies->getCompVoxel(i));
               if(isPopulatable(aVoxel))
                 {
                   return aVoxel;
@@ -2663,7 +2666,7 @@ public:
         }
       else
         {
-          Voxel* aVoxel(aVacantSpecies->getCompVoxel(r));
+          Voxel* aVoxel(theVacantSpecies->getCompVoxel(r));
           if(isPopulatable(aVoxel))
             {
               return aVoxel;

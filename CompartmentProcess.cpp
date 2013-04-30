@@ -239,6 +239,7 @@ void CompartmentProcess::allocateGrid()
     }
     */
   //Actual surface area = Width*Length
+  theComp->actualArea = Width*Length;
 }
 
 void CompartmentProcess::initializeThird()
