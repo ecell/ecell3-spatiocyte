@@ -76,9 +76,9 @@ void MoleculePopulateProcess::initializeSecond()
     }
 }
 
-void MoleculePopulateProcess::initializeThird()
+void MoleculePopulateProcess::initializeFourth()
 {
-  SpatiocyteProcess::initializeThird();
+  SpatiocyteProcess::initializeFourth();
   std::vector<Variable*> aVariables;
   std::vector<Process*> aProcesses(theSpatiocyteStepper->getProcessVector());
   for(std::vector<Process*>::const_iterator j(aProcesses.begin());
@@ -102,7 +102,8 @@ void MoleculePopulateProcess::initializeThird()
       i !=theSpecies.end(); ++i)
     {
       if(!(*i)->getIsVacant() && !(*i)->getIsInterface() &&
-         (*i)->getVariable() && (*i)->getVariable()->getValue() != 0 &&
+         !(*i)->getIsPopulated() && (*i)->getVariable() &&
+         (*i)->getVariable()->getValue() != 0 &&
          std::find(aVariables.begin(), aVariables.end(),
                    (*i)->getVariable()) == aVariables.end())
         {

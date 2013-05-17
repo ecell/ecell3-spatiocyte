@@ -637,7 +637,7 @@ void GLScene::on_realize()
         }
       else
         {
-          gluSphere(qobj, theRadii[i-theGLIndex]*30, 10, 10);
+          gluSphere(qobj, theRadii[i-theGLIndex]*20, 10, 10);
           //gluSphere(qobj, theRadii[i-theGLIndex], 10, 10);
         }
       glEndList();
