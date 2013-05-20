@@ -122,6 +122,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
                  const char* aBaseName)
 : Gtk::GL::DrawingArea(config),
   theRotateAngle(5.0),
+  isInvertBound(false),
   m_Run(false),
   m_RunReverse(false),
   show3DMolecule(true),
@@ -374,8 +375,8 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
         }
       else
         {
-          thePlotFunction = &GLScene::plotHCPPoints;
           thePlot3DFunction = &GLScene::plot3DHCPMolecules;
+          thePlotFunction = &GLScene::plotHCPPoints;
           theLoadCoordsFunction = &GLScene::loadCoords;
         }
       break;
@@ -504,6 +505,12 @@ void GLScene::setZLowBound(unsigned int aBound )
 void GLScene::set3DMolecule(bool is3D)
 {
   show3DMolecule = is3D;
+  queue_draw();
+}
+
+void GLScene::setInvertBound(bool isInvert)
+{
+  isInvertBound = isInvert;
   queue_draw();
 }
 
@@ -637,7 +644,7 @@ void GLScene::on_realize()
         }
       else
         {
-          gluSphere(qobj, theRadii[i-theGLIndex]*20, 10, 10);
+          gluSphere(qobj, theRadii[i-theGLIndex], 10, 10);
           //gluSphere(qobj, theRadii[i-theGLIndex], 10, 10);
         }
       glEndList();
@@ -1075,6 +1082,7 @@ bool GLScene::loadMeanCoords(std::streampos& aStreamPos)
 
 void GLScene::plotMeanHCPPoints()
 {
+  plotHCPPoints();
   glBegin(GL_POINTS);
   double x,y,z;
   for(unsigned int k(0); k != theMeanPointSize; ++k)
@@ -1091,9 +1099,10 @@ void GLScene::plotMeanHCPPoints()
                                (double)(theMeanCount/4));
               //glColor3f(clr.r*intensity, clr.g*intensity, clr.b*intensity); 
               glColor4f(clr.r, clr.g, clr.b, intensity);
-              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                  z <= theZUpBound[j] && z >= theZLowBound[j]))
+              bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                           y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                           z <= theZUpBound[j] && z >= theZLowBound[j]);
+              if((isInvertBound && isBound) || (!isInvertBound && !isBound))
                 {
                   glVertex3f(x, y, z);
                 }
@@ -1105,6 +1114,7 @@ void GLScene::plotMeanHCPPoints()
 
 void GLScene::plotMean3DHCPMolecules()
 {
+  plot3DHCPMolecules();
   double x,y,z;
   for(unsigned int k(0); k != theMeanPointSize; ++k)
     {
@@ -1122,9 +1132,10 @@ void GLScene::plotMean3DHCPMolecules()
               glColor4f(clr.r, clr.g, clr.b, intensity);
               //glColor4f(clr.r*intensity, clr.g*intensity, clr.b*intensity,
                //         0.5f); 
-              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                  z <= theZUpBound[j] && z >= theZLowBound[j]))
+              bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                           y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                           z <= theZUpBound[j] && z >= theZLowBound[j]);
+              if((isInvertBound && isBound) || (!isInvertBound && !isBound))
                 {
                   glPushMatrix();
                   glTranslatef(x,y,z);
@@ -1156,9 +1167,10 @@ void GLScene::plotMean3DCubicMolecules()
               glColor4f(clr.r, clr.g, clr.b, intensity);
               //glColor4f(clr.r*intensity, clr.g*intensity, clr.b*intensity,
                //         0.5f); 
-              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                  z <= theZUpBound[j] && z >= theZLowBound[j]))
+              bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                           y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                           z <= theZUpBound[j] && z >= theZLowBound[j]);
+              if((isInvertBound && isBound) || (!isInvertBound && !isBound))
                 {
                   glPushMatrix();
                   glTranslatef(x,y,z);
@@ -1184,9 +1196,10 @@ void GLScene::plotMean3DCubicMolecules()
               y = layer*2*theRadius + theRadius;
               z = row*2*theRadius + theRadius;
               x = col*2*theRadius + theRadius; 
-              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                  z <= theZUpBound[j] && z >= theZLowBound[j]))
+              bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                           y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                           z <= theZUpBound[j] && z >= theZLowBound[j]);
+              if((isInvertBound && isBound) || (!isInvertBound && !isBound))
                 {
                   glPushMatrix();
                   glTranslatef(x,y,z);
@@ -1218,9 +1231,10 @@ void GLScene::plot3DHCPMolecules()
               y = (col%2)*theHCPl + theHCPy*layer + theRadius;
               z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
               x = col*theHCPx + theRadius;
-              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                  z <= theZUpBound[j] && z >= theZLowBound[j]))
+              bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                           y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                           z <= theZUpBound[j] && z >= theZLowBound[j]);
+              if((isInvertBound && isBound) || (!isInvertBound && !isBound))
                 {
                   glPushMatrix();
                   glTranslatef(x,y,z);
@@ -1242,9 +1256,10 @@ void GLScene::plot3DHCPMolecules()
               x = (thePoints[j][k].x)+theRadius;
               y = (thePoints[j][k].y)+theRadius;
               z = (thePoints[j][k].z)+theRadius;
-              if(!( x <= theXUpBound[m] && x >= theXLowBound[m] &&
-                  y <= theYUpBound[m] && y >= theYLowBound[m] &&
-                  z <= theZUpBound[m] && z >= theZLowBound[m]))
+              bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                           y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                           z <= theZUpBound[j] && z >= theZLowBound[j]);
+              if((isInvertBound && isBound) || (!isInvertBound && !isBound))
                 {
                   glPushMatrix();
                   glTranslatef(x,y,z);
@@ -1335,9 +1350,10 @@ void GLScene::plotHCPPoints()
               y = (col%2)*theHCPl + theHCPy*layer + theRadius;
               z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
               x = col*theHCPx + theRadius;
-              if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                  y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                  z <= theZUpBound[j] && z >= theZLowBound[j]))
+              bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                           y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                           z <= theZUpBound[j] && z >= theZLowBound[j]);
+              if((isInvertBound && isBound) || (!isInvertBound && !isBound))
                 {
                   glVertex3f(x, y, z);
                 }
@@ -1356,9 +1372,10 @@ void GLScene::plotHCPPoints()
               x = (thePoints[j][k].x)+theRadius;
               y = (thePoints[j][k].y)+theRadius;
               z = (thePoints[j][k].z)+theRadius;
-              if(!( x <= theXUpBound[m] && x >= theXLowBound[m] &&
-                  y <= theYUpBound[m] && y >= theYLowBound[m] &&
-                  z <= theZUpBound[m] && z >= theZLowBound[m]))
+              bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
+                           y <= theYUpBound[j] && y >= theYLowBound[j] &&
+                           z <= theZUpBound[j] && z >= theZLowBound[j]);
+              if((isInvertBound && isBound) || (!isInvertBound && !isBound))
                 {
                   glVertex3f(x, y, z);
                 }
@@ -1762,7 +1779,7 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table *aTable) :
   theResetRotButton( "Reset" ),
   theCheck3DMolecule( "Show 3D Molecules" ),
   theCheckFix( "Fix rotation" ),
-  theCheckFixBound( "Fix bounding" ),
+  theCheckInvertBound( "Invert Bounding" ),
   theCheckShowSurface( "Show Surface" ),
   theCheckShowTime( "Show Time" ),
   theFrameBoundAdj("Bounding"),
@@ -1908,8 +1925,9 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table *aTable) :
   theBoxInBound.pack_start( theZUpBoundBox, false, false, 1 ); 
   theBoxInBound.pack_start( theZLowBoundBox, false, false, 1 ); 
   theBoxInBound.pack_start( theBoxBoundFixReset, false, false, 1 ); 
-  //theCheckFixBound.connect( 'toggled', fixBoundToggled );
-  theBoxBoundFixReset.pack_start( theCheckFixBound );
+  theCheckInvertBound.signal_toggled().connect( sigc::mem_fun(*this,
+                            &ControlBox::on_InvertBound_toggled) );
+  theBoxBoundFixReset.pack_start( theCheckInvertBound );
   theResetBoundButton.signal_clicked().connect( sigc::mem_fun(*this,
                             &ControlBox::onResetBound) );
   theBoxBoundFixReset.pack_start( theResetBoundButton );
@@ -2210,6 +2228,11 @@ void ControlBox::update_background_color(Gtk::ColorSelection* colorSel)
 void ControlBox::on_3DMolecule_toggled()
 {
   m_area->set3DMolecule(theCheck3DMolecule.get_active());
+}
+
+void ControlBox::on_InvertBound_toggled()
+{
+  m_area->setInvertBound(theCheckInvertBound.get_active());
 }
 
 void ControlBox::on_showTime_toggled()

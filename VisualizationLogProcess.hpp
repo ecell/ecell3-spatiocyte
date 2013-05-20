@@ -45,6 +45,8 @@ public:
       PROPERTYSLOT_SET_GET(Integer, MultiscaleStructure);
       PROPERTYSLOT_SET_GET(Integer, Polymer);
       PROPERTYSLOT_SET_GET(Real, LogInterval);
+      PROPERTYSLOT_SET_GET(Real, OffRadiusScale);
+      PROPERTYSLOT_SET_GET(Real, RadiusScale);
       PROPERTYSLOT_SET_GET(String, FileName);
     }
   VisualizationLogProcess():
@@ -53,11 +55,15 @@ public:
     theLogMarker(UINT_MAX),
     theMeanCount(0),
     LogInterval(0),
+    OffRadiusScale(0),
+    RadiusScale(0),
     FileName("VisualLog.dat") {}
   virtual ~VisualizationLogProcess() {}
   SIMPLE_SET_GET_METHOD(Integer, MultiscaleStructure);
   SIMPLE_SET_GET_METHOD(Integer, Polymer);
   SIMPLE_SET_GET_METHOD(Real, LogInterval);
+  SIMPLE_SET_GET_METHOD(Real, OffRadiusScale);
+  SIMPLE_SET_GET_METHOD(Real, RadiusScale);
   SIMPLE_SET_GET_METHOD(String, FileName); 
   virtual void initialize()
     {
@@ -177,6 +183,8 @@ protected:
   unsigned theLogMarker;
   unsigned theMeanCount;
   double LogInterval;
+  double OffRadiusScale;
+  double RadiusScale;
   String FileName;
   std::ofstream theLogFile;
   std::streampos theStepStartPos;  

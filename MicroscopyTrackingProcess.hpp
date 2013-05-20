@@ -64,11 +64,39 @@ public:
         {
           Variable* aVariable((*i).getVariable());
           Species* aSpecies(theSpatiocyteStepper->getSpecies(aVariable));
-          if(!aSpecies->getIsLipid() &&
+          if(aSpecies && 
              std::find(theLatticeSpecies.begin(), theLatticeSpecies.end(), 
                   aSpecies) == theLatticeSpecies.end())
             {
               theLatticeSpecies.push_back(aSpecies);
+            }
+        }
+      for(VariableReferenceVector::iterator 
+          i(theZeroVariableReferences.begin());
+          i != theZeroVariableReferences.end(); ++i)
+        {
+          Variable* aVariable((*i).getVariable());
+          Species* aSpecies(theSpatiocyteStepper->getSpecies(aVariable));
+          if(aSpecies)
+            {
+              if(aSpecies->getIsOffLattice())
+                {
+                  if(std::find(theOffLatticeSpecies.begin(),
+                     theOffLatticeSpecies.end(), aSpecies) == 
+                     theOffLatticeSpecies.end())
+                    {
+                      theOffLatticeSpecies.push_back(aSpecies);
+                    }
+                }
+              else
+                {
+                  if(std::find(theLatticeSpecies.begin(),
+                     theLatticeSpecies.end(), aSpecies) == 
+                     theLatticeSpecies.end())
+                    {
+                      theLatticeSpecies.push_back(aSpecies);
+                    }
+                }
             }
         }
       if(!getPriority())
@@ -87,7 +115,7 @@ public:
           int aPositiveCoefficient((*i).getCoefficient());
           Variable* aVariable((*i).getVariable());
           Species* aSpecies(theSpatiocyteStepper->getSpecies(aVariable));
-          if(!aSpecies->getIsLipid())
+          if(aSpecies)
             {
               if(aPositiveCoefficient > 0)
                 {

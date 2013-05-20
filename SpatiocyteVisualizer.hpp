@@ -77,6 +77,7 @@ protected:
   void onResetBound();
   void onResetRotation();
   void on_3DMolecule_toggled();
+  void on_InvertBound_toggled();
   void on_checkbutton_toggled(unsigned int id);
   void on_record_toggled();
   void on_resetTime_clicked();
@@ -121,7 +122,7 @@ private:
   Gtk::Button theResetRotButton;
   Gtk::CheckButton theCheck3DMolecule;
   Gtk::CheckButton theCheckFix;
-  Gtk::CheckButton theCheckFixBound;
+  Gtk::CheckButton theCheckInvertBound;
   Gtk::CheckButton theCheckShowSurface;
   Gtk::CheckButton theCheckShowTime;
   Gtk::Entry m_steps;
@@ -226,6 +227,7 @@ public:
   void rotateMidAxis(int aMult, int x, int y, int z);
   void rotateMidAxisAbs(double, int , int , int );
   void set3DMolecule(bool is3D);
+  void setInvertBound(bool);
   void setBackgroundColor(Color);
   void setControlBox(ControlBox* aControl);
   void setRecord(bool isRecord);
@@ -309,6 +311,7 @@ protected:
   Point** thePoints;
   bool *theSpeciesVisibility;
   bool isChanged;
+  bool isInvertBound;
   bool m_Run;
   bool m_RunReverse;
   bool show3DMolecule;
