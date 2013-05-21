@@ -2445,6 +2445,46 @@ public:
       cout << "shouldn't get here deoligomerize:" << getIDString() <<
         std::endl;
       return 0;
+      /*
+      const unsigned start(theRng.Integer(theMoleculeSize));
+      const unsigned dir(theRng.Integer(2));
+      if(dir)
+        {
+          for(unsigned i(start); i < theMoleculeSize; ++i)
+            {
+              if(theTags[i].boundCnt == boundCnt)
+                {
+                  return i;
+                }
+            }
+          for(unsigned i(start); i >= 1; --i)
+            {
+              if(theTags[i-1].boundCnt == boundCnt)
+                {
+                  return i-1;
+                }
+            }
+        }
+      else
+        {
+          for(unsigned i(start); i >= 1; --i)
+            {
+              if(theTags[i-1].boundCnt == boundCnt)
+                {
+                  return i-1;
+                }
+            }
+          for(unsigned i(start); i < theMoleculeSize; ++i)
+            {
+              if(theTags[i].boundCnt == boundCnt)
+                {
+                  return i;
+                }
+            }
+        }
+      cout << "shouldn't get here deoligomerize:" << getIDString() << std::endl;
+      return 0;
+      */
     }
   Voxel* getRandomMolecule()
     {

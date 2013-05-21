@@ -55,8 +55,8 @@ public:
     theLogMarker(UINT_MAX),
     theMeanCount(0),
     LogInterval(0),
-    OffRadiusScale(0),
-    RadiusScale(0),
+    OffRadiusScale(1),
+    RadiusScale(1),
     FileName("VisualLog.dat") {}
   virtual ~VisualizationLogProcess() {}
   SIMPLE_SET_GET_METHOD(Integer, MultiscaleStructure);

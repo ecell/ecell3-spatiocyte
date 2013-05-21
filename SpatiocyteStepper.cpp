@@ -2350,6 +2350,14 @@ void SpatiocyteStepper::setSurfaceVoxelProperties(Comp* aComp)
           optimizeSurfaceVoxel(aCoord, aComp);
           setSurfaceSubunit(aCoord, aComp);
         }
+      if(RemoveSurfaceBias)
+        {
+          for(unsigned i(0); i != aVacantSpecies->size(); ++i)
+            {
+              unsigned aCoord(aVacantSpecies->getCoord(i));
+              addSurfaceAdjoins(aCoord, aComp);
+            }
+        }
     }
 }
 
@@ -2479,6 +2487,85 @@ void SpatiocyteStepper::optimizeSurfaceVoxel(unsigned aCoord, Comp* aComp)
     }
     */
   aVoxel.diffuseSize = forward-aVoxel.adjoiningCoords;
+}
+
+void SpatiocyteStepper::addSurfaceAdjoins(const unsigned aCoord,
+                                          const Comp* aComp)
+{
+  Voxel& aVoxel(theLattice[aCoord]);
+  if(aVoxel.diffuseSize > 5)
+    {
+      return;
+    }
+  std::vector<unsigned> extCoords;
+  std::vector<double> extDists;
+  const Point aPoint(coord2point(aCoord));
+  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
+    {
+      Voxel& adjoin(theLattice[aVoxel.adjoiningCoords[i]]);
+      for(unsigned j(0); j != theAdjoiningCoordSize; ++j)
+        { 
+          const unsigned coord(adjoin.adjoiningCoords[j]);
+          Voxel& extAdjoin(theLattice[coord]);
+          if(extAdjoin.diffuseSize < 6 && coord != aCoord && 
+             extAdjoin.idx != theNullID*theStride &&
+             id2Comp(getID(extAdjoin))->dimension <= aComp->dimension)
+            {
+              if(std::find(extCoords.begin(), extCoords.end(),
+                           coord) == extCoords.end())
+                {
+                  bool isAdjoined(false);
+                  for(unsigned k(0); k != aVoxel.diffuseSize; ++k)
+                    { 
+                      if(aVoxel.adjoiningCoords[k] == coord)
+                        {
+                          isAdjoined = true;
+                          break;
+                        }
+                    }
+                  if(!isAdjoined)
+                    {
+                      extCoords.push_back(coord);
+                      const Point extPoint(coord2point(coord));
+                      extDists.push_back(distance(aPoint, extPoint));
+                    }
+                }
+            }
+        }
+    }
+  const unsigned addSize(6-aVoxel.diffuseSize);
+  std::vector<double> tmpDists(extDists);
+  std::sort(extDists.begin(), extDists.end());
+  /*
+  std::cout << "addSize:" << addSize << std::endl;
+  for(unsigned j(0); j != extCoords.size(); ++j)
+    {
+      std::cout << "dist:" << extDists[j] << std::endl;
+    }
+    */
+  for(unsigned i(0); i != addSize; ++i)
+    {
+      for(unsigned j(0); j != extCoords.size(); ++j)
+        {
+          if(tmpDists[j] == extDists[i])
+            {
+              Voxel& extAdjoin(theLattice[extCoords[j]]);
+              aVoxel.adjoiningCoords[aVoxel.diffuseSize++] = extCoords[j];
+              extAdjoin.adjoiningCoords[extAdjoin.diffuseSize++] = aCoord;
+              extCoords[j] = extCoords.back();
+              extCoords.pop_back();
+              tmpDists[j] = tmpDists.back();
+              tmpDists.pop_back();
+              break;
+            }
+        }
+    }
+  /*
+  if(aVoxel.diffuseSize != 6)
+    {
+      std::cout << "diffuse size is larger:" << aVoxel.diffuseSize << std::endl;
+    }
+    */
 }
 
 Species* SpatiocyteStepper::id2species(unsigned short id)

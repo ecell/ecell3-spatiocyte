@@ -148,12 +148,17 @@ public:
             }
         }
       theFreqLattice.resize(theLatticeSpecies.size());
-      for(unsigned int i(0); i != theFreqLattice.size(); ++i)
+      for(unsigned i(0); i != theFreqLattice.size(); ++i)
         {
           theFreqLattice[i].resize(theFreqLatticeSize);
         }
       resetLattice();
-      if(MeanCount > 0)
+      if(LogInterval)
+        {
+          theInterval = LogInterval;
+          MeanCount = (int)rint(ExposureTime/theInterval);
+        }
+      else if(MeanCount > 0)
         {
           theInterval = ExposureTime/MeanCount;
         }
@@ -175,7 +180,7 @@ public:
             }
           MeanCount = (int)rint(ExposureTime/theInterval);
         }
-      theMeanCount = (unsigned int)MeanCount;
+      theMeanCount = (unsigned)MeanCount;
       theTime = theInterval;
       theLastExposedTime = theTime;
       thePriorityQueue->move(theQueueID);
@@ -207,16 +212,16 @@ protected:
   void logFluorescentSpecies();
   void resetLattice()
     {
-      for(unsigned int i(0); i != theFreqLattice.size(); ++i)
+      for(unsigned i(0); i != theFreqLattice.size(); ++i)
         {
-          for(unsigned int j(0); j != theFreqLatticeSize; ++j)
+          for(unsigned j(0); j != theFreqLatticeSize; ++j)
             {
               theFreqLattice[i][j] = 0;
             }
         }
     }
 protected:
-  unsigned int theFreqLatticeSize;
+  unsigned theFreqLatticeSize;
   int MeanCount;
   double ExposureTime;
   double theLastExposedTime;
