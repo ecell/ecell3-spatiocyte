@@ -45,8 +45,6 @@ public:
       PROPERTYSLOT_SET_GET(Integer, MultiscaleStructure);
       PROPERTYSLOT_SET_GET(Integer, Polymer);
       PROPERTYSLOT_SET_GET(Real, LogInterval);
-      PROPERTYSLOT_SET_GET(Real, OffRadiusScale);
-      PROPERTYSLOT_SET_GET(Real, RadiusScale);
       PROPERTYSLOT_SET_GET(String, FileName);
     }
   VisualizationLogProcess():
@@ -55,15 +53,11 @@ public:
     theLogMarker(UINT_MAX),
     theMeanCount(0),
     LogInterval(0),
-    OffRadiusScale(1),
-    RadiusScale(1),
     FileName("VisualLog.dat") {}
   virtual ~VisualizationLogProcess() {}
   SIMPLE_SET_GET_METHOD(Integer, MultiscaleStructure);
   SIMPLE_SET_GET_METHOD(Integer, Polymer);
   SIMPLE_SET_GET_METHOD(Real, LogInterval);
-  SIMPLE_SET_GET_METHOD(Real, OffRadiusScale);
-  SIMPLE_SET_GET_METHOD(Real, RadiusScale);
   SIMPLE_SET_GET_METHOD(String, FileName); 
   virtual void initialize()
     {
@@ -90,27 +84,69 @@ public:
     }	
   virtual void initializeFourth()
     {
-      for(unsigned i(0); i != theProcessSpecies.size(); ++i)
+      for(VariableReferenceVector::iterator
+          i(thePositiveVariableReferences.begin());
+          i != thePositiveVariableReferences.end(); ++i)
         {
-          Species* aSpecies(theProcessSpecies[i]);
-          if(aSpecies->getIsOffLattice())
+          int aCoefficient((*i).getCoefficient());
+          Variable* aVariable((*i).getVariable());
+          Species* aSpecies(theSpatiocyteStepper->getSpecies(aVariable));
+          if(aSpecies && aCoefficient < 10000)
             {
-              theOffLatticeSpecies.push_back(aSpecies);
-            }
-          else
-            {
-              theLatticeSpecies.push_back(aSpecies);
-              if(aSpecies->getIsPolymer() && Polymer)
+              if(aSpecies->getIsOffLattice() && std::find(
+                  theOffLatticeSpecies.begin(), theOffLatticeSpecies.end(),
+                    aSpecies) == theOffLatticeSpecies.end())
                 {
-                  thePolymerSpecies.push_back(aSpecies);
-                  thePolymerIndex.push_back(theLatticeSpecies.size()-1);
+                  theOffLatticeSpecies.push_back(aSpecies);
+                }
+              else if(!aSpecies->getIsOffLattice() && std::find(
+                      theLatticeSpecies.begin(), theLatticeSpecies.end(),
+                      aSpecies) == theLatticeSpecies.end())
+                {
+                  theLatticeSpecies.push_back(aSpecies);
+                  if(aSpecies->getIsPolymer() && Polymer)
+                    {
+                      thePolymerSpecies.push_back(aSpecies);
+                      thePolymerIndex.push_back(theLatticeSpecies.size()-1);
+                    }
                 }
             }
-
         }
       if(!getPriority())
         {
           setPriority(-1);
+        }
+      setRadiusScales();
+    }
+  virtual void setRadiusScales()
+    {
+      theOffRadiusScales.resize(theOffLatticeSpecies.size(), 1);
+      theRadiusScales.resize(theLatticeSpecies.size(), 1);
+      for(VariableReferenceVector::iterator
+          i(thePositiveVariableReferences.begin());
+          i != thePositiveVariableReferences.end(); ++i)
+        {
+          int aCoefficient((*i).getCoefficient());
+          Variable* aVariable((*i).getVariable());
+          Species* aSpecies(theSpatiocyteStepper->getSpecies(aVariable));
+          if(aSpecies && aCoefficient >= 10000)
+            {
+              std::vector<Species*>::iterator iter(std::find(
+                 theOffLatticeSpecies.begin(), theOffLatticeSpecies.end(),
+                 aSpecies));
+              if(iter != theOffLatticeSpecies.end())
+                {
+                  theOffRadiusScales[iter-theOffLatticeSpecies.begin()] =
+                    (aCoefficient-10000)/100.0;
+                }
+              iter = std::find(theLatticeSpecies.begin(),
+                               theLatticeSpecies.end(), aSpecies);
+              if(iter != theLatticeSpecies.end())
+                {
+                  theRadiusScales[iter-theLatticeSpecies.begin()] =
+                    (aCoefficient-10000)/100.0;
+                }
+            }
         }
     }
   virtual void initializeFifth()
@@ -183,12 +219,12 @@ protected:
   unsigned theLogMarker;
   unsigned theMeanCount;
   double LogInterval;
-  double OffRadiusScale;
-  double RadiusScale;
   String FileName;
   std::ofstream theLogFile;
   std::streampos theStepStartPos;  
   std::vector<unsigned> thePolymerIndex;
+  std::vector<double> theOffRadiusScales;
+  std::vector<double> theRadiusScales;
   std::vector<Species*> thePolymerSpecies;
   std::vector<Species*> theLatticeSpecies;
   std::vector<Species*> theOffLatticeSpecies;

@@ -103,6 +103,7 @@ public:
         {
           setPriority(-1);
         }
+      setRadiusScales();
     }
   virtual void initializeFifth()
     {
@@ -117,7 +118,7 @@ public:
           Species* aSpecies(theSpatiocyteStepper->getSpecies(aVariable));
           if(aSpecies)
             {
-              if(aPositiveCoefficient > 0)
+              if(aPositiveCoefficient > 0 && aPositiveCoefficient < 10000)
                 {
                   thePositiveSpecies.push_back(aSpecies);
                   std::vector<int> aProcessSpeciesIndices;
