@@ -8,6 +8,7 @@ $ mkdir wrk
 $ cd wrk
 $ git clone https://github.com/ecell/ecell3.git
 $ cd ecell3
+$ git checkout -t remotes/origin/ecell-3.3
 $ ./autogen.sh
 $ ./configure --prefix=$HOME/root
 $ make -j3 (or just make, if there is only one CPU core available)
@@ -48,6 +49,7 @@ The steps to install E-Cell3-Spatiocyte are as follows:
 $ cd $HOME/wrk
 $ git clone git://github.com/ecell/ecell3-spatiocyte.git
 $ cd ecell3-spatiocyte
+$ git checkout -t remotes/origin/compartment
 $ make -j3 (or just make, if there is only one CPU core available)
 
 The E-Cell3-Spatiocyte package includes the MinDE model reported in 
