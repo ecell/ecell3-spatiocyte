@@ -85,13 +85,12 @@ public:
   virtual void initializeFourth()
     {
       for(VariableReferenceVector::iterator
-          i(thePositiveVariableReferences.begin());
-          i != thePositiveVariableReferences.end(); ++i)
+          i(theSortedVariableReferences.begin());
+          i != theSortedVariableReferences.end(); ++i)
         {
-          int aCoefficient((*i).getCoefficient());
           Variable* aVariable((*i).getVariable());
           Species* aSpecies(theSpatiocyteStepper->getSpecies(aVariable));
-          if(aSpecies && aCoefficient < 10000)
+          if(aSpecies)
             {
               if(aSpecies->getIsOffLattice() && std::find(
                   theOffLatticeSpecies.begin(), theOffLatticeSpecies.end(),
