@@ -657,7 +657,7 @@ bool SpatiocyteNextReactionProcess::reactACDbind(Species* a, Species* c,
     {
       //Look for D[BindingSite]:
       moleculeC = c->getBindingSiteAdjoiningVoxel(moleculeA, BindingSite, d);
-      if(moleculeD == NULL)
+      if(moleculeC == NULL)
         {
           return false;
         }
