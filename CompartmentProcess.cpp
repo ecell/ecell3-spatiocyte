@@ -33,9 +33,22 @@
 
 LIBECS_DM_INIT(CompartmentProcess, Process); 
 
+
 unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
 {
   Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
+  if(aComp->diffusiveComp)
+    {
+      Comp* aDiffusiveComp(aComp->diffusiveComp);
+      if(aDiffusiveComp->interfaceID == theSpecies.size())
+        {
+          aDiffusiveComp->interfaceID = theInterfaceSpecies->getID();
+        }
+      else
+        {
+          theInterfaceSpecies = theSpecies[aDiffusiveComp->interfaceID];
+        }
+    }
   aComp->interfaceID = theInterfaceSpecies->getID();
   *theComp = *aComp;
   theVacantSpecies->resetFixedAdjoins();
