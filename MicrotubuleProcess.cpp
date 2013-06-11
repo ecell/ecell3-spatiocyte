@@ -94,12 +94,12 @@ void MicrotubuleProcess::initializeVectors()
   Minus.y = 0;
   Minus.z = 0;
   //Rotated Minus end
-  theSpatiocyteStepper->rotateX(theComp->rotateX, &Minus, -1);
-  theSpatiocyteStepper->rotateY(theComp->rotateY, &Minus, -1);
-  theSpatiocyteStepper->rotateZ(theComp->rotateZ, &Minus, -1);
-  theSpatiocyteStepper->rotateX(RotateX, &Minus, -1);
-  theSpatiocyteStepper->rotateY(RotateY, &Minus, -1);
-  theSpatiocyteStepper->rotateZ(RotateZ, &Minus, -1);
+  theSpatiocyteStepper->rotateX(theComp->rotateX, &Minus, 1);
+  theSpatiocyteStepper->rotateY(theComp->rotateY, &Minus, 1);
+  theSpatiocyteStepper->rotateZ(theComp->rotateZ, &Minus, 1);
+  theSpatiocyteStepper->rotateX(RotateX, &Minus, 1);
+  theSpatiocyteStepper->rotateY(RotateY, &Minus, 1);
+  theSpatiocyteStepper->rotateZ(RotateZ, &Minus, 1);
   add_(Minus, Origin);
   //Direction vector from the Minus end to center
   //Direction vector from the Minus end to center
