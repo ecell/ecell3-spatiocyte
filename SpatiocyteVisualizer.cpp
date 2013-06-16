@@ -762,9 +762,36 @@ void GLScene::drawTime()
   Glib::RefPtr<Pango::Layout> layout = Pango::Layout::create(ft2_context);
   layout->set_width(PANGO_SCALE*get_allocation().get_width());
   layout->set_alignment(Pango::ALIGN_LEFT);
-  char buffer[50];
-  sprintf(buffer, "t = %g s", theCurrentTime-theResetTime);
-  layout->set_text(buffer);
+  double aTime(theCurrentTime-theResetTime);
+  std::stringstream ss;
+  if(aTime < 1e-3)
+    {
+      ss << "t = " << unsigned(aTime*1e+6) << " us";
+    }
+  else if(aTime < 1)
+    {
+      ss << "t = " << unsigned(aTime*1e+3) << " ms";
+    }
+  else if(aTime < 60)
+    {
+      ss << "t = " << unsigned(aTime) << " s";
+    }
+  else if(aTime < 3600)
+    {
+      ss << "t = " << unsigned(aTime/60) << "m " << unsigned(aTime)%60  << "s";
+    }
+  else if(aTime < 86400)
+    {
+      ss << "t = " << unsigned(aTime/3600) << "h " << unsigned(aTime)%3600/60 <<
+        "m " << unsigned(aTime)%3600%60  << "s";
+    }
+  else
+    {
+      ss << "t = " << unsigned(aTime/86400) << "d " << 
+        unsigned(aTime)%86400/3600 << "h " << unsigned(aTime)%86400%3600/60 <<
+        "m " << unsigned(aTime)%86400%3600%60  << "s";
+    }
+  layout->set_text(ss.str().c_str());
 
   Pango::Rectangle pango_extents = layout->get_pixel_logical_extents();
   pixel_extent_width = pango_extents.get_width();

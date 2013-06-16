@@ -463,9 +463,9 @@ void CompartmentProcess::rotate(Point& V)
 {
   if(!Autofit)
     {
-      theSpatiocyteStepper->rotateX(RotateX, &V, -1);
-      theSpatiocyteStepper->rotateY(RotateY, &V, -1);
-      theSpatiocyteStepper->rotateZ(RotateZ, &V, -1);
+      theSpatiocyteStepper->rotateX(RotateX, &V, 1);
+      theSpatiocyteStepper->rotateY(RotateY, &V, 1);
+      theSpatiocyteStepper->rotateZ(RotateZ, &V, 1);
     }
 }
 
