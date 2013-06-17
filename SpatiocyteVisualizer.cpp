@@ -764,32 +764,32 @@ void GLScene::drawTime()
   layout->set_alignment(Pango::ALIGN_LEFT);
   double aTime(theCurrentTime-theResetTime);
   std::stringstream ss;
-  if(aTime < 1e-3)
+  if(fabs(aTime) < 1e-3)
     {
-      ss << "t = " << unsigned(aTime*1e+6) << " us";
+      ss << "t = " << int(aTime*1e+6) << " us";
     }
-  else if(aTime < 1)
+  else if(fabs(aTime) < 1)
     {
-      ss << "t = " << unsigned(aTime*1e+3) << " ms";
+      ss << "t = " << int(aTime*1e+3) << " ms";
     }
-  else if(aTime < 60)
+  else if(fabs(aTime) < 60)
     {
-      ss << "t = " << unsigned(aTime) << " s";
+      ss << "t = " << int(aTime) << " s";
     }
-  else if(aTime < 3600)
+  else if(fabs(aTime) < 3600)
     {
-      ss << "t = " << unsigned(aTime/60) << "m " << unsigned(aTime)%60  << "s";
+      ss << "t = " << int(aTime/60) << "m " << int(aTime)%60  << "s";
     }
-  else if(aTime < 86400)
+  else if(fabs(aTime) < 86400)
     {
-      ss << "t = " << unsigned(aTime/3600) << "h " << unsigned(aTime)%3600/60 <<
-        "m " << unsigned(aTime)%3600%60  << "s";
+      ss << "t = " << int(aTime/3600) << "h " << int(aTime)%3600/60 <<
+        "m " << int(aTime)%3600%60  << "s";
     }
   else
     {
-      ss << "t = " << unsigned(aTime/86400) << "d " << 
-        unsigned(aTime)%86400/3600 << "h " << unsigned(aTime)%86400%3600/60 <<
-        "m " << unsigned(aTime)%86400%3600%60  << "s";
+      ss << "t = " << int(aTime/86400) << "d " << 
+        int(aTime)%86400/3600 << "h " << int(aTime)%86400%3600/60 <<
+        "m " << int(aTime)%86400%3600%60  << "s";
     }
   layout->set_text(ss.str().c_str());
 

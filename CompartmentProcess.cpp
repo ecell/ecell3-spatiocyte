@@ -811,7 +811,7 @@ void CompartmentProcess::addInterfaceVoxel(unsigned subunitCoord,
   //Should use SubunitRadius instead of DiffuseRadius since it is the
   //actual size of the subunit. Nope, the distance is too far when using
   //SubunitRadius:
-  if(dist < aDist)
+  if(dist < aDist && subunitInterfaces[subunitCoord-subStartCoord].size() < 3)
     {
       Voxel& voxel((*theLattice)[voxelCoord]);
       //theSpecies[6]->addMolecule(&voxel);
@@ -851,7 +851,8 @@ void CompartmentProcess::addInterfaceVoxel(Voxel& aVoxel, Point& aPoint)
                       const unsigned subCoord(coords[l]);
                       const Point& subPoint(*(*theLattice)[subCoord].point);
                       const double dist(distance(subPoint, aPoint));
-                      if(dist < nDiffuseRadius+nVoxelRadius)
+                      if(dist < nDiffuseRadius+nVoxelRadius &&
+                         subunitInterfaces[subCoord-subStartCoord].size() < 3)
                         {
                           subunitInterfaces[subCoord-subStartCoord].push_back(
                                                               aVoxel.coord);
