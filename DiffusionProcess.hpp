@@ -60,6 +60,7 @@ public:
     Propensity(0),
     WalkProbability(1),
     theDiffusionSpecies(NULL),
+    theLeadSpecies(NULL),
     theTrailSpecies(NULL),
     theVacantSpecies(NULL),
     theWalkMethod(&DiffusionProcess::walk) {}
@@ -103,7 +104,7 @@ public:
               theDiffusionSpecies = aSpecies;
               theDiffusionSpecies->setDiffusionCoefficient(D);
             }
-          else if((*i).getCoefficient() < 0)
+          else if((*i).getCoefficient() == -1)
             {
               if(theVacantSpecies)
                 {
@@ -111,15 +112,15 @@ public:
                                   getPropertyInterface().getClassName()) +
                                   "[" + getFullID().asString() + 
                                   "]: A DiffusionProcess requires only one " +
-                                  "nonHD variable reference with negative " +
-                                  "coefficient as the vacant species to be " +
+                                  "nonHD variable reference with coefficient " +
+                                  "-1 as the vacant species to be " +
                                   "diffused on, but " +
                                   getIDString(theVacantSpecies) + " and " +
                                   getIDString(aSpecies) + " are given."); 
                 }
               theVacantSpecies = aSpecies;
             }
-          else
+          else if((*i).getCoefficient() == 1)
             {
               if(theTrailSpecies)
                 {
@@ -127,13 +128,29 @@ public:
                                   getPropertyInterface().getClassName()) +
                                   "[" + getFullID().asString() + 
                                   "]: A DiffusionProcess requires only one " +
-                                  "nonHD variable reference with positive " +
-                                  "coefficient as the trailing species to be " +
+                                  "nonHD variable reference with coefficient " +
+                                  "1 as the trailing species to be " +
                                   "diffused off, but " +
                                   getIDString(theTrailSpecies) + " and " +
                                   getIDString(aSpecies) + " are given."); 
                 }
               theTrailSpecies = aSpecies;
+            }
+          else if((*i).getCoefficient() == 2)
+            {
+              if(theLeadSpecies)
+                {
+                  THROW_EXCEPTION(ValueError, String(
+                                  getPropertyInterface().getClassName()) +
+                                  "[" + getFullID().asString() + 
+                                  "]: A DiffusionProcess requires only one " +
+                                  "nonHD variable reference with coefficient " +
+                                  "2 as the leading vacant species to be " +
+                                  "diffused on, but " +
+                                  getIDString(theLeadSpecies) + " and " +
+                                  getIDString(aSpecies) + " are given."); 
+                }
+              theLeadSpecies = aSpecies;
             }
         }
       if(!theDiffusionSpecies)
@@ -160,6 +177,10 @@ public:
       if(theTrailSpecies)
         {
           theDiffusionSpecies->setTrailSpecies(theTrailSpecies);
+        }
+      if(theLeadSpecies)
+        {
+          theDiffusionSpecies->setLeadSpecies(theLeadSpecies);
         }
     }
   virtual void initializeFourth()
@@ -268,6 +289,10 @@ public:
                 {
                   theWalkMethod = &DiffusionProcess::walkTrail;
                 }
+              else if(theLeadSpecies)
+                {
+                  theWalkMethod = &DiffusionProcess::walkLead;
+                }
               else
                 {
                   theWalkMethod = &DiffusionProcess::walk;
@@ -303,6 +328,10 @@ public:
   void walkTrail() const
     {
       theDiffusionSpecies->walkTrail();
+    }
+  void walkLead() const
+    {
+      theDiffusionSpecies->walkLead();
     }
   void walkRegular() const
     {
@@ -363,6 +392,7 @@ protected:
   double Propensity;
   double WalkProbability;
   Species* theDiffusionSpecies;
+  Species* theLeadSpecies;
   Species* theTrailSpecies;
   Species* theVacantSpecies;
   WalkMethod theWalkMethod;

@@ -774,7 +774,7 @@ void GLScene::drawTime()
     }
   else if(fabs(aTime) < 60)
     {
-      ss << "t = " << int(aTime) << " s";
+      ss << "t = " << aTime << " s";
     }
   else if(fabs(aTime) < 3600)
     {
@@ -782,14 +782,14 @@ void GLScene::drawTime()
     }
   else if(fabs(aTime) < 86400)
     {
-      ss << "t = " << int(aTime/3600) << "h " << int(aTime)%3600/60 <<
-        "m " << int(aTime)%3600%60  << "s";
+      ss << "t = " << int(aTime/3600) << "h " << int(aTime)%3600/60 << "m";
+        //"m " << int(aTime)%3600%60  << "s";
     }
   else
     {
       ss << "t = " << int(aTime/86400) << "d " << 
-        int(aTime)%86400/3600 << "h " << int(aTime)%86400%3600/60 <<
-        "m " << int(aTime)%86400%3600%60  << "s";
+        int(aTime)%86400/3600 << "h " << int(aTime)%86400%3600/60 << "m";
+        //"m " << int(aTime)%86400%3600%60  << "s";
     }
   layout->set_text(ss.str().c_str());
 
