@@ -49,6 +49,20 @@ react.VariableReferenceList = [['_', 'Variable:/:TubulinP','1']]
 react.p = 1
 
 react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:detachMinus')
+react.VariableReferenceList = [['_', 'Variable:/:MTKinesin','-1']]
+react.VariableReferenceList = [['_', 'Variable:/:TubulinM','-1']]
+react.VariableReferenceList = [['_', 'Variable:/:Kinesin','1']]
+react.VariableReferenceList = [['_', 'Variable:/:TubulinM','1']]
+react.p = 1
+
+react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:detachPlusDynein')
+react.VariableReferenceList = [['_', 'Variable:/:MTDynein','-1']]
+react.VariableReferenceList = [['_', 'Variable:/:TubulinP','-1']]
+react.VariableReferenceList = [['_', 'Variable:/:Dynein','1']]
+react.VariableReferenceList = [['_', 'Variable:/:TubulinP','1']]
+react.p = 1
+
+react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:detachMinusDynein')
 react.VariableReferenceList = [['_', 'Variable:/:MTDynein','-1']]
 react.VariableReferenceList = [['_', 'Variable:/:TubulinM','-1']]
 react.VariableReferenceList = [['_', 'Variable:/:Dynein','1']]
@@ -61,19 +75,19 @@ react.VariableReferenceList = [['_', 'Variable:/:Tubulin','-1']]
 react.VariableReferenceList = [['_', 'Variable:/:MTKinesin','1']]
 react.p = 0.001
 
-react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:explicitAttachD')
-react.VariableReferenceList = [['_', 'Variable:/:Dynein','-1']]
-react.VariableReferenceList = [['_', 'Variable:/:Tubulin','-1']]
-react.VariableReferenceList = [['_', 'Variable:/:MTDynein','1']]
-react.p = 0.1
-
 react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:explicitAttachAct')
 react.VariableReferenceList = [['_', 'Variable:/:Kinesin','-1']]
 react.VariableReferenceList = [['_', 'Variable:/:actTubulin','-1']]
 react.VariableReferenceList = [['_', 'Variable:/:MTKinesin','1']]
-react.p = 0.1
+react.p = 1
 
-react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:explicitAttachActD')
+react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:explicitAttachDynein')
+react.VariableReferenceList = [['_', 'Variable:/:Dynein','-1']]
+react.VariableReferenceList = [['_', 'Variable:/:Tubulin','-1']]
+react.VariableReferenceList = [['_', 'Variable:/:MTDynein','1']]
+react.p = 1
+
+react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:explicitAttachActDynein')
 react.VariableReferenceList = [['_', 'Variable:/:Dynein','-1']]
 react.VariableReferenceList = [['_', 'Variable:/:actTubulin','-1']]
 react.VariableReferenceList = [['_', 'Variable:/:MTDynein','1']]
@@ -141,7 +155,7 @@ react.k = 55
 react = theSimulator.createEntity('SpatiocyteTauLeapProcess', 'Process:/:inactive')
 react.VariableReferenceList = [['_', 'Variable:/:actTubulin','-1']]
 react.VariableReferenceList = [['_', 'Variable:/:Tubulin','1']]
-react.k = 0.06
+react.k = 0
 
 diffuse = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffusePlus')
 diffuse.VariableReferenceList = [['_', 'Variable:/:MTKinesin']]
@@ -150,8 +164,15 @@ diffuse.D = 0.04e-12
 
 diffuse = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseMTDynein')
 diffuse.VariableReferenceList = [['_', 'Variable:/:MTDynein']]
-diffuse.VariableReferenceList = [['_', 'Variable:/:actTubulin', '2']]
 diffuse.D = 0.04e-12
+
+react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:bindActDynein')
+react.VariableReferenceList = [['_', 'Variable:/:MTDynein','-1']]
+react.VariableReferenceList = [['_', 'Variable:/:actTubulin','-1']]
+react.VariableReferenceList = [['_', 'Variable:/:Tubulin','1']]
+react.VariableReferenceList = [['_', 'Variable:/:MTDynein','1']]
+react.ForcedSequence = 1
+react.p = 1
 
 #tagger = theSimulator.createEntity('TagProcess', 'Process:/:tagger')
 #tagger.VariableReferenceList = [['_', 'Variable:/:GFP', '-1' ]]
