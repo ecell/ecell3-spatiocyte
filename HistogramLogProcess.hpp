@@ -96,6 +96,8 @@ protected:
   unsigned int Collision;
   double binInterval;
   double Length;
+  double nLength;
+  double nRadius;
   double OriginX;
   double OriginY;
   double OriginZ;
@@ -104,10 +106,9 @@ protected:
   double RotateY;
   double RotateZ;
   double VoxelDiameter;
-  Point C;
-  Point E;
-  Point D;
-  Comp* theComp;
+  Point lengthVector; 
+  Point Minus; 
+  Point Origin;
   std::vector<std::vector<std::vector<double> > > theLogValues;
 };
 

@@ -54,6 +54,11 @@ void IteratingLogProcess::initializeFifth()
     {
       LogInterval = theInterval;
     }
+  if(!ExposureTime)
+    {
+      ExposureTime = LogInterval;
+    }
+  exposureCnt = unsigned(ExposureTime/LogInterval);
   if(!LogStart)
     {
       LogStart = theInterval;
@@ -122,11 +127,15 @@ void IteratingLogProcess::fire()
         {
           theInterval = libecs::INF;
         }
-      ++timePointCnt;
+      ++logCnt;
+      if(!(logCnt%exposureCnt))
+        {
+          ++timePointCnt;
+        }
     }
-  if(theTotalIterations == 1)
+  if(theTotalIterations == 1 && !(logCnt%exposureCnt))
     {
-      saveATimePoint(theLogFile, theTime, 1, timePointCnt-1);
+      saveATimePoint(theLogFile, theTime+theInterval, 1, timePointCnt-1);
       if(theTime >= LogEnd)
         {
           theLogFile.close();
