@@ -93,3 +93,5 @@ $ valgrind --tool=memcheck --num-callers=40 --leak-check=full python $HOME/root/
 
 Making a movie out of saved sequence of png image files:
 ffmpeg -i image%07d.png -sameq out.mp4
+For Windows compatible movie:
+ffmpeg -i image%07d.png -vcodec msmpeg4v2 -sameq output.avi

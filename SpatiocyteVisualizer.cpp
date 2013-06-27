@@ -766,29 +766,29 @@ void GLScene::drawTime()
   std::stringstream ss;
   if(fabs(aTime) < 1e-3)
     {
-      ss << "t = " << int(aTime*1e+6) << " us";
+      ss << aTime*1e+6 << " us";
     }
   else if(fabs(aTime) < 1)
     {
-      ss << "t = " << int(aTime*1e+3) << " ms";
+      ss << aTime*1e+3 << " ms";
     }
   else if(fabs(aTime) < 60)
     {
-      ss << "t = " << aTime << " s";
+      ss << aTime << " s";
     }
   else if(fabs(aTime) < 3600)
     {
-      ss << "t = " << int(aTime/60) << "m " << int(aTime)%60  << "s";
+      ss << int(aTime/60) << "m " << int(aTime)%60  << "s";
     }
   else if(fabs(aTime) < 86400)
     {
-      ss << "t = " << int(aTime/3600) << "h " << int(aTime)%3600/60 << "m";
+      ss << int(aTime/3600) << "h " << int(aTime)%3600/60 << "m";
         //"m " << int(aTime)%3600%60  << "s";
     }
   else
     {
-      ss << "t = " << int(aTime/86400) << "d " << 
-        int(aTime)%86400/3600 << "h " << int(aTime)%86400%3600/60 << "m";
+      ss << int(aTime/86400) << "d " << int(aTime)%86400/3600 << "h " 
+        << int(aTime)%86400%3600/60 << "m";
         //"m " << int(aTime)%86400%3600%60  << "s";
     }
   layout->set_text(ss.str().c_str());

@@ -17,8 +17,8 @@ def run(ActivePercent, Duration, Iteration):
   os.system("ecell3-session " + param + " microKinesinModelIterate.py")
 
 if __name__ == '__main__':
-  ActivePercent = 0
-  Duration = 101
+  ActivePercent = 100
+  Duration = 1001
   Iterations = 1000
   for i in range(Iterations):
     run(ActivePercent, Duration, i)

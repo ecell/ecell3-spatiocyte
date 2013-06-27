@@ -6,14 +6,12 @@ MTRadius = 12.5e-9
 VoxelRadius = 0.8e-8
 KinesinRadius = 0.4e-8
 neuriteRadius = 0.2e-6
-neuriteLength = 5e-6
+neuriteLength = 1.7e-6
 somaRadius = 1.3e-6
-MTLength = neuriteLength*0.95
 
 singleMTVolumeVoxels = 717256.0
 singleNeuriteVolumeVoxels = 48325789.0
 totalKinesins = 1000*singleMTVolumeVoxels/singleNeuriteVolumeVoxels
-print "totalKinesins:", totalKinesins
 
 theSimulator.createStepper('SpatiocyteStepper', 'SS').VoxelRadius = VoxelRadius
 
@@ -31,7 +29,7 @@ theSimulator.createEntity('Variable', 'Variable:/Soma:LENGTHX').Value = somaRadi
 theSimulator.createEntity('Variable', 'Variable:/Soma:LENGTHY').Value = somaRadius*2
 theSimulator.createEntity('Variable', 'Variable:/Soma:LENGTHZ').Value = neuriteRadius*4
 theSimulator.createEntity('Variable', 'Variable:/Soma:VACANT').Value = -1
-theSimulator.createEntity('Variable', 'Variable:/Soma:Kinesin').Value = 25
+theSimulator.createEntity('Variable', 'Variable:/Soma:Kinesin').Value = 17
 theSimulator.createEntity('Variable', 'Variable:/Soma:MTKinesin' ).Value = 0
 theSimulator.createEntity('Variable', 'Variable:/Soma:MTKinesinATP' ).Value = 0
 theSimulator.createEntity('Variable', 'Variable:/Soma:Tubulin' ).Value = 0
@@ -73,7 +71,7 @@ react.VariableReferenceList = [['_', 'Variable:/Soma:Kinesin','-1']]
 react.VariableReferenceList = [['_', 'Variable:/Soma:actTubulin','-1']]
 react.VariableReferenceList = [['_', 'Variable:/Soma:MTKinesin','1']]
 #react.k = 2.5863133e-22
-react.p = 0.009
+react.p = 1
 #react.k = 1.69706e-20
 
 react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/Soma:explicitAttach')
@@ -81,7 +79,7 @@ react.VariableReferenceList = [['_', 'Variable:/Soma:Kinesin','-1']]
 react.VariableReferenceList = [['_', 'Variable:/Soma:Tubulin','-1']]
 react.VariableReferenceList = [['_', 'Variable:/Soma:MTKinesin','1']]
 #react.k = 2.5863133e-24
-react.p = 0.009
+react.p = 0.00005
 #react.k = 6.78823e-24
 
 react = theSimulator.createEntity('SpatiocyteTauLeapProcess', 'Process:/Soma:detach')
@@ -89,7 +87,7 @@ react.VariableReferenceList = [['_', 'Variable:/Soma:MTKinesinATP','-1']]
 react.VariableReferenceList = [['_', 'Variable:/Soma:actTubulin','1']]
 react.VariableReferenceList = [['_', 'Variable:/Soma:Kinesin','1']]
 react.SearchVacant = 1
-react.k = 0.7
+react.k = 15
 
 react = theSimulator.createEntity('SpatiocyteTauLeapProcess', 'Process:/Soma:inactive')
 react.VariableReferenceList = [['_', 'Variable:/Soma:actTubulin','-1']]
@@ -155,7 +153,7 @@ micro.VariableReferenceList = [['_', 'Variable:/Soma:MTKinesin', '-1']]
 micro.VariableReferenceList = [['_', 'Variable:/Soma:MTKinesin', '12500']]
 micro.LogInterval = 1
 micro.ExposureTime = 60
-micro.FileName = "equalDistribution.dat"
+micro.FileName = "shortNeuriteAxon.dat"
 
 def rotatePointAlongVector(P, C, N, angle):
   x = P[0]
@@ -214,13 +212,15 @@ for i in range(somaMTs):
     Microtubule.VariableReferenceList = [['_', 'Variable:/Soma:TubulinP' , '-3']]
 
 angle = math.pi/4
-A = [0.5, 0, 0]
+A = [0.45, 0, 0]
 A = rotatePointAlongVector(A, somaMTvectorZpoint, somaMTvectorZ, angle)
 B = rotatePointAlongVector(A, somaMTvectorZpoint, somaMTvectorZ, angle*2)
 C = rotatePointAlongVector(B, somaMTvectorZpoint, somaMTvectorZ, angle*2)
 D = rotatePointAlongVector(C, somaMTvectorZpoint, somaMTvectorZ, angle*2)
+C = [0.76, 0, 0]
+C = rotatePointAlongVector(C, somaMTvectorZpoint, somaMTvectorZ, angle+math.pi)
 
-neuritesLengthX = [neuriteLength, neuriteLength, neuriteLength, neuriteLength]
+neuritesLengthX = [neuriteLength, neuriteLength, neuriteLength*2, neuriteLength]
 neuritesOriginX = [A[0], B[0], C[0], D[0]]
 neuritesOriginY = [A[1], B[1], C[1], D[1]]
 neuritesRotateZ = [-angle, -(angle+angle*2), -(angle+angle*4), -(angle+angle*6)]
@@ -252,10 +252,10 @@ for i in range(4):
   Histogram.VariableReferenceList = [['_', 'Variable:/Soma:Kinesin' ]]
   Histogram.Length = neuritesLengthX[i]
   Histogram.Radius = neuriteRadius
-  Histogram.Bins = 10
+  Histogram.Bins = 3
   Histogram.LogInterval = 1
   Histogram.ExposureTime = 60
-  Histogram.FileName = "hislog.EqualDistribution.Neurite%d.csv" %i
+  Histogram.FileName = "hislog.shortNeuriteAxon.Neurite%d.csv" %i
   Histogram.LogEnd = 90000
   Histogram.Iterations = 1
 
@@ -269,7 +269,7 @@ for i in range(4):
     Microtubule.RotateZ =  0
     Microtubule.Radius = MTRadius
     Microtubule.SubunitRadius = KinesinRadius
-    Microtubule.Length = MTLength
+    Microtubule.Length = neuritesLengthX[i]*0.95
     Microtubule.Filaments = Filaments
     Microtubule.Periodic = 0
     Microtubule.VariableReferenceList = [['_', 'Variable:/Soma:MTKinesin' ]]

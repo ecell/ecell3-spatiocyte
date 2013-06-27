@@ -152,10 +152,10 @@ micro.VariableReferenceList = [['_', 'Variable:/Soma:MTKinesinATP', '1']]
 micro.VariableReferenceList = [['_', 'Variable:/Soma:MTKinesin', '-1']]
 micro.VariableReferenceList = [['_', 'Variable:/Soma:MTKinesin', '-1']]
 micro.VariableReferenceList = [['_', 'Variable:/Soma:MTKinesin', '-1']]
-micro.VariableReferenceList = [['_', 'Variable:/Soma:MTKinesin', '11500']]
+micro.VariableReferenceList = [['_', 'Variable:/Soma:MTKinesin', '12500']]
 micro.LogInterval = 1
 micro.ExposureTime = 60
-micro.FileName = "translocating.dat"
+micro.FileName = "translocation.dat"
 
 def rotatePointAlongVector(P, C, N, angle):
   x = P[0]
@@ -256,7 +256,7 @@ for i in range(4):
   Histogram.LogInterval = 1
   Histogram.ExposureTime = 60
   Histogram.FileName = "hislog.Translocating.Neurite%d.csv" %i
-  Histogram.LogEnd = 40000
+  Histogram.LogEnd = 180000
   Histogram.Iterations = 1
 
   for j in range(5):
@@ -279,6 +279,6 @@ for i in range(4):
     Microtubule.VariableReferenceList = [['_', 'Variable:/Soma:TubulinM' , '-2']]
     Microtubule.VariableReferenceList = [['_', 'Variable:/Soma:TubulinP' , '-3']]
 
-run(40000)
+run(180000)
 
 
